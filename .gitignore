@@ -8,3 +8,17 @@ vite.config.ts.*
 .idea
 .mcp
 CLAUDE_RULES.md
+
+# Electron build outputs
+release/
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+
+# Electron cache
+.electron-builder/
+
+# Test coverage
+coverage/
