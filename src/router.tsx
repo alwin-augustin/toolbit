@@ -2,30 +2,30 @@ import { Switch, Route } from "wouter";
 import { lazy, Suspense } from "react";
 
 // Lazy load all tool components for code splitting
-const JsonFormatter = lazy(() => import("@/components/tools/JsonFormatter"));
-const YamlFormatter = lazy(() => import("@/components/tools/YamlFormatter"));
-const Base64Encoder = lazy(() => import("@/components/tools/Base64Encoder"));
-const UrlEncoder = lazy(() => import("@/components/tools/UrlEncoder"));
-const JsonValidator = lazy(() => import("@/components/tools/JsonValidator"));
-const CaseConverter = lazy(() => import("@/components/tools/CaseConverter"));
-const TimestampConverter = lazy(() => import("@/components/tools/TimestampConverter"));
-const WordCounter = lazy(() => import("@/components/tools/WordCounter"));
-const DateCalculator = lazy(() => import("@/components/tools/DateCalculator"));
-const UuidGenerator = lazy(() => import("@/components/tools/UuidGenerator"));
-const HashGenerator = lazy(() => import("@/components/tools/HashGenerator"));
-const JwtDecoder = lazy(() => import("@/components/tools/JwtDecoder"));
-const DiffTool = lazy(() => import("@/components/tools/DiffTool"));
-const MarkdownPreviewer = lazy(() => import("@/components/tools/MarkdownPreviewer"));
-const ColorConverter = lazy(() => import("@/components/tools/ColorConverter"));
-const HtmlEscape = lazy(() => import("@/components/tools/HtmlEscape"));
-const StripWhitespace = lazy(() => import("@/components/tools/StripWhitespace"));
-const CsvToJsonConverter = lazy(() => import("@/components/tools/CsvToJsonConverter"));
-const JsonToPythonConverter = lazy(() => import("@/components/tools/JsonToPythonConverter"));
-const CronParser = lazy(() => import("@/components/tools/CronParser"));
-const UnitConverter = lazy(() => import("@/components/tools/UnitConverter"));
-const HttpStatusCodeReference = lazy(() => import("@/components/tools/HttpStatusCodeReference"));
-const CssFormatter = lazy(() => import("@/components/tools/CssFormatter"));
-const JsJsonMinifier = lazy(() => import("@/components/tools/JsJsonMinifier"));
+const JsonFormatter = lazy(() => import("@/components/tools/JsonFormatter").then(m => ({ default: m.default })));
+const YamlFormatter = lazy(() => import("@/components/tools/YamlFormatter").then(m => ({ default: m.default })));
+const Base64Encoder = lazy(() => import("@/components/tools/Base64Encoder").then(m => ({ default: m.default })));
+const UrlEncoder = lazy(() => import("@/components/tools/UrlEncoder").then(m => ({ default: m.default })));
+const JsonValidator = lazy(() => import("@/components/tools/JsonValidator").then(m => ({ default: m.default })));
+const CaseConverter = lazy(() => import("@/components/tools/CaseConverter").then(m => ({ default: m.default })));
+const TimestampConverter = lazy(() => import("@/components/tools/TimestampConverter").then(m => ({ default: m.default })));
+const WordCounter = lazy(() => import("@/components/tools/WordCounter").then(m => ({ default: m.default })));
+const DateCalculator = lazy(() => import("@/components/tools/DateCalculator").then(m => ({ default: m.default })));
+const UuidGenerator = lazy(() => import("@/components/tools/UuidGenerator").then(m => ({ default: m.default })));
+const HashGenerator = lazy(() => import("@/components/tools/HashGenerator").then(m => ({ default: m.default })));
+const JwtDecoder = lazy(() => import("@/components/tools/JwtDecoder").then(m => ({ default: m.default })));
+const DiffTool = lazy(() => import("@/components/tools/DiffTool").then(m => ({ default: m.default })));
+const MarkdownPreviewer = lazy(() => import("@/components/tools/MarkdownPreviewer").then(m => ({ default: m.default })));
+const ColorConverter = lazy(() => import("@/components/tools/ColorConverter").then(m => ({ default: m.default })));
+const HtmlEscape = lazy(() => import("@/components/tools/HtmlEscape").then(m => ({ default: m.default })));
+const StripWhitespace = lazy(() => import("@/components/tools/StripWhitespace").then(m => ({ default: m.default })));
+const CsvToJsonConverter = lazy(() => import("@/components/tools/CsvToJsonConverter").then(m => ({ default: m.default })));
+const JsonToPythonConverter = lazy(() => import("@/components/tools/JsonToPythonConverter").then(m => ({ default: m.default })));
+const CronParser = lazy(() => import("@/components/tools/CronParser").then(m => ({ default: m.default })));
+const UnitConverter = lazy(() => import("@/components/tools/UnitConverter").then(m => ({ default: m.default })));
+const HttpStatusCodeReference = lazy(() => import("@/components/tools/HttpStatusCodeReference").then(m => ({ default: m.default })));
+const CssFormatter = lazy(() => import("@/components/tools/CssFormatter").then(m => ({ default: m.default })));
+const JsJsonMinifier = lazy(() => import("@/components/tools/JsJsonMinifier").then(m => ({ default: m.default })));
 
 // Loading component with minimal spinner
 const LoadingFallback = () => (

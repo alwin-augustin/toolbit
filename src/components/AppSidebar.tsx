@@ -80,7 +80,7 @@ export function AppSidebar() {
 
     return (
         <aside className={cn(
-            "flex flex-col border-r border-border bg-card/50 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-lg",
+            "flex flex-col border-r border-border bg-card/50 backdrop-blur-xl transition-transform duration-300 ease-in-out shadow-lg",
             "fixed inset-y-0 left-0 z-30 w-64",
             // Hide/show based on isOpen state for all screen sizes
             !isOpen && "-translate-x-full",
