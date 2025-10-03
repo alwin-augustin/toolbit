@@ -1,17 +1,74 @@
 {
-  "name": "devtoolbox",
+  "name": "toolbit",
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
+  "main": "electron/main.js",
+  "author": {
+    "name": "Toolbit",
+    "email": "alwinaugustin@gmail.com"
+  },
+  "description": "A comprehensive collection of developer utilities",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "npm run web:dev",
+    "build": "npm run web:build",
     "preview": "vite preview",
     "check": "tsc",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "web:dev": "vite",
+    "web:build": "vite build",
+    "web:preview": "vite preview",
+    "desktop:dev": "concurrently \"cross-env NODE_ENV=development vite\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
+    "desktop:build": "cross-env ELECTRON=true vite build && electron-builder",
+    "desktop:build:win": "cross-env ELECTRON=true vite build && electron-builder --win",
+    "desktop:build:mac": "cross-env ELECTRON=true vite build && electron-builder --mac",
+    "desktop:build:linux": "cross-env ELECTRON=true vite build && electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.toolbit.app",
+    "productName": "Toolbit",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png",
+      "category": "Development"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.7",
@@ -71,6 +128,10 @@
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^38.2.0",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.36.0",
     "jsdom": "^27.0.0",
     "lucide-react": "^0.544.0",
@@ -83,7 +144,8 @@
     "typescript": "5.6.3",
     "typescript-eslint": "^8.45.0",
     "vite": "^5.4.20",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wait-on": "^9.0.1"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
