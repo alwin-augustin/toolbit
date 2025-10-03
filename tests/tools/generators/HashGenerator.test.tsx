@@ -14,7 +14,7 @@ const mockDigest = vi.fn()
 
 describe('HashGenerator', () => {
   beforeEach(() => {
-    mockDigest.mockImplementation((algorithm: string) => {
+    mockDigest.mockImplementation((_algorithm: string) => {
       const mockHash = new Uint8Array([1, 2, 3, 4]).buffer
       return Promise.resolve(mockHash)
     })

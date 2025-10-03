@@ -1,6 +1,6 @@
-# DevToolBox
+# Toolbit
 
-A modern, comprehensive collection of developer utilities for everyday tasks. Built with React, TypeScript, and Tailwind CSS.
+A modern, comprehensive collection of developer utilities for everyday tasks. Available as both a web application and desktop app. Built with React, TypeScript, and Tailwind CSS.
 
 ## Features
 
@@ -41,6 +41,7 @@ A modern, comprehensive collection of developer utilities for everyday tasks. Bu
 - **React 19** - UI framework
 - **TypeScript** - Type safety
 - **Vite** - Build tool
+- **Electron** - Desktop app framework
 - **Tailwind CSS** - Styling
 - **Radix UI** - Accessible component primitives
 - **Zustand** - State management
@@ -61,7 +62,7 @@ A modern, comprehensive collection of developer utilities for everyday tasks. Bu
 git clone <repository-url>
 
 # Navigate to project directory
-cd DevToolBox
+cd toolbit
 
 # Install dependencies
 npm install
@@ -69,32 +70,58 @@ npm install
 
 ### Development
 
-```bash
-# Start development server
-npm run dev
+#### Web App
 
+```bash
+# Start web development server
+npm run web:dev
+
+# Build web app for production
+npm run web:build
+
+# Preview web production build
+npm run web:preview
+```
+
+#### Desktop App
+
+```bash
+# Start desktop app in development mode
+npm run desktop:dev
+
+# Build desktop app for current platform
+npm run desktop:build
+
+# Build for specific platforms
+npm run desktop:build:mac    # macOS
+npm run desktop:build:win    # Windows
+npm run desktop:build:linux  # Linux
+```
+
+#### Testing & Validation
+
+```bash
 # Type checking
 npm run check
 
 # Linting
 npm run lint
-```
 
-### Build
+# Run tests
+npm run test
 
-```bash
-# Build for production
-npm run build
+# Run tests with UI
+npm run test:ui
 
-# Preview production build
-npm run preview
+# Run tests with coverage
+npm run test:coverage
 ```
 
 ## Project Structure
 
 ```
-DevToolBox/
-├── client/
+toolbit/
+├── src/                        # React application source
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── tools/          # Individual tool components
@@ -106,7 +133,19 @@ DevToolBox/
 │   │   ├── styles/             # Global styles
 │   │   ├── App.tsx
 │   │   └── router.tsx
-│   └── ...
+│   ├── index.html
+│   └── public/
+├── electron/                   # Electron-specific files
+│   ├── main.js                 # Main process
+│   ├── preload.js              # Preload script
+│   └── electron.d.ts           # TypeScript definitions
+├── dist/                       # Build output (web & desktop)
+├── release/                    # Desktop installers
+├── build/                      # Desktop app icons
+├── .github/
+│   └── workflows/              # CI/CD workflows
+│       ├── release-desktop.yml # Desktop app releases
+│       └── validate-web.yml    # Web build validation
 ├── package.json
 └── README.md
 ```
@@ -133,6 +172,25 @@ DevToolBox/
 - Code splitting
 - Optimized bundle size
 - Lazy loading components
+
+## Deployment
+
+### Web App (Cloudflare Pages)
+
+The web app is automatically deployed to Cloudflare Pages when changes are pushed to the main branch. The build command is `npm run web:build` and the output directory is `dist/`.
+
+### Desktop App (GitHub Releases)
+
+Desktop apps are automatically built and released to GitHub Releases when:
+- Changes are pushed to the `main` or `master` branch (creates a pre-release)
+- A version tag (e.g., `v1.0.0`) is created (creates a stable release)
+
+The workflow builds installers for:
+- **macOS**: `.dmg` disk image
+- **Windows**: `.exe` installer
+- **Linux**: `.AppImage` and `.deb` packages
+
+For more details on the desktop app, see [ELECTRON.md](./ELECTRON.md).
 
 ## License
 
