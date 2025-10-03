@@ -29,35 +29,13 @@ export default defineConfig(({ mode }) => {
             emptyOutDir: true,
             rollupOptions: {
                 output: {
-                    // Manual chunk splitting for better caching and loading
-                    manualChunks: isElectron ? undefined : (id) => {
-                        // Vendor chunk for React and core libraries
-                        if (id.includes('node_modules')) {
-                            // React core libraries
-                            if (id.includes('react') || id.includes('react-dom')) {
-                                return 'vendor-react';
-                            }
-                            // UI libraries (Radix UI)
-                            if (id.includes('@radix-ui')) {
-                                return 'vendor-ui';
-                            }
-                            // Routing and state management
-                            if (id.includes('wouter') || id.includes('zustand')) {
-                                return 'vendor-routing-state';
-                            }
-                            // Data processing libraries
-                            if (id.includes('papaparse') || id.includes('js-yaml') ||
-                                id.includes('marked') || id.includes('dompurify')) {
-                                return 'vendor-data';
-                            }
-                            // All other vendor code
-                            return 'vendor-misc';
-                        }
-                    },
+                    // Disable manual chunks for Electron to avoid issues
+                    // For web, use automatic chunking
+                    manualChunks: undefined,
                 }
             },
-            // Optimize chunk size
-            chunkSizeWarningLimit: 600,
+            // Increase chunk size limit since we're bundling everything
+            chunkSizeWarningLimit: 2000,
         },
         server: {
             port: 5173,
