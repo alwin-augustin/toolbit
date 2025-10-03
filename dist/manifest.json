@@ -1,6 +1,6 @@
 {
-  "name": "DevToolbox - Developer Utilities",
-  "short_name": "DevToolbox",
+  "name": "Toolbit - Developer Utilities",
+  "short_name": "Toolbit",
   "description": "A comprehensive collection of local-only developer utilities",
   "start_url": "/",
   "display": "standalone",

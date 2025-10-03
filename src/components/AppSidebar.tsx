@@ -80,22 +80,22 @@ export function AppSidebar() {
 
     return (
         <aside className={cn(
-            "flex flex-col border-r border-border bg-card/50 backdrop-blur-xl transition-all duration-150 ease-out shadow-lg",
+            "flex flex-col border-r border-border bg-card/50 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-lg",
             "fixed inset-y-0 left-0 z-30 w-64",
             // Hide/show based on isOpen state for all screen sizes
             !isOpen && "-translate-x-full",
             isOpen && "translate-x-0",
             // On large screens, make it static only when open
-            isOpen && "lg:static"
+            isOpen && "lg:static lg:transition-none"
         )}>
             <div className="flex flex-col flex-1 overflow-hidden">
                 <div className="flex h-16 items-center gap-2 border-b border-border px-6 bg-card/80">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                            <span className="text-primary-foreground font-bold text-sm">DT</span>
+                            <span className="text-primary-foreground font-bold text-sm">TB</span>
                         </div>
                         <h1 className="font-semibold tracking-tight">
-                            <span className="text-lg text-foreground">DevToolbox</span>
+                            <span className="text-lg text-foreground">Toolbit</span>
                         </h1>
                     </div>
                 </div>

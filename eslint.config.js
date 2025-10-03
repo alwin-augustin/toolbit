@@ -5,7 +5,7 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ['*.config.js', '*.config.ts', 'vite.config.ts', 'tailwind.config.ts', 'postcss.config.js', 'dist/**', 'node_modules/**', 'src/dist/**', 'electron/**', 'build/**', 'release/**'],
+    ignores: ['*.config.js', '*.config.ts', 'vite.config.ts', 'tailwind.config.ts', 'postcss.config.js', 'dist/**', 'node_modules/**', 'electron/**', 'build/**', 'release/**'],
   },
   {
     files: ['**/*.ts', '**/*.tsx'],

@@ -121,24 +121,25 @@ npm run test:coverage
 
 ```
 toolbit/
-├── src/                        # React application source
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── tools/          # Individual tool components
-│   │   │   ├── ui/             # Reusable UI components
-│   │   │   ├── AppSidebar.tsx
-│   │   │   └── ...
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── lib/                # Utilities and helpers
-│   │   ├── styles/             # Global styles
-│   │   ├── App.tsx
-│   │   └── router.tsx
-│   ├── index.html
-│   └── public/
+├── src/                        # Application source code
+│   ├── components/
+│   │   ├── tools/              # Individual tool components
+│   │   ├── ui/                 # Reusable UI components
+│   │   └── AppSidebar.tsx
+│   ├── hooks/                  # Custom React hooks
+│   ├── lib/                    # Utilities and helpers
+│   ├── pages/                  # Page components
+│   ├── styles/                 # Global styles
+│   ├── App.tsx
+│   ├── main.tsx
+│   ├── router.tsx
+│   └── index.css
 ├── electron/                   # Electron-specific files
 │   ├── main.js                 # Main process
 │   ├── preload.js              # Preload script
 │   └── electron.d.ts           # TypeScript definitions
+├── public/                     # Static assets
+├── tests/                      # Test files
 ├── dist/                       # Build output (web & desktop)
 ├── release/                    # Desktop installers
 ├── build/                      # Desktop app icons
@@ -146,6 +147,7 @@ toolbit/
 │   └── workflows/              # CI/CD workflows
 │       ├── release-desktop.yml # Desktop app releases
 │       └── validate-web.yml    # Web build validation
+├── index.html                  # Entry HTML
 ├── package.json
 └── README.md
 ```

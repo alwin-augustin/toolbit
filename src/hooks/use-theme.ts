@@ -33,7 +33,7 @@ export const useTheme = create<ThemeState>()(
       },
     }),
     {
-      name: 'devtoolbox-theme',
+      name: 'toolbit-theme',
       onRehydrateStorage: () => (state) => {
         // Apply theme immediately on rehydration
         if (state) {
@@ -46,7 +46,7 @@ export const useTheme = create<ThemeState>()(
 
 // Initialize theme on first load
 if (typeof window !== 'undefined') {
-  const stored = localStorage.getItem('devtoolbox-theme')
+  const stored = localStorage.getItem('toolbit-theme')
   if (stored) {
     try {
       const { state } = JSON.parse(stored)

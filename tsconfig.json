@@ -1,5 +1,5 @@
 {
-  "include": ["src/src/**/*", "shared/**/*", "server/**/*", "electron/**/*"],
+  "include": ["src/**/*", "shared/**/*", "server/**/*", "electron/**/*"],
   "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
   "compilerOptions": {
     "incremental": true,
@@ -16,7 +16,7 @@
     "baseUrl": ".",
     "types": ["node", "vite/client"],
     "paths": {
-      "@/*": ["./src/src/*"],
+      "@/*": ["./src/*"],
       "@shared/*": ["./shared/*"],
       "@assets/*": ["./attached_assets/*"]
     }
