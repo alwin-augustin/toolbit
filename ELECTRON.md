@@ -1,22 +1,28 @@
 # Electron Desktop App Setup
 
-This guide explains how to run and build the DevToolBox desktop application using Electron.
+This guide explains how to run and build the Toolbit desktop application using Electron.
 
 ## 📁 Project Structure
 
 ```
 toolbit/
+├── src/                 # Application source code
+│   ├── components/      # React components
+│   ├── hooks/          # Custom React hooks
+│   ├── lib/            # Utilities and helpers
+│   └── ...
 ├── electron/
 │   ├── main.js          # Electron main process (Node.js environment)
 │   ├── preload.js       # Preload script (secure IPC bridge)
 │   └── electron.d.ts    # TypeScript definitions for Electron API
-├── src/                 # React application source
+├── public/              # Static assets
 ├── dist/                # Built web/electron app (generated)
 ├── build/               # Electron builder resources (icons)
 │   ├── icon.ico        # Windows icon (256x256)
 │   ├── icon.icns       # macOS icon
 │   └── icon.png        # Linux icon (512x512)
-└── release/            # Electron installers (generated)
+├── release/            # Electron installers (generated)
+└── index.html          # Entry HTML
 ```
 
 ## 🚀 Development
@@ -160,16 +166,16 @@ Edit `package.json`:
 
 ```json
 {
-  "name": "devtoolbox",
+  "name": "toolbit",
   "version": "1.0.0",
-  "description": "Your app description",
+  "description": "A comprehensive collection of developer utilities",
   "author": {
-    "name": "Your Name",
-    "email": "your-email@example.com"
+    "name": "Toolbit",
+    "email": "alwinaugustin@gmail.com"
   },
   "build": {
-    "appId": "com.yourcompany.app",
-    "productName": "DevToolBox"
+    "appId": "com.toolbit.app",
+    "productName": "Toolbit"
   }
 }
 ```
@@ -180,7 +186,7 @@ Edit `electron/main.js`:
 
 ```javascript
 mainWindow = new BrowserWindow({
-  width: 1200,        // Default width
+  width: 1280,        // Default width
   height: 800,        // Default height
   minWidth: 800,      // Minimum width
   minHeight: 600,     // Minimum height

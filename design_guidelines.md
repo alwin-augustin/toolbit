@@ -1,8 +1,8 @@
-# DevToolbox Design Guidelines
+# Toolbit Design Guidelines
 
 ## Design Approach: Utility-First Design System
 
-**Rationale**: DevToolbox is a utility-focused application serving developers who prioritize efficiency, clarity, and consistent functionality over visual decoration. Following a clean, minimal design system approach optimized for productivity tools.
+**Rationale**: Toolbit is a utility-focused application serving developers who prioritize efficiency, clarity, and consistent functionality over visual decoration. Following a clean, minimal design system approach optimized for productivity tools.
 
 **Reference Inspiration**: Linear, VS Code, and modern developer tools that emphasize function over form while maintaining visual polish.
 
