@@ -22,10 +22,12 @@
     "web:build": "vite build",
     "web:preview": "vite preview",
     "desktop:dev": "concurrently \"cross-env NODE_ENV=development vite\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
-    "desktop:build": "cross-env ELECTRON=true vite build && electron-builder",
-    "desktop:build:win": "cross-env ELECTRON=true vite build && electron-builder --win",
-    "desktop:build:mac": "cross-env ELECTRON=true vite build && electron-builder --mac",
-    "desktop:build:linux": "cross-env ELECTRON=true vite build && electron-builder --linux"
+    "desktop:build": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
+    "desktop:build:win": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win",
+    "desktop:build:mac": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac",
+    "desktop:build:mac:universal": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac --universal",
+    "desktop:build:linux": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --linux",
+    "desktop:clean": "rm -rf release dist"
   },
   "build": {
     "appId": "com.toolbit.app",
@@ -37,38 +39,113 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules",
+      "!**/*.{ts,tsx,map}",
+      "!**/*.md",
+      "!**/LICENSE",
+      "!**/.DS_Store"
     ],
     "extraMetadata": {
       "main": "electron/main.js"
     },
+    "asarUnpack": [
+      "**/*.node"
+    ],
+    "compression": "maximum",
     "win": {
       "target": [
-        "nsis"
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "verifyUpdateCodeSignature": false
     },
     "mac": {
       "target": [
-        "dmg"
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64",
+            "universal"
+          ]
+        }
       ],
       "icon": "build/icon.icns",
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.developer-tools",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.inherit.plist",
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "darkModeSupport": true,
+      "type": "distribution",
+      "minimumSystemVersion": "10.13.0"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "title": "${productName} ${version}",
+      "internetEnabled": false,
+      "sign": false
     },
     "linux": {
       "target": [
-        "AppImage",
-        "deb"
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
       ],
       "icon": "build/icon.png",
-      "category": "Development"
+      "category": "Development",
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "synopsis": "A comprehensive collection of developer utilities",
+      "description": "Toolbit provides a comprehensive set of utilities for developers including JSON formatters, encoders/decoders, and more."
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    }
+      "createStartMenuShortcut": true,
+      "allowElevation": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "afterSign": "scripts/notarize.cjs",
+    "buildDependenciesFromSource": false,
+    "nodeGypRebuild": false
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.7",
@@ -146,8 +223,5 @@
     "vite": "^5.4.20",
     "vitest": "^3.2.4",
     "wait-on": "^9.0.1"
-  },
-  "optionalDependencies": {
-    "bufferutil": "^4.0.8"
   }
 }
