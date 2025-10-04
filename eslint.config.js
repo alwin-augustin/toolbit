@@ -5,7 +5,19 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    ignores: ['*.config.js', '*.config.ts', 'vite.config.ts', 'tailwind.config.ts', 'postcss.config.js', 'dist/**', 'node_modules/**', 'electron/**', 'build/**', 'release/**'],
+    ignores: [
+      '*.config.js',
+      '*.config.ts',
+      'vite.config.ts',
+      'tailwind.config.ts',
+      'postcss.config.js',
+      'dist/**',
+      'node_modules/**',
+      'electron/**',
+      'build/**',
+      'release/**',
+      'scripts/**/*.cjs',  // Ignore CommonJS files in scripts
+    ],
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
