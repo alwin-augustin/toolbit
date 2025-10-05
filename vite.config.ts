@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { VitePWA } from 'vite-plugin-pwa';
 import path from "path";
 
 export default defineConfig(({ mode }) => {
@@ -15,7 +16,90 @@ export default defineConfig(({ mode }) => {
         },
         plugins: [
             react(),
-        ],
+            // Only enable PWA for web builds, not Electron
+            !isElectron && VitePWA({
+                registerType: 'autoUpdate',
+                includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png'],
+                manifest: {
+                    name: 'Toolbit - Developer Utilities',
+                    short_name: 'Toolbit',
+                    description: 'A comprehensive collection of local-only developer utilities including JSON formatter, Base64 encoder, and 20+ essential tools',
+                    theme_color: '#1e40af',
+                    background_color: '#020817',
+                    display: 'standalone',
+                    scope: '/',
+                    start_url: '/',
+                    orientation: 'any',
+                    categories: ['productivity', 'utilities', 'developer tools'],
+                    icons: [
+                        {
+                            src: '/pwa-64x64.png',
+                            sizes: '64x64',
+                            type: 'image/png'
+                        },
+                        {
+                            src: '/pwa-192x192.png',
+                            sizes: '192x192',
+                            type: 'image/png'
+                        },
+                        {
+                            src: '/pwa-512x512.png',
+                            sizes: '512x512',
+                            type: 'image/png',
+                            purpose: 'any'
+                        },
+                        {
+                            src: '/maskable-icon-512x512.png',
+                            sizes: '512x512',
+                            type: 'image/png',
+                            purpose: 'maskable'
+                        }
+                    ]
+                },
+                workbox: {
+                    globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+                    runtimeCaching: [
+                        {
+                            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+                            handler: 'CacheFirst',
+                            options: {
+                                cacheName: 'google-fonts-cache',
+                                expiration: {
+                                    maxEntries: 10,
+                                    maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                                },
+                                cacheableResponse: {
+                                    statuses: [0, 200]
+                                }
+                            }
+                        },
+                        {
+                            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+                            handler: 'CacheFirst',
+                            options: {
+                                cacheName: 'gstatic-fonts-cache',
+                                expiration: {
+                                    maxEntries: 10,
+                                    maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                                },
+                                cacheableResponse: {
+                                    statuses: [0, 200]
+                                }
+                            }
+                        }
+                    ],
+                    // Cache all static assets
+                    navigateFallback: null,
+                    cleanupOutdatedCaches: true,
+                    clientsClaim: true,
+                    skipWaiting: true
+                },
+                devOptions: {
+                    enabled: false, // Disable PWA in development for faster iteration
+                    type: 'module'
+                }
+            })
+        ].filter(Boolean),
         resolve: {
             alias: {
                 "@": path.resolve(import.meta.dirname, "src"),
@@ -42,32 +126,14 @@ export default defineConfig(({ mode }) => {
                     comments: false,
                 },
             },
-            // Optimize chunk size
-            chunkSizeWarningLimit: 1000,
+            // Optimize chunk size (increased due to disabled code splitting)
+            chunkSizeWarningLimit: 2000,
             // Source maps for debugging (only in dev)
             sourcemap: isDev,
             rollupOptions: {
-                output: isElectron ? {
-                    // For Electron, keep everything in one file to avoid loading issues
+                output: {
+                    // Disable code splitting for both Electron and Web to avoid React hooks issues
                     manualChunks: undefined,
-                    inlineDynamicImports: true,
-                } : {
-                    // For web, split chunks for better caching
-                    manualChunks: (id) => {
-                        // Vendor chunks
-                        if (id.includes('node_modules')) {
-                            // React ecosystem
-                            if (id.includes('react') || id.includes('react-dom')) {
-                                return 'react-vendor';
-                            }
-                            // Radix UI components
-                            if (id.includes('@radix-ui')) {
-                                return 'radix-vendor';
-                            }
-                            // Other vendor code
-                            return 'vendor';
-                        }
-                    },
                     // Optimize asset naming
                     assetFileNames: (assetInfo) => {
                         const info = assetInfo.name?.split('.');
