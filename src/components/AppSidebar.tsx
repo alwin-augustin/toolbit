@@ -1,7 +1,6 @@
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/hooks/use-sidebar"
 import {
-    FileText,
     Code,
     Link as LinkIcon,
     FileJson,
@@ -25,12 +24,11 @@ const toolGroups = [
         title: "Text & Format",
         items: [
             { title: "JSON Formatter", url: "/json-formatter", icon: FileJson },
-            { title: "YAML Formatter", url: "/yaml-formatter", icon: FileText },
             { title: "Case Converter", url: "/case-converter", icon: Type },
             { title: "Word Counter", url: "/word-counter", icon: Hash },
             { title: "Strip Whitespace", url: "/strip-whitespace", icon: Eraser },
             { title: "CSS Formatter/Minifier", url: "/css-formatter", icon: Code },
-            { title: "JavaScript/JSON Minifier", url: "/js-json-minifier", icon: Code },
+            { title: "JavaScript Minifier", url: "/js-json-minifier", icon: Code },
         ],
     },
     {
@@ -59,7 +57,6 @@ const toolGroups = [
             { title: "Color Converter", url: "/color-converter", icon: Palette },
             { title: "Diff Tool", url: "/diff-tool", icon: GitCompare },
             { title: "CSV to JSON Converter", url: "/csv-to-json", icon: FileJson },
-            { title: "JSON to Python Converter", url: "/json-to-python", icon: Code },
             { title: "Cron Expression Parser", url: "/cron-parser", icon: Clock },
             { title: "Unit Converter", url: "/unit-converter", icon: Hash },
             { title: "HTTP Status Code Reference", url: "/http-status-codes", icon: Search },

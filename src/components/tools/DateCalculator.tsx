@@ -7,6 +7,7 @@ import { Calendar } from "lucide-react"
 export default function DateCalculator() {
     const [startDate, setStartDate] = useState("")
     const [endDate, setEndDate] = useState("")
+    const [hasCalculated, setHasCalculated] = useState(false)
     const [result, setResult] = useState({
         days: 0,
         weeks: 0,
@@ -41,6 +42,7 @@ export default function DateCalculator() {
             months,
             years
         })
+        setHasCalculated(true)
     }
 
     const setToday = (field: 'start' | 'end') => {
@@ -119,7 +121,7 @@ export default function DateCalculator() {
                     Calculate Difference
                 </Button>
 
-                {(startDate && endDate) && (
+                {hasCalculated && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {Object.entries({
                             years: "Years",

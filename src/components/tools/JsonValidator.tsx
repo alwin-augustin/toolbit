@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Shield, CheckCircle, XCircle } from "lucide-react"
 import Ajv from "ajv"
+import addFormats from "ajv-formats"
 import { ToolCard } from "@/components/ToolCard"
 
 export default function JsonValidator() {
@@ -17,6 +18,7 @@ export default function JsonValidator() {
             const parsedSchema = JSON.parse(schema)
 
             const ajv = new Ajv()
+            addFormats(ajv)
             const validate = ajv.compile(parsedSchema)
             const valid = validate(parsedData)
 
@@ -43,19 +45,6 @@ export default function JsonValidator() {
             icon={<Shield className="h-5 w-5" />}
         >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <label htmlFor="json-data" className="text-sm font-medium">
-                        JSON Data
-                    </label>
-                    <Textarea
-                        id="json-data"
-                        placeholder='{"name": "John", "age": 30}'
-                        value={jsonData}
-                        onChange={(e) => setJsonData(e.target.value)}
-                        className="h-32 font-mono text-sm"
-                        data-testid="input-json-data"
-                    />
-                </div>
 
                 <div className="space-y-2">
                     <label htmlFor="json-schema" className="text-sm font-medium">
@@ -68,6 +57,19 @@ export default function JsonValidator() {
                         onChange={(e) => setSchema(e.target.value)}
                         className="h-32 font-mono text-sm"
                         data-testid="input-json-schema"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label htmlFor="json-data" className="text-sm font-medium">
+                        JSON Data
+                    </label>
+                    <Textarea
+                        id="json-data"
+                        placeholder='{"name": "John", "age": 30}'
+                        value={jsonData}
+                        onChange={(e) => setJsonData(e.target.value)}
+                        className="h-32 font-mono text-sm"
+                        data-testid="input-json-data"
                     />
                 </div>
             </div>

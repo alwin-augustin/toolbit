@@ -12,18 +12,18 @@ const JsJsonMinifier: React.FC = () => {
       const result = await minify(code);
       setMinifiedCode(result.code || '');
     } catch (_error) {
-      setMinifiedCode('Invalid JavaScript/JSON input');
+      setMinifiedCode('Invalid JavaScript input');
     }
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
       <div>
-        <h2 className="text-lg font-semibold mb-2">JavaScript/JSON</h2>
+        <h2 className="text-lg font-semibold mb-2">JavaScript</h2>
         <Textarea
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="Enter JavaScript/JSON data"
+          placeholder="Enter JavaScript"
           className="min-h-[24rem]"
         />
       </div>

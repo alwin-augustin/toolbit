@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import Papa, { ParseResult } from 'papaparse';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Copy } from 'lucide-react';
 
 const CsvToJsonConverter: React.FC = () => {
   const [csv, setCsv] = useState('');
   const [json, setJson] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const handleConvert = () => {
     Papa.parse(csv, {
@@ -14,6 +16,14 @@ const CsvToJsonConverter: React.FC = () => {
         setJson(JSON.stringify(result.data, null, 2));
       },
     });
+  };
+
+  const handleCopy = async () => {
+    if (json) {
+      await navigator.clipboard.writeText(json);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -28,7 +38,18 @@ const CsvToJsonConverter: React.FC = () => {
         />
       </div>
       <div>
-        <h2 className="text-lg font-semibold mb-2">JSON</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-semibold">JSON</h2>
+          <Button
+            onClick={handleCopy}
+            variant="outline"
+            size="sm"
+            disabled={!json}
+          >
+            <Copy className="h-4 w-4 mr-2" />
+            {copied ? 'Copied!' : 'Copy'}
+          </Button>
+        </div>
         <Textarea
           value={json}
           readOnly

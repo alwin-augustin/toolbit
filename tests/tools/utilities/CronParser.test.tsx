@@ -23,7 +23,7 @@ describe('CronParser', () => {
     await user.click(parseButton)
 
     const output = screen.getByTestId('cron-output') as HTMLTextAreaElement
-    expect(output.value).toContain('Next 5 dates:')
+    expect(output.value).toContain('Next 5 execution times:')
   })
 
   it('handles custom cron expression', async () => {
@@ -38,7 +38,7 @@ describe('CronParser', () => {
     await user.click(parseButton)
 
     const output = screen.getByTestId('cron-output') as HTMLTextAreaElement
-    expect(output.value).toContain('Next 5 dates:')
+    expect(output.value).toContain('Next 5 execution times:')
   })
 
   it('handles invalid cron expression', async () => {
@@ -53,7 +53,7 @@ describe('CronParser', () => {
     await user.click(parseButton)
 
     const output = screen.getByTestId('cron-output') as HTMLTextAreaElement
-    expect(output.value).toContain('Error')
+    expect(output.value.toLowerCase()).toContain('error')
   })
 
   it('parses every minute cron expression', async () => {
@@ -68,7 +68,7 @@ describe('CronParser', () => {
     await user.click(parseButton)
 
     const output = screen.getByTestId('cron-output') as HTMLTextAreaElement
-    expect(output.value).toContain('Next 5 dates:')
+    expect(output.value).toContain('Next 5 execution times:')
   })
 
   it('parses daily cron expression', async () => {
@@ -83,6 +83,6 @@ describe('CronParser', () => {
     await user.click(parseButton)
 
     const output = screen.getByTestId('cron-output') as HTMLTextAreaElement
-    expect(output.value).toContain('Next 5 dates:')
+    expect(output.value).toContain('Next 5 execution times:')
   })
 })
