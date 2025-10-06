@@ -60,7 +60,7 @@ export default function YamlFormatter() {
             icon={<FileText className="h-5 w-5" />}
         >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-2">
+                <div className="space-y-2 flex flex-col h-full">
                     <label htmlFor="yaml-input" className="text-sm font-medium">
                         Input (YAML or JSON)
                     </label>
@@ -69,7 +69,7 @@ export default function YamlFormatter() {
                         placeholder="key: value"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        className="min-h-[24rem] font-mono text-sm"
+                        className="flex-grow font-mono text-sm"
                         data-testid="input-yaml"
                     />
                     <div className="flex gap-2 flex-wrap">
@@ -87,7 +87,7 @@ export default function YamlFormatter() {
                     </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 flex flex-col h-full">
                     <label htmlFor="yaml-output" className="text-sm font-medium">
                         Output
                     </label>
@@ -96,7 +96,7 @@ export default function YamlFormatter() {
                         placeholder="Formatted output will appear here..."
                         value={output}
                         readOnly
-                        className={`min-h-[24rem] font-mono text-sm ${isValid ? '' : 'text-destructive'}`}
+                        className={`flex-grow font-mono text-sm ${isValid ? '' : 'text-destructive'}`}
                         data-testid="output-yaml"
                     />
                     <Button

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import Papa, { ParseResult } from 'papaparse';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Copy } from 'lucide-react';
+import Editor from 'react-simple-code-editor';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-json';
+
 
 const CsvToJsonConverter: React.FC = () => {
   const [csv, setCsv] = useState('');
@@ -26,18 +29,22 @@ const CsvToJsonConverter: React.FC = () => {
     }
   };
 
+  const editorClassName = "flex-grow min-h-[20rem] font-mono text-sm rounded-md border border-input bg-background px-3 py-2 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm";
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
-      <div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 h-full">
+      <div className="flex flex-col h-full">
         <h2 className="text-lg font-semibold mb-2">CSV</h2>
-        <Textarea
+        <Editor
           value={csv}
-          onChange={(e) => setCsv(e.target.value)}
+          onValueChange={setCsv}
+          highlight={(code) => code} // No highlighting for CSV
+          padding={10}
           placeholder="Enter CSV data"
-          className="min-h-[24rem]"
+          className={editorClassName}
         />
       </div>
-      <div>
+      <div className="flex flex-col h-full">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold">JSON</h2>
           <Button
@@ -50,11 +57,14 @@ const CsvToJsonConverter: React.FC = () => {
             {copied ? 'Copied!' : 'Copy'}
           </Button>
         </div>
-        <Textarea
+        <Editor
           value={json}
+          onValueChange={() => {}}
           readOnly
+          highlight={(code) => Prism.highlight(code, Prism.languages.json, 'json')}
+          padding={10}
           placeholder="JSON output"
-          className="min-h-[24rem]"
+          className={editorClassName}
         />
       </div>
       <div className="col-span-1 lg:col-span-2">

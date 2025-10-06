@@ -21,44 +21,54 @@ import { Link, useLocation } from "wouter"
 
 const toolGroups = [
     {
-        title: "Text & Format",
+        title: "JSON",
         items: [
             { title: "JSON Formatter", url: "/json-formatter", icon: FileJson },
-            { title: "Case Converter", url: "/case-converter", icon: Type },
-            { title: "Word Counter", url: "/word-counter", icon: Hash },
-            { title: "Strip Whitespace", url: "/strip-whitespace", icon: Eraser },
+            { title: "JSON Schema Validator", url: "/json-validator", icon: Shield },
+            { title: "CSV to JSON Converter", url: "/csv-to-json", icon: FileJson },
+        ],
+    },
+    {
+        title: "Web",
+        items: [
             { title: "CSS Formatter/Minifier", url: "/css-formatter", icon: Code },
             { title: "JavaScript Minifier", url: "/js-json-minifier", icon: Code },
-        ],
-    },
-    {
-        title: "Encoding & Decoding",
-        items: [
-            { title: "Base64 Encoder", url: "/base64-encoder", icon: Code },
-            { title: "URL Encoder", url: "/url-encoder", icon: LinkIcon },
             { title: "HTML Escape", url: "/html-escape", icon: Braces },
-            { title: "JWT Decoder", url: "/jwt-decoder", icon: Shield },
-        ],
-    },
-    {
-        title: "Preview & Validation",
-        items: [
-            { title: "JSON Schema Validator", url: "/json-validator", icon: Shield },
+            { title: "URL Encoder", url: "/url-encoder", icon: LinkIcon },
             { title: "Markdown Previewer", url: "/markdown-previewer", icon: CircleDotDashed },
         ],
     },
     {
-        title: "Generators & Tools",
+        title: "Encoding & Security",
         items: [
-            { title: "UUID Generator", url: "/uuid-generator", icon: Key },
+            { title: "Base64 Encoder", url: "/base64-encoder", icon: Code },
+            { title: "JWT Decoder", url: "/jwt-decoder", icon: Shield },
             { title: "Hash Generator", url: "/hash-generator", icon: Hash },
-            { title: "Timestamp Converter", url: "/timestamp-converter", icon: Clock },
-            { title: "Date Calculator", url: "/date-calculator", icon: Calendar },
-            { title: "Color Converter", url: "/color-converter", icon: Palette },
+        ],
+    },
+    {
+        title: "Text",
+        items: [
+            { title: "Case Converter", url: "/case-converter", icon: Type },
+            { title: "Word Counter", url: "/word-counter", icon: Hash },
+            { title: "Strip Whitespace", url: "/strip-whitespace", icon: Eraser },
             { title: "Diff Tool", url: "/diff-tool", icon: GitCompare },
-            { title: "CSV to JSON Converter", url: "/csv-to-json", icon: FileJson },
-            { title: "Cron Expression Parser", url: "/cron-parser", icon: Clock },
+        ],
+    },
+    {
+        title: "Converters & Generators",
+        items: [
+            { title: "Timestamp Converter", url: "/timestamp-converter", icon: Clock },
+            { title: "Color Converter", url: "/color-converter", icon: Palette },
             { title: "Unit Converter", url: "/unit-converter", icon: Hash },
+            { title: "UUID Generator", url: "/uuid-generator", icon: Key },
+        ],
+    },
+    {
+        title: "Utilities",
+        items: [
+            { title: "Date Calculator", url: "/date-calculator", icon: Calendar },
+            { title: "Cron Expression Parser", url: "/cron-parser", icon: Clock },
             { title: "HTTP Status Code Reference", url: "/http-status-codes", icon: Search },
         ],
     },

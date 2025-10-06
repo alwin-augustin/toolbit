@@ -17,6 +17,7 @@ export default tseslint.config(
       'build/**',
       'release/**',
       'scripts/**/*.cjs',  // Ignore CommonJS files in scripts
+      'scripts/*.js',
     ],
   },
   {

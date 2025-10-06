@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
     const isDev = mode === 'development';
 
     return {
+        appType: 'spa',
         define: {
             global: "window",
         },
@@ -133,7 +134,7 @@ export default defineConfig(({ mode }) => {
             rollupOptions: {
                 output: {
                     // Disable code splitting for both Electron and Web to avoid React hooks issues
-                    manualChunks: undefined,
+                    manualChunks: () => 'everything',
                     // Optimize asset naming
                     assetFileNames: (assetInfo) => {
                         const info = assetInfo.name?.split('.');
