@@ -1,7 +1,0 @@
-/* Default (light) theme */
-@import 'prismjs/themes/prism-solarizedlight.css';
-
-/* Dark theme overrides */
-.dark {
-    @import 'prismjs/themes/prism-tomorrow.css';
-}

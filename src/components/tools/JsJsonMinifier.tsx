@@ -6,6 +6,7 @@ import Prism from 'prismjs';
 import 'prismjs/components/prism-javascript';
 
 
+
 const JsJsonMinifier: React.FC = () => {
   const [code, setCode] = useState('');
   const [minifiedCode, setMinifiedCode] = useState('');

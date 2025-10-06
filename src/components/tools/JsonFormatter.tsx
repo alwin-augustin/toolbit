@@ -8,6 +8,7 @@ import Prism from "prismjs";
 import "prismjs/components/prism-json";
 
 
+
 export default function JsonFormatter() {
     const [input, setInput] = useState("");
     const [output, setOutput] = useState("");

@@ -9,6 +9,7 @@ import Prism from "prismjs";
 import "prismjs/components/prism-json";
 
 
+
 export default function JsonValidator() {
     const [jsonData, setJsonData] = useState("");
     const [schema, setSchema] = useState("");
