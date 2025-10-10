@@ -74,17 +74,17 @@ function createWindow() {
 
   // Load the app
   if (isDev) {
-    // Development: Load from Vite dev server
-    mainWindow.loadURL('http://localhost:5173').catch(err => {
+    // Development: Load from Vite dev server directly to app route
+    mainWindow.loadURL('http://localhost:5173/app/json-formatter').catch(err => {
       console.error('Failed to load dev server:', err);
       app.quit();
     });
     // Open DevTools in development
     mainWindow.webContents.openDevTools();
   } else {
-    // Production: Load from built files
+    // Production: Load from built files with hash routing to app
     const indexPath = path.join(__dirname, '../dist/index.html');
-    mainWindow.loadFile(indexPath).catch(err => {
+    mainWindow.loadFile(indexPath, { hash: '/app/json-formatter' }).catch(err => {
       console.error('Failed to load app:', err);
       app.quit();
     });
