@@ -14,6 +14,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { AppRouter } from "./router";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Footer } from "@/components/Footer";
 
 function App() {
     const { theme } = useTheme();
@@ -80,6 +81,7 @@ function App() {
                                         <AppRouter />
                                     </ErrorBoundary>
                                 </main>
+                                <Footer />
                             </div>
                         </div>
                     </div>
