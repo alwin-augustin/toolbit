@@ -1,37 +1,24 @@
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Copy, Code } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { ToolCard } from "@/components/ToolCard"
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Copy, Code } from "lucide-react";
+import { ToolCard } from "@/components/ToolCard";
+import { useToolIO } from "@/hooks/use-tool-io";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { encodeBase64, decodeBase64 } from "@/services";
 
 export default function Base64Encoder() {
-    const [input, setInput] = useState("")
-    const [output, setOutput] = useState("")
-    const { toast } = useToast()
+    const { input, output, setInput, setOutput } = useToolIO();
+    const { copyToClipboard } = useCopyToClipboard();
 
-    const encode = () => {
-        try {
-            const encoded = btoa(input)
-            setOutput(encoded)
-        } catch (error) {
-            setOutput(`Error: ${error instanceof Error ? error.message : 'Encoding failed'}`)
-        }
-    }
+    const handleEncode = () => {
+        const result = encodeBase64(input);
+        setOutput(result.success ? result.data! : `Error: ${result.error}`);
+    };
 
-    const decode = () => {
-        try {
-            const decoded = atob(input)
-            setOutput(decoded)
-        } catch (error) {
-            setOutput(`Error: ${error instanceof Error ? error.message : 'Invalid Base64'}`)
-        }
-    }
-
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(output)
-        toast({ description: "Copied to clipboard!" })
-    }
+    const handleDecode = () => {
+        const result = decodeBase64(input);
+        setOutput(result.success ? result.data! : `Error: ${result.error}`);
+    };
 
     return (
         <ToolCard
@@ -53,10 +40,10 @@ export default function Base64Encoder() {
                         data-testid="input-base64"
                     />
                     <div className="flex gap-2">
-                        <Button onClick={encode} data-testid="button-encode">
+                        <Button onClick={handleEncode} data-testid="button-encode">
                             Encode
                         </Button>
-                        <Button onClick={decode} variant="outline" data-testid="button-decode">
+                        <Button onClick={handleDecode} variant="outline" data-testid="button-decode">
                             Decode
                         </Button>
                     </div>
@@ -75,7 +62,7 @@ export default function Base64Encoder() {
                         data-testid="output-base64"
                     />
                     <Button
-                        onClick={copyToClipboard}
+                        onClick={() => copyToClipboard(output)}
                         disabled={!output}
                         variant="outline"
                         data-testid="button-copy"
@@ -86,5 +73,5 @@ export default function Base64Encoder() {
                 </div>
             </div>
         </ToolCard>
-    )
+    );
 }

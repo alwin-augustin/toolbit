@@ -133,8 +133,25 @@ export default defineConfig(({ mode }) => {
             sourcemap: isDev,
             rollupOptions: {
                 output: {
-                    // Disable code splitting for both Electron and Web to avoid React hooks issues
-                    manualChunks: () => 'everything',
+                    // Enable code splitting with proper chunking strategy
+                    manualChunks: isElectron ? undefined : (id) => {
+                        // Vendor chunk for node_modules
+                        if (id.includes('node_modules')) {
+                            // Separate large libraries into their own chunks
+                            if (id.includes('prismjs')) return 'prism';
+                            if (id.includes('marked') || id.includes('dompurify')) return 'markdown';
+                            if (id.includes('@radix-ui')) return 'radix';
+                            return 'vendor';
+                        }
+                        // Tool components chunked by category
+                        if (id.includes('/tools/json/')) return 'tools-json';
+                        if (id.includes('/tools/encoding/')) return 'tools-encoding';
+                        if (id.includes('/tools/text/')) return 'tools-text';
+                        if (id.includes('/tools/web/')) return 'tools-web';
+                        if (id.includes('/tools/security/')) return 'tools-security';
+                        if (id.includes('/tools/converters/')) return 'tools-converters';
+                        if (id.includes('/tools/utilities/')) return 'tools-utilities';
+                    },
                     // Optimize asset naming
                     assetFileNames: (assetInfo) => {
                         const info = assetInfo.name?.split('.');

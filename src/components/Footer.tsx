@@ -10,11 +10,9 @@ export function Footer() {
             <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
                 {isAppRoute && (
                     <>
-                        <Link href="/">
-                            <a className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
-                                <Home className="h-3 w-3" />
-                                Home
-                            </a>
+                        <Link href="/" className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
+                            <Home className="h-3 w-3" />
+                            Home
                         </Link>
                         <span className="text-muted-foreground/40">•</span>
                     </>

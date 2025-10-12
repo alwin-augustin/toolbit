@@ -1,49 +1,39 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy, FileText } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { ToolCard } from "@/components/ToolCard";
 import Editor from "react-simple-code-editor";
 import Prism from "prismjs";
 import "prismjs/components/prism-json";
-
-
+import { useToolIO } from "@/hooks/use-tool-io";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { formatJson, minifyJson } from "@/services";
 
 export default function JsonFormatter() {
-    const [input, setInput] = useState("");
-    const [output, setOutput] = useState("");
-    const [isValid, setIsValid] = useState(true);
-    const { toast } = useToast();
+    const { input, output, isValid, error, setInput, setOutput, setValidation } = useToolIO();
+    const { copyToClipboard } = useCopyToClipboard();
 
-    const formatJson = () => {
-        try {
-            const parsed = JSON.parse(input);
-            const formatted = JSON.stringify(parsed, null, 2);
-            setOutput(formatted);
-            setIsValid(true);
-        } catch (error) {
-            setOutput(`Error: ${error instanceof Error ? error.message : 'Invalid JSON'}`);
-            setIsValid(false);
+    const handleFormat = () => {
+        const result = formatJson(input, 2);
+        if (result.success) {
+            setOutput(result.data!);
+            setValidation(true);
+        } else {
+            setOutput(`Error: ${result.error}`);
+            setValidation(false, result.error);
         }
     };
 
-    const minifyJson = () => {
-        try {
-            const parsed = JSON.parse(input);
-            const minified = JSON.stringify(parsed);
-            setOutput(minified);
-            setIsValid(true);
-        } catch (error) {
-            setOutput(`Error: ${error instanceof Error ? error.message : 'Invalid JSON'}`);
-            setIsValid(false);
+    const handleMinify = () => {
+        const result = minifyJson(input);
+        if (result.success) {
+            setOutput(result.data!);
+            setValidation(true);
+        } else {
+            setOutput(`Error: ${result.error}`);
+            setValidation(false, result.error);
         }
     };
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(output);
-        toast({ description: "Copied to clipboard!" });
-    };
-    
     const editorClassName = "flex-grow min-h-[20rem] font-mono text-sm rounded-md border border-input bg-background px-3 py-2 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm";
 
     return (
@@ -68,10 +58,10 @@ export default function JsonFormatter() {
                         placeholder='{"key": "value"}'
                     />
                     <div className="flex gap-2">
-                        <Button onClick={formatJson} data-testid="button-format">
+                        <Button onClick={handleFormat} data-testid="button-format">
                             Format
                         </Button>
-                        <Button onClick={minifyJson} variant="outline" data-testid="button-minify">
+                        <Button onClick={handleMinify} variant="outline" data-testid="button-minify">
                             Minify
                         </Button>
                     </div>
@@ -93,7 +83,7 @@ export default function JsonFormatter() {
                         placeholder="Formatted JSON will appear here..."
                     />
                     <Button
-                        onClick={copyToClipboard}
+                        onClick={() => copyToClipboard(output)}
                         disabled={!output}
                         variant="outline"
                         data-testid="button-copy"

@@ -1,33 +1,24 @@
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Copy, Link } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { ToolCard } from "@/components/ToolCard"
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Copy, Link } from "lucide-react";
+import { ToolCard } from "@/components/ToolCard";
+import { useToolIO } from "@/hooks/use-tool-io";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { encodeUrl, decodeUrl } from "@/services";
 
 export default function UrlEncoder() {
-    const [input, setInput] = useState("")
-    const [output, setOutput] = useState("")
-    const { toast } = useToast()
+    const { input, output, setInput, setOutput } = useToolIO();
+    const { copyToClipboard } = useCopyToClipboard();
 
-    const encode = () => {
-        const encoded = encodeURIComponent(input)
-        setOutput(encoded)
-    }
+    const handleEncode = () => {
+        const result = encodeUrl(input);
+        setOutput(result.success ? result.data! : `Error: ${result.error}`);
+    };
 
-    const decode = () => {
-        try {
-            const decoded = decodeURIComponent(input)
-            setOutput(decoded)
-        } catch (error) {
-            setOutput(`Error: ${error instanceof Error ? error.message : 'Invalid URL encoding'}`)
-        }
-    }
-
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(output)
-        toast({ description: "Copied to clipboard!" })
-    }
+    const handleDecode = () => {
+        const result = decodeUrl(input);
+        setOutput(result.success ? result.data! : `Error: ${result.error}`);
+    };
 
     return (
         <ToolCard
@@ -49,10 +40,10 @@ export default function UrlEncoder() {
                         data-testid="input-url"
                     />
                     <div className="flex gap-2">
-                        <Button onClick={encode} data-testid="button-encode">
+                        <Button onClick={handleEncode} data-testid="button-encode">
                             Encode
                         </Button>
-                        <Button onClick={decode} variant="outline" data-testid="button-decode">
+                        <Button onClick={handleDecode} variant="outline" data-testid="button-decode">
                             Decode
                         </Button>
                     </div>
@@ -71,7 +62,7 @@ export default function UrlEncoder() {
                         data-testid="output-url"
                     />
                     <Button
-                        onClick={copyToClipboard}
+                        onClick={() => copyToClipboard(output)}
                         disabled={!output}
                         variant="outline"
                         data-testid="button-copy"
@@ -82,5 +73,5 @@ export default function UrlEncoder() {
                 </div>
             </div>
         </ToolCard>
-    )
+    );
 }
