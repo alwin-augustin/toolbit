@@ -1,3 +1,4 @@
+/* global document, localStorage */
 // Initialize theme before app loads
 (function () {
   try {
@@ -12,7 +13,7 @@
       document.documentElement.classList.remove('dark');
       document.documentElement.classList.add('light');
     }
-  } catch (err) {
+  } catch {
     document.documentElement.classList.add('light');
   }
 })();
