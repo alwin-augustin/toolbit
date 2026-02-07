@@ -36,55 +36,7 @@
     <meta name="twitter:image:alt" content="Toolbit - Developer Utilities">
 
     <!-- Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Toolbit",
-      "alternateName": "Toolbit - Developer Utilities",
-      "description": "Free privacy-focused developer utilities including JSON formatter, Base64 encoder, schema validator, color converter, and 20+ essential tools. All processing happens locally in your browser.",
-      "applicationCategory": "DeveloperApplication",
-      "operatingSystem": "All",
-      "url": "https://toolbit.pages.dev/",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "5",
-        "ratingCount": "1"
-      },
-      "featureList": [
-        "JSON Formatter & Validator",
-        "Base64 Encoder/Decoder",
-        "JWT Token Decoder",
-        "Color Converter (HEX, RGB, HSL)",
-        "Timestamp Converter",
-        "Hash Generator (MD5, SHA-256)",
-        "CSS Formatter & Minifier",
-        "Markdown Previewer",
-        "Unit Converter",
-        "Date Calculator",
-        "Cron Expression Parser",
-        "CSV to JSON Converter",
-        "Case Converter",
-        "URL Encoder/Decoder",
-        "HTML Escape/Unescape",
-        "Word Counter",
-        "Diff Tool",
-        "UUID Generator",
-        "JavaScript Minifier",
-        "HTTP Status Code Reference"
-      ],
-      "browserRequirements": "Requires JavaScript. Modern browser recommended.",
-      "softwareVersion": "1.0.0",
-      "datePublished": "2025",
-      "screenshot": "https://toolbit.pages.dev/pwa-512x512.png",
-      "downloadUrl": "https://github.com/alwin-augustin/toolbit/releases"
-    }
-    </script>
+    <script type="application/ld+json" src="/structured-data.json"></script>
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#1e40af" />
@@ -96,6 +48,8 @@
     <meta name="apple-mobile-web-app-title" content="Toolbit" />
 
     <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/pwa-192x192.png" />
     <link rel="apple-touch-icon" sizes="512x512" href="/pwa-512x512.png" />
 
@@ -110,20 +64,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
 
     <!-- Theme Script - Set light mode as default -->
-    <script>
-        // Initialize theme to light if not set
-        if (!localStorage.getItem('theme')) {
-            localStorage.setItem('theme', 'light');
-        }
-        // Apply theme from localStorage or default to light
-        const theme = localStorage.getItem('theme') || 'light';
-        if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-            document.documentElement.classList.add('light');
-        }
-    </script>
+    <script src="/theme-init.js"></script>
 </head>
 <body>
 <div id="root"></div>

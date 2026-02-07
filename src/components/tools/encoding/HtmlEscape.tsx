@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Copy, Code } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ToolCard } from "@/components/ToolCard";
+import { useUrlState } from "@/hooks/use-url-state";
+import { useToolHistory } from "@/hooks/use-tool-history";
 import Editor from "react-simple-code-editor";
 import Prism from "prismjs";
 import "prismjs/components/prism-markup";
@@ -13,6 +15,8 @@ export default function HtmlEscape() {
     const [input, setInput] = useState("");
     const [output, setOutput] = useState("");
     const { toast } = useToast();
+    const { getShareUrl } = useUrlState(input, setInput);
+    const { addEntry } = useToolHistory("html-escape", "HTML Escape");
 
     const escapeHtml = () => {
         const escaped = input
@@ -22,6 +26,7 @@ export default function HtmlEscape() {
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
         setOutput(escaped);
+        addEntry({ input, output: escaped, metadata: { action: "escape" } });
     };
 
     const unescapeHtml = () => {
@@ -32,6 +37,7 @@ export default function HtmlEscape() {
             .replace(/&#39;/g, "'")
             .replace(/&amp;/g, '&'); // This should be last
         setOutput(unescaped);
+        addEntry({ input, output: unescaped, metadata: { action: "unescape" } });
     };
 
     const copyToClipboard = () => {
@@ -50,6 +56,15 @@ export default function HtmlEscape() {
             title="HTML Escape / Unescape"
             description="Escape HTML entities or unescape HTML-encoded text"
             icon={<Code className="h-5 w-5" />}
+            shareUrl={getShareUrl()}
+            history={{
+                toolId: "html-escape",
+                toolName: "HTML Escape",
+                onRestore: (entry) => {
+                    setInput(entry.input || "");
+                    setOutput(entry.output || "");
+                },
+            }}
         >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2 flex flex-col h-full">

@@ -6,6 +6,7 @@ import path from "path";
 export default defineConfig(({ mode }) => {
     const isElectron = process.env.ELECTRON === 'true';
     const isDev = mode === 'development';
+    const disablePwa = process.env.VITE_DISABLE_PWA === 'true';
 
     return {
         appType: 'spa',
@@ -18,7 +19,9 @@ export default defineConfig(({ mode }) => {
         plugins: [
             react(),
             // Only enable PWA for web builds, not Electron
-            !isElectron && VitePWA({
+            !isElectron && !disablePwa && VitePWA({
+                strategies: 'generateSW',
+                filename: 'sw.js',
                 registerType: 'autoUpdate',
                 includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png'],
                 manifest: {
@@ -58,7 +61,8 @@ export default defineConfig(({ mode }) => {
                     ]
                 },
                 workbox: {
-                    globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+                    maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
+                    globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,webmanifest,json}'],
                     runtimeCaching: [
                         {
                             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -140,7 +144,7 @@ export default defineConfig(({ mode }) => {
                             // Separate large libraries into their own chunks
                             if (id.includes('prismjs')) return 'prism';
                             if (id.includes('marked') || id.includes('dompurify')) return 'markdown';
-                            if (id.includes('@radix-ui')) return 'radix';
+                            // Keep Radix in vendor to avoid circular chunk dependencies.
                             return 'vendor';
                         }
                         // Tool components chunked by category
@@ -185,12 +189,19 @@ export default defineConfig(({ mode }) => {
                 overlay: true,
             },
         },
+        preview: {
+            headers: {
+                "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+                "Surrogate-Control": "no-store",
+            },
+        },
         // Optimize dependencies
         optimizeDeps: {
             include: [
                 'react',
                 'react-dom',
-                'react-hook-form',
                 'zustand',
                 'wouter',
             ],

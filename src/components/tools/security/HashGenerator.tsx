@@ -1,10 +1,13 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
-import { Copy, Hash } from "lucide-react"
+import { Copy, Hash, Sparkles } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ToolCard } from "@/components/ToolCard"
+import { useUrlState } from "@/hooks/use-url-state"
+import { useToolHistory } from "@/hooks/use-tool-history"
+import { useToolPipe } from "@/hooks/use-tool-pipe"
 
 export default function HashGenerator() {
     const [input, setInput] = useState("")
@@ -15,6 +18,17 @@ export default function HashGenerator() {
         sha512: ""
     })
     const { toast } = useToast()
+    const { getShareUrl } = useUrlState(input, setInput)
+    const { addEntry } = useToolHistory("hash-generator", "Hash Generator")
+    const { consumePipeData } = useToolPipe()
+
+    useEffect(() => {
+        if (input) return
+        const payload = consumePipeData()
+        if (payload?.data) {
+            setInput(payload.data)
+        }
+    }, [consumePipeData, input, setInput])
 
     const generateHashes = async () => {
         if (!input.trim()) return
@@ -39,6 +53,7 @@ export default function HashGenerator() {
                 sha256: arrayBufferToHex(sha256),
                 sha512: arrayBufferToHex(sha512)
             })
+            addEntry({ input, output: JSON.stringify({ md5: md5Hash, sha1: arrayBufferToHex(sha1), sha256: arrayBufferToHex(sha256), sha512: arrayBufferToHex(sha512) }, null, 2), metadata: { action: "generate" } })
         } catch (_error) {
             toast({
                 description: "Error generating hashes",
@@ -70,6 +85,14 @@ export default function HashGenerator() {
             title="Hash Generator"
             description="Generate MD5, SHA-1, SHA-256, and SHA-512 hashes"
             icon={<Hash className="h-5 w-5" />}
+            shareUrl={getShareUrl()}
+            history={{
+                toolId: "hash-generator",
+                toolName: "Hash Generator",
+                onRestore: (entry) => {
+                    setInput(entry.input || "")
+                },
+            }}
         >
             <div className="space-y-2">
                 <label htmlFor="hash-input" className="text-sm font-medium">
@@ -83,9 +106,15 @@ export default function HashGenerator() {
                     className="h-32 font-mono text-sm"
                     data-testid="input-hash"
                 />
-                <Button onClick={generateHashes} data-testid="button-generate">
-                    Generate Hashes
-                </Button>
+                <div className="flex gap-2">
+                    <Button onClick={generateHashes} data-testid="button-generate">
+                        Generate Hashes
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setInput("Hello, World!")}>
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        Sample
+                    </Button>
+                </div>
             </div>
 
             {Object.values(hashes).some(hash => hash) && (

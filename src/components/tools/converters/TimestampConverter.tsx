@@ -1,9 +1,11 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Copy, Clock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ToolCard } from "@/components/ToolCard"
+import { useUrlState } from "@/hooks/use-url-state"
+import { useToolHistory } from "@/hooks/use-tool-history"
 
 export default function TimestampConverter() {
     const [timestamp, setTimestamp] = useState("")
@@ -16,6 +18,12 @@ export default function TimestampConverter() {
         relative: ""
     })
     const { toast } = useToast()
+    const shareState = useMemo(() => ({ timestamp, dateTime }), [timestamp, dateTime])
+    const { getShareUrl } = useUrlState(shareState, (state) => {
+        setTimestamp(typeof state.timestamp === "string" ? state.timestamp : "")
+        setDateTime(typeof state.dateTime === "string" ? state.dateTime : "")
+    })
+    const { addEntry } = useToolHistory("timestamp-converter", "Timestamp Converter")
 
     const convertFromTimestamp = () => {
         try {
@@ -29,6 +37,7 @@ export default function TimestampConverter() {
                 utc: date.toUTCString(),
                 relative: getRelativeTime(date)
             })
+            addEntry({ input: JSON.stringify({ timestamp, dateTime }), output: JSON.stringify({ unix: ts.toString() }), metadata: { action: "from-timestamp" } })
         } catch (_error) {
             toast({ description: "Invalid timestamp", variant: "destructive" })
         }
@@ -46,6 +55,7 @@ export default function TimestampConverter() {
                 utc: date.toUTCString(),
                 relative: getRelativeTime(date)
             })
+            addEntry({ input: JSON.stringify({ timestamp, dateTime }), output: JSON.stringify({ unix: ts.toString() }), metadata: { action: "from-datetime" } })
         } catch (_error) {
             toast({ description: "Invalid date/time", variant: "destructive" })
         }
@@ -63,6 +73,7 @@ export default function TimestampConverter() {
             utc: now.toUTCString(),
             relative: "Now"
         })
+        addEntry({ input: JSON.stringify({ timestamp: ts.toString(), dateTime: "" }), output: JSON.stringify({ unix: ts.toString() }), metadata: { action: "current" } })
     }
 
     const getRelativeTime = (date: Date) => {
@@ -86,6 +97,20 @@ export default function TimestampConverter() {
             title="Timestamp Converter"
             description="Convert between Unix timestamps and human-readable dates"
             icon={<Clock className="h-5 w-5" />}
+            shareUrl={getShareUrl()}
+            history={{
+                toolId: "timestamp-converter",
+                toolName: "Timestamp Converter",
+                onRestore: (entry) => {
+                    try {
+                        const parsed = JSON.parse(entry.input || "{}") as { timestamp?: string; dateTime?: string }
+                        setTimestamp(parsed.timestamp || "")
+                        setDateTime(parsed.dateTime || "")
+                    } catch {
+                        setTimestamp(entry.input || "")
+                    }
+                },
+            }}
         >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">

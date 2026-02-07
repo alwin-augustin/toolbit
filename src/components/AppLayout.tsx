@@ -5,6 +5,9 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Footer } from "@/components/Footer";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { WorkspaceManager } from "@/components/WorkspaceManager";
 
 interface AppLayoutProps {
     children: React.ReactNode;
@@ -49,7 +52,44 @@ export function AppLayout({ children }: AppLayoutProps) {
                             <div className="flex items-center gap-4">
                                 <SidebarToggle />
                             </div>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 sm:gap-4">
+                                {/* Search button */}
+                                <Button
+                                    variant="outline"
+                                    className="hidden sm:flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                                    onClick={() => {
+                                        // Trigger command palette
+                                        const event = new KeyboardEvent('keydown', {
+                                            key: 'k',
+                                            metaKey: true,
+                                            bubbles: true
+                                        });
+                                        document.dispatchEvent(event);
+                                    }}
+                                >
+                                    <Search className="h-4 w-4" />
+                                    <span className="text-sm">Search tools...</span>
+                                    <kbd className="hidden md:inline-flex ml-2 px-1.5 py-0.5 rounded bg-muted text-xs">
+                                        ⌘K
+                                    </kbd>
+                                </Button>
+                                {/* Mobile search icon */}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="sm:hidden"
+                                    onClick={() => {
+                                        const event = new KeyboardEvent('keydown', {
+                                            key: 'k',
+                                            metaKey: true,
+                                            bubbles: true
+                                        });
+                                        document.dispatchEvent(event);
+                                    }}
+                                >
+                                    <Search className="h-5 w-5" />
+                                </Button>
+                                <WorkspaceManager />
                                 <ThemeToggle />
                             </div>
                         </header>

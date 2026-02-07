@@ -1,15 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, Code, FileText } from "lucide-react";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
+import { FileDropZone } from "@/components/FileDropZone";
+import { ToolCard } from "@/components/ToolCard";
+import { useUrlState } from "@/hooks/use-url-state";
 
 export default function MarkdownPreviewer() {
     const [markdown, setMarkdown] = useState("");
     const [html, setHtml] = useState("");
     const [showPreview, setShowPreview] = useState(true);
+    const shareState = useMemo(() => ({ markdown, showPreview }), [markdown, showPreview]);
+    const { getShareUrl } = useUrlState(shareState, (state) => {
+        setMarkdown(typeof state.markdown === "string" ? state.markdown : "");
+        setShowPreview(state.showPreview !== false);
+    });
 
     useEffect(() => {
         const renderMarkdown = async () => {
@@ -61,17 +68,12 @@ function hello() {
     };
 
     return (
-        <Card className="h-full">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Markdown Previewer
-                </CardTitle>
-                <CardDescription>
-                    Write Markdown and see the rendered preview
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <ToolCard
+            title="Markdown Previewer"
+            description="Write Markdown and see the rendered preview"
+            icon={<FileText className="h-5 w-5" />}
+            shareUrl={getShareUrl()}
+        >
                 <div className="flex gap-2">
                     <Button
                         onClick={() => setShowPreview(false)}
@@ -95,6 +97,7 @@ function hello() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <FileDropZone onFileContent={setMarkdown} accept={[".md", ".markdown", ".txt", "text/markdown"]}>
                     <div className="space-y-2">
                         <label htmlFor="markdown-input" className="text-sm font-medium">
                             Markdown Input
@@ -108,6 +111,7 @@ function hello() {
                             data-testid="input-markdown"
                         />
                     </div>
+                    </FileDropZone>
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium">
@@ -129,7 +133,6 @@ function hello() {
                         )}
                     </div>
                 </div>
-            </CardContent>
-        </Card>
+        </ToolCard>
     );
 }

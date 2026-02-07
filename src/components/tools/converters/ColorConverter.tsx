@@ -1,15 +1,24 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Copy, Palette } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ToolCard } from "@/components/ToolCard"
+import { useUrlState } from "@/hooks/use-url-state"
+import { useToolHistory } from "@/hooks/use-tool-history"
 
 export default function ColorConverter() {
     const [hex, setHex] = useState("#3b82f6")
     const [rgb, setRgb] = useState({ r: 59, g: 130, b: 246 })
     const [hsl, setHsl] = useState({ h: 217, s: 91, l: 60 })
     const { toast } = useToast()
+    const shareState = useMemo(() => ({ hex }), [hex])
+    const { getShareUrl } = useUrlState(shareState, (state) => {
+        const nextHex = typeof state.hex === "string" ? state.hex : "#3b82f6"
+        setHex(nextHex)
+        updateFromHex(nextHex)
+    })
+    const { addEntry } = useToolHistory("color-converter", "Color Converter")
 
     useEffect(() => {
         updateFromHex(hex)
@@ -106,6 +115,7 @@ export default function ColorConverter() {
     const copyToClipboard = (value: string, format: string) => {
         navigator.clipboard.writeText(value)
         toast({ description: `${format} value copied to clipboard!` })
+        addEntry({ input: hex, output: value, metadata: { action: "copy", format } })
     }
 
     return (
@@ -113,6 +123,16 @@ export default function ColorConverter() {
             title="Color Converter & Picker"
             description="Convert between HEX, RGB, and HSL color formats"
             icon={<Palette className="h-5 w-5" />}
+            shareUrl={getShareUrl()}
+            history={{
+                toolId: "color-converter",
+                toolName: "Color Converter",
+                onRestore: (entry) => {
+                    const nextHex = entry.input || "#3b82f6"
+                    setHex(nextHex)
+                    updateFromHex(nextHex)
+                },
+            }}
         >
             <div className="flex items-center gap-4">
                 <div

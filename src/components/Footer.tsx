@@ -37,8 +37,16 @@ export function Footer() {
                     <ExternalLink className="h-3 w-3" />
                 </a>
                 <span className="text-muted-foreground/40">•</span>
+                <Link href="/privacy" className="hover:text-foreground transition-colors">
+                    Privacy
+                </Link>
+                <span className="text-muted-foreground/40">•</span>
+                <Link href="/terms" className="hover:text-foreground transition-colors">
+                    Terms
+                </Link>
+                <span className="text-muted-foreground/40">•</span>
                 <span className="text-muted-foreground/70">
-                    Your data never leaves your device — Toolbit runs locally
+                    Your data never leaves your device
                 </span>
             </div>
         </footer>

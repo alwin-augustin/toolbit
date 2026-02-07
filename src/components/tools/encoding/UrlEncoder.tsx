@@ -1,23 +1,53 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, Link } from "lucide-react";
+import { Copy, Link, Sparkles } from "lucide-react";
 import { ToolCard } from "@/components/ToolCard";
 import { useToolIO } from "@/hooks/use-tool-io";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { encodeUrl, decodeUrl } from "@/services";
+import { useUrlState } from "@/hooks/use-url-state";
+import { useToolHistory } from "@/hooks/use-tool-history";
+import { useToolPipe } from "@/hooks/use-tool-pipe";
+import { useWorkspace } from "@/hooks/use-workspace";
+import { useEffect } from "react";
 
 export default function UrlEncoder() {
     const { input, output, setInput, setOutput } = useToolIO();
     const { copyToClipboard } = useCopyToClipboard();
+    const { getShareUrl } = useUrlState(input, setInput);
+    const { addEntry } = useToolHistory("url-encoder", "URL Encoder");
+    const { consumePipeData } = useToolPipe();
+    const consumeWorkspaceState = useWorkspace((state) => state.consumeState);
+
+    useEffect(() => {
+        if (input) return;
+        const workspaceState = consumeWorkspaceState("url-encoder");
+        if (workspaceState) {
+            try {
+                const parsed = JSON.parse(workspaceState) as { input?: string; output?: string };
+                setInput(parsed.input || "");
+                setOutput(parsed.output || "");
+            } catch {
+                setInput(workspaceState);
+            }
+            return;
+        }
+        const payload = consumePipeData();
+        if (payload?.data) {
+            setInput(payload.data);
+        }
+    }, [consumePipeData, input, setInput, setOutput, consumeWorkspaceState]);
 
     const handleEncode = () => {
         const result = encodeUrl(input);
         setOutput(result.success ? result.data! : `Error: ${result.error}`);
+        addEntry({ input, output: result.success ? result.data! : `Error: ${result.error}`, metadata: { action: "encode" } });
     };
 
     const handleDecode = () => {
         const result = decodeUrl(input);
         setOutput(result.success ? result.data! : `Error: ${result.error}`);
+        addEntry({ input, output: result.success ? result.data! : `Error: ${result.error}`, metadata: { action: "decode" } });
     };
 
     return (
@@ -25,6 +55,19 @@ export default function UrlEncoder() {
             title="URL Encoder / Decoder"
             description="Encode text for URLs or decode URL-encoded text"
             icon={<Link className="h-5 w-5" />}
+            shareUrl={getShareUrl()}
+            history={{
+                toolId: "url-encoder",
+                toolName: "URL Encoder",
+                onRestore: (entry) => {
+                    setInput(entry.input || "");
+                    setOutput(entry.output || "");
+                },
+            }}
+            pipeSource={{
+                toolId: "url-encoder",
+                output: output || "",
+            }}
         >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -45,6 +88,10 @@ export default function UrlEncoder() {
                         </Button>
                         <Button onClick={handleDecode} variant="outline" data-testid="button-decode">
                             Decode
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => { setInput("https://example.com/search?q=hello world&lang=en&page=1#results"); setOutput(""); }}>
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            Sample
                         </Button>
                     </div>
                 </div>

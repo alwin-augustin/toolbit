@@ -1,26 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://toolbit.pages.dev/</loc></url>
-  <url><loc>https://toolbit.pages.dev/json-formatter</loc></url>
-  <url><loc>https://toolbit.pages.dev/base64-encoder</loc></url>
-  <url><loc>https://toolbit.pages.dev/url-encoder</loc></url>
-  <url><loc>https://toolbit.pages.dev/json-validator</loc></url>
-  <url><loc>https://toolbit.pages.dev/case-converter</loc></url>
-  <url><loc>https://toolbit.pages.dev/timestamp-converter</loc></url>
-  <url><loc>https://toolbit.pages.dev/word-counter</loc></url>
-  <url><loc>https://toolbit.pages.dev/date-calculator</loc></url>
-  <url><loc>https://toolbit.pages.dev/uuid-generator</loc></url>
-  <url><loc>https://toolbit.pages.dev/hash-generator</loc></url>
-  <url><loc>https://toolbit.pages.dev/jwt-decoder</loc></url>
-  <url><loc>https://toolbit.pages.dev/diff-tool</loc></url>
-  <url><loc>https://toolbit.pages.dev/markdown-previewer</loc></url>
-  <url><loc>https://toolbit.pages.dev/color-converter</loc></url>
-  <url><loc>https://toolbit.pages.dev/html-escape</loc></url>
-  <url><loc>https://toolbit.pages.dev/strip-whitespace</loc></url>
-  <url><loc>https://toolbit.pages.dev/csv-to-json</loc></url>
-  <url><loc>https://toolbit.pages.dev/cron-parser</loc></url>
-  <url><loc>https://toolbit.pages.dev/unit-converter</loc></url>
-  <url><loc>https://toolbit.pages.dev/http-status-codes</loc></url>
-  <url><loc>https://toolbit.pages.dev/css-formatter</loc></url>
-  <url><loc>https://toolbit.pages.dev/js-json-minifier</loc></url>
+  <!-- Main pages -->
+  <url><loc>https://toolbit.pages.dev/</loc><priority>1.0</priority></url>
+  <url><loc>https://toolbit.pages.dev/privacy</loc><priority>0.3</priority></url>
+  <url><loc>https://toolbit.pages.dev/terms</loc><priority>0.3</priority></url>
+
+  <!-- JSON Tools -->
+  <url><loc>https://toolbit.pages.dev/app/json-formatter</loc><priority>0.8</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/json-validator</loc><priority>0.8</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/csv-to-json</loc><priority>0.7</priority></url>
+
+  <!-- Encoding Tools -->
+  <url><loc>https://toolbit.pages.dev/app/base64-encoder</loc><priority>0.8</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/url-encoder</loc><priority>0.8</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/html-escape</loc><priority>0.7</priority></url>
+
+  <!-- Text Tools -->
+  <url><loc>https://toolbit.pages.dev/app/case-converter</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/word-counter</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/strip-whitespace</loc><priority>0.6</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/diff-tool</loc><priority>0.7</priority></url>
+
+  <!-- Web Tools -->
+  <url><loc>https://toolbit.pages.dev/app/markdown-previewer</loc><priority>0.8</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/css-formatter</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/js-json-minifier</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/yaml-formatter</loc><priority>0.6</priority></url>
+
+  <!-- Security Tools -->
+  <url><loc>https://toolbit.pages.dev/app/hash-generator</loc><priority>0.8</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/jwt-decoder</loc><priority>0.8</priority></url>
+
+  <!-- Converter Tools -->
+  <url><loc>https://toolbit.pages.dev/app/timestamp-converter</loc><priority>0.8</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/color-converter</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/unit-converter</loc><priority>0.7</priority></url>
+
+  <!-- Utility Tools -->
+  <url><loc>https://toolbit.pages.dev/app/uuid-generator</loc><priority>0.8</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/date-calculator</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/cron-parser</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/http-status-codes</loc><priority>0.6</priority></url>
 </urlset>

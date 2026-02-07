@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Shield, CheckCircle, XCircle } from "lucide-react";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import { ToolCard } from "@/components/ToolCard";
+import { useUrlState } from "@/hooks/use-url-state";
+import { useToolHistory } from "@/hooks/use-tool-history";
 import Editor from "react-simple-code-editor";
 import Prism from "prismjs";
 import "prismjs/components/prism-json";
@@ -15,6 +17,12 @@ export default function JsonValidator() {
     const [schema, setSchema] = useState("");
     const [result, setResult] = useState("");
     const [isValid, setIsValid] = useState(true);
+    const shareState = useMemo(() => ({ jsonData, schema }), [jsonData, schema]);
+    const { getShareUrl } = useUrlState(shareState, (state) => {
+        setJsonData(typeof state.jsonData === "string" ? state.jsonData : "");
+        setSchema(typeof state.schema === "string" ? state.schema : "");
+    });
+    const { addEntry } = useToolHistory("json-validator", "JSON Validator");
 
     const validateJson = () => {
         try {
@@ -29,16 +37,19 @@ export default function JsonValidator() {
             if (valid) {
                 setResult("✅ JSON is valid according to the schema");
                 setIsValid(true);
+                addEntry({ input: JSON.stringify({ jsonData, schema }), output: "valid", metadata: { action: "validate" } });
             } else {
                 const errors = validate.errors?.map(err =>
                     `${err.instancePath || 'root'}: ${err.message}`
                 ).join('\n') || 'Unknown validation error';
                 setResult(`❌ Validation failed:\n${errors}`);
                 setIsValid(false);
+                addEntry({ input: JSON.stringify({ jsonData, schema }), output: errors, metadata: { action: "validate" } });
             }
         } catch (error) {
             setResult(`Error: ${error instanceof Error ? error.message : 'Invalid JSON or schema'}`);
             setIsValid(false);
+            addEntry({ input: JSON.stringify({ jsonData, schema }), output: "error", metadata: { action: "validate" } });
         }
     };
 
@@ -49,6 +60,20 @@ export default function JsonValidator() {
             title="JSON Schema Validator"
             description="Validate JSON data against a JSON schema"
             icon={<Shield className="h-5 w-5" />}
+            shareUrl={getShareUrl()}
+            history={{
+                toolId: "json-validator",
+                toolName: "JSON Validator",
+                onRestore: (entry) => {
+                    try {
+                        const parsed = JSON.parse(entry.input || "{}") as { jsonData?: string; schema?: string };
+                        setJsonData(parsed.jsonData || "");
+                        setSchema(parsed.schema || "");
+                    } catch {
+                        setJsonData(entry.input || "");
+                    }
+                },
+            }}
         >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="space-y-2 flex flex-col h-full">
