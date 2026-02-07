@@ -16,6 +16,19 @@ import {
     Palette,
     Braces,
     Eraser,
+    Database,
+    TextCursorInput,
+    QrCode,
+    Image,
+    Globe,
+    FileCode,
+    Plug,
+    Server,
+    Binary,
+    Lock,
+    GitBranch,
+    Container,
+    FileText,
 } from "lucide-react"
 import { Link, useLocation } from "wouter"
 
@@ -36,6 +49,13 @@ const toolGroups = [
             { title: "HTML Escape", url: "/app/html-escape", icon: Braces },
             { title: "URL Encoder", url: "/app/url-encoder", icon: LinkIcon },
             { title: "Markdown Previewer", url: "/app/markdown-previewer", icon: CircleDotDashed },
+            { title: "YAML Formatter", url: "/app/yaml-formatter", icon: Code },
+            { title: "XML Formatter", url: "/app/xml-formatter", icon: FileCode },
+            { title: "SQL Formatter", url: "/app/sql-formatter", icon: Database },
+            { title: "API Request Builder", url: "/app/api-request-builder", icon: Globe },
+            { title: "GraphQL Formatter", url: "/app/graphql-formatter", icon: Code },
+            { title: "WebSocket Tester", url: "/app/websocket-tester", icon: Plug },
+            { title: "Nginx Config Validator", url: "/app/nginx-config-validator", icon: Server },
         ],
     },
     {
@@ -44,6 +64,10 @@ const toolGroups = [
             { title: "Base64 Encoder", url: "/app/base64-encoder", icon: Code },
             { title: "JWT Decoder", url: "/app/jwt-decoder", icon: Shield },
             { title: "Hash Generator", url: "/app/hash-generator", icon: Hash },
+            { title: "Password Generator", url: "/app/password-generator", icon: Shield },
+            { title: "TOTP/2FA Generator", url: "/app/totp-generator", icon: Lock },
+            { title: "Certificate Decoder", url: "/app/certificate-decoder", icon: Lock },
+            { title: "Protobuf Decoder", url: "/app/protobuf-decoder", icon: Binary },
         ],
     },
     {
@@ -53,6 +77,9 @@ const toolGroups = [
             { title: "Word Counter", url: "/app/word-counter", icon: Hash },
             { title: "Strip Whitespace", url: "/app/strip-whitespace", icon: Eraser },
             { title: "Diff Tool", url: "/app/diff-tool", icon: GitCompare },
+            { title: "Git Diff Viewer", url: "/app/git-diff-viewer", icon: GitBranch },
+            { title: "Regex Tester", url: "/app/regex-tester", icon: Search },
+            { title: "Lorem Ipsum Generator", url: "/app/lorem-ipsum-generator", icon: TextCursorInput },
         ],
     },
     {
@@ -62,6 +89,8 @@ const toolGroups = [
             { title: "Color Converter", url: "/app/color-converter", icon: Palette },
             { title: "Unit Converter", url: "/app/unit-converter", icon: Hash },
             { title: "UUID Generator", url: "/app/uuid-generator", icon: Key },
+            { title: "Image Converter", url: "/app/image-converter", icon: Image },
+            { title: "PDF Tools", url: "/app/pdf-tools", icon: FileText },
         ],
     },
     {
@@ -70,6 +99,10 @@ const toolGroups = [
             { title: "Date Calculator", url: "/app/date-calculator", icon: Calendar },
             { title: "Cron Expression Parser", url: "/app/cron-parser", icon: Clock },
             { title: "HTTP Status Code Reference", url: "/app/http-status-codes", icon: Search },
+            { title: "Fake Data Generator", url: "/app/fake-data-generator", icon: Database },
+            { title: "QR Code Generator", url: "/app/qr-code-generator", icon: QrCode },
+            { title: "Crontab Generator", url: "/app/crontab-generator", icon: Calendar },
+            { title: "Docker Command Builder", url: "/app/docker-command-builder", icon: Container },
         ],
     },
 ]
@@ -98,9 +131,11 @@ export function AppSidebar() {
             <div className="flex flex-col flex-1 overflow-hidden">
                 <div className="flex h-16 items-center gap-2 border-b border-border px-6 bg-card/80">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                            <span className="text-primary-foreground font-bold text-sm">TB</span>
-                        </div>
+                        <img
+                            src="/icon-64.png"
+                            alt="Toolbit"
+                            className="w-8 h-8"
+                        />
                         <h1 className="font-semibold tracking-tight">
                             <span className="text-lg text-foreground">Toolbit</span>
                         </h1>

@@ -1,8 +1,10 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar } from "lucide-react"
+import { ToolCard } from "@/components/ToolCard"
+import { useUrlState } from "@/hooks/use-url-state"
+import { useToolHistory } from "@/hooks/use-tool-history"
 
 export default function DateCalculator() {
     const [startDate, setStartDate] = useState("")
@@ -17,6 +19,12 @@ export default function DateCalculator() {
         minutes: 0,
         seconds: 0
     })
+    const shareState = useMemo(() => ({ startDate, endDate }), [startDate, endDate])
+    const { getShareUrl } = useUrlState(shareState, (state) => {
+        setStartDate(typeof state.startDate === "string" ? state.startDate : "")
+        setEndDate(typeof state.endDate === "string" ? state.endDate : "")
+    })
+    const { addEntry } = useToolHistory("date-calculator", "Date Calculator")
 
     const calculateDifference = () => {
         if (!startDate || !endDate) return
@@ -43,6 +51,11 @@ export default function DateCalculator() {
             years
         })
         setHasCalculated(true)
+        addEntry({
+            input: JSON.stringify({ startDate, endDate }),
+            output: JSON.stringify({ days, weeks, months, years, hours, minutes, seconds }),
+            metadata: { action: "calculate" },
+        })
     }
 
     const setToday = (field: 'start' | 'end') => {
@@ -55,17 +68,26 @@ export default function DateCalculator() {
     }
 
     return (
-        <Card className="h-full">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    Date Calculator
-                </CardTitle>
-                <CardDescription>
-                    Calculate the difference between two dates
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <ToolCard
+            title="Date Calculator"
+            description="Calculate the difference between two dates"
+            icon={<Calendar className="h-5 w-5" />}
+            shareUrl={getShareUrl()}
+            history={{
+                toolId: "date-calculator",
+                toolName: "Date Calculator",
+                onRestore: (entry) => {
+                    try {
+                        const parsed = JSON.parse(entry.input || "{}") as { startDate?: string; endDate?: string }
+                        setStartDate(parsed.startDate || "")
+                        setEndDate(parsed.endDate || "")
+                    } catch {
+                        setStartDate("")
+                        setEndDate("")
+                    }
+                },
+            }}
+        >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <label htmlFor="start-date" className="text-sm font-medium">
@@ -141,7 +163,6 @@ export default function DateCalculator() {
                         ))}
                     </div>
                 )}
-            </CardContent>
-        </Card>
+        </ToolCard>
     )
 }

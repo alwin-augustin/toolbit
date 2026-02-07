@@ -1,14 +1,21 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Copy, Key, RefreshCw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ToolCard } from "@/components/ToolCard"
+import { useUrlState } from "@/hooks/use-url-state"
+import { useToolHistory } from "@/hooks/use-tool-history"
 
 export default function UuidGenerator() {
     const [uuids, setUuids] = useState<string[]>([])
     const [count, setCount] = useState(1)
     const { toast } = useToast()
+    const shareState = useMemo(() => ({ count }), [count])
+    const { getShareUrl } = useUrlState(shareState, (state) => {
+        setCount(typeof state.count === "number" ? state.count : 1)
+    })
+    const { addEntry } = useToolHistory("uuid-generator", "UUID Generator")
 
     const generateUuid = () => {
         return crypto.randomUUID()
@@ -17,11 +24,13 @@ export default function UuidGenerator() {
     const generateUuids = () => {
         const newUuids = Array.from({ length: count }, generateUuid)
         setUuids(newUuids)
+        addEntry({ input: String(count), output: newUuids.join("\n"), metadata: { action: "generate" } })
     }
 
     const generateSingle = () => {
         const newUuid = generateUuid()
         setUuids([newUuid])
+        addEntry({ input: "1", output: newUuid, metadata: { action: "generate-single" } })
     }
 
     const copyToClipboard = (uuid: string) => {
@@ -39,6 +48,14 @@ export default function UuidGenerator() {
             title="UUID / GUID Generator"
             description="Generate unique identifiers (UUIDs/GUIDs)"
             icon={<Key className="h-5 w-5" />}
+            shareUrl={getShareUrl()}
+            history={{
+                toolId: "uuid-generator",
+                toolName: "UUID Generator",
+                onRestore: (entry) => {
+                    setUuids(entry.output ? entry.output.split("\n") : [])
+                },
+            }}
         >
             <div className="flex gap-2 items-end">
                 <div className="space-y-2 flex-1">

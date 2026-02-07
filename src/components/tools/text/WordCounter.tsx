@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Hash } from "lucide-react"
+import { Hash, Sparkles } from "lucide-react"
 import { ToolCard } from "@/components/ToolCard"
+import { useUrlState } from "@/hooks/use-url-state"
 
 export default function WordCounter() {
     const [text, setText] = useState("")
+    const { getShareUrl } = useUrlState(text, setText)
     const [stats, setStats] = useState({
         characters: 0,
         charactersNoSpaces: 0,
@@ -37,11 +40,18 @@ export default function WordCounter() {
             title="Word Counter"
             description="Count words, characters, lines, and more"
             icon={<Hash className="h-5 w-5" />}
+            shareUrl={getShareUrl()}
         >
             <div className="space-y-2">
-                <label htmlFor="word-input" className="text-sm font-medium">
-                    Enter your text
-                </label>
+                <div className="flex items-center justify-between">
+                    <label htmlFor="word-input" className="text-sm font-medium">
+                        Enter your text
+                    </label>
+                    <Button variant="ghost" size="sm" onClick={() => setText("The quick brown fox jumps over the lazy dog. This is a sample paragraph for testing the word counter tool.\n\nIt contains multiple sentences and paragraphs. You can see the statistics update in real time as you type!")}>
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        Sample
+                    </Button>
+                </div>
                 <Textarea
                     id="word-input"
                     placeholder="Type or paste your text here..."

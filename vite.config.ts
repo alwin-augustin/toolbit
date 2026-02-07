@@ -58,6 +58,7 @@ export default defineConfig(({ mode }) => {
                     ]
                 },
                 workbox: {
+                    maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
                     globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
                     runtimeCaching: [
                         {
@@ -190,7 +191,6 @@ export default defineConfig(({ mode }) => {
             include: [
                 'react',
                 'react-dom',
-                'react-hook-form',
                 'zustand',
                 'wouter',
             ],

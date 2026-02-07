@@ -1,38 +1,47 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Copy, Eraser } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { ToolCard } from "@/components/ToolCard"
+import { useUrlState } from "@/hooks/use-url-state"
+import { useToolHistory } from "@/hooks/use-tool-history"
 
 export default function StripWhitespace() {
     const [input, setInput] = useState("")
     const [output, setOutput] = useState("")
     const { toast } = useToast()
+    const { getShareUrl } = useUrlState(input, setInput)
+    const { addEntry } = useToolHistory("strip-whitespace", "Strip Whitespace")
 
     const stripLeading = () => {
         const result = input.split('\n').map(line => line.replace(/^\s+/, '')).join('\n')
         setOutput(result)
+        addEntry({ input, output: result, metadata: { action: "strip-leading" } })
     }
 
     const stripTrailing = () => {
         const result = input.split('\n').map(line => line.replace(/\s+$/, '')).join('\n')
         setOutput(result)
+        addEntry({ input, output: result, metadata: { action: "strip-trailing" } })
     }
 
     const stripLeadingAndTrailing = () => {
         const result = input.split('\n').map(line => line.trim()).join('\n')
         setOutput(result)
+        addEntry({ input, output: result, metadata: { action: "strip-both" } })
     }
 
     const stripAll = () => {
         const result = input.replace(/\s+/g, ' ').trim()
         setOutput(result)
+        addEntry({ input, output: result, metadata: { action: "strip-all" } })
     }
 
     const stripEmpty = () => {
         const result = input.split('\n').filter(line => line.trim()).join('\n')
         setOutput(result)
+        addEntry({ input, output: result, metadata: { action: "remove-empty" } })
     }
 
     const normalizeSpacing = () => {
@@ -42,6 +51,7 @@ export default function StripWhitespace() {
             .filter(line => line)
             .join('\n')
         setOutput(result)
+        addEntry({ input, output: result, metadata: { action: "normalize" } })
     }
 
     const copyToClipboard = () => {
@@ -60,17 +70,20 @@ Trailing spaces
     }
 
     return (
-        <Card className="h-full">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Eraser className="h-5 w-5" />
-                    Strip Whitespace
-                </CardTitle>
-                <CardDescription>
-                    Remove leading, trailing, or all whitespace from text
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <ToolCard
+            title="Strip Whitespace"
+            description="Remove leading, trailing, or all whitespace from text"
+            icon={<Eraser className="h-5 w-5" />}
+            shareUrl={getShareUrl()}
+            history={{
+                toolId: "strip-whitespace",
+                toolName: "Strip Whitespace",
+                onRestore: (entry) => {
+                    setInput(entry.input || "")
+                    setOutput(entry.output || "")
+                },
+            }}
+        >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-2">
                         <label htmlFor="whitespace-input" className="text-sm font-medium">
@@ -145,7 +158,6 @@ Trailing spaces
                         <li><strong>Normalize All:</strong> Clean everything and remove empty lines</li>
                     </ul>
                 </div>
-            </CardContent>
-        </Card>
+        </ToolCard>
     )
 }
