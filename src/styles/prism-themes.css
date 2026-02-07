@@ -4,14 +4,14 @@
  */
 
 /* Light theme - default */
-@import 'prismjs/themes/prism-solarizedlight.css' layer(prism-light);
+@import '/prismjs/themes/prism-solarizedlight.css' layer(prism-light);
 
 /* Dark theme */
 @media (prefers-color-scheme: dark) {
-  @import 'prismjs/themes/prism-okaidia.css' layer(prism-dark);
+  @import '/prismjs/themes/prism-okaidia.css' layer(prism-dark);
 }
 
 /* Manual dark mode override */
 .dark {
-  @import 'prismjs/themes/prism-okaidia.css' layer(prism-dark);
+  @import '/prismjs/themes/prism-okaidia.css' layer(prism-dark);
 }

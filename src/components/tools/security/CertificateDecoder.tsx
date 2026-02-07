@@ -51,25 +51,36 @@ const OID_MAP: Record<string, string> = {
 }
 
 function pemToArrayBuffer(pem: string): ArrayBuffer {
-    const match = pem.match(/-----BEGIN CERTIFICATE-----([\s\S]*?)-----END CERTIFICATE-----/)
-    const body = match ? match[1] : pem
-    const cleaned = body.replace(/[^A-Za-z0-9+/=]/g, "")
-    if (!cleaned) {
-        throw new Error("No certificate data found. Paste a PEM certificate.")
+    const blocks: string[] = []
+    const pemBlockRegex = /-----BEGIN ([A-Z0-9 ]+)-----([\s\S]*?)-----END \1-----/g
+    let match: RegExpExecArray | null
+    while ((match = pemBlockRegex.exec(pem)) !== null) {
+        const label = match[1] || ""
+        if (label.includes("CERTIFICATE")) {
+            blocks.push(match[2] || "")
+        }
     }
-    const padding = cleaned.length % 4 === 0 ? "" : "=".repeat(4 - (cleaned.length % 4))
-    const b64 = `${cleaned}${padding}`
-    let binary = ""
-    try {
-        binary = atob(b64)
-    } catch {
-        throw new Error("Invalid PEM/base64 data. Ensure the certificate is complete.")
+
+    const candidates = blocks.length > 0 ? blocks : [pem]
+
+    for (const body of candidates) {
+        const cleaned = body.replace(/[^A-Za-z0-9+/=]/g, "")
+        if (!cleaned) continue
+        const padding = cleaned.length % 4 === 0 ? "" : "=".repeat(4 - (cleaned.length % 4))
+        const b64 = `${cleaned}${padding}`
+        try {
+            const binary = atob(b64)
+            const bytes = new Uint8Array(binary.length)
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i)
+            }
+            return bytes.buffer
+        } catch {
+            // try next candidate
+        }
     }
-    const bytes = new Uint8Array(binary.length)
-    for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i)
-    }
-    return bytes.buffer
+
+    throw new Error("Invalid PEM/base64 data. Ensure the certificate is complete.")
 }
 
 function rdnToObject(rdn: pkijs.RelativeDistinguishedNames): Record<string, string> {

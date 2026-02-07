@@ -22,11 +22,12 @@ const WIRE_TYPES: Record<number, string> = {
 }
 
 function hexToBytes(hex: string): Uint8Array {
-    const clean = hex.replace(/[\s:0x,]/g, "")
-    if (clean.length % 2 !== 0) throw new Error("Invalid hex string length")
-    const bytes = new Uint8Array(clean.length / 2)
-    for (let i = 0; i < clean.length; i += 2) {
-        const b = parseInt(clean.substring(i, i + 2), 16)
+    const clean = hex.replace(/[^0-9a-fA-F]/g, "")
+    if (!clean) throw new Error("Invalid hex string length")
+    const normalized = clean.length % 2 === 0 ? clean : `0${clean}`
+    const bytes = new Uint8Array(normalized.length / 2)
+    for (let i = 0; i < normalized.length; i += 2) {
+        const b = parseInt(normalized.substring(i, i + 2), 16)
         if (isNaN(b)) throw new Error(`Invalid hex at position ${i}`)
         bytes[i / 2] = b
     }
