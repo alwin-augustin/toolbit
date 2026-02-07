@@ -1,0 +1,47 @@
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Toolbit",
+  "alternateName": "Toolbit - Developer Utilities",
+  "description": "Free privacy-focused developer utilities including JSON formatter, Base64 encoder, schema validator, color converter, and 20+ essential tools. All processing happens locally in your browser.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "All",
+  "url": "https://toolbit.pages.dev/",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "5",
+    "ratingCount": "1"
+  },
+  "featureList": [
+    "JSON Formatter & Validator",
+    "Base64 Encoder/Decoder",
+    "JWT Token Decoder",
+    "Color Converter (HEX, RGB, HSL)",
+    "Timestamp Converter",
+    "Hash Generator (MD5, SHA-256)",
+    "CSS Formatter & Minifier",
+    "Markdown Previewer",
+    "Unit Converter",
+    "Date Calculator",
+    "Cron Expression Parser",
+    "CSV to JSON Converter",
+    "Case Converter",
+    "URL Encoder/Decoder",
+    "HTML Escape/Unescape",
+    "Word Counter",
+    "Diff Tool",
+    "UUID Generator",
+    "JavaScript Minifier",
+    "HTTP Status Code Reference"
+  ],
+  "browserRequirements": "Requires JavaScript. Modern browser recommended.",
+  "softwareVersion": "1.0.0",
+  "datePublished": "2025",
+  "screenshot": "https://toolbit.pages.dev/pwa-512x512.png",
+  "downloadUrl": "https://github.com/alwin-augustin/toolbit/releases"
+}
