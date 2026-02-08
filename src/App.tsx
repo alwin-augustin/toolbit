@@ -11,6 +11,8 @@ import { CookieConsent } from "@/components/CookieConsent";
 import { LoadingFallback } from "@/components/LoadingFallback";
 import { CommandPalette } from "@/components/CommandPalette";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
+import { SmartSuggestion } from "@/components/SmartSuggestion";
+import { AriaLiveAnnouncer } from "@/components/AriaLiveAnnouncer";
 
 // Lazy load legal pages
 const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
@@ -19,6 +21,7 @@ const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
 function App() {
     return (
         <ErrorBoundary>
+            <AriaLiveAnnouncer>
             <TooltipProvider>
                 <Switch>
                     {/* Landing page route */}
@@ -50,7 +53,9 @@ function App() {
                 <CookieConsent />
                 <CommandPalette />
                 <KeyboardShortcutsHelp />
+                <SmartSuggestion />
             </TooltipProvider>
+            </AriaLiveAnnouncer>
         </ErrorBoundary>
     );
 }

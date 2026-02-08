@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Copy, FileText, ArrowLeftRight } from "lucide-react"
+import { Copy, FileText, ArrowLeftRight, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import * as yaml from "js-yaml"
 import { ToolCard } from "@/components/ToolCard"
@@ -10,10 +10,23 @@ import { useToolHistory } from "@/hooks/use-tool-history"
 import { useToolPipe } from "@/hooks/use-tool-pipe"
 import { useWorkspace } from "@/hooks/use-workspace"
 
+const WORKER_THRESHOLD = 100_000 // 100KB
+
+function runMainThread(input: string, action: "format" | "yaml-to-json" | "json-to-yaml"): string {
+    if (action === "format") {
+        return yaml.dump(yaml.load(input), { indent: 2 })
+    } else if (action === "yaml-to-json") {
+        return JSON.stringify(yaml.load(input), null, 2)
+    } else {
+        return yaml.dump(JSON.parse(input), { indent: 2 })
+    }
+}
+
 export default function YamlFormatter() {
     const [input, setInput] = useState("")
     const [output, setOutput] = useState("")
     const [isValid, setIsValid] = useState(true)
+    const [isProcessing, setIsProcessing] = useState(false)
     const { toast } = useToast()
     const { getShareUrl } = useUrlState(input, setInput)
     const { addEntry } = useToolHistory("yaml-formatter", "YAML Formatter")
@@ -39,44 +52,48 @@ export default function YamlFormatter() {
         }
     }, [consumePipeData, input, setInput, setOutput, consumeWorkspaceState])
 
-    const formatYaml = () => {
-        try {
-            const parsed = yaml.load(input)
-            const formatted = yaml.dump(parsed, { indent: 2 })
-            setOutput(formatted)
-            setIsValid(true)
-            addEntry({ input, output: formatted, metadata: { action: "format" } })
-        } catch (error) {
-            setOutput(`Error: ${error instanceof Error ? error.message : 'Invalid YAML'}`)
-            setIsValid(false)
-        }
-    }
+    const runWithWorker = useCallback((text: string, action: "format" | "yaml-to-json" | "json-to-yaml"): Promise<string> => {
+        const worker = new Worker(new URL("../../../workers/yaml-worker.ts", import.meta.url), { type: "module" })
+        return new Promise((resolve, reject) => {
+            const timeout = window.setTimeout(() => { worker.terminate(); reject(new Error("Timeout")) }, 30_000)
+            worker.onmessage = (e: MessageEvent) => {
+                window.clearTimeout(timeout); worker.terminate()
+                if (e.data?.ok) resolve(e.data.result)
+                else reject(new Error(e.data?.error || "Worker failed"))
+            }
+            worker.onerror = (e) => { window.clearTimeout(timeout); worker.terminate(); reject(new Error(e.message)) }
+            worker.postMessage({ input: text, action })
+        })
+    }, [])
 
-    const yamlToJson = () => {
+    const processYaml = useCallback(async (action: "format" | "yaml-to-json" | "json-to-yaml") => {
+        setIsProcessing(true)
         try {
-            const parsed = yaml.load(input)
-            const json = JSON.stringify(parsed, null, 2)
-            setOutput(json)
+            let result: string
+            if (input.length > WORKER_THRESHOLD && "Worker" in window) {
+                try {
+                    result = await runWithWorker(input, action)
+                } catch {
+                    // Fallback to main thread
+                    result = runMainThread(input, action)
+                }
+            } else {
+                result = runMainThread(input, action)
+            }
+            setOutput(result)
             setIsValid(true)
-            addEntry({ input, output: json, metadata: { action: "yaml-to-json" } })
+            addEntry({ input, output: result, metadata: { action } })
         } catch (error) {
-            setOutput(`Error: ${error instanceof Error ? error.message : 'Invalid YAML'}`)
+            const label = action === "json-to-yaml" ? "Invalid JSON" : "Invalid YAML"
+            setOutput(`Error: ${error instanceof Error ? error.message : label}`)
             setIsValid(false)
         }
-    }
+        setIsProcessing(false)
+    }, [input, addEntry, runWithWorker])
 
-    const jsonToYaml = () => {
-        try {
-            const parsed = JSON.parse(input)
-            const yamlOutput = yaml.dump(parsed, { indent: 2 })
-            setOutput(yamlOutput)
-            setIsValid(true)
-            addEntry({ input, output: yamlOutput, metadata: { action: "json-to-yaml" } })
-        } catch (error) {
-            setOutput(`Error: ${error instanceof Error ? error.message : 'Invalid JSON'}`)
-            setIsValid(false)
-        }
-    }
+    const formatYaml = () => processYaml("format")
+    const yamlToJson = () => processYaml("yaml-to-json")
+    const jsonToYaml = () => processYaml("json-to-yaml")
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(output)
@@ -115,18 +132,20 @@ export default function YamlFormatter() {
                         className="flex-grow font-mono text-sm"
                         data-testid="input-yaml"
                     />
-                    <div className="flex gap-2 flex-wrap">
-                        <Button onClick={formatYaml} data-testid="button-format-yaml">
+                    <div className="flex gap-2 flex-wrap items-center">
+                        <Button onClick={formatYaml} disabled={isProcessing} data-testid="button-format-yaml">
+                            {isProcessing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
                             Format YAML
                         </Button>
-                        <Button onClick={yamlToJson} variant="outline" data-testid="button-yaml-to-json">
+                        <Button onClick={yamlToJson} variant="outline" disabled={isProcessing} data-testid="button-yaml-to-json">
                             <ArrowLeftRight className="h-4 w-4 mr-2" />
                             YAML → JSON
                         </Button>
-                        <Button onClick={jsonToYaml} variant="outline" data-testid="button-json-to-yaml">
+                        <Button onClick={jsonToYaml} variant="outline" disabled={isProcessing} data-testid="button-json-to-yaml">
                             <ArrowLeftRight className="h-4 w-4 mr-2" />
                             JSON → YAML
                         </Button>
+                        {input.length > WORKER_THRESHOLD && <span className="text-xs text-muted-foreground">Large input — using background thread</span>}
                     </div>
                 </div>
 

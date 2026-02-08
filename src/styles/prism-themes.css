@@ -1,17 +1,162 @@
 /**
- * Prism.js Theme Imports
- * Using CSS imports with theme-specific selectors
+ * Prism.js Themes for Toolbit
+ *
+ * Light: Solarized Light (imported)
+ * Dark:  Custom VS Code Dark+ inspired theme (inline, because nested @import
+ *        doesn't work with postcss-import)
  */
 
-/* Light theme - default */
-@import '/prismjs/themes/prism-solarizedlight.css' layer(prism-light);
+/* ── Light theme ─────────────────────────────────────────────────────────── */
+@import 'prismjs/themes/prism-solarizedlight.css' layer(prism-light);
 
-/* Dark theme */
-@media (prefers-color-scheme: dark) {
-  @import '/prismjs/themes/prism-okaidia.css' layer(prism-dark);
+/* ── Dark theme (custom, scoped to .dark) ────────────────────────────────── */
+
+/* Reset the solarized light background that leaks into dark mode */
+.dark code[class*="language-"],
+.dark pre[class*="language-"] {
+  color: #d4d4d4;
+  background: none;
+  text-shadow: none;
+  font-family: var(--font-mono), 'JetBrains Mono', Consolas, Monaco, 'Courier New', monospace;
 }
 
-/* Manual dark mode override */
-.dark {
-  @import '/prismjs/themes/prism-okaidia.css' layer(prism-dark);
+.dark pre[class*="language-"] {
+  background: transparent;
+}
+
+.dark :not(pre) > code[class*="language-"],
+.dark pre[class*="language-"] {
+  background: transparent;
+}
+
+/* ── Token colours ───────────────────────────────────────────────────────── */
+
+/* Comments — muted green, deliberately low-key */
+.dark .token.comment,
+.dark .token.prolog,
+.dark .token.doctype,
+.dark .token.cdata {
+  color: #6a9955;
+  font-style: italic;
+}
+
+/* Punctuation — subtle gray */
+.dark .token.punctuation {
+  color: #a0a0a0;
+}
+
+.dark .token.namespace {
+  opacity: 0.85;
+}
+
+/* Properties, tags, constants, symbols, deleted — blue */
+.dark .token.property,
+.dark .token.tag,
+.dark .token.constant,
+.dark .token.symbol,
+.dark .token.deleted {
+  color: #569cd6;
+}
+
+/* Booleans, numbers — light green */
+.dark .token.boolean,
+.dark .token.number {
+  color: #b5cea8;
+}
+
+/* Selectors, attr names, strings, chars, builtins, inserted — warm peach */
+.dark .token.selector,
+.dark .token.attr-name,
+.dark .token.string,
+.dark .token.char,
+.dark .token.builtin,
+.dark .token.inserted {
+  color: #ce9178;
+}
+
+/* Operators, entities, URLs — soft gray-white */
+.dark .token.operator,
+.dark .token.entity,
+.dark .token.url,
+.dark .language-css .token.string,
+.dark .style .token.string,
+.dark .token.variable {
+  color: #d4d4d4;
+}
+
+/* At-rules, attr values, functions, class names — soft yellow */
+.dark .token.atrule,
+.dark .token.attr-value,
+.dark .token.function,
+.dark .token.class-name {
+  color: #dcdcaa;
+}
+
+/* Keywords — soft purple-magenta */
+.dark .token.keyword {
+  color: #c586c0;
+}
+
+/* Regex, important — soft red */
+.dark .token.regex,
+.dark .token.important {
+  color: #d16969;
+}
+
+.dark .token.important,
+.dark .token.bold {
+  font-weight: bold;
+}
+
+.dark .token.italic {
+  font-style: italic;
+}
+
+/* JSON-specific overrides for better key/value distinction */
+.dark .language-json .token.property {
+  color: #9cdcfe;
+}
+
+.dark .language-json .token.string {
+  color: #ce9178;
+}
+
+.dark .language-json .token.number {
+  color: #b5cea8;
+}
+
+.dark .language-json .token.boolean {
+  color: #569cd6;
+}
+
+.dark .language-json .token.null {
+  color: #569cd6;
+}
+
+/* CSS-specific */
+.dark .language-css .token.property {
+  color: #9cdcfe;
+}
+
+.dark .language-css .token.selector {
+  color: #d7ba7d;
+}
+
+.dark .language-css .token.function {
+  color: #dcdcaa;
+}
+
+/* SQL-specific */
+.dark .language-sql .token.keyword {
+  color: #569cd6;
+}
+
+/* Diff-specific */
+.dark .token.coord {
+  color: #569cd6;
+}
+
+/* Line highlighting */
+.dark .line-highlight {
+  background: rgba(255, 255, 255, 0.05);
 }

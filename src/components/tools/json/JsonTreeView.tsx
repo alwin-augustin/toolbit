@@ -1,6 +1,9 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useRef } from "react"
 import { ChevronRight, ChevronDown, Copy } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+
+const MAX_VISIBLE_NODES = 500
+const BATCH_SIZE = 500
 
 interface JsonTreeViewProps {
     data: unknown
@@ -36,13 +39,19 @@ interface TreeNodeProps {
     value: unknown
     path: string
     depth: number
+    nodeCounter: React.MutableRefObject<number>
+    nodeLimit: number
 }
 
-function TreeNode({ keyName, value, path, depth }: TreeNodeProps) {
+function TreeNode({ keyName, value, path, depth, nodeCounter, nodeLimit }: TreeNodeProps) {
     const [isOpen, setIsOpen] = useState(depth < 2)
     const { toast } = useToast()
     const type = getType(value)
     const isExpandable = type === "object" || type === "array"
+
+    // Count this node against the limit
+    nodeCounter.current++
+    if (nodeCounter.current > nodeLimit) return null
 
     const copyPath = useCallback((e: React.MouseEvent) => {
         e.stopPropagation()
@@ -100,6 +109,8 @@ function TreeNode({ keyName, value, path, depth }: TreeNodeProps) {
                             value={val}
                             path={type === "array" ? `${path}[${key}]` : `${path}.${key}`}
                             depth={depth + 1}
+                            nodeCounter={nodeCounter}
+                            nodeLimit={nodeLimit}
                         />
                     ))}
                 </div>
@@ -109,6 +120,8 @@ function TreeNode({ keyName, value, path, depth }: TreeNodeProps) {
 }
 
 export function JsonTreeView({ data }: JsonTreeViewProps) {
+    const [nodeLimit, setNodeLimit] = useState(MAX_VISIBLE_NODES)
+    const nodeCounter = useRef(0)
     const type = getType(data)
 
     if (type !== "object" && type !== "array") {
@@ -123,6 +136,9 @@ export function JsonTreeView({ data }: JsonTreeViewProps) {
         ? (data as unknown[]).map((v, i) => [i, v] as const)
         : Object.entries(data as object)
 
+    // Reset counter before each render
+    nodeCounter.current = 0
+
     return (
         <div className="max-h-[400px] overflow-y-auto rounded-md border bg-background p-2">
             {entries.map(([key, val]) => (
@@ -132,8 +148,18 @@ export function JsonTreeView({ data }: JsonTreeViewProps) {
                     value={val}
                     path={type === "array" ? `$[${key}]` : `$.${key}`}
                     depth={0}
+                    nodeCounter={nodeCounter}
+                    nodeLimit={nodeLimit}
                 />
             ))}
+            {nodeCounter.current > nodeLimit && (
+                <button
+                    onClick={() => setNodeLimit(prev => prev + BATCH_SIZE)}
+                    className="mt-2 w-full py-1.5 text-sm text-primary hover:underline"
+                >
+                    Showing {nodeLimit} nodes — click to show more
+                </button>
+            )}
         </div>
     )
 }

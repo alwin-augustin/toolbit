@@ -69,6 +69,7 @@
   --destructive-foreground: 0 0% 100%;
 
   --input: 220 13% 80%;
+  --input-background: 0 0% 100%;
   --ring: 217 100% 68%;
   --chart-1: 217 100% 55%;
   --chart-2: 142 76% 40%;
@@ -186,7 +187,8 @@
 
   --destructive-foreground: 0 0% 100%;
 
-  --input: 220 13% 25%;
+  --input: 220 13% 30%;
+  --input-background: 220 12% 16%;
   --ring: 217 100% 68%;
   --chart-1: 217 100% 75%;
   --chart-2: 142 76% 60%;
@@ -217,6 +219,60 @@
   /* Enhanced focus indicators for accessibility */
   *:focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Dark mode: lift inputs off the card background for better contrast */
+  .dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  .dark textarea,
+  .dark select,
+  .dark [role="textbox"] {
+    background-color: hsl(var(--input-background)) !important;
+  }
+
+  /* Dark mode: crisper placeholder text */
+  .dark ::placeholder {
+    color: hsl(var(--muted-foreground) / 0.65);
+  }
+
+  /* Dark mode: subtle inner glow on focus for inputs */
+  .dark input:focus,
+  .dark textarea:focus,
+  .dark select:focus {
+    box-shadow: inset 0 0 0 1px hsl(var(--ring) / 0.15);
+  }
+
+  /* Mobile touch target minimum size (48px per WCAG) */
+  @media (pointer: coarse) {
+    button:not([class*="h-"]),
+    [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Larger tap targets for select dropdowns on mobile */
+    select {
+      min-height: 44px;
+    }
+
+    /* Prevent zoom on input focus in iOS */
+    input, textarea, select {
+      font-size: 16px;
+    }
+  }
+
+  /* Smooth scrolling for better UX */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 

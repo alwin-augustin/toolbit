@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useToolHistory } from "@/hooks/use-tool-history";
 import { useToolPipe } from "@/hooks/use-tool-pipe";
 import { useWorkspace } from "@/hooks/use-workspace";
+import { useAutoSave } from "@/hooks/use-auto-save";
 
 const SAMPLE_TEXT = "Hello, World! This is a sample text for Base64 encoding.";
 
@@ -60,6 +61,18 @@ export default function Base64Encoder() {
             setMode("single");
         }
     }, [consumePipeData, input, batchInput, setInput, consumeWorkspaceState, setMode, setBatchInput, setBatchOutput, setOutput]);
+
+    const autoSaveState = useMemo(() => ({ input, output, mode, batchInput }), [input, output, mode, batchInput]);
+    const { hasRestorable, restore: restoreAutoSave, dismiss: dismissAutoSave } = useAutoSave(
+        "base64-encoder",
+        autoSaveState,
+        (saved) => {
+            if (saved.input) setInput(saved.input);
+            if (saved.output) setOutput(saved.output);
+            if (saved.mode) setMode(saved.mode as Mode);
+            if (saved.batchInput) setBatchInput(saved.batchInput);
+        },
+    );
 
     const handleEncode = () => {
         const result = encodeBase64(input);
@@ -174,6 +187,12 @@ export default function Base64Encoder() {
             description="Encode text to Base64, decode Base64, generate Data URIs, and preview images"
             icon={<Code className="h-5 w-5" />}
             shareUrl={getShareUrl()}
+            toolId="base64-encoder"
+            autoSave={{
+                visible: hasRestorable,
+                onRestore: restoreAutoSave,
+                onDismiss: dismissAutoSave,
+            }}
             history={{
                 toolId: "base64-encoder",
                 toolName: "Base64 Encoder",
