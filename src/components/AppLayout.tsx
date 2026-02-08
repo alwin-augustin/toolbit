@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WorkspaceManager } from "@/components/WorkspaceManager";
+import { MobileActionButton } from "@/components/MobileActionButton";
 
 interface AppLayoutProps {
     children: React.ReactNode;
@@ -101,6 +102,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                         <Footer />
                     </div>
                 </div>
+                <MobileActionButton />
             </div>
         </>
     );

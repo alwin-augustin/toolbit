@@ -9,6 +9,7 @@ import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 import { useToolPipe } from "@/hooks/use-tool-pipe"
 import { useWorkspace } from "@/hooks/use-workspace"
+import { useAutoSave } from "@/hooks/use-auto-save"
 
 type Tab = "decode" | "generate"
 
@@ -103,6 +104,16 @@ export default function JwtDecoder() {
     const { addEntry } = useToolHistory("jwt-decoder", "JWT Decoder")
     const { consumePipeData } = useToolPipe()
     const consumeWorkspaceState = useWorkspace((state) => state.consumeState)
+
+    const autoSaveState = useMemo(() => ({ jwt, activeTab }), [jwt, activeTab])
+    const { hasRestorable, restore: restoreAutoSave, dismiss: dismissAutoSave } = useAutoSave(
+        "jwt-decoder",
+        autoSaveState,
+        (saved) => {
+            if (saved.jwt) setJwt(saved.jwt)
+            if (saved.activeTab) setActiveTab(saved.activeTab as Tab)
+        },
+    )
 
     useEffect(() => {
         if (jwt) return
@@ -219,6 +230,12 @@ export default function JwtDecoder() {
             description="Decode, verify, edit, and generate JSON Web Tokens"
             icon={<Shield className="h-5 w-5" />}
             shareUrl={getShareUrl()}
+            toolId="jwt-decoder"
+            autoSave={{
+                visible: hasRestorable,
+                onRestore: restoreAutoSave,
+                onDismiss: dismissAutoSave,
+            }}
             history={{
                 toolId: "jwt-decoder",
                 toolName: "JWT Decoder",

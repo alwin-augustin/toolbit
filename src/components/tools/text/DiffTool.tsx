@@ -1,4 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react"
+import { List } from "react-window"
+import type { CSSProperties, ReactElement } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { GitCompare, Copy, Download, Columns, AlignJustify } from "lucide-react"
@@ -346,29 +348,9 @@ export default function DiffTool() {
                     </div>
 
                     {/* Diff output */}
-                    <div ref={diffRef} className="border rounded-md overflow-hidden max-h-[500px] overflow-y-auto">
+                    <div ref={diffRef} className="border rounded-md overflow-hidden">
                         {viewMode === "unified" ? (
-                            <div className="font-mono text-sm">
-                                {diffLines.map((line, i) => (
-                                    <div
-                                        key={i}
-                                        className={`flex ${lineClass(line.type)}`}
-                                    >
-                                        <span className="w-10 text-right px-2 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
-                                            {line.lineNumOld ?? ""}
-                                        </span>
-                                        <span className="w-10 text-right px-2 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
-                                            {line.lineNumNew ?? ""}
-                                        </span>
-                                        <span className="w-5 text-center text-muted-foreground/80 select-none shrink-0 leading-6">
-                                            {linePrefix(line.type)}
-                                        </span>
-                                        <span className="flex-1 px-2 leading-6 whitespace-pre">
-                                            {line.value}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
+                            <UnifiedView lines={diffLines} lineClass={lineClass} linePrefix={linePrefix} />
                         ) : (
                             <SideBySideView lines={diffLines} />
                         )}
@@ -379,29 +361,150 @@ export default function DiffTool() {
     )
 }
 
+const ROW_HEIGHT = 24
+const LIST_MAX_HEIGHT = 500
+const VIRTUALIZE_THRESHOLD = 200
+
+interface UnifiedRowProps {
+    lines: DiffLine[]
+    lineClass: (type: DiffLine["type"]) => string
+    linePrefix: (type: DiffLine["type"]) => string
+}
+
+function UnifiedRow({ index, style, lines, lineClass, linePrefix }: UnifiedRowProps & {
+    ariaAttributes: { "aria-posinset": number; "aria-setsize": number; role: "listitem" }
+    index: number
+    style: CSSProperties
+}): ReactElement {
+    const line = lines[index]
+    return (
+        <div style={style} className={`flex ${lineClass(line.type)}`}>
+            <span className="w-10 text-right px-2 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
+                {line.lineNumOld ?? ""}
+            </span>
+            <span className="w-10 text-right px-2 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
+                {line.lineNumNew ?? ""}
+            </span>
+            <span className="w-5 text-center text-muted-foreground/80 select-none shrink-0 leading-6">
+                {linePrefix(line.type)}
+            </span>
+            <span className="flex-1 px-2 leading-6 whitespace-pre">
+                {line.value}
+            </span>
+        </div>
+    )
+}
+
+function UnifiedView({
+    lines,
+    lineClass,
+    linePrefix,
+}: {
+    lines: DiffLine[]
+    lineClass: (type: DiffLine["type"]) => string
+    linePrefix: (type: DiffLine["type"]) => string
+}) {
+    // For small diffs, render directly without virtualization overhead
+    if (lines.length <= VIRTUALIZE_THRESHOLD) {
+        return (
+            <div className="font-mono text-sm max-h-[500px] overflow-y-auto">
+                {lines.map((line, i) => (
+                    <div key={i} className={`flex ${lineClass(line.type)}`}>
+                        <span className="w-10 text-right px-2 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
+                            {line.lineNumOld ?? ""}
+                        </span>
+                        <span className="w-10 text-right px-2 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
+                            {line.lineNumNew ?? ""}
+                        </span>
+                        <span className="w-5 text-center text-muted-foreground/80 select-none shrink-0 leading-6">
+                            {linePrefix(line.type)}
+                        </span>
+                        <span className="flex-1 px-2 leading-6 whitespace-pre">
+                            {line.value}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        )
+    }
+
+    const rowProps = useMemo(() => ({ lines, lineClass, linePrefix }), [lines, lineClass, linePrefix])
+
+    return (
+        <List
+            rowComponent={UnifiedRow}
+            rowCount={lines.length}
+            rowHeight={ROW_HEIGHT}
+            rowProps={rowProps}
+            className="font-mono text-sm"
+            style={{ maxHeight: LIST_MAX_HEIGHT }}
+        />
+    )
+}
+
+interface SidePair { left?: DiffLine; right?: DiffLine }
+
+interface SideRowProps {
+    pairs: SidePair[]
+}
+
+function SideBySideRow({ index, style, pairs }: SideRowProps & {
+    ariaAttributes: { "aria-posinset": number; "aria-setsize": number; role: "listitem" }
+    index: number
+    style: CSSProperties
+}): ReactElement {
+    const pair = pairs[index]
+    const cellClass = (type?: "added" | "removed" | "unchanged") => {
+        if (type === "added") return "bg-green-50 dark:bg-green-950/40"
+        if (type === "removed") return "bg-red-50 dark:bg-red-950/40"
+        return ""
+    }
+    return (
+        <div style={style} className="flex">
+            <div className={`flex-1 flex border-r ${cellClass(pair.left?.type)}`}>
+                <span className="w-8 text-right px-1 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
+                    {pair.left?.lineNumOld ?? ""}
+                </span>
+                <span className="flex-1 px-2 leading-6 whitespace-pre truncate">
+                    {pair.left?.value ?? ""}
+                </span>
+            </div>
+            <div className={`flex-1 flex ${cellClass(pair.right?.type)}`}>
+                <span className="w-8 text-right px-1 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
+                    {pair.right?.lineNumNew ?? ""}
+                </span>
+                <span className="flex-1 px-2 leading-6 whitespace-pre truncate">
+                    {pair.right?.value ?? ""}
+                </span>
+            </div>
+        </div>
+    )
+}
+
 function SideBySideView({ lines }: { lines: DiffLine[] }) {
-    // Build paired lines for side-by-side
-    const pairs: { left?: DiffLine; right?: DiffLine }[] = []
-    let i = 0
-    while (i < lines.length) {
-        const line = lines[i]
-        if (line.type === "unchanged") {
-            pairs.push({ left: line, right: line })
-            i++
-        } else if (line.type === "removed") {
-            // Check if next is added (paired change)
-            if (i + 1 < lines.length && lines[i + 1].type === "added") {
-                pairs.push({ left: line, right: lines[i + 1] })
-                i += 2
+    const pairs = useMemo(() => {
+        const result: SidePair[] = []
+        let i = 0
+        while (i < lines.length) {
+            const line = lines[i]
+            if (line.type === "unchanged") {
+                result.push({ left: line, right: line })
+                i++
+            } else if (line.type === "removed") {
+                if (i + 1 < lines.length && lines[i + 1].type === "added") {
+                    result.push({ left: line, right: lines[i + 1] })
+                    i += 2
+                } else {
+                    result.push({ left: line })
+                    i++
+                }
             } else {
-                pairs.push({ left: line })
+                result.push({ right: line })
                 i++
             }
-        } else {
-            pairs.push({ right: line })
-            i++
         }
-    }
+        return result
+    }, [lines])
 
     const cellClass = (type?: "added" | "removed" | "unchanged") => {
         if (type === "added") return "bg-green-50 dark:bg-green-950/40"
@@ -409,30 +512,44 @@ function SideBySideView({ lines }: { lines: DiffLine[] }) {
         return ""
     }
 
+    // For small diffs, render directly
+    if (pairs.length <= VIRTUALIZE_THRESHOLD) {
+        return (
+            <div className="font-mono text-sm max-h-[500px] overflow-y-auto">
+                {pairs.map((pair, i) => (
+                    <div key={i} className="flex">
+                        <div className={`flex-1 flex border-r ${cellClass(pair.left?.type)}`}>
+                            <span className="w-8 text-right px-1 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
+                                {pair.left?.lineNumOld ?? ""}
+                            </span>
+                            <span className="flex-1 px-2 leading-6 whitespace-pre truncate">
+                                {pair.left?.value ?? ""}
+                            </span>
+                        </div>
+                        <div className={`flex-1 flex ${cellClass(pair.right?.type)}`}>
+                            <span className="w-8 text-right px-1 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
+                                {pair.right?.lineNumNew ?? ""}
+                            </span>
+                            <span className="flex-1 px-2 leading-6 whitespace-pre truncate">
+                                {pair.right?.value ?? ""}
+                            </span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )
+    }
+
+    const rowProps = useMemo(() => ({ pairs }), [pairs])
+
     return (
-        <div className="font-mono text-sm">
-            {pairs.map((pair, i) => (
-                <div key={i} className="flex">
-                    {/* Left side */}
-                    <div className={`flex-1 flex border-r ${cellClass(pair.left?.type)}`}>
-                        <span className="w-8 text-right px-1 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
-                            {pair.left?.lineNumOld ?? ""}
-                        </span>
-                        <span className="flex-1 px-2 leading-6 whitespace-pre truncate">
-                            {pair.left?.value ?? ""}
-                        </span>
-                    </div>
-                    {/* Right side */}
-                    <div className={`flex-1 flex ${cellClass(pair.right?.type)}`}>
-                        <span className="w-8 text-right px-1 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
-                            {pair.right?.lineNumNew ?? ""}
-                        </span>
-                        <span className="flex-1 px-2 leading-6 whitespace-pre truncate">
-                            {pair.right?.value ?? ""}
-                        </span>
-                    </div>
-                </div>
-            ))}
-        </div>
+        <List
+            rowComponent={SideBySideRow}
+            rowCount={pairs.length}
+            rowHeight={ROW_HEIGHT}
+            rowProps={rowProps}
+            className="font-mono text-sm"
+            style={{ maxHeight: LIST_MAX_HEIGHT }}
+        />
     )
 }

@@ -23,6 +23,7 @@ import { formatJsonWorker, minifyJsonWorker } from "@/workers/json-worker";
 import { useToolHistory } from "@/hooks/use-tool-history";
 import { useToolPipe } from "@/hooks/use-tool-pipe";
 import { useWorkspace } from "@/hooks/use-workspace";
+import { useAutoSave } from "@/hooks/use-auto-save";
 import {
     queryJsonPath,
     generateJsonSchema,
@@ -72,6 +73,17 @@ export default function JsonFormatter() {
     // Types state
     const [typeLang, setTypeLang] = useState<TypeLang>("typescript");
     const [typeOutput, setTypeOutput] = useState("");
+
+    const autoSaveState = useMemo(() => ({ input, output, indentSize }), [input, output, indentSize]);
+    const { hasRestorable, restore: restoreAutoSave, dismiss: dismissAutoSave } = useAutoSave(
+        "json-formatter",
+        autoSaveState,
+        (saved) => {
+            if (saved.input) setInput(saved.input);
+            if (saved.output) { setOutput(saved.output); setValidation(true); }
+            if (typeof saved.indentSize === "number") setIndentSize(saved.indentSize);
+        },
+    );
 
     const inputSizeBytes = new Blob([input]).size;
     const isLargeFile = inputSizeBytes > SIZE_WARNING_BYTES;
@@ -224,6 +236,12 @@ export default function JsonFormatter() {
             description="Format, minify, and validate JSON data"
             icon={<FileText className="h-5 w-5" />}
             shareUrl={getShareUrl()}
+            toolId="json-formatter"
+            autoSave={{
+                visible: hasRestorable,
+                onRestore: restoreAutoSave,
+                onDismiss: dismissAutoSave,
+            }}
             history={{
                 toolId: "json-formatter",
                 toolName: "JSON Formatter",

@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import React from "react";
 import { ToolHistory } from "@/components/ToolHistory";
 import { type ToolHistoryEntry } from "@/lib/history-db";
+import { ToolFeedback } from "@/components/ToolFeedback";
 import { useLocation } from "wouter";
 import { TOOLS } from "@/config/tools.config";
 import { getChainTargets } from "@/config/tool-chains.config";
@@ -16,6 +17,7 @@ interface ToolCardProps {
   icon: React.ReactNode;
   children: React.ReactNode;
   shareUrl?: string;
+  toolId?: string;
   history?: {
     toolId: string;
     toolName: string;
@@ -25,9 +27,14 @@ interface ToolCardProps {
     toolId: string;
     output: string;
   };
+  autoSave?: {
+    visible: boolean;
+    onRestore: () => void;
+    onDismiss: () => void;
+  };
 }
 
-export function ToolCard({ title, description, icon, children, shareUrl, history, pipeSource }: ToolCardProps) {
+export function ToolCard({ title, description, icon, children, shareUrl, toolId, history, pipeSource, autoSave }: ToolCardProps) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { setPipeData } = useToolPipe();
@@ -42,6 +49,8 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
   const chainTools = chainTargets
     .map((id) => TOOLS.find((t) => t.id === id))
     .filter(Boolean);
+
+  const feedbackId = toolId || history?.toolId;
 
   return (
     <Card className="h-full shadow-sm border-border/50 hover:shadow-md transition-shadow duration-200">
@@ -91,7 +100,37 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
         </div>
         <CardDescription className="text-sm text-muted-foreground">{description}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">{children}</CardContent>
+      <CardContent className="space-y-6">
+        {/* Auto-save restore banner */}
+        {autoSave?.visible && (
+          <div
+            className="flex items-center gap-3 rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/30 px-4 py-2.5 animate-in fade-in slide-in-from-top-2 duration-200"
+            role="alert"
+            aria-live="polite"
+          >
+            <p className="text-sm text-blue-800 dark:text-blue-200 flex-1">
+              Previous session found. Restore your work?
+            </p>
+            <Button size="sm" variant="outline" onClick={autoSave.onRestore} className="shrink-0">
+              Restore
+            </Button>
+            <button
+              onClick={autoSave.onDismiss}
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 shrink-0 text-xs"
+              aria-label="Dismiss"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+        {children}
+      </CardContent>
+      {/* Footer with feedback */}
+      {feedbackId && (
+        <div className="px-6 pb-4 pt-2 border-t border-border/30 mt-2">
+          <ToolFeedback toolId={feedbackId} />
+        </div>
+      )}
     </Card>
   );
 }
