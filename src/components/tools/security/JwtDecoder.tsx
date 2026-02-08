@@ -106,6 +106,13 @@ export default function JwtDecoder() {
 
     useEffect(() => {
         if (jwt) return
+        // Check for smart-paste data from AppHome
+        const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+        if (smartPaste) {
+            sessionStorage.removeItem("toolbit:smart-paste");
+            setJwt(smartPaste.trim());
+            return;
+        }
         const workspaceState = consumeWorkspaceState("jwt-decoder")
         if (workspaceState) {
             try {

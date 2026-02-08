@@ -111,6 +111,13 @@ export default function DiffTool() {
 
     useEffect(() => {
         if (text1 || text2) return
+        // Check for smart-paste data from AppHome
+        const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+        if (smartPaste) {
+            sessionStorage.removeItem("toolbit:smart-paste");
+            setText1(smartPaste.trim());
+            return;
+        }
         const workspaceState = consumeWorkspaceState("diff-tool")
         if (workspaceState) {
             try {

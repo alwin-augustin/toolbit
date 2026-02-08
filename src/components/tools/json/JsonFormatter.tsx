@@ -201,6 +201,13 @@ export default function JsonFormatter() {
 
     useEffect(() => {
         if (input) return;
+        // Check for smart-paste data from AppHome
+        const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+        if (smartPaste) {
+            sessionStorage.removeItem("toolbit:smart-paste");
+            setInput(smartPaste.trim());
+            return;
+        }
         const workspaceState = consumeWorkspaceState("json-formatter");
         if (workspaceState) {
             try {

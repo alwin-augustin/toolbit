@@ -25,6 +25,13 @@ const JsJsonMinifier: React.FC = () => {
 
   useEffect(() => {
     if (code) return;
+    // Check for smart-paste data from AppHome
+    const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+    if (smartPaste) {
+        sessionStorage.removeItem("toolbit:smart-paste");
+        setCode(smartPaste.trim());
+        return;
+    }
     const workspaceState = consumeWorkspaceState('js-json-minifier');
     if (workspaceState) {
       try {

@@ -38,6 +38,14 @@ export default function Base64Encoder() {
 
     useEffect(() => {
         if (input || batchInput) return;
+        // Check for smart-paste data from AppHome
+        const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+        if (smartPaste) {
+            sessionStorage.removeItem("toolbit:smart-paste");
+            setInput(smartPaste.trim());
+            setMode("single");
+            return;
+        }
         const workspaceState = consumeWorkspaceState("base64-encoder");
         if (workspaceState) {
             try {
