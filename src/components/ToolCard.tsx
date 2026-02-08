@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { saveWorkspace } from "@/lib/workspace-db";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { AutoSaveRestore } from "@/components/AutoSaveRestore";
 
 interface ToolCardProps {
   title: string;
@@ -20,6 +21,12 @@ interface ToolCardProps {
   icon: React.ReactNode;
   children: React.ReactNode;
   shareUrl?: string;
+  toolId?: string;
+  autoSave?: {
+    visible: boolean;
+    onRestore: () => void;
+    onDismiss: () => void;
+  };
   history?: {
     toolId: string;
     toolName: string;
@@ -31,7 +38,7 @@ interface ToolCardProps {
   };
 }
 
-export function ToolCard({ title, description, icon, children, shareUrl, history, pipeSource }: ToolCardProps) {
+export function ToolCard({ title, description, icon, children, shareUrl, history, pipeSource, autoSave, toolId }: ToolCardProps) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { setPipeData, addPipelineStep, pipeline, clearPipeline } = useToolPipe();
@@ -121,6 +128,7 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
 
   return (
     <Card
+      data-tool-id={toolId}
       className="h-full shadow-sm border-border/50"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
@@ -206,6 +214,13 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
         <CardDescription className="text-sm text-muted-foreground">{description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {autoSave && (
+          <AutoSaveRestore
+            visible={autoSave.visible}
+            onRestore={autoSave.onRestore}
+            onDismiss={autoSave.onDismiss}
+          />
+        )}
         {children}
 
         {/* Pipe to next tool — popover instead of native select */}
