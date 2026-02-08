@@ -3,24 +3,27 @@
   "@type": "WebApplication",
   "name": "Toolbit",
   "alternateName": "Toolbit - Developer Utilities",
-  "description": "Free privacy-focused developer utilities including JSON formatter, Base64 encoder, schema validator, color converter, and 20+ essential tools. All processing happens locally in your browser.",
+  "description": "Local-first developer toolbox with 40+ utilities including JSON/YAML/XML/SQL formatters, Base64 encoder/decoder, JWT decoder, UUID and hash generators, regex tester, cron parser, API request builder, and Docker command builder. All processing happens locally in your browser.",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "All",
   "url": "https://toolbit.pages.dev/",
+  "image": "https://toolbit.pages.dev/pwa-512x512.png",
+  "sameAs": [
+    "https://github.com/alwin-augustin/toolbit"
+  ],
   "offers": {
     "@type": "Offer",
     "price": "0",
     "priceCurrency": "USD"
   },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "5",
-    "ratingCount": "1"
-  },
+  "isAccessibleForFree": true,
   "featureList": [
     "JSON Formatter & Validator",
     "Base64 Encoder/Decoder",
     "JWT Token Decoder",
+    "YAML Formatter",
+    "XML Formatter",
+    "SQL Formatter",
     "Color Converter (HEX, RGB, HSL)",
     "Timestamp Converter",
     "Hash Generator (MD5, SHA-256)",
@@ -37,11 +40,14 @@
     "Diff Tool",
     "UUID Generator",
     "JavaScript Minifier",
-    "HTTP Status Code Reference"
+    "HTTP Status Code Reference",
+    "API Request Builder",
+    "Docker Command Builder",
+    "WebSocket Tester"
   ],
   "browserRequirements": "Requires JavaScript. Modern browser recommended.",
   "softwareVersion": "1.0.0",
-  "datePublished": "2025",
+  "datePublished": "2024-01-01",
   "screenshot": "https://toolbit.pages.dev/pwa-512x512.png",
   "downloadUrl": "https://github.com/alwin-augustin/toolbit/releases"
 }

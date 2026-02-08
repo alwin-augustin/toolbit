@@ -4,11 +4,13 @@
 
 import { useEffect, useCallback } from 'react';
 import { useTheme } from './use-theme';
+import { useSidebar } from './use-sidebar';
 
 interface KeyboardShortcutOptions {
     onPrimaryAction?: () => void;
     onCopyOutput?: () => void;
     onClear?: () => void;
+    onPipe?: () => void;
 }
 
 /**
@@ -17,9 +19,11 @@ interface KeyboardShortcutOptions {
  * - Cmd/Ctrl + Shift + C: Copy output
  * - Cmd/Ctrl + Shift + X: Clear all
  * - Cmd/Ctrl + Shift + L: Toggle theme
+ * - Cmd/Ctrl + Shift + P: Pipe output to next tool
+ * - Cmd/Ctrl + B: Toggle sidebar
  */
 export function useKeyboardShortcuts(options: KeyboardShortcutOptions = {}) {
-    const { onPrimaryAction, onCopyOutput, onClear } = options;
+    const { onPrimaryAction, onCopyOutput, onClear, onPipe } = options;
     const { toggleTheme } = useTheme();
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -50,13 +54,20 @@ export function useKeyboardShortcuts(options: KeyboardShortcutOptions = {}) {
             return;
         }
 
+        // Cmd/Ctrl + Shift + P: Pipe output
+        if (isMod && isShift && e.key.toLowerCase() === 'p' && onPipe) {
+            e.preventDefault();
+            onPipe();
+            return;
+        }
+
         // Cmd/Ctrl + Shift + L: Toggle theme (global)
         if (isMod && isShift && e.key.toLowerCase() === 'l' && !isInInput) {
             e.preventDefault();
             toggleTheme();
             return;
         }
-    }, [onPrimaryAction, onCopyOutput, onClear, toggleTheme]);
+    }, [onPrimaryAction, onCopyOutput, onClear, onPipe, toggleTheme]);
 
     useEffect(() => {
         document.addEventListener('keydown', handleKeyDown);
@@ -69,6 +80,7 @@ export function useKeyboardShortcuts(options: KeyboardShortcutOptions = {}) {
  */
 export function useGlobalShortcuts() {
     const { toggleTheme } = useTheme();
+    const { toggleMode } = useSidebar();
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -81,9 +93,15 @@ export function useGlobalShortcuts() {
                 e.preventDefault();
                 toggleTheme();
             }
+
+            // Cmd/Ctrl + B: Toggle sidebar
+            if (isMod && e.key.toLowerCase() === 'b' && !isInInput) {
+                e.preventDefault();
+                toggleMode();
+            }
         };
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [toggleTheme]);
+    }, [toggleTheme, toggleMode]);
 }

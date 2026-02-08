@@ -3,7 +3,6 @@ import { minify } from 'terser';
 import { Button } from '@/components/ui/button';
 import Editor from 'react-simple-code-editor';
 import Prism from 'prismjs';
-import 'prismjs/components/prism-javascript';
 import { FileDropZone } from '@/components/FileDropZone';
 import { ToolCard } from '@/components/ToolCard';
 import { useUrlState } from '@/hooks/use-url-state';
@@ -16,6 +15,7 @@ import { useWorkspace } from '@/hooks/use-workspace';
 const JsJsonMinifier: React.FC = () => {
   const [code, setCode] = useState('');
   const [minifiedCode, setMinifiedCode] = useState('');
+  const [jsReady, setJsReady] = useState(false);
   const shareState = useMemo(() => ({ code }), [code]);
   const { getShareUrl } = useUrlState(shareState, (state) => {
     setCode(typeof state.code === 'string' ? state.code : '');
@@ -25,6 +25,13 @@ const JsJsonMinifier: React.FC = () => {
 
   useEffect(() => {
     if (code) return;
+    // Check for smart-paste data from AppHome
+    const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+    if (smartPaste) {
+        sessionStorage.removeItem("toolbit:smart-paste");
+        setCode(smartPaste.trim());
+        return;
+    }
     const workspaceState = consumeWorkspaceState('js-json-minifier');
     if (workspaceState) {
       try {
@@ -36,6 +43,18 @@ const JsJsonMinifier: React.FC = () => {
       }
     }
   }, [code, consumeWorkspaceState]);
+
+  useEffect(() => {
+    let active = true;
+    import('prismjs/components/prism-javascript')
+      .then(() => {
+        if (active) setJsReady(true);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleMinify = async () => {
     try {
@@ -75,7 +94,7 @@ const JsJsonMinifier: React.FC = () => {
           <Editor
             value={code}
             onValueChange={setCode}
-            highlight={(code) => Prism.highlight(code, Prism.languages.javascript, 'javascript')}
+            highlight={(code) => (jsReady && Prism.languages.javascript ? Prism.highlight(code, Prism.languages.javascript, 'javascript') : code)}
             padding={10}
             placeholder="Enter JavaScript"
             className={editorClassName}
@@ -88,7 +107,7 @@ const JsJsonMinifier: React.FC = () => {
             value={minifiedCode}
             onValueChange={() => {}}
             readOnly
-            highlight={(code) => Prism.highlight(code, Prism.languages.javascript, 'javascript')}
+            highlight={(code) => (jsReady && Prism.languages.javascript ? Prism.highlight(code, Prism.languages.javascript, 'javascript') : code)}
             padding={10}
             placeholder="Minified output"
             className={editorClassName}

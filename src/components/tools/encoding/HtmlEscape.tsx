@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy, Code } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -7,13 +7,13 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { useToolHistory } from "@/hooks/use-tool-history";
 import Editor from "react-simple-code-editor";
 import Prism from "prismjs";
-import "prismjs/components/prism-markup";
 
 
 
 export default function HtmlEscape() {
     const [input, setInput] = useState("");
     const [output, setOutput] = useState("");
+    const [markupReady, setMarkupReady] = useState(false);
     const { toast } = useToast();
     const { getShareUrl } = useUrlState(input, setInput);
     const { addEntry } = useToolHistory("html-escape", "HTML Escape");
@@ -51,6 +51,18 @@ export default function HtmlEscape() {
 
     const editorClassName = "flex-grow min-h-[20rem] font-mono text-sm rounded-md border border-input bg-background px-3 py-2 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm";
 
+    useEffect(() => {
+        let active = true;
+        import("prismjs/components/prism-markup")
+            .then(() => {
+                if (active) setMarkupReady(true);
+            })
+            .catch(() => {});
+        return () => {
+            active = false;
+        };
+    }, []);
+
     return (
         <ToolCard
             title="HTML Escape / Unescape"
@@ -76,7 +88,7 @@ export default function HtmlEscape() {
                         placeholder="Enter HTML to escape or escaped HTML to unescape..."
                         value={input}
                         onValueChange={setInput}
-                        highlight={(code) => Prism.highlight(code, Prism.languages.markup, 'markup')}
+                        highlight={(code) => (markupReady && Prism.languages.markup ? Prism.highlight(code, Prism.languages.markup, "markup") : code)}
                         padding={10}
                         className={editorClassName}
                         data-testid="input-html"
@@ -104,7 +116,7 @@ export default function HtmlEscape() {
                         value={output}
                         readOnly
                         onValueChange={() => {}}
-                        highlight={(code) => Prism.highlight(code, Prism.languages.markup, 'markup')}
+                        highlight={(code) => (markupReady && Prism.languages.markup ? Prism.highlight(code, Prism.languages.markup, "markup") : code)}
                         padding={10}
                         className={editorClassName}
                         data-testid="output-html"

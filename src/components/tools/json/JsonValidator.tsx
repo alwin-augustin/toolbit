@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Shield, CheckCircle, XCircle } from "lucide-react";
 import Ajv from "ajv";
@@ -8,7 +8,6 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { useToolHistory } from "@/hooks/use-tool-history";
 import Editor from "react-simple-code-editor";
 import Prism from "prismjs";
-import "prismjs/components/prism-json";
 
 
 
@@ -17,12 +16,25 @@ export default function JsonValidator() {
     const [schema, setSchema] = useState("");
     const [result, setResult] = useState("");
     const [isValid, setIsValid] = useState(true);
+    const [jsonReady, setJsonReady] = useState(false);
     const shareState = useMemo(() => ({ jsonData, schema }), [jsonData, schema]);
     const { getShareUrl } = useUrlState(shareState, (state) => {
         setJsonData(typeof state.jsonData === "string" ? state.jsonData : "");
         setSchema(typeof state.schema === "string" ? state.schema : "");
     });
     const { addEntry } = useToolHistory("json-validator", "JSON Validator");
+
+    useEffect(() => {
+        let active = true;
+        import("prismjs/components/prism-json")
+            .then(() => {
+                if (active) setJsonReady(true);
+            })
+            .catch(() => {});
+        return () => {
+            active = false;
+        };
+    }, []);
 
     const validateJson = () => {
         try {
@@ -85,7 +97,7 @@ export default function JsonValidator() {
                         placeholder='{"type": "object", "properties": {"name": {"type": "string"}}}'
                         value={schema}
                         onValueChange={setSchema}
-                        highlight={(code) => Prism.highlight(code, Prism.languages.json, "json")}
+                        highlight={(code) => (jsonReady && Prism.languages.json ? Prism.highlight(code, Prism.languages.json, "json") : code)}
                         padding={10}
                         className={editorClassName}
                         data-testid="input-json-schema"
@@ -100,7 +112,7 @@ export default function JsonValidator() {
                         placeholder='{"name": "John", "age": 30}'
                         value={jsonData}
                         onValueChange={setJsonData}
-                        highlight={(code) => Prism.highlight(code, Prism.languages.json, "json")}
+                        highlight={(code) => (jsonReady && Prism.languages.json ? Prism.highlight(code, Prism.languages.json, "json") : code)}
                         padding={10}
                         className={editorClassName}
                         data-testid="input-json-data"

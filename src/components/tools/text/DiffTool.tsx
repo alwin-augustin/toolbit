@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { GitCompare, Copy, Download, Columns, AlignJustify } from "lucide-react"
 import { ToolCard } from "@/components/ToolCard"
+import { ToolEmptyState } from "@/components/ToolEmptyState"
 import { useToast } from "@/hooks/use-toast"
 import * as Diff from "diff"
 import { useUrlState } from "@/hooks/use-url-state"
@@ -113,6 +114,13 @@ export default function DiffTool() {
 
     useEffect(() => {
         if (text1 || text2) return
+        // Check for smart-paste data from AppHome
+        const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+        if (smartPaste) {
+            sessionStorage.removeItem("toolbit:smart-paste");
+            setText1(smartPaste.trim());
+            return;
+        }
         const workspaceState = consumeWorkspaceState("diff-tool")
         if (workspaceState) {
             try {
@@ -308,6 +316,28 @@ export default function DiffTool() {
                     />
                 </div>
             </div>
+
+            {!text1.trim() && !text2.trim() && (
+                <ToolEmptyState
+                    title="Paste two versions to compare"
+                    description="Get a clean diff view with added and removed lines."
+                    actions={
+                        <>
+                            <Button variant="outline" size="sm" onClick={loadSample}>
+                                Load sample diff
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
+                            >
+                                Browse snippets
+                            </Button>
+                        </>
+                    }
+                    hint="Tip: Use unified or side‑by‑side view from the toolbar."
+                />
+            )}
 
             {/* Results */}
             {hasCompared && (

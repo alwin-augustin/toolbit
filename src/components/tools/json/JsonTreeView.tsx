@@ -140,7 +140,7 @@ export function JsonTreeView({ data }: JsonTreeViewProps) {
     nodeCounter.current = 0
 
     return (
-        <div className="max-h-[400px] overflow-y-auto rounded-md border bg-background p-2">
+        <div className="h-full overflow-y-auto rounded-md bg-background p-2">
             {entries.map(([key, val]) => (
                 <TreeNode
                     key={String(key)}

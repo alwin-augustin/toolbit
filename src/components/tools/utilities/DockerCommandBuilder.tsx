@@ -8,6 +8,7 @@ import { Copy, Container, Plus, Trash2, Zap } from "lucide-react"
 import yaml from "js-yaml"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
+import { ToolEmptyState } from "@/components/ToolEmptyState"
 
 interface PortMapping {
     host: string
@@ -84,18 +85,32 @@ const PRESETS: Preset[] = [
     },
 ]
 
+const DEFAULT_STATE = {
+    image: "nginx:latest",
+    containerName: "my-container",
+    ports: [{ host: "8080", container: "80", protocol: "tcp" }],
+    volumes: [] as VolumeMapping[],
+    envVars: [] as EnvVar[],
+    network: "",
+    restartPolicy: "",
+    flags: { detach: true, rm: false, interactive: false, privileged: false, readOnly: false },
+    memory: "",
+    cpus: "",
+    tab: "run" as const,
+}
+
 export default function DockerCommandBuilder() {
-    const [image, setImage] = useState("nginx:latest")
-    const [containerName, setContainerName] = useState("my-container")
-    const [ports, setPorts] = useState<PortMapping[]>([{ host: "8080", container: "80", protocol: "tcp" }])
-    const [volumes, setVolumes] = useState<VolumeMapping[]>([])
-    const [envVars, setEnvVars] = useState<EnvVar[]>([])
-    const [network, setNetwork] = useState("")
-    const [restartPolicy, setRestartPolicy] = useState("")
-    const [flags, setFlags] = useState({ detach: true, rm: false, interactive: false, privileged: false, readOnly: false })
-    const [memory, setMemory] = useState("")
-    const [cpus, setCpus] = useState("")
-    const [tab, setTab] = useState<"run" | "compose">("run")
+    const [image, setImage] = useState(DEFAULT_STATE.image)
+    const [containerName, setContainerName] = useState(DEFAULT_STATE.containerName)
+    const [ports, setPorts] = useState<PortMapping[]>(DEFAULT_STATE.ports)
+    const [volumes, setVolumes] = useState<VolumeMapping[]>(DEFAULT_STATE.volumes)
+    const [envVars, setEnvVars] = useState<EnvVar[]>(DEFAULT_STATE.envVars)
+    const [network, setNetwork] = useState(DEFAULT_STATE.network)
+    const [restartPolicy, setRestartPolicy] = useState(DEFAULT_STATE.restartPolicy)
+    const [flags, setFlags] = useState(DEFAULT_STATE.flags)
+    const [memory, setMemory] = useState(DEFAULT_STATE.memory)
+    const [cpus, setCpus] = useState(DEFAULT_STATE.cpus)
+    const [tab, setTab] = useState<"run" | "compose">(DEFAULT_STATE.tab)
     const { toast } = useToast()
     const shareState = useMemo(
         () => ({
@@ -114,16 +129,16 @@ export default function DockerCommandBuilder() {
         [image, containerName, ports, volumes, envVars, network, restartPolicy, flags, memory, cpus, tab],
     )
     const { getShareUrl } = useUrlState(shareState, (state) => {
-        setImage(typeof state.image === "string" ? state.image : "nginx:latest")
-        setContainerName(typeof state.containerName === "string" ? state.containerName : "my-container")
-        setPorts(Array.isArray(state.ports) ? (state.ports as PortMapping[]) : [{ host: "8080", container: "80", protocol: "tcp" }])
-        setVolumes(Array.isArray(state.volumes) ? (state.volumes as VolumeMapping[]) : [])
-        setEnvVars(Array.isArray(state.envVars) ? (state.envVars as EnvVar[]) : [])
-        setNetwork(typeof state.network === "string" ? state.network : "")
-        setRestartPolicy(typeof state.restartPolicy === "string" ? state.restartPolicy : "")
-        setFlags(typeof state.flags === "object" && state.flags ? (state.flags as typeof flags) : { detach: true, rm: false, interactive: false, privileged: false, readOnly: false })
-        setMemory(typeof state.memory === "string" ? state.memory : "")
-        setCpus(typeof state.cpus === "string" ? state.cpus : "")
+        setImage(typeof state.image === "string" ? state.image : DEFAULT_STATE.image)
+        setContainerName(typeof state.containerName === "string" ? state.containerName : DEFAULT_STATE.containerName)
+        setPorts(Array.isArray(state.ports) ? (state.ports as PortMapping[]) : DEFAULT_STATE.ports)
+        setVolumes(Array.isArray(state.volumes) ? (state.volumes as VolumeMapping[]) : DEFAULT_STATE.volumes)
+        setEnvVars(Array.isArray(state.envVars) ? (state.envVars as EnvVar[]) : DEFAULT_STATE.envVars)
+        setNetwork(typeof state.network === "string" ? state.network : DEFAULT_STATE.network)
+        setRestartPolicy(typeof state.restartPolicy === "string" ? state.restartPolicy : DEFAULT_STATE.restartPolicy)
+        setFlags(typeof state.flags === "object" && state.flags ? (state.flags as typeof flags) : DEFAULT_STATE.flags)
+        setMemory(typeof state.memory === "string" ? state.memory : DEFAULT_STATE.memory)
+        setCpus(typeof state.cpus === "string" ? state.cpus : DEFAULT_STATE.cpus)
         setTab(state.tab === "compose" ? "compose" : "run")
     })
     const { addEntry } = useToolHistory("docker-command-builder", "Docker Command Builder")
@@ -134,8 +149,22 @@ export default function DockerCommandBuilder() {
         setPorts(preset.ports)
         setVolumes(preset.volumes)
         setEnvVars(preset.envVars)
-        setFlags({ ...flags, ...preset.flags })
-    }, [flags])
+        setFlags((current) => ({ ...current, ...preset.flags }))
+    }, [])
+
+    const resetAll = useCallback(() => {
+        setImage(DEFAULT_STATE.image)
+        setContainerName(DEFAULT_STATE.containerName)
+        setPorts(DEFAULT_STATE.ports)
+        setVolumes(DEFAULT_STATE.volumes)
+        setEnvVars(DEFAULT_STATE.envVars)
+        setNetwork(DEFAULT_STATE.network)
+        setRestartPolicy(DEFAULT_STATE.restartPolicy)
+        setFlags(DEFAULT_STATE.flags)
+        setMemory(DEFAULT_STATE.memory)
+        setCpus(DEFAULT_STATE.cpus)
+        setTab(DEFAULT_STATE.tab)
+    }, [])
 
     const dockerRunCommand = useMemo(() => {
         const parts = ["docker run"]
@@ -186,8 +215,9 @@ export default function DockerCommandBuilder() {
         return yaml.dump(compose, { indent: 2, lineWidth: -1 })
     }, [image, containerName, ports, volumes, envVars, network, restartPolicy, memory])
 
+    const output = tab === "run" ? dockerRunCommand : dockerComposeYaml
+
     const copyCommand = useCallback(() => {
-        const output = tab === "run" ? dockerRunCommand : dockerComposeYaml
         navigator.clipboard.writeText(output)
         toast({ title: "Copied to clipboard" })
         addEntry({
@@ -195,7 +225,23 @@ export default function DockerCommandBuilder() {
             output,
             metadata: { action: "copy", tab },
         })
-    }, [tab, dockerRunCommand, dockerComposeYaml, toast, addEntry, image, containerName, ports, volumes, envVars, network, restartPolicy, flags, memory, cpus])
+    }, [output, toast, addEntry, image, containerName, ports, volumes, envVars, network, restartPolicy, flags, memory, cpus, tab])
+
+    const downloadCompose = useCallback(() => {
+        if (tab !== "compose") return
+        const blob = new Blob([dockerComposeYaml], { type: "text/yaml" })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = "docker-compose.yml"
+        link.click()
+        URL.revokeObjectURL(url)
+        addEntry({
+            input: JSON.stringify({ image, containerName, ports, volumes, envVars, network, restartPolicy, flags, memory, cpus, tab }),
+            output: dockerComposeYaml,
+            metadata: { action: "download", tab: "compose" },
+        })
+    }, [tab, dockerComposeYaml, addEntry, image, containerName, ports, volumes, envVars, network, restartPolicy, flags, memory, cpus])
 
     return (
         <ToolCard
@@ -203,6 +249,7 @@ export default function DockerCommandBuilder() {
             description="Build docker run commands and docker-compose files visually"
             icon={<Container className="h-5 w-5" />}
             shareUrl={getShareUrl()}
+            pipeSource={{ toolId: "docker-command-builder", output }}
             history={{
                 toolId: "docker-command-builder",
                 toolName: "Docker Command Builder",
@@ -239,6 +286,26 @@ export default function DockerCommandBuilder() {
             }}
         >
             <div className="space-y-4">
+                <ToolEmptyState
+                    title="Build a container in seconds"
+                    description="Pick a preset, tweak ports and environment variables, and copy the generated docker run or docker-compose output."
+                    actions={(
+                        <>
+                            <Button variant="outline" size="sm" className="text-xs h-7" onClick={resetAll}>
+                                Reset to defaults
+                            </Button>
+                            <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setTab("run")}>
+                                Focus docker run
+                            </Button>
+                            <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => setTab("compose")}>
+                                Focus compose
+                            </Button>
+                        </>
+                    )}
+                    hint="Output updates live as you edit. Use the copy button to send it to your clipboard."
+                    compact={false}
+                />
+
                 {/* Presets */}
                 <div className="flex flex-wrap gap-1.5">
                     {PRESETS.map(p => (
@@ -251,40 +318,55 @@ export default function DockerCommandBuilder() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Left: Form */}
                     <div className="space-y-3">
-                        {/* Image & Name */}
-                        <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium">Image</label>
-                                <Input value={image} onChange={(e) => setImage(e.target.value)} placeholder="nginx:latest" className="text-sm" />
+                        {/* Core */}
+                        <div className="rounded-lg border border-border/60 bg-muted/10 p-3 space-y-2">
+                            <div>
+                                <div className="text-xs font-semibold">Core configuration</div>
+                                <p className="text-[11px] text-muted-foreground">Define the image and container identity.</p>
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium">Container Name</label>
-                                <Input value={containerName} onChange={(e) => setContainerName(e.target.value)} placeholder="my-container" className="text-sm" />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium">Image</label>
+                                    <Input value={image} onChange={(e) => setImage(e.target.value)} placeholder="nginx:latest" className="text-sm" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium">Container Name</label>
+                                    <Input value={containerName} onChange={(e) => setContainerName(e.target.value)} placeholder="my-container" className="text-sm" />
+                                </div>
                             </div>
                         </div>
 
                         {/* Flags */}
-                        <div className="flex flex-wrap gap-3 text-sm">
-                            {Object.entries(flags).map(([key, val]) => (
-                                <label key={key} className="flex items-center gap-1.5">
-                                    <input type="checkbox" checked={val} onChange={(e) => setFlags(f => ({ ...f, [key]: e.target.checked }))} className="rounded" />
-                                    <span className="text-xs">
-                                        {key === "detach" ? "-d" : key === "rm" ? "--rm" : key === "interactive" ? "-it" : key === "privileged" ? "--privileged" : "--read-only"}
-                                    </span>
-                                </label>
-                            ))}
+                        <div className="rounded-lg border border-border/60 bg-muted/10 p-3 space-y-2">
+                            <div>
+                                <div className="text-xs font-semibold">Run flags</div>
+                                <p className="text-[11px] text-muted-foreground">Common runtime switches for docker run.</p>
+                            </div>
+                            <div className="flex flex-wrap gap-3 text-sm">
+                                {Object.entries(flags).map(([key, val]) => (
+                                    <label key={key} className="flex items-center gap-1.5">
+                                        <input type="checkbox" checked={val} onChange={(e) => setFlags(f => ({ ...f, [key]: e.target.checked }))} className="rounded" />
+                                        <span className="text-xs">
+                                            {key === "detach" ? "-d (detached)" : key === "rm" ? "--rm" : key === "interactive" ? "-it" : key === "privileged" ? "--privileged" : "--read-only"}
+                                        </span>
+                                    </label>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Ports */}
-                        <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                                <label className="text-xs font-medium">Port Mappings</label>
+                        <div className="rounded-lg border border-border/60 bg-muted/10 p-3 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                                <div>
+                                    <div className="text-xs font-semibold">Port mappings</div>
+                                    <p className="text-[11px] text-muted-foreground">Expose container ports to the host.</p>
+                                </div>
                                 <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setPorts([...ports, { host: "", container: "", protocol: "tcp" }])}>
                                     <Plus className="h-3 w-3 mr-1" /> Add
                                 </Button>
                             </div>
                             {ports.map((p, i) => (
-                                <div key={i} className="flex gap-1.5 items-center">
+                                <div key={i} className="flex flex-wrap gap-1.5 items-center">
                                     <Input value={p.host} onChange={(e) => setPorts(ps => ps.map((pp, j) => j === i ? { ...pp, host: e.target.value } : pp))} placeholder="Host" className="text-xs w-20" />
                                     <span className="text-xs text-muted-foreground">:</span>
                                     <Input value={p.container} onChange={(e) => setPorts(ps => ps.map((pp, j) => j === i ? { ...pp, container: e.target.value } : pp))} placeholder="Container" className="text-xs w-20" />
@@ -300,15 +382,21 @@ export default function DockerCommandBuilder() {
                         </div>
 
                         {/* Volumes */}
-                        <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                                <label className="text-xs font-medium">Volumes</label>
+                        <div className="rounded-lg border border-border/60 bg-muted/10 p-3 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                                <div>
+                                    <div className="text-xs font-semibold">Volumes</div>
+                                    <p className="text-[11px] text-muted-foreground">Mount host paths or named volumes.</p>
+                                </div>
                                 <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setVolumes([...volumes, { host: "", container: "", mode: "rw" }])}>
                                     <Plus className="h-3 w-3 mr-1" /> Add
                                 </Button>
                             </div>
+                            {volumes.length === 0 && (
+                                <div className="text-[11px] text-muted-foreground">No volumes yet. Add one to persist data or mount files.</div>
+                            )}
                             {volumes.map((v, i) => (
-                                <div key={i} className="flex gap-1.5 items-center">
+                                <div key={i} className="flex flex-wrap gap-1.5 items-center">
                                     <Input value={v.host} onChange={(e) => setVolumes(vs => vs.map((vv, j) => j === i ? { ...vv, host: e.target.value } : vv))} placeholder="Host path" className="text-xs flex-1" />
                                     <span className="text-xs text-muted-foreground">:</span>
                                     <Input value={v.container} onChange={(e) => setVolumes(vs => vs.map((vv, j) => j === i ? { ...vv, container: e.target.value } : vv))} placeholder="Container path" className="text-xs flex-1" />
@@ -324,15 +412,21 @@ export default function DockerCommandBuilder() {
                         </div>
 
                         {/* Env Vars */}
-                        <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                                <label className="text-xs font-medium">Environment Variables</label>
+                        <div className="rounded-lg border border-border/60 bg-muted/10 p-3 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                                <div>
+                                    <div className="text-xs font-semibold">Environment variables</div>
+                                    <p className="text-[11px] text-muted-foreground">Pass configuration values into the container.</p>
+                                </div>
                                 <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setEnvVars([...envVars, { key: "", value: "" }])}>
                                     <Plus className="h-3 w-3 mr-1" /> Add
                                 </Button>
                             </div>
+                            {envVars.length === 0 && (
+                                <div className="text-[11px] text-muted-foreground">No variables yet. Add KEY=value pairs when needed.</div>
+                            )}
                             {envVars.map((e, i) => (
-                                <div key={i} className="flex gap-1.5 items-center">
+                                <div key={i} className="flex flex-wrap gap-1.5 items-center">
                                     <Input value={e.key} onChange={(ev) => setEnvVars(es => es.map((ee, j) => j === i ? { ...ee, key: ev.target.value } : ee))} placeholder="KEY" className="text-xs flex-1 font-mono" />
                                     <span className="text-xs text-muted-foreground">=</span>
                                     <Input value={e.value} onChange={(ev) => setEnvVars(es => es.map((ee, j) => j === i ? { ...ee, value: ev.target.value } : ee))} placeholder="value" className="text-xs flex-1" />
@@ -344,50 +438,66 @@ export default function DockerCommandBuilder() {
                         </div>
 
                         {/* Advanced */}
-                        <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium">Network</label>
-                                <Input value={network} onChange={(e) => setNetwork(e.target.value)} placeholder="bridge" className="text-xs" />
+                        <div className="rounded-lg border border-border/60 bg-muted/10 p-3 space-y-2">
+                            <div>
+                                <div className="text-xs font-semibold">Resources & policies</div>
+                                <p className="text-[11px] text-muted-foreground">Networking, restart policy, and limits.</p>
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium">Restart Policy</label>
-                                <select value={restartPolicy} onChange={(e) => setRestartPolicy(e.target.value)} className="w-full text-xs rounded border bg-background px-2 py-1.5">
-                                    <option value="">none</option>
-                                    <option value="always">always</option>
-                                    <option value="unless-stopped">unless-stopped</option>
-                                    <option value="on-failure">on-failure</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium">Memory Limit</label>
-                                <Input value={memory} onChange={(e) => setMemory(e.target.value)} placeholder="512m" className="text-xs" />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium">CPU Limit</label>
-                                <Input value={cpus} onChange={(e) => setCpus(e.target.value)} placeholder="1.5" className="text-xs" />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium">Network</label>
+                                    <Input value={network} onChange={(e) => setNetwork(e.target.value)} placeholder="bridge" className="text-xs" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium">Restart Policy</label>
+                                    <select value={restartPolicy} onChange={(e) => setRestartPolicy(e.target.value)} className="w-full text-xs rounded border bg-background px-2 py-1.5">
+                                        <option value="">none</option>
+                                        <option value="always">always</option>
+                                        <option value="unless-stopped">unless-stopped</option>
+                                        <option value="on-failure">on-failure</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium">Memory Limit</label>
+                                    <Input value={memory} onChange={(e) => setMemory(e.target.value)} placeholder="512m" className="text-xs" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium">CPU Limit</label>
+                                    <Input value={cpus} onChange={(e) => setCpus(e.target.value)} placeholder="1.5" className="text-xs" />
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Right: Output */}
                     <div className="space-y-2">
-                        <div className="flex gap-1">
-                            <Button variant={tab === "run" ? "default" : "outline"} size="sm" className="text-xs" onClick={() => setTab("run")}>
-                                docker run
-                            </Button>
-                            <Button variant={tab === "compose" ? "default" : "outline"} size="sm" className="text-xs" onClick={() => setTab("compose")}>
-                                docker-compose.yml
-                            </Button>
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex gap-1">
+                                <Button variant={tab === "run" ? "default" : "outline"} size="sm" className="text-xs" onClick={() => setTab("run")}>
+                                    docker run
+                                </Button>
+                                <Button variant={tab === "compose" ? "default" : "outline"} size="sm" className="text-xs" onClick={() => setTab("compose")}>
+                                    docker-compose.yml
+                                </Button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {tab === "compose" && (
+                                    <Button variant="outline" size="sm" className="text-xs" onClick={downloadCompose}>
+                                        Download
+                                    </Button>
+                                )}
+                                <Button variant="outline" size="sm" className="text-xs" onClick={copyCommand}>
+                                    <Copy className="h-3.5 w-3.5 mr-1" />
+                                    Copy
+                                </Button>
+                            </div>
                         </div>
                         <div className="relative">
                             <Textarea
-                                value={tab === "run" ? dockerRunCommand : dockerComposeYaml}
+                                value={output}
                                 readOnly
-                                className="font-mono text-sm min-h-[400px] bg-muted/30"
+                                className="font-mono text-sm min-h-[420px] bg-muted/30"
                             />
-                            <Button variant="outline" size="sm" className="absolute top-2 right-2" onClick={copyCommand}>
-                                <Copy className="h-4 w-4" />
-                            </Button>
                         </div>
                     </div>
                 </div>

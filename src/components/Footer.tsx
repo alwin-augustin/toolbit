@@ -1,8 +1,13 @@
 import { ExternalLink, Home } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { isElectronApp } from "@/hooks/use-electron";
 
 export function Footer() {
     const [location] = useLocation();
+    const hideFooter = typeof window !== "undefined" && isElectronApp();
+    if (hideFooter) {
+        return null;
+    }
     const isAppRoute = location.startsWith('/app');
 
     return (

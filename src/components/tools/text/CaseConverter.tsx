@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Copy, Type, Sparkles } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ToolCard } from "@/components/ToolCard"
+import { ToolEmptyState } from "@/components/ToolEmptyState"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 
@@ -87,6 +88,29 @@ export default function CaseConverter() {
                     </Button>
                 </div>
             </div>
+
+            {!input.trim() && (
+                <ToolEmptyState
+                    title="Paste text to convert cases"
+                    description="Generate camelCase, snake_case, kebab-case, and more."
+                    actions={
+                        <>
+                            <Button variant="outline" size="sm" onClick={() => setInput("the quick brown fox jumps over the lazy dog")}>
+                                <Sparkles className="h-3 w-3 mr-1" />
+                                Load sample text
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
+                            >
+                                Browse snippets
+                            </Button>
+                        </>
+                    }
+                    hint="Tip: Spaces are converted into separators for snake/kebab/camel."
+                />
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries({

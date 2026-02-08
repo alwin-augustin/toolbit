@@ -2,9 +2,10 @@ import { useState, useCallback, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Copy, Shield, CheckCircle, XCircle, Clock } from "lucide-react"
+import { Copy, Shield, CheckCircle, XCircle, Clock, Sparkles } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ToolCard } from "@/components/ToolCard"
+import { ToolEmptyState } from "@/components/ToolEmptyState"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 import { useToolPipe } from "@/hooks/use-tool-pipe"
@@ -81,6 +82,7 @@ export default function JwtDecoder() {
     const [error, setError] = useState("")
     const [sigStatus, setSigStatus] = useState<"valid" | "invalid" | "unchecked">("unchecked")
     const [timeClaims, setTimeClaims] = useState<Record<string, ReturnType<typeof formatTimeClaim>>>({})
+    const [showExplain, setShowExplain] = useState(false)
 
     // Generate tab state
     const [genPayload, setGenPayload] = useState(SAMPLE_PAYLOAD)
@@ -117,6 +119,13 @@ export default function JwtDecoder() {
 
     useEffect(() => {
         if (jwt) return
+        // Check for smart-paste data from AppHome
+        const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+        if (smartPaste) {
+            sessionStorage.removeItem("toolbit:smart-paste");
+            setJwt(smartPaste.trim());
+            return;
+        }
         const workspaceState = consumeWorkspaceState("jwt-decoder")
         if (workspaceState) {
             try {
@@ -282,8 +291,51 @@ export default function JwtDecoder() {
                             <Button variant="outline" onClick={() => { setJwt(SAMPLE_JWT); }} data-testid="button-sample">
                                 Sample
                             </Button>
+                            <Button
+                                variant={showExplain ? "default" : "outline"}
+                                onClick={() => setShowExplain(!showExplain)}
+                            >
+                                Explain
+                            </Button>
                         </div>
                     </div>
+
+                    {!jwt.trim() && (
+                        <ToolEmptyState
+                            title="Paste a JWT to decode instantly"
+                            description="Inspect header, payload, and verify signatures locally."
+                            actions={
+                                <>
+                                    <Button variant="outline" size="sm" onClick={() => setJwt(SAMPLE_JWT)}>
+                                        <Sparkles className="h-3 w-3 mr-1" />
+                                        Load sample token
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
+                                    >
+                                        Browse snippets
+                                    </Button>
+                                </>
+                            }
+                            hint="Tip: JWTs often start with “eyJ…”."
+                        />
+                    )}
+
+                    {showExplain && (
+                        <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm space-y-2">
+                            <div className="font-medium">JWT structure explained</div>
+                            <div className="text-xs text-muted-foreground">
+                                A JSON Web Token has three Base64URL parts: header, payload, and signature.
+                            </div>
+                            <ul className="text-xs text-muted-foreground list-disc pl-4">
+                                <li>Header describes the algorithm and token type.</li>
+                                <li>Payload contains claims like <span className="font-mono">sub</span>, <span className="font-mono">exp</span>, and <span className="font-mono">iat</span>.</li>
+                                <li>Signature verifies integrity; never share secret keys.</li>
+                            </ul>
+                        </div>
+                    )}
 
                     {error && (
                         <div className="text-sm text-red-500 bg-red-50 dark:bg-red-950/30 p-3 rounded-md">

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Copy, Clock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ToolCard } from "@/components/ToolCard"
+import { ToolEmptyState } from "@/components/ToolEmptyState"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 
@@ -154,6 +155,28 @@ export default function TimestampConverter() {
             <Button onClick={getCurrentTimestamp} className="w-full" data-testid="button-current">
                 Get Current Timestamp
             </Button>
+
+            {!timestamp.trim() && !dateTime.trim() && !results.unix && (
+                <ToolEmptyState
+                    title="Convert timestamps and dates"
+                    description="Paste a Unix timestamp or pick a date to see all formats."
+                    actions={
+                        <>
+                            <Button variant="outline" size="sm" onClick={getCurrentTimestamp}>
+                                Use current time
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
+                            >
+                                Browse snippets
+                            </Button>
+                        </>
+                    }
+                    hint="Tip: Unix timestamps are usually 10 digits (seconds)."
+                />
+            )}
 
             {results.unix && (
                 <div className="space-y-3">

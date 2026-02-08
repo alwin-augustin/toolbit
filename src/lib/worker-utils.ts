@@ -17,10 +17,10 @@ export async function runInWorker<T, A extends unknown[]>(
     const fnSource = fn.toString()
 
     const workerSource = `
+const userFn = ${fnSource};
 self.onmessage = async (event) => {
-  const { fn, args } = event.data || {};
+  const { args } = event.data || {};
   try {
-    const userFn = eval('(' + fn + ')');
     const result = await userFn(...(args || []));
     self.postMessage({ ok: true, result });
   } catch (error) {
@@ -61,6 +61,6 @@ self.onmessage = async (event) => {
             reject(new Error(event.message || "Worker error"))
         }
 
-        worker.postMessage({ fn: fnSource, args })
+        worker.postMessage({ args })
     })
 }

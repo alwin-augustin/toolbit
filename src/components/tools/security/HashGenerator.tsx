@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Copy, Hash, Sparkles, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { ToolCard } from "@/components/ToolCard"
+import { ToolEmptyState } from "@/components/ToolEmptyState"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 import { useToolPipe } from "@/hooks/use-tool-pipe"
@@ -203,6 +204,29 @@ export default function HashGenerator() {
                     {!isComputing && input.trim() && <span className="text-xs text-muted-foreground">Auto-computed</span>}
                 </div>
             </div>
+
+            {!input.trim() && !Object.values(hashes).some(hash => hash) && (
+                <ToolEmptyState
+                    title="Enter text to generate hashes"
+                    description="Generate MD5, SHA-1, SHA-256, and SHA-512 locally."
+                    actions={
+                        <>
+                            <Button variant="outline" size="sm" onClick={() => setInput("Hello, World!")}>
+                                <Sparkles className="h-3 w-3 mr-1" />
+                                Load sample text
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
+                            >
+                                Browse snippets
+                            </Button>
+                        </>
+                    }
+                    hint="Tip: Hashes update only when you click Generate."
+                />
+            )}
 
             {Object.values(hashes).some(hash => hash) && (
                 <div className="space-y-3">

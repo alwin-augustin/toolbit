@@ -9,20 +9,20 @@ export interface ToolMetadata {
     id: string;
     name: string;
     description: string;
-    category: 'json' | 'encoding' | 'text' | 'web' | 'security' | 'converters' | 'utilities';
+    category: 'format' | 'encode' | 'generate' | 'transform' | 'analyze' | 'build' | 'text';
     path: string;
     component: ComponentType;
     keywords?: string[];
 }
 
 export const TOOL_CATEGORIES = {
-    json: { name: 'JSON Tools', description: 'Tools for working with JSON data' },
-    encoding: { name: 'Encoding Tools', description: 'Tools for encoding and decoding data' },
-    text: { name: 'Text Tools', description: 'Tools for text manipulation and analysis' },
-    web: { name: 'Web Development', description: 'Tools for web development tasks' },
-    security: { name: 'Security Tools', description: 'Tools for security and cryptography' },
-    converters: { name: 'Converter Tools', description: 'Tools for converting between different formats' },
-    utilities: { name: 'Utility Tools', description: 'General utility and helper tools' }
+    format: { name: 'Format & Validate', description: 'Make code pretty and verify structure' },
+    encode: { name: 'Encode & Decode', description: 'Encode, decode, and inspect data formats' },
+    generate: { name: 'Generate', description: 'Create identifiers, hashes, and sample data' },
+    transform: { name: 'Transform', description: 'Convert data between formats' },
+    analyze: { name: 'Analyze', description: 'Inspect, compare, and understand content' },
+    build: { name: 'Build', description: 'Construct requests and developer artifacts' },
+    text: { name: 'Text & Docs', description: 'Text utilities and document tools' }
 } as const;
 
 // Lazy-loaded tool components
@@ -85,7 +85,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'json-formatter',
         name: 'JSON Formatter',
         description: 'Format, minify, and validate JSON data',
-        category: 'json',
+        category: 'format',
         path: '/app/json-formatter',
         component: JsonFormatter,
         keywords: ['json', 'format', 'minify', 'validate', 'pretty print']
@@ -94,7 +94,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'json-validator',
         name: 'JSON Validator',
         description: 'Validate JSON against schemas',
-        category: 'json',
+        category: 'format',
         path: '/app/json-validator',
         component: JsonValidator,
         keywords: ['json', 'validate', 'schema', 'ajv']
@@ -103,7 +103,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'csv-to-json',
         name: 'CSV to JSON',
         description: 'Convert CSV files to JSON format',
-        category: 'json',
+        category: 'transform',
         path: '/app/csv-to-json',
         component: CsvToJsonConverter,
         keywords: ['csv', 'json', 'convert', 'transform']
@@ -113,7 +113,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'base64-encoder',
         name: 'Base64 Encoder',
         description: 'Encode text to Base64 or decode Base64 to text',
-        category: 'encoding',
+        category: 'encode',
         path: '/app/base64-encoder',
         component: Base64Encoder,
         keywords: ['base64', 'encode', 'decode']
@@ -122,7 +122,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'url-encoder',
         name: 'URL Encoder',
         description: 'Encode text for URLs or decode URL-encoded text',
-        category: 'encoding',
+        category: 'encode',
         path: '/app/url-encoder',
         component: UrlEncoder,
         keywords: ['url', 'encode', 'decode', 'uri', 'percent encoding']
@@ -131,7 +131,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'html-escape',
         name: 'HTML Escape',
         description: 'Escape and unescape HTML entities',
-        category: 'encoding',
+        category: 'encode',
         path: '/app/html-escape',
         component: HtmlEscape,
         keywords: ['html', 'escape', 'unescape', 'entities']
@@ -140,7 +140,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'protobuf-decoder',
         name: 'Protobuf Decoder',
         description: 'Decode raw Protocol Buffer binary data into readable fields',
-        category: 'encoding',
+        category: 'encode',
         path: '/app/protobuf-decoder',
         component: ProtobufDecoder,
         keywords: ['protobuf', 'protocol buffer', 'decode', 'binary', 'grpc', 'wire format']
@@ -150,7 +150,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'case-converter',
         name: 'Case Converter',
         description: 'Convert text between camelCase, snake_case, PascalCase, and more',
-        category: 'text',
+        category: 'transform',
         path: '/app/case-converter',
         component: CaseConverter,
         keywords: ['case', 'convert', 'camel', 'snake', 'pascal', 'kebab']
@@ -159,7 +159,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'word-counter',
         name: 'Word Counter',
         description: 'Count words, characters, and sentences',
-        category: 'text',
+        category: 'analyze',
         path: '/app/word-counter',
         component: WordCounter,
         keywords: ['word', 'count', 'character', 'sentence', 'statistics']
@@ -177,7 +177,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'diff-tool',
         name: 'Diff Tool',
         description: 'Compare text and see differences side-by-side',
-        category: 'text',
+        category: 'analyze',
         path: '/app/diff-tool',
         component: DiffTool,
         keywords: ['diff', 'compare', 'difference', 'merge']
@@ -186,7 +186,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'git-diff-viewer',
         name: 'Git Diff Viewer',
         description: 'Paste git diff output to view syntax-highlighted changes',
-        category: 'text',
+        category: 'analyze',
         path: '/app/git-diff-viewer',
         component: GitDiffViewer,
         keywords: ['git', 'diff', 'patch', 'viewer', 'changes', 'commit']
@@ -195,7 +195,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'regex-tester',
         name: 'Regex Tester',
         description: 'Test regex patterns with real-time matching and replace',
-        category: 'text',
+        category: 'analyze',
         path: '/app/regex-tester',
         component: RegexTester,
         keywords: ['regex', 'regular expression', 'pattern', 'test', 'match', 'replace']
@@ -204,7 +204,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'lorem-ipsum-generator',
         name: 'Lorem Ipsum Generator',
         description: 'Generate placeholder text for designs and mockups',
-        category: 'text',
+        category: 'generate',
         path: '/app/lorem-ipsum-generator',
         component: LoremIpsumGenerator,
         keywords: ['lorem', 'ipsum', 'placeholder', 'text', 'generate', 'dummy']
@@ -214,7 +214,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'css-formatter',
         name: 'CSS Formatter',
         description: 'Format and minify CSS code',
-        category: 'web',
+        category: 'format',
         path: '/app/css-formatter',
         component: CssFormatter,
         keywords: ['css', 'format', 'minify', 'beautify']
@@ -223,7 +223,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'js-json-minifier',
         name: 'JS/JSON Minifier',
         description: 'Minify JavaScript code',
-        category: 'web',
+        category: 'transform',
         path: '/app/js-json-minifier',
         component: JsJsonMinifier,
         keywords: ['javascript', 'minify', 'compress', 'uglify']
@@ -232,7 +232,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'markdown-previewer',
         name: 'Markdown Previewer',
         description: 'Live preview Markdown with syntax support',
-        category: 'web',
+        category: 'text',
         path: '/app/markdown-previewer',
         component: MarkdownPreviewer,
         keywords: ['markdown', 'preview', 'md', 'render']
@@ -241,7 +241,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'yaml-formatter',
         name: 'YAML Formatter',
         description: 'Format YAML and convert between YAML and JSON',
-        category: 'web',
+        category: 'format',
         path: '/app/yaml-formatter',
         component: YamlFormatter,
         keywords: ['yaml', 'json', 'format', 'convert', 'yml']
@@ -250,7 +250,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'api-request-builder',
         name: 'API Request Builder',
         description: 'Send HTTP requests and inspect responses (Postman-lite)',
-        category: 'web',
+        category: 'build',
         path: '/app/api-request-builder',
         component: ApiRequestBuilder,
         keywords: ['api', 'http', 'request', 'postman', 'rest', 'fetch', 'get', 'post', 'put', 'delete']
@@ -259,7 +259,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'xml-formatter',
         name: 'XML Formatter',
         description: 'Format, minify, convert XML to JSON, and query with XPath',
-        category: 'web',
+        category: 'format',
         path: '/app/xml-formatter',
         component: XmlFormatter,
         keywords: ['xml', 'format', 'minify', 'json', 'xpath', 'convert', 'prettify']
@@ -268,7 +268,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'sql-formatter',
         name: 'SQL Formatter',
         description: 'Format, minify, and uppercase SQL queries',
-        category: 'web',
+        category: 'format',
         path: '/app/sql-formatter',
         component: SqlFormatter,
         keywords: ['sql', 'format', 'query', 'database', 'minify', 'mysql', 'postgresql']
@@ -277,7 +277,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'graphql-formatter',
         name: 'GraphQL Formatter',
         description: 'Format, validate, and minify GraphQL queries and schemas',
-        category: 'web',
+        category: 'format',
         path: '/app/graphql-formatter',
         component: GraphqlFormatter,
         keywords: ['graphql', 'gql', 'format', 'validate', 'query', 'mutation', 'schema']
@@ -286,7 +286,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'websocket-tester',
         name: 'WebSocket Tester',
         description: 'Connect to WebSocket servers, send and receive messages in real-time',
-        category: 'web',
+        category: 'build',
         path: '/app/websocket-tester',
         component: WebSocketTester,
         keywords: ['websocket', 'ws', 'wss', 'real-time', 'socket', 'test', 'connect']
@@ -295,7 +295,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'nginx-config-validator',
         name: 'Nginx Config Validator',
         description: 'Validate, format, and analyze Nginx configuration files',
-        category: 'web',
+        category: 'format',
         path: '/app/nginx-config-validator',
         component: NginxConfigValidator,
         keywords: ['nginx', 'config', 'validate', 'server', 'proxy', 'reverse proxy']
@@ -305,7 +305,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'hash-generator',
         name: 'Hash Generator',
         description: 'Generate MD5, SHA-1, SHA-256, and SHA-512 hashes',
-        category: 'security',
+        category: 'generate',
         path: '/app/hash-generator',
         component: HashGenerator,
         keywords: ['hash', 'md5', 'sha', 'checksum', 'digest']
@@ -314,7 +314,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'jwt-decoder',
         name: 'JWT Decoder',
         description: 'Decode and inspect JWT tokens',
-        category: 'security',
+        category: 'encode',
         path: '/app/jwt-decoder',
         component: JwtDecoder,
         keywords: ['jwt', 'token', 'decode', 'inspect', 'authentication']
@@ -323,7 +323,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'password-generator',
         name: 'Password Generator',
         description: 'Generate secure random passwords with strength meter',
-        category: 'security',
+        category: 'generate',
         path: '/app/password-generator',
         component: PasswordGenerator,
         keywords: ['password', 'generate', 'random', 'secure', 'strength']
@@ -332,7 +332,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'totp-generator',
         name: 'TOTP/2FA Generator',
         description: 'Generate time-based one-time passwords (TOTP) offline',
-        category: 'security',
+        category: 'generate',
         path: '/app/totp-generator',
         component: TotpGenerator,
         keywords: ['totp', '2fa', 'two-factor', 'authenticator', 'otp', 'mfa']
@@ -341,7 +341,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'certificate-decoder',
         name: 'Certificate Decoder',
         description: 'Decode and inspect SSL/TLS certificates (PEM format)',
-        category: 'security',
+        category: 'encode',
         path: '/app/certificate-decoder',
         component: CertificateDecoder,
         keywords: ['certificate', 'ssl', 'tls', 'x509', 'pem', 'decode', 'inspect']
@@ -351,7 +351,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'timestamp-converter',
         name: 'Timestamp Converter',
         description: 'Convert between timestamps and human-readable dates',
-        category: 'converters',
+        category: 'transform',
         path: '/app/timestamp-converter',
         component: TimestampConverter,
         keywords: ['timestamp', 'unix', 'epoch', 'date', 'time']
@@ -360,7 +360,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'color-converter',
         name: 'Color Converter',
         description: 'Convert between HEX, RGB, and HSL color formats',
-        category: 'converters',
+        category: 'transform',
         path: '/app/color-converter',
         component: ColorConverter,
         keywords: ['color', 'hex', 'rgb', 'hsl', 'convert']
@@ -369,7 +369,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'unit-converter',
         name: 'Unit Converter',
         description: 'Convert between different units of measurement',
-        category: 'converters',
+        category: 'transform',
         path: '/app/unit-converter',
         component: UnitConverter,
         keywords: ['unit', 'convert', 'measurement', 'length', 'weight']
@@ -378,7 +378,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'image-converter',
         name: 'Image Converter',
         description: 'Convert, resize, and optimize images between PNG, JPEG, and WebP',
-        category: 'converters',
+        category: 'transform',
         path: '/app/image-converter',
         component: ImageConverter,
         keywords: ['image', 'convert', 'resize', 'compress', 'png', 'jpg', 'webp', 'optimize']
@@ -387,7 +387,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'pdf-tools',
         name: 'PDF Tools',
         description: 'Merge, split, and rotate PDFs — all processing in your browser',
-        category: 'converters',
+        category: 'text',
         path: '/app/pdf-tools',
         component: PdfTools,
         keywords: ['pdf', 'merge', 'split', 'rotate', 'extract', 'combine', 'pages']
@@ -397,7 +397,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'date-calculator',
         name: 'Date Calculator',
         description: 'Calculate date differences and add/subtract time',
-        category: 'utilities',
+        category: 'text',
         path: '/app/date-calculator',
         component: DateCalculator,
         keywords: ['date', 'calculate', 'difference', 'add', 'subtract']
@@ -406,7 +406,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'cron-parser',
         name: 'Cron Expression Parser',
         description: 'Parse and understand cron expressions',
-        category: 'utilities',
+        category: 'analyze',
         path: '/app/cron-parser',
         component: CronParser,
         keywords: ['cron', 'parse', 'schedule', 'expression']
@@ -415,7 +415,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'uuid-generator',
         name: 'UUID Generator',
         description: 'Generate UUIDs (v4)',
-        category: 'utilities',
+        category: 'generate',
         path: '/app/uuid-generator',
         component: UuidGenerator,
         keywords: ['uuid', 'guid', 'generate', 'unique', 'identifier']
@@ -424,7 +424,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'http-status-codes',
         name: 'HTTP Status Codes',
         description: 'Quick reference for HTTP status codes',
-        category: 'utilities',
+        category: 'analyze',
         path: '/app/http-status-codes',
         component: HttpStatusCodeReference,
         keywords: ['http', 'status', 'code', 'reference', 'error']
@@ -433,7 +433,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'fake-data-generator',
         name: 'Fake Data Generator',
         description: 'Generate realistic test data with names, emails, and addresses',
-        category: 'utilities',
+        category: 'generate',
         path: '/app/fake-data-generator',
         component: FakeDataGenerator,
         keywords: ['fake', 'data', 'generate', 'mock', 'test', 'name', 'email', 'address', 'csv', 'sql']
@@ -442,7 +442,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'qr-code-generator',
         name: 'QR Code Generator',
         description: 'Generate QR codes for text, URLs, WiFi, and contacts',
-        category: 'utilities',
+        category: 'generate',
         path: '/app/qr-code-generator',
         component: QrCodeGenerator,
         keywords: ['qr', 'code', 'generate', 'barcode', 'wifi', 'vcard', 'url']
@@ -451,7 +451,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'crontab-generator',
         name: 'Crontab Generator',
         description: 'Build cron expressions visually with real-time preview',
-        category: 'utilities',
+        category: 'build',
         path: '/app/crontab-generator',
         component: CrontabGenerator,
         keywords: ['cron', 'crontab', 'schedule', 'build', 'visual', 'generator']
@@ -460,7 +460,7 @@ export const TOOLS: ToolMetadata[] = [
         id: 'docker-command-builder',
         name: 'Docker Command Builder',
         description: 'Build docker run commands and docker-compose files visually',
-        category: 'utilities',
+        category: 'build',
         path: '/app/docker-command-builder',
         component: DockerCommandBuilder,
         keywords: ['docker', 'container', 'compose', 'run', 'build', 'command']

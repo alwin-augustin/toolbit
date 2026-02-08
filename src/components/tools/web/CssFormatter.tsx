@@ -1,25 +1,22 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import cssbeautify from 'cssbeautify';
 import { minify } from 'csso';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Code, Loader2 } from 'lucide-react';
+import { Sparkles, Code } from 'lucide-react';
 import Editor from 'react-simple-code-editor';
 import Prism from 'prismjs';
-import 'prismjs/components/prism-css';
 import { FileDropZone } from '@/components/FileDropZone';
 import { ToolCard } from '@/components/ToolCard';
 import { useUrlState } from '@/hooks/use-url-state';
 import { useToolHistory } from '@/hooks/use-tool-history';
 import { useWorkspace } from '@/hooks/use-workspace';
 
-const WORKER_THRESHOLD = 100_000; // 100KB
-
 
 
 const CssFormatter: React.FC = () => {
   const [css, setCss] = useState('');
   const [formattedCss, setFormattedCss] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [cssReady, setCssReady] = useState(false);
   const shareState = useMemo(() => ({ css }), [css]);
   const { getShareUrl } = useUrlState(shareState, (state) => {
     setCss(typeof state.css === 'string' ? state.css : '');
@@ -29,6 +26,13 @@ const CssFormatter: React.FC = () => {
 
   useEffect(() => {
     if (css) return;
+    // Check for smart-paste data from AppHome
+    const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+    if (smartPaste) {
+        sessionStorage.removeItem("toolbit:smart-paste");
+        setCss(smartPaste.trim());
+        return;
+    }
     const workspaceState = consumeWorkspaceState('css-formatter');
     if (workspaceState) {
       try {
@@ -41,48 +45,40 @@ const CssFormatter: React.FC = () => {
     }
   }, [css, consumeWorkspaceState]);
 
-  const runWithWorker = useCallback((cssInput: string, action: "format" | "minify"): Promise<string> => {
-    const worker = new Worker(new URL("../../../workers/css-worker.ts", import.meta.url), { type: "module" });
-    return new Promise((resolve, reject) => {
-      const timeout = window.setTimeout(() => { worker.terminate(); reject(new Error("Timeout")); }, 30_000);
-      worker.onmessage = (e: MessageEvent) => {
-        window.clearTimeout(timeout); worker.terminate();
-        if (e.data?.ok) resolve(e.data.result);
-        else reject(new Error(e.data?.error || "Worker failed"));
-      };
-      worker.onerror = (e) => { window.clearTimeout(timeout); worker.terminate(); reject(new Error(e.message)); };
-      worker.postMessage({ css: cssInput, action });
-    });
+  useEffect(() => {
+    let active = true;
+    import('prismjs/components/prism-css')
+      .then(() => {
+        if (active) setCssReady(true);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const processCSS = useCallback(async (action: "format" | "minify") => {
-    setIsProcessing(true);
+  const handleFormat = () => {
     try {
-      let result: string;
-      if (css.length > WORKER_THRESHOLD && "Worker" in window) {
-        try {
-          result = await runWithWorker(css, action);
-        } catch {
-          // Fallback to main thread
-          result = action === "format"
-            ? cssbeautify(css, { indent: '  ', autosemicolon: true })
-            : minify(css).css;
-        }
-      } else {
-        result = action === "format"
-          ? cssbeautify(css, { indent: '  ', autosemicolon: true })
-          : minify(css).css;
-      }
-      setFormattedCss(result);
-      addEntry({ input: css, output: result, metadata: { action } });
-    } catch {
+      const formatted = cssbeautify(css, {
+        indent: '  ',
+        autosemicolon: true,
+      });
+      setFormattedCss(formatted);
+      addEntry({ input: css, output: formatted, metadata: { action: 'format' } });
+    } catch (_error) {
       setFormattedCss('Invalid CSS input');
     }
-    setIsProcessing(false);
-  }, [css, addEntry, runWithWorker]);
+  };
 
-  const handleFormat = () => processCSS("format");
-  const handleMinify = () => processCSS("minify");
+  const handleMinify = () => {
+    try {
+      const minified = minify(css).css;
+      setFormattedCss(minified);
+      addEntry({ input: css, output: minified, metadata: { action: 'minify' } });
+    } catch (_error) {
+      setFormattedCss('Invalid CSS input');
+    }
+  };
 
   const editorClassName = "flex-grow min-h-[20rem] font-mono text-sm rounded-md border border-input bg-background px-3 py-2 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm";
 
@@ -112,7 +108,7 @@ const CssFormatter: React.FC = () => {
           <Editor
             value={css}
             onValueChange={setCss}
-            highlight={(code) => Prism.highlight(code, Prism.languages.css, 'css')}
+            highlight={(code) => (cssReady && Prism.languages.css ? Prism.highlight(code, Prism.languages.css, 'css') : code)}
             padding={10}
             placeholder="Enter CSS data"
             className={editorClassName}
@@ -125,23 +121,19 @@ const CssFormatter: React.FC = () => {
             value={formattedCss}
             onValueChange={() => {}}
             readOnly
-            highlight={(code) => Prism.highlight(code, Prism.languages.css, 'css')}
+            highlight={(code) => (cssReady && Prism.languages.css ? Prism.highlight(code, Prism.languages.css, 'css') : code)}
             padding={10}
             placeholder="Formatted/Minified CSS output"
             className={editorClassName}
           />
         </div>
-        <div className="col-span-1 lg:col-span-2 flex gap-2 items-center">
-          <Button onClick={handleFormat} disabled={isProcessing}>
-            {isProcessing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
-            Format
-          </Button>
-          <Button onClick={handleMinify} disabled={isProcessing}>Minify</Button>
+        <div className="col-span-1 lg:col-span-2 flex gap-2">
+          <Button onClick={handleFormat}>Format</Button>
+          <Button onClick={handleMinify}>Minify</Button>
           <Button variant="ghost" size="sm" onClick={() => setCss('.container{display:flex;justify-content:center;align-items:center;gap:1rem;padding:2rem}.card{background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);padding:1.5rem}')}>
             <Sparkles className="h-3 w-3 mr-1" />
             Sample
           </Button>
-          {css.length > WORKER_THRESHOLD && <span className="text-xs text-muted-foreground">Large input — using background thread</span>}
         </div>
       </div>
     </ToolCard>

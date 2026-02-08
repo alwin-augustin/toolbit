@@ -1,9 +1,10 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, Code, Image, FileUp, Sparkles } from "lucide-react";
+import { Copy, Code, Image, FileUp, Sparkles, ArrowRight } from "lucide-react";
 import { ToolCard } from "@/components/ToolCard";
 import { FileDropZone } from "@/components/FileDropZone";
+import { ToolEmptyState } from "@/components/ToolEmptyState";
 import { useToolIO } from "@/hooks/use-tool-io";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { encodeBase64, decodeBase64 } from "@/services";
@@ -39,6 +40,14 @@ export default function Base64Encoder() {
 
     useEffect(() => {
         if (input || batchInput) return;
+        // Check for smart-paste data from AppHome
+        const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+        if (smartPaste) {
+            sessionStorage.removeItem("toolbit:smart-paste");
+            setInput(smartPaste.trim());
+            setMode("single");
+            return;
+        }
         const workspaceState = consumeWorkspaceState("base64-encoder");
         if (workspaceState) {
             try {
@@ -265,70 +274,105 @@ export default function Base64Encoder() {
                 </div>
             ) : (
             <>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <FileDropZone onFileContent={setInput} accept={[".txt", "text/plain"]}>
-                <div className="space-y-2">
-                    <label htmlFor="base64-input" className="text-sm font-medium">
-                        Input
-                    </label>
-                    <Textarea
-                        id="base64-input"
-                        placeholder="Enter text to encode or Base64 to decode..."
-                        value={input}
-                        onChange={(e) => { setInput(e.target.value); setImageDataUri(""); }}
-                        className="min-h-[20rem] font-mono text-sm"
-                        data-testid="input-base64"
-                    />
-                    <div className="flex gap-2 flex-wrap">
-                        <Button onClick={handleEncode} data-testid="button-encode">
-                            Encode
-                        </Button>
-                        <Button onClick={handleDecode} variant="outline" data-testid="button-decode">
-                            Decode
-                        </Button>
-                        <Button onClick={handleGenerateDataUri} variant="outline">
-                            Data URI
-                        </Button>
-                        <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                            <FileUp className="h-4 w-4 mr-1" />
-                            File → Base64
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => { setInput(SAMPLE_TEXT); setOutput(""); setImageDataUri(""); }}>
-                            <Sparkles className="h-3 w-3 mr-1" />
-                            Sample
-                        </Button>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            className="hidden"
-                            onChange={handleFileUpload}
-                            accept="image/*,.pdf,.txt"
+            <div className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 items-stretch">
+                    <FileDropZone onFileContent={setInput} accept={[".txt", "text/plain"]}>
+                        <div className="space-y-2 h-full">
+                            <label htmlFor="base64-input" className="text-sm font-medium">
+                                Input
+                            </label>
+                            <Textarea
+                                id="base64-input"
+                                placeholder="Enter text to encode or Base64 to decode..."
+                                value={input}
+                                onChange={(e) => { setInput(e.target.value); setImageDataUri(""); }}
+                                className="min-h-[20rem] font-mono text-sm"
+                                data-testid="input-base64"
+                            />
+                        </div>
+                    </FileDropZone>
+
+                    <div className="hidden lg:flex items-center justify-center text-muted-foreground">
+                        <ArrowRight className="h-5 w-5" />
+                    </div>
+
+                    <div className="space-y-2 h-full">
+                        <label htmlFor="base64-output" className="text-sm font-medium">
+                            Output
+                        </label>
+                        <Textarea
+                            id="base64-output"
+                            placeholder="Result will appear here..."
+                            value={output}
+                            readOnly
+                            className="min-h-[20rem] font-mono text-sm"
+                            data-testid="output-base64"
                         />
                     </div>
                 </div>
-                </FileDropZone>
 
-                <div className="space-y-2">
-                    <label htmlFor="base64-output" className="text-sm font-medium">
-                        Output
-                    </label>
-                    <Textarea
-                        id="base64-output"
-                        placeholder="Result will appear here..."
-                        value={output}
-                        readOnly
-                        className="min-h-[20rem] font-mono text-sm"
-                        data-testid="output-base64"
+                {!input.trim() && (
+                    <ToolEmptyState
+                        title="Drop a file or paste text to get started"
+                        description="Encode plain text to Base64, decode Base64 to text, or generate Data URIs."
+                        actions={
+                            <>
+                                <Button variant="outline" size="sm" onClick={() => { setInput(SAMPLE_TEXT); setOutput(""); setImageDataUri(""); }}>
+                                    <Sparkles className="h-3 w-3 mr-1" />
+                                    Load sample
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                                    <FileUp className="h-3 w-3 mr-1" />
+                                    Choose a file
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
+                                >
+                                    Browse snippets
+                                </Button>
+                            </>
+                        }
+                        hint="Tip: Use Cmd+Enter to run the primary action quickly."
                     />
+                )}
+
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button onClick={handleEncode} data-testid="button-encode">
+                        Encode
+                    </Button>
+                    <Button onClick={handleDecode} variant="outline" data-testid="button-decode">
+                        Decode
+                    </Button>
+                    <Button onClick={handleGenerateDataUri} variant="outline">
+                        Data URI
+                    </Button>
+                    <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                        <FileUp className="h-4 w-4 mr-1" />
+                        File → Base64
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setInput(SAMPLE_TEXT); setOutput(""); setImageDataUri(""); }}>
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        Sample
+                    </Button>
                     <Button
                         onClick={() => copyToClipboard(output)}
                         disabled={!output}
                         variant="outline"
                         data-testid="button-copy"
+                        className="ml-auto"
                     >
                         <Copy className="h-4 w-4 mr-2" />
-                        Copy
+                        Copy Output
                     </Button>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                        accept="image/*,.pdf,.txt"
+                    />
                 </div>
             </div>
 

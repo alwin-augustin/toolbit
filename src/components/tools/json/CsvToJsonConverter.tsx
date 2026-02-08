@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Copy, FileJson } from 'lucide-react';
 import Editor from 'react-simple-code-editor';
 import Prism from 'prismjs';
-import 'prismjs/components/prism-json';
 import { FileDropZone } from '@/components/FileDropZone';
 import { ToolCard } from '@/components/ToolCard';
+import { ToolEmptyState } from "@/components/ToolEmptyState";
 import { useUrlState } from '@/hooks/use-url-state';
 import { useToolHistory } from '@/hooks/use-tool-history';
 import { useWorkspace } from '@/hooks/use-workspace';
@@ -17,6 +17,7 @@ const CsvToJsonConverter: React.FC = () => {
   const [csv, setCsv] = useState('');
   const [json, setJson] = useState('');
   const [copied, setCopied] = useState(false);
+  const [jsonReady, setJsonReady] = useState(false);
   const shareState = useMemo(() => ({ csv }), [csv]);
   const { getShareUrl } = useUrlState(shareState, (state) => {
     setCsv(typeof state.csv === 'string' ? state.csv : '');
@@ -26,6 +27,13 @@ const CsvToJsonConverter: React.FC = () => {
 
   useEffect(() => {
     if (csv) return;
+    // Check for smart-paste data from AppHome
+    const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+    if (smartPaste) {
+        sessionStorage.removeItem("toolbit:smart-paste");
+        setCsv(smartPaste.trim());
+        return;
+    }
     const workspaceState = consumeWorkspaceState('csv-to-json');
     if (workspaceState) {
       try {
@@ -37,6 +45,18 @@ const CsvToJsonConverter: React.FC = () => {
       }
     }
   }, [csv, consumeWorkspaceState]);
+
+  useEffect(() => {
+    let active = true;
+    import('prismjs/components/prism-json')
+      .then(() => {
+        if (active) setJsonReady(true);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleConvert = () => {
     Papa.parse(csv, {
@@ -90,6 +110,31 @@ const CsvToJsonConverter: React.FC = () => {
             placeholder="Enter CSV data"
             className={editorClassName}
           />
+          {!csv.trim() && (
+            <ToolEmptyState
+              title="Paste CSV or drop a file"
+              description="Convert tabular data into structured JSON arrays."
+              actions={
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCsv("name,role,active\\nAlice,Engineer,true\\nBob,Designer,false")}
+                  >
+                    Load sample CSV
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
+                  >
+                    Browse snippets
+                  </Button>
+                </>
+              }
+              hint="Tip: The first row is used as column headers."
+            />
+          )}
         </div>
         </FileDropZone>
         <div className="flex flex-col h-full">
@@ -109,7 +154,7 @@ const CsvToJsonConverter: React.FC = () => {
             value={json}
             onValueChange={() => {}}
             readOnly
-            highlight={(code) => Prism.highlight(code, Prism.languages.json, 'json')}
+            highlight={(code) => (jsonReady && Prism.languages.json ? Prism.highlight(code, Prism.languages.json, 'json') : code)}
             padding={10}
             placeholder="JSON output"
             className={editorClassName}
