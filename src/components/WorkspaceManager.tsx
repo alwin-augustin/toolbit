@@ -6,13 +6,8 @@ import { listWorkspaces, saveWorkspace, deleteWorkspace, type Workspace, type Wo
 import { getRecentHistory, type ToolHistoryEntry } from "@/lib/history-db"
 import { useWorkspace } from "@/hooks/use-workspace"
 import { TOOLS } from "@/config/tools.config"
+import { PRESET_WORKFLOWS } from "@/config/workflows.config"
 import { useLocation } from "wouter"
-
-const PRESET_WORKSPACES: { name: string; tools: string[] }[] = [
-    { name: "API Development", tools: ["api-request-builder", "json-formatter", "base64-encoder"] },
-    { name: "Data Conversion", tools: ["csv-to-json", "json-formatter", "yaml-formatter"] },
-    { name: "Security Audit", tools: ["jwt-decoder", "hash-generator", "base64-encoder"] },
-]
 
 function buildWorkspaceFromHistory(name: string, entries: ToolHistoryEntry[]): Workspace {
     const latestByTool = new Map<string, ToolHistoryEntry>()
@@ -42,7 +37,11 @@ function buildWorkspaceFromTools(name: string, toolIds: string[]): Workspace {
     }
 }
 
-export function WorkspaceManager() {
+interface WorkspaceManagerProps {
+    showTrigger?: boolean
+}
+
+export function WorkspaceManager({ showTrigger = true }: WorkspaceManagerProps) {
     const [open, setOpen] = useState(false)
     const [workspaces, setWorkspaces] = useState<Workspace[]>([])
     const [name, setName] = useState("")
@@ -61,6 +60,12 @@ export function WorkspaceManager() {
     useEffect(() => {
         if (open) refresh()
     }, [open])
+
+    useEffect(() => {
+        const handleOpen = () => setOpen(true)
+        window.addEventListener("open-workspaces", handleOpen)
+        return () => window.removeEventListener("open-workspaces", handleOpen)
+    }, [])
 
     const existingNames = useMemo(() => new Set(workspaces.map((w) => w.name)), [workspaces])
 
@@ -123,9 +128,11 @@ export function WorkspaceManager() {
 
     return (
         <Sheet open={open} onOpenChange={setOpen}>
-            <Button variant="ghost" size="icon" onClick={() => setOpen(true)} title="Workspaces">
-                <FolderOpen className="h-4 w-4" />
-            </Button>
+            {showTrigger && (
+                <Button variant="ghost" size="icon" onClick={() => setOpen(true)} title="Workspaces">
+                    <FolderOpen className="h-4 w-4" />
+                </Button>
+            )}
             <SheetContent side="right" className="w-full sm:max-w-xl">
                 <SheetHeader>
                     <SheetTitle>Workspaces</SheetTitle>
@@ -157,8 +164,8 @@ export function WorkspaceManager() {
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Presets</label>
                         <div className="flex flex-wrap gap-2">
-                            {PRESET_WORKSPACES.map((preset) => (
-                                <Button key={preset.name} variant="outline" size="sm" onClick={() => handleCreatePreset(preset)}>
+                            {PRESET_WORKFLOWS.map((preset) => (
+                                <Button key={preset.id} variant="outline" size="sm" onClick={() => handleCreatePreset(preset)}>
                                     {preset.name}
                                 </Button>
                             ))}

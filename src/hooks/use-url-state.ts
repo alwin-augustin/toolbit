@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useRef, useState } from "react"
 
 const DEFAULT_MAX_BYTES = 8 * 1024
+const STATE_PARAM = "tb"
 
 type UrlStateOptions = {
     enabled?: boolean
@@ -175,17 +176,51 @@ export function useUrlState<T extends Record<string, unknown> | string>(
     const [shareUrl, setShareUrl] = useState(() => window.location.href)
     const [shareWarning, setShareWarning] = useState<string | undefined>(undefined)
     const [isOversize, setIsOversize] = useState(false)
+    const isHashRouter = () => window.location.hash.startsWith("#/")
+
+    const getStateToken = () => {
+        if (isHashRouter()) {
+            const params = new URLSearchParams(window.location.search)
+            return params.get(STATE_PARAM) || ""
+        }
+        return window.location.hash.slice(1)
+    }
+
+    const updateUrlWithToken = (token: string) => {
+        if (isHashRouter()) {
+            const url = new URL(window.location.href)
+            if (token) {
+                url.searchParams.set(STATE_PARAM, token)
+            } else {
+                url.searchParams.delete(STATE_PARAM)
+            }
+            window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`)
+            const origin = url.origin === "null" ? "" : url.origin
+            setShareUrl(`${origin}${url.pathname}${url.search}${url.hash}`)
+            return
+        }
+
+        if (token) {
+            window.history.replaceState(null, "", `#${token}`)
+            const origin = window.location.origin === "null" ? "" : window.location.origin
+            setShareUrl(`${origin}${window.location.pathname}#${token}`)
+        } else {
+            window.history.replaceState(null, "", window.location.pathname)
+            const origin = window.location.origin === "null" ? "" : window.location.origin
+            setShareUrl(`${origin}${window.location.pathname}`)
+        }
+    }
 
     // On mount, restore state from URL hash
     useEffect(() => {
         if (!enabled || initialized.current) return
         initialized.current = true
 
-        const hash = window.location.hash.slice(1)
-        if (!hash) return
+        const token = getStateToken()
+        if (!token) return
 
         ;(async () => {
-            const decoded = await decodeState(hash)
+            const decoded = await decodeState(token)
             if (decoded === null || decoded === undefined) return
             skipNextHashUpdate.current = true
 
@@ -231,20 +266,13 @@ export function useUrlState<T extends Record<string, unknown> | string>(
 
                 setIsOversize(oversize)
                 if (oversize) {
-                    setShareWarning(`Share URL too large (>${Math.round(maxBytes / 1024)}KB). Link copied without data.`)
-                    window.history.replaceState(null, "", window.location.pathname)
-                    setShareUrl(`${window.location.origin}${window.location.pathname}`)
-                    return
-                }
+                setShareWarning(`Share URL too large (>${Math.round(maxBytes / 1024)}KB). Link copied without data.`)
+                updateUrlWithToken("")
+                return
+            }
 
-                setShareWarning(undefined)
-                if (hash) {
-                    window.history.replaceState(null, "", `#${hash}`)
-                    setShareUrl(`${window.location.origin}${window.location.pathname}#${hash}`)
-                } else {
-                    window.history.replaceState(null, "", window.location.pathname)
-                    setShareUrl(`${window.location.origin}${window.location.pathname}`)
-                }
+            setShareWarning(undefined)
+                updateUrlWithToken(hash)
             })()
         }, 500)
 

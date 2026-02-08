@@ -77,9 +77,17 @@
             "arm64",
             "universal"
           ]
+        },
+        {
+          "target": "pkg",
+          "arch": [
+            "x64",
+            "arm64",
+            "universal"
+          ]
         }
       ],
-      "icon": "build/icon.icns",
+      "icon": "build/icon.png",
       "category": "public.app-category.developer-tools",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
@@ -91,6 +99,9 @@
       "minimumSystemVersion": "10.13.0"
     },
     "dmg": {
+      "background": "build/dmg-background.png",
+      "iconSize": 96,
+      "iconTextSize": 12,
       "contents": [
         {
           "x": 130,
@@ -110,6 +121,11 @@
       "title": "${productName} ${version}",
       "internetEnabled": false,
       "sign": false
+    },
+    "pkg": {
+      "allowAnywhere": true,
+      "allowCurrentUserHome": true,
+      "allowRootDirectory": true
     },
     "linux": {
       "target": [

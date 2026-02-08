@@ -1,44 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Main pages -->
   <url><loc>https://toolbit.pages.dev/</loc><priority>1.0</priority></url>
+  <url><loc>https://toolbit.pages.dev/app</loc><priority>0.9</priority></url>
   <url><loc>https://toolbit.pages.dev/privacy</loc><priority>0.3</priority></url>
   <url><loc>https://toolbit.pages.dev/terms</loc><priority>0.3</priority></url>
 
-  <!-- JSON Tools -->
-  <url><loc>https://toolbit.pages.dev/app/json-formatter</loc><priority>0.8</priority></url>
-  <url><loc>https://toolbit.pages.dev/app/json-validator</loc><priority>0.8</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/json-formatter</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/json-validator</loc><priority>0.7</priority></url>
   <url><loc>https://toolbit.pages.dev/app/csv-to-json</loc><priority>0.7</priority></url>
-
-  <!-- Encoding Tools -->
-  <url><loc>https://toolbit.pages.dev/app/base64-encoder</loc><priority>0.8</priority></url>
-  <url><loc>https://toolbit.pages.dev/app/url-encoder</loc><priority>0.8</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/base64-encoder</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/url-encoder</loc><priority>0.7</priority></url>
   <url><loc>https://toolbit.pages.dev/app/html-escape</loc><priority>0.7</priority></url>
-
-  <!-- Text Tools -->
+  <url><loc>https://toolbit.pages.dev/app/protobuf-decoder</loc><priority>0.7</priority></url>
   <url><loc>https://toolbit.pages.dev/app/case-converter</loc><priority>0.7</priority></url>
   <url><loc>https://toolbit.pages.dev/app/word-counter</loc><priority>0.7</priority></url>
-  <url><loc>https://toolbit.pages.dev/app/strip-whitespace</loc><priority>0.6</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/strip-whitespace</loc><priority>0.7</priority></url>
   <url><loc>https://toolbit.pages.dev/app/diff-tool</loc><priority>0.7</priority></url>
-
-  <!-- Web Tools -->
-  <url><loc>https://toolbit.pages.dev/app/markdown-previewer</loc><priority>0.8</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/git-diff-viewer</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/regex-tester</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/lorem-ipsum-generator</loc><priority>0.7</priority></url>
   <url><loc>https://toolbit.pages.dev/app/css-formatter</loc><priority>0.7</priority></url>
   <url><loc>https://toolbit.pages.dev/app/js-json-minifier</loc><priority>0.7</priority></url>
-  <url><loc>https://toolbit.pages.dev/app/yaml-formatter</loc><priority>0.6</priority></url>
-
-  <!-- Security Tools -->
-  <url><loc>https://toolbit.pages.dev/app/hash-generator</loc><priority>0.8</priority></url>
-  <url><loc>https://toolbit.pages.dev/app/jwt-decoder</loc><priority>0.8</priority></url>
-
-  <!-- Converter Tools -->
-  <url><loc>https://toolbit.pages.dev/app/timestamp-converter</loc><priority>0.8</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/markdown-previewer</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/yaml-formatter</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/api-request-builder</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/xml-formatter</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/sql-formatter</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/graphql-formatter</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/websocket-tester</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/nginx-config-validator</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/hash-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/jwt-decoder</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/password-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/totp-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/certificate-decoder</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/timestamp-converter</loc><priority>0.7</priority></url>
   <url><loc>https://toolbit.pages.dev/app/color-converter</loc><priority>0.7</priority></url>
   <url><loc>https://toolbit.pages.dev/app/unit-converter</loc><priority>0.7</priority></url>
-
-  <!-- Utility Tools -->
-  <url><loc>https://toolbit.pages.dev/app/uuid-generator</loc><priority>0.8</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/image-converter</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/pdf-tools</loc><priority>0.7</priority></url>
   <url><loc>https://toolbit.pages.dev/app/date-calculator</loc><priority>0.7</priority></url>
   <url><loc>https://toolbit.pages.dev/app/cron-parser</loc><priority>0.7</priority></url>
-  <url><loc>https://toolbit.pages.dev/app/http-status-codes</loc><priority>0.6</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/uuid-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/http-status-codes</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/fake-data-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/qr-code-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/crontab-generator</loc><priority>0.7</priority></url>
+  <url><loc>https://toolbit.pages.dev/app/docker-command-builder</loc><priority>0.7</priority></url>
 </urlset>

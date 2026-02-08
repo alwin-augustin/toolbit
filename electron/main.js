@@ -21,8 +21,8 @@ function createWindow() {
         ...details.responseHeaders,
         'Content-Security-Policy': [
           isDev
-            ? "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* ws://localhost:*; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
-            : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self';"
+            ? "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:* ws://localhost:*; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:* ws://localhost:*;"
+            : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';"
         ]
       }
     });
@@ -75,7 +75,7 @@ function createWindow() {
   // Load the app
   if (isDev) {
     // Development: Load from Vite dev server directly to app route
-    mainWindow.loadURL('http://localhost:5173/app/json-formatter').catch(err => {
+    mainWindow.loadURL('http://localhost:5173/#/app').catch(err => {
       console.error('Failed to load dev server:', err);
       app.quit();
     });
@@ -84,7 +84,7 @@ function createWindow() {
   } else {
     // Production: Load from built files with hash routing to app
     const indexPath = path.join(__dirname, '../dist/index.html');
-    mainWindow.loadFile(indexPath, { hash: '/app/json-formatter' }).catch(err => {
+    mainWindow.loadFile(indexPath, { hash: '/app' }).catch(err => {
       console.error('Failed to load app:', err);
       app.quit();
     });

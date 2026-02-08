@@ -50,12 +50,13 @@ export default function PrivacyPolicy() {
                     <section className="space-y-4">
                         <h2 className="text-xl font-semibold text-foreground">Local Storage</h2>
                         <p>
-                            Toolbit uses your browser's local storage to save your preferences:
+                            Toolbit uses your browser's local storage and IndexedDB to save preferences and convenience data:
                         </p>
                         <ul className="list-disc pl-6 space-y-2">
                             <li><strong>Theme preference:</strong> Whether you prefer light or dark mode</li>
                             <li><strong>Sidebar state:</strong> Whether the sidebar is open or closed</li>
-                            <li><strong>Cookie consent:</strong> Your consent preference for using cookies</li>
+                            <li><strong>Favorites and recents:</strong> Your pinned tools and recent activity</li>
+                            <li><strong>History, workspaces, snippets:</strong> Optional local history and saved workflows</li>
                         </ul>
                         <p>
                             This data is stored only on your device and is never transmitted anywhere. You can clear this
@@ -66,14 +67,8 @@ export default function PrivacyPolicy() {
                     <section className="space-y-4">
                         <h2 className="text-xl font-semibold text-foreground">Cookies</h2>
                         <p>
-                            Toolbit uses a single functional cookie to remember your sidebar preference. This cookie:
+                            Toolbit does not use cookies.
                         </p>
-                        <ul className="list-disc pl-6 space-y-2">
-                            <li>Is essential for the application to function properly</li>
-                            <li>Does not track you across websites</li>
-                            <li>Does not contain personal information</li>
-                            <li>Is not shared with any third parties</li>
-                        </ul>
                     </section>
 
                     <section className="space-y-4">
@@ -82,8 +77,6 @@ export default function PrivacyPolicy() {
                             The web version of Toolbit uses the following external resources:
                         </p>
                         <ul className="list-disc pl-6 space-y-2">
-                            <li><strong>Google Fonts:</strong> We load fonts (Inter, JetBrains Mono) from Google Fonts.
-                            Google may collect usage data according to their privacy policy.</li>
                             <li><strong>Cloudflare Pages:</strong> The web application is hosted on Cloudflare Pages,
                             which may collect standard web server logs.</li>
                         </ul>

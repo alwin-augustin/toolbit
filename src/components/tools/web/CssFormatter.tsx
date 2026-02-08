@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Code } from 'lucide-react';
 import Editor from 'react-simple-code-editor';
 import Prism from 'prismjs';
-import 'prismjs/components/prism-css';
 import { FileDropZone } from '@/components/FileDropZone';
 import { ToolCard } from '@/components/ToolCard';
 import { useUrlState } from '@/hooks/use-url-state';
@@ -17,6 +16,7 @@ import { useWorkspace } from '@/hooks/use-workspace';
 const CssFormatter: React.FC = () => {
   const [css, setCss] = useState('');
   const [formattedCss, setFormattedCss] = useState('');
+  const [cssReady, setCssReady] = useState(false);
   const shareState = useMemo(() => ({ css }), [css]);
   const { getShareUrl } = useUrlState(shareState, (state) => {
     setCss(typeof state.css === 'string' ? state.css : '');
@@ -44,6 +44,18 @@ const CssFormatter: React.FC = () => {
       }
     }
   }, [css, consumeWorkspaceState]);
+
+  useEffect(() => {
+    let active = true;
+    import('prismjs/components/prism-css')
+      .then(() => {
+        if (active) setCssReady(true);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleFormat = () => {
     try {
@@ -96,7 +108,7 @@ const CssFormatter: React.FC = () => {
           <Editor
             value={css}
             onValueChange={setCss}
-            highlight={(code) => Prism.highlight(code, Prism.languages.css, 'css')}
+            highlight={(code) => (cssReady && Prism.languages.css ? Prism.highlight(code, Prism.languages.css, 'css') : code)}
             padding={10}
             placeholder="Enter CSS data"
             className={editorClassName}
@@ -109,7 +121,7 @@ const CssFormatter: React.FC = () => {
             value={formattedCss}
             onValueChange={() => {}}
             readOnly
-            highlight={(code) => Prism.highlight(code, Prism.languages.css, 'css')}
+            highlight={(code) => (cssReady && Prism.languages.css ? Prism.highlight(code, Prism.languages.css, 'css') : code)}
             padding={10}
             placeholder="Formatted/Minified CSS output"
             className={editorClassName}

@@ -27,6 +27,7 @@ const CronParser: React.FC = () => {
   const [description, setDescription] = useState('');
   const [nextDates, setNextDates] = useState<string[]>([]);
   const [error, setError] = useState('');
+  const [showExplain, setShowExplain] = useState(false);
   const { getShareUrl } = useUrlState(expression, setExpression);
   const { addEntry } = useToolHistory('cron-parser', 'Cron Parser');
 
@@ -98,6 +99,15 @@ const CronParser: React.FC = () => {
             className="font-mono text-base"
             data-testid="cron-input"
           />
+          <div className="mt-2 flex items-center gap-2">
+            <Button
+              variant={showExplain ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowExplain(!showExplain)}
+            >
+              Explain
+            </Button>
+          </div>
         </div>
 
         {/* Visual field labels */}
@@ -109,6 +119,20 @@ const CronParser: React.FC = () => {
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{FIELD_LABELS[i]}</span>
               </div>
             ))}
+          </div>
+        )}
+
+        {showExplain && (
+          <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm space-y-2">
+            <div className="font-medium">Cron fields explained</div>
+            <div className="text-xs text-muted-foreground">
+              Standard cron uses five fields: minute, hour, day of month, month, and day of week.
+            </div>
+            <ul className="text-xs text-muted-foreground list-disc pl-4">
+              <li><span className="font-mono">* *</span> runs every minute.</li>
+              <li>Use <span className="font-mono">*/5</span> for every 5 minutes.</li>
+              <li>Ranges like <span className="font-mono">1-5</span> and lists like <span className="font-mono">1,3,5</span> are supported.</li>
+            </ul>
           </div>
         )}
 

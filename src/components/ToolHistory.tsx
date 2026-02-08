@@ -1,10 +1,11 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
-import { Clock, RotateCcw } from "lucide-react"
+import { Clock, RotateCcw, Save } from "lucide-react"
 import { useEffect } from "react"
 import { useToolHistory } from "@/hooks/use-tool-history"
 import { type ToolHistoryEntry } from "@/lib/history-db"
+import { saveSnippet } from "@/lib/snippet-db"
 
 interface ToolHistoryProps {
     toolId: string
@@ -80,6 +81,42 @@ export function ToolHistory({ toolId, toolName, onRestore }: ToolHistoryProps) {
                                     </div>
                                 </div>
                             )}
+                            <div className="flex flex-wrap gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={async () => {
+                                        await saveSnippet({
+                                            id: crypto.randomUUID(),
+                                            name: `${toolName} input · ${new Date(entry.timestamp).toLocaleDateString()}`,
+                                            content: entry.input || "",
+                                            toolId,
+                                            createdAt: Date.now(),
+                                        })
+                                    }}
+                                >
+                                    <Save className="h-3.5 w-3.5 mr-1" />
+                                    Save Input
+                                </Button>
+                                {entry.output && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={async () => {
+                                            await saveSnippet({
+                                                id: crypto.randomUUID(),
+                                                name: `${toolName} output · ${new Date(entry.timestamp).toLocaleDateString()}`,
+                                                content: entry.output || "",
+                                                toolId,
+                                                createdAt: Date.now(),
+                                            })
+                                        }}
+                                    >
+                                        <Save className="h-3.5 w-3.5 mr-1" />
+                                        Save Output
+                                    </Button>
+                                )}
+                            </div>
                             <Button
                                 variant="outline"
                                 size="sm"

@@ -1,7 +1,12 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useDeferredValue } from "react";
 import { Link, useLocation } from "wouter";
 import { TOOLS } from "@/config/tools.config";
 import { getRecentHistory, type ToolHistoryEntry } from "@/lib/history-db";
+import { listWorkspaces, type Workspace } from "@/lib/workspace-db";
+import { listSnippets, type Snippet } from "@/lib/snippet-db";
+import { useWorkspace } from "@/hooks/use-workspace";
+import { PRESET_WORKFLOWS } from "@/config/workflows.config";
+import { detectContentType } from "@/lib/smart-detect";
 import {
     Sparkles,
     Clock,
@@ -9,149 +14,27 @@ import {
     ArrowRight,
     Clipboard,
     FileJson,
-    Code,
-    Shield,
-    Type,
+    Lock,
+    Wand2,
+    ArrowRightLeft,
+    Microscope,
+    Hammer,
+    FileText,
     Hash,
     Keyboard,
+    FileText as FileTextIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface SmartSuggestion {
-    toolId: string;
-    toolName: string;
-    path: string;
-    reason: string;
-}
-
-function detectContentType(text: string): SmartSuggestion[] {
-    const trimmed = text.trim();
-    if (!trimmed) return [];
-
-    const suggestions: SmartSuggestion[] = [];
-
-    // JWT detection (starts with eyJ)
-    if (/^eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/.test(trimmed)) {
-        suggestions.push({ toolId: "jwt-decoder", toolName: "JWT Decoder", path: "/app/jwt-decoder", reason: "Detected JWT token" });
-        suggestions.push({ toolId: "base64-encoder", toolName: "Base64 Decoder", path: "/app/base64-encoder", reason: "Decode Base64 segments" });
-    }
-
-    // JSON detection
-    if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
-        try {
-            JSON.parse(trimmed);
-            suggestions.push({ toolId: "json-formatter", toolName: "JSON Formatter", path: "/app/json-formatter", reason: "Detected valid JSON" });
-            suggestions.push({ toolId: "json-validator", toolName: "JSON Schema Validator", path: "/app/json-validator", reason: "Validate against schema" });
-        } catch {
-            suggestions.push({ toolId: "json-formatter", toolName: "JSON Formatter", path: "/app/json-formatter", reason: "Looks like JSON (may have errors)" });
-        }
-    }
-
-    // Base64 detection
-    if (/^[A-Za-z0-9+/=]{20,}$/.test(trimmed) && trimmed.length % 4 === 0 && suggestions.length === 0) {
-        suggestions.push({ toolId: "base64-encoder", toolName: "Base64 Decoder", path: "/app/base64-encoder", reason: "Detected Base64 encoded data" });
-    }
-
-    // URL-encoded detection
-    if (/%[0-9A-Fa-f]{2}/.test(trimmed)) {
-        suggestions.push({ toolId: "url-encoder", toolName: "URL Decoder", path: "/app/url-encoder", reason: "Detected URL-encoded text" });
-    }
-
-    // Cron expression detection
-    if (/^(\*|[0-9,\-\/]+)\s+(\*|[0-9,\-\/]+)\s+(\*|[0-9,\-\/]+)\s+(\*|[0-9,\-\/]+)\s+(\*|[0-9,\-\/]+)(\s+(\*|[0-9,\-\/]+))?$/.test(trimmed)) {
-        suggestions.push({ toolId: "cron-parser", toolName: "Cron Parser", path: "/app/cron-parser", reason: "Detected cron expression" });
-    }
-
-    // Unix timestamp detection
-    if (/^\d{10,13}$/.test(trimmed)) {
-        suggestions.push({ toolId: "timestamp-converter", toolName: "Timestamp Converter", path: "/app/timestamp-converter", reason: "Detected Unix timestamp" });
-    }
-
-    // HTML detection
-    if (/<[a-z][\s\S]*>/i.test(trimmed) && suggestions.length === 0) {
-        suggestions.push({ toolId: "html-escape", toolName: "HTML Escape", path: "/app/html-escape", reason: "Detected HTML content" });
-    }
-
-    // CSS detection
-    if (/[.#@][a-zA-Z][\w-]*\s*\{/.test(trimmed) && suggestions.length === 0) {
-        suggestions.push({ toolId: "css-formatter", toolName: "CSS Formatter", path: "/app/css-formatter", reason: "Detected CSS" });
-    }
-
-    // YAML detection
-    if (/^[a-zA-Z_][\w]*:\s*.+/m.test(trimmed) && !trimmed.startsWith("{") && suggestions.length === 0) {
-        suggestions.push({ toolId: "yaml-formatter", toolName: "YAML Formatter", path: "/app/yaml-formatter", reason: "Detected YAML" });
-    }
-
-    // SQL detection
-    if (/^\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP)\s/im.test(trimmed) && suggestions.length === 0) {
-        suggestions.push({ toolId: "sql-formatter", toolName: "SQL Formatter", path: "/app/sql-formatter", reason: "Detected SQL query" });
-    }
-
-    // XML detection
-    if (/^<\?xml|^<[a-zA-Z][\w]*[\s>]/m.test(trimmed) && suggestions.length === 0) {
-        suggestions.push({ toolId: "xml-formatter", toolName: "XML Formatter", path: "/app/xml-formatter", reason: "Detected XML" });
-    }
-
-    // Hex color detection
-    if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/.test(trimmed)) {
-        suggestions.push({ toolId: "color-converter", toolName: "Color Converter", path: "/app/color-converter", reason: "Detected hex color" });
-    }
-
-    // Regex detection
-    if (/^\/.*\/[gimsuvy]*$/.test(trimmed)) {
-        suggestions.push({ toolId: "regex-tester", toolName: "Regex Tester", path: "/app/regex-tester", reason: "Detected regex pattern" });
-    }
-
-    // UUID detection
-    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed)) {
-        suggestions.push({ toolId: "uuid-generator", toolName: "UUID Generator", path: "/app/uuid-generator", reason: "Detected UUID" });
-    }
-
-    // CSV detection
-    if (trimmed.includes(",") && trimmed.includes("\n") && suggestions.length === 0) {
-        const lines = trimmed.split("\n").filter(Boolean);
-        if (lines.length >= 2) {
-            const commaCount = lines[0].split(",").length;
-            if (commaCount >= 2 && lines.every(l => Math.abs(l.split(",").length - commaCount) <= 1)) {
-                suggestions.push({ toolId: "csv-to-json", toolName: "CSV to JSON", path: "/app/csv-to-json", reason: "Detected CSV data" });
-            }
-        }
-    }
-
-    // Markdown detection
-    if (/^#{1,6}\s|^\*{1,2}[^*]+\*{1,2}|\[.*\]\(.*\)/m.test(trimmed) && suggestions.length === 0) {
-        suggestions.push({ toolId: "markdown-previewer", toolName: "Markdown Previewer", path: "/app/markdown-previewer", reason: "Detected Markdown" });
-    }
-
-    // Git diff detection
-    if (/^diff --git|^@@\s/.test(trimmed)) {
-        suggestions.push({ toolId: "git-diff-viewer", toolName: "Git Diff Viewer", path: "/app/git-diff-viewer", reason: "Detected git diff" });
-    }
-
-    // PEM certificate detection
-    if (/-----BEGIN CERTIFICATE-----/.test(trimmed)) {
-        suggestions.push({ toolId: "certificate-decoder", toolName: "Certificate Decoder", path: "/app/certificate-decoder", reason: "Detected PEM certificate" });
-    }
-
-    // Fallback: general text tools
-    if (suggestions.length === 0 && trimmed.length > 0) {
-        suggestions.push({ toolId: "hash-generator", toolName: "Hash Generator", path: "/app/hash-generator", reason: "Generate hash" });
-        suggestions.push({ toolId: "base64-encoder", toolName: "Base64 Encoder", path: "/app/base64-encoder", reason: "Encode to Base64" });
-        suggestions.push({ toolId: "case-converter", toolName: "Case Converter", path: "/app/case-converter", reason: "Convert text case" });
-    }
-
-    return suggestions.slice(0, 4);
-}
-
 const categoryIcons: Record<string, typeof FileJson> = {
-    json: FileJson,
-    encoding: Code,
-    text: Type,
-    web: Code,
-    security: Shield,
-    converters: Clock,
-    utilities: Hash,
+    format: FileJson,
+    encode: Lock,
+    generate: Wand2,
+    transform: ArrowRightLeft,
+    analyze: Microscope,
+    build: Hammer,
+    text: FileText,
 };
 
 function AppHome() {
@@ -160,16 +43,61 @@ function AppHome() {
     const [recentHistory, setRecentHistory] = useState<ToolHistoryEntry[]>([]);
     const [favorites, setFavorites] = useState<string[]>([]);
     const [recentToolIds, setRecentToolIds] = useState<string[]>([]);
+    const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+    const [snippets, setSnippets] = useState<Snippet[]>([]);
+    const { setWorkspace } = useWorkspace();
 
     useEffect(() => {
-        getRecentHistory(20).then(setRecentHistory).catch(() => {});
-        const favs = JSON.parse(localStorage.getItem("toolbit:favorites") || "[]");
-        setFavorites(favs);
-        const recent = JSON.parse(localStorage.getItem("toolbit:recent") || "[]");
-        setRecentToolIds(recent);
+        let mounted = true;
+
+        const safeGetArray = (key: string) => {
+            try {
+                const raw = localStorage.getItem(key);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        };
+
+        if (typeof indexedDB !== "undefined") {
+            getRecentHistory(20)
+                .then((items) => {
+                    if (mounted) setRecentHistory(items);
+                })
+                .catch(() => {
+                    if (mounted) setRecentHistory([]);
+                });
+        }
+
+        setFavorites(safeGetArray("toolbit:favorites"));
+        setRecentToolIds(safeGetArray("toolbit:recent"));
+
+        listWorkspaces()
+            .then((items) => {
+                if (mounted) setWorkspaces(items);
+            })
+            .catch(() => {
+                if (mounted) setWorkspaces([]);
+            });
+
+        if (typeof indexedDB !== "undefined") {
+            listSnippets()
+                .then((items) => {
+                    if (mounted) setSnippets(items);
+                })
+                .catch(() => {
+                    if (mounted) setSnippets([]);
+                });
+        }
+
+        return () => {
+            mounted = false;
+        };
     }, []);
 
-    const suggestions = useMemo(() => detectContentType(pasteInput), [pasteInput]);
+    const deferredInput = useDeferredValue(pasteInput);
+    const suggestions = useMemo(() => detectContentType(deferredInput), [deferredInput]);
 
     const handleSuggestionClick = useCallback((path: string) => {
         // Store paste data for the target tool to consume
@@ -198,10 +126,76 @@ function AppHome() {
         [favorites]
     );
 
-    const recentlyUsedTools = useMemo(
-        () => TOOLS.filter(t => recentToolIds.includes(t.id)).slice(0, 8),
-        [recentToolIds]
-    );
+    const toolById = useMemo(() => new Map(TOOLS.map((tool) => [tool.id, tool])), []);
+
+    const workflowCards = useMemo(() => {
+        const cards: {
+            id: string;
+            name: string;
+            tools: string[];
+            description?: string;
+            type: "saved" | "preset";
+            workspace?: Workspace;
+        }[] = [];
+
+        workspaces.slice(0, 3).forEach((workspace) => {
+            cards.push({
+                id: workspace.id,
+                name: workspace.name,
+                tools: workspace.tools.map((tool) => tool.toolId),
+                description: `${workspace.tools.length} tools`,
+                type: "saved",
+                workspace,
+            });
+        });
+
+        if (cards.length < 3) {
+            PRESET_WORKFLOWS.filter((preset) => !cards.some(card => card.name === preset.name))
+                .slice(0, 3 - cards.length)
+                .forEach((preset) => {
+                    cards.push({
+                        id: preset.id,
+                        name: preset.name,
+                        tools: preset.tools,
+                        description: preset.description,
+                        type: "preset",
+                    });
+                });
+        }
+
+        return cards;
+    }, [workspaces]);
+
+    const renderWorkflowSteps = (toolIds: string[]) => {
+        const names = toolIds
+            .map((id) => toolById.get(id)?.name)
+            .filter(Boolean) as string[];
+        return names.join(" → ");
+    };
+
+    const handleLaunchWorkflow = (card: {
+        name: string;
+        tools: string[];
+        type: "saved" | "preset";
+        workspace?: Workspace;
+    }) => {
+        const workspace = card.workspace ?? {
+            id: crypto.randomUUID(),
+            name: card.name,
+            createdAt: Date.now(),
+            tools: card.tools.map((toolId) => ({
+                toolId,
+                state: JSON.stringify({ input: "", output: "" }),
+            })),
+        };
+
+        setWorkspace(workspace);
+        const firstToolId = workspace.tools[0]?.toolId;
+        const tool = firstToolId ? toolById.get(firstToolId) : null;
+        if (tool) {
+            setLocation(tool.path);
+        }
+    };
 
     const timeAgo = (timestamp: number) => {
         const diff = Date.now() - timestamp;
@@ -218,6 +212,8 @@ function AppHome() {
         const cleaned = text.replace(/\s+/g, " ").trim();
         return cleaned.length > max ? cleaned.slice(0, max) + "..." : cleaned;
     };
+
+    const isFirstRun = recentTools.length === 0 && favorites.length === 0 && workspaces.length === 0 && snippets.length === 0;
 
     return (
         <div className="max-w-5xl mx-auto space-y-8">
@@ -303,6 +299,44 @@ function AppHome() {
                 )}
             </div>
 
+            {/* First run onboarding */}
+            {isFirstRun && (
+                <div className="rounded-lg border border-border/60 bg-muted/20 p-4 space-y-3">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        Get started in 30 seconds
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        Paste anything above, or jump into a popular workflow below.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                        <Button
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => setPasteInput('{"name": "toolbit", "version": "2.0"}')}
+                        >
+                            Try JSON
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                            onClick={() => setLocation("/app/jwt-decoder")}
+                        >
+                            Open JWT Decoder
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                            onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
+                        >
+                            Search tools
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             {/* Recent Activity */}
             {recentTools.length > 0 && (
                 <div className="space-y-3">
@@ -341,12 +375,12 @@ function AppHome() {
             )}
 
             {/* Favorites */}
-            {favoriteTools.length > 0 && (
-                <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                        <Star className="h-4 w-4 text-yellow-500" />
-                        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Favorites</h3>
-                    </div>
+            <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Favorites</h3>
+                </div>
+                {favoriteTools.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                         {favoriteTools.map((tool) => {
                             const CategoryIcon = categoryIcons[tool.category] || Hash;
@@ -362,8 +396,107 @@ function AppHome() {
                             );
                         })}
                     </div>
+                ) : (
+                    <div className="text-xs text-muted-foreground">
+                        Star tools in the sidebar or command palette to pin them here.
+                    </div>
+                )}
+            </div>
+
+            {/* Quick Workflows */}
+            {workflowCards.length > 0 && (
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <ArrowRightLeft className="h-4 w-4 text-primary" />
+                            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Quick Workflows</h3>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => window.dispatchEvent(new CustomEvent("open-workspaces"))}
+                            className="text-xs text-muted-foreground hover:text-foreground"
+                        >
+                            Manage
+                        </Button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {workflowCards.map((card) => (
+                            <button
+                                key={card.id}
+                                onClick={() => handleLaunchWorkflow(card)}
+                                className="group text-left p-3 rounded-lg border border-border bg-card hover:bg-accent hover:border-border/80 transition-all"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="font-medium text-sm">{card.name}</div>
+                                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70">
+                                        {card.type === "preset" ? "Preset" : "Saved"}
+                                    </span>
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-0.5">
+                                    {card.description ?? `${card.tools.length} tools`}
+                                </div>
+                                <div className="mt-2 text-xs font-mono text-primary/90 truncate">
+                                    {renderWorkflowSteps(card.tools)}
+                                </div>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             )}
+
+            {/* Snippets */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <FileTextIcon className="h-4 w-4 text-primary" />
+                        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Snippets</h3>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                        Manage
+                    </Button>
+                </div>
+                {snippets.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {snippets.slice(0, 6).map((snippet) => (
+                            <button
+                                key={snippet.id}
+                                onClick={() => {
+                                    if (snippet.toolId) {
+                                        const tool = toolById.get(snippet.toolId);
+                                        if (tool) {
+                                            sessionStorage.setItem("toolbit:smart-paste", snippet.content);
+                                            setLocation(tool.path);
+                                            return;
+                                        }
+                                    }
+                                    window.dispatchEvent(new CustomEvent("open-snippets"));
+                                }}
+                                className="group text-left p-3 rounded-lg border border-border bg-card hover:bg-accent hover:border-border/80 transition-all"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="font-medium text-sm truncate">{snippet.name}</div>
+                                    {snippet.toolId && (
+                                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/70">Saved</span>
+                                    )}
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1 font-mono truncate">
+                                    {previewText(snippet.content)}
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-xs text-muted-foreground">
+                        Save inputs or outputs as snippets to reuse them quickly.
+                    </div>
+                )}
+            </div>
 
             {/* All Tools Grid */}
             <div className="space-y-3">

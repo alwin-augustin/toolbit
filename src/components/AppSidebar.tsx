@@ -1,6 +1,8 @@
-import { useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
+import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/hooks/use-sidebar"
+import { TOOLS } from "@/config/tools.config"
 import {
     Code,
     Link as LinkIcon,
@@ -31,7 +33,6 @@ import {
     Container,
     FileText,
     ChevronRight,
-    ChevronLeft,
     Home,
     Wand2,
     ArrowRightLeft,
@@ -39,9 +40,11 @@ import {
     Hammer,
     PanelLeftClose,
     PanelLeft,
+    Star,
 } from "lucide-react"
 import { Link, useLocation } from "wouter"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import appLogoUrl from "@/assets/app-logo.svg"
 
 const toolGroups = [
     {
@@ -134,18 +137,52 @@ export function AppSidebar() {
     const [location] = useLocation()
     const { isOpen, mode, close, toggleMode } = useSidebar()
     const [hoveredGroup, setHoveredGroup] = useState<string | null>(null)
+    const [search, setSearch] = useState("")
+    const [favorites, setFavorites] = useState<string[]>([])
+    const [recentTools, setRecentTools] = useState<string[]>([])
+    const [flyoutPos, setFlyoutPos] = useState<{ top: number; left: number } | null>(null)
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => {
         // Auto-expand the group containing the active tool
         const activeGroup = toolGroups.find(g => g.items.some(i => i.url === location))
         return new Set(activeGroup ? [activeGroup.title] : [])
     })
+    const railRef = useRef<HTMLElement | null>(null)
+    const flyoutAnchorRef = useRef<HTMLElement | null>(null)
+    const flyoutRef = useRef<HTMLDivElement | null>(null)
 
     const isCollapsed = mode === 'collapsed'
+
+    const toolByPath = useMemo(() => new Map(TOOLS.map(tool => [tool.path, tool])), [])
+    const toolMetaByPath = useMemo(() => {
+        const map = new Map<string, { title: string; icon: typeof FileJson }>()
+        toolGroups.forEach(group => {
+            group.items.forEach(item => {
+                map.set(item.url, { title: item.title, icon: item.icon })
+            })
+        })
+        return map
+    }, [toolGroups])
 
     const handleLinkClick = () => {
         if (window.innerWidth < 1024) {
             close()
         }
+    }
+
+    const openFlyout = (groupTitle: string, anchor: HTMLElement, itemCount: number) => {
+        const rect = anchor.getBoundingClientRect()
+        const estimatedHeight = Math.min(40 + itemCount * 36, 360)
+        const maxTop = window.innerHeight - estimatedHeight - 12
+        const top = Math.max(8, Math.min(rect.top, maxTop))
+        setHoveredGroup(groupTitle)
+        setFlyoutPos({ top, left: rect.right + 8 })
+        flyoutAnchorRef.current = anchor
+    }
+
+    const closeFlyout = () => {
+        setHoveredGroup(null)
+        setFlyoutPos(null)
+        flyoutAnchorRef.current = null
     }
 
     const toggleGroup = (title: string) => {
@@ -163,17 +200,122 @@ export function AppSidebar() {
     // Find active group for collapsed mode highlighting
     const activeGroupTitle = toolGroups.find(g => g.items.some(i => i.url === location))?.title
 
+    useEffect(() => {
+        const favs = JSON.parse(localStorage.getItem("toolbit:favorites") || "[]")
+        const recent = JSON.parse(localStorage.getItem("toolbit:recent") || "[]")
+        if (Array.isArray(favs)) setFavorites(favs)
+        if (Array.isArray(recent)) setRecentTools(recent)
+    }, [isOpen, location])
+
+    useEffect(() => {
+        const activeGroup = toolGroups.find(g => g.items.some(i => i.url === location))
+        if (!activeGroup) return
+        setExpandedGroups(prev => {
+            if (prev.has(activeGroup.title)) return prev
+            const next = new Set(prev)
+            next.add(activeGroup.title)
+            return next
+        })
+    }, [location])
+
+    const favoriteItems = useMemo(() => {
+        return favorites
+            .map((id) => {
+                const tool = TOOLS.find(t => t.id === id)
+                if (!tool) return null
+                const meta = toolMetaByPath.get(tool.path)
+                return {
+                    id,
+                    title: tool.name,
+                    url: tool.path,
+                    icon: meta?.icon ?? FileJson,
+                }
+            })
+            .filter(Boolean) as { id: string; title: string; url: string; icon: typeof FileJson }[]
+    }, [favorites, toolMetaByPath])
+
+    const recentItems = useMemo(() => {
+        return recentTools
+            .map((id) => {
+                const tool = TOOLS.find(t => t.id === id)
+                if (!tool) return null
+                const meta = toolMetaByPath.get(tool.path)
+                return {
+                    id,
+                    title: tool.name,
+                    url: tool.path,
+                    icon: meta?.icon ?? FileJson,
+                }
+            })
+            .filter(Boolean)
+            .slice(0, 5) as { id: string; title: string; url: string; icon: typeof FileJson }[]
+    }, [recentTools, toolMetaByPath])
+
+    const filteredGroups = useMemo(() => {
+        const term = search.trim().toLowerCase()
+        if (!term) return toolGroups
+        return toolGroups
+            .map(group => ({
+                ...group,
+                items: group.items.filter(item => {
+                    const tool = toolByPath.get(item.url)
+                    const haystack = [
+                        item.title,
+                        tool?.description,
+                        tool?.keywords?.join(" "),
+                        group.title,
+                    ]
+                        .filter(Boolean)
+                        .join(" ")
+                        .toLowerCase()
+                    return haystack.includes(term)
+                }),
+            }))
+            .filter(group => group.items.length > 0)
+    }, [search, toolByPath, toolGroups])
+
+    const isDesktop = typeof window !== "undefined" ? window.innerWidth >= 1024 : true
+
+    useEffect(() => {
+        if (!hoveredGroup) return
+        const handlePointerDown = (event: MouseEvent) => {
+            const target = event.target as Node
+            if (railRef.current && railRef.current.contains(target)) return
+            if (flyoutRef.current && flyoutRef.current.contains(target)) return
+            closeFlyout()
+        }
+        document.addEventListener("mousedown", handlePointerDown)
+        return () => document.removeEventListener("mousedown", handlePointerDown)
+    }, [hoveredGroup])
+
+    useEffect(() => {
+        if (!hoveredGroup) return
+        const handleReposition = () => {
+            if (!flyoutAnchorRef.current) return
+            const group = toolGroups.find((g) => g.title === hoveredGroup)
+            const rect = flyoutAnchorRef.current.getBoundingClientRect()
+            const estimatedHeight = group ? Math.min(40 + group.items.length * 36, 360) : 240
+            const maxTop = window.innerHeight - estimatedHeight - 12
+            const top = Math.max(8, Math.min(rect.top, maxTop))
+            setFlyoutPos({ top, left: rect.right + 8 })
+        }
+        window.addEventListener("resize", handleReposition)
+        return () => window.removeEventListener("resize", handleReposition)
+    }, [hoveredGroup])
+
+    const hoveredGroupData = hoveredGroup ? toolGroups.find((g) => g.title === hoveredGroup) : null
+
     // Collapsed icon rail mode
-    if (isOpen && isCollapsed && window.innerWidth >= 1024) {
+    if (isOpen && isCollapsed && isDesktop) {
         return (
-            <aside className="flex flex-col border-r border-border bg-card/50 backdrop-blur-xl w-16 shrink-0">
+            <aside ref={railRef} className="flex flex-col border-r border-border bg-card/50 backdrop-blur-xl w-16 shrink-0">
                 <div className="flex h-16 items-center justify-center border-b border-border">
                     <Link href="/app" onClick={handleLinkClick}>
-                        <img src="/icon-64.png" alt="Toolbit" className="w-7 h-7" />
+                        <img src={appLogoUrl} alt="Toolbit" className="w-8 h-8 object-contain" />
                     </Link>
                 </div>
 
-                <nav className="flex-1 flex flex-col items-center gap-1 py-3 overflow-y-auto">
+                <nav className="flex-1 flex flex-col items-center gap-1 py-3 overflow-visible">
                     <Tooltip delayDuration={0}>
                         <TooltipTrigger asChild>
                             <Link
@@ -201,8 +343,7 @@ export function AppSidebar() {
                             <div
                                 key={group.title}
                                 className="relative"
-                                onMouseEnter={() => setHoveredGroup(group.title)}
-                                onMouseLeave={() => setHoveredGroup(null)}
+                                onMouseEnter={(event) => openFlyout(group.title, event.currentTarget as unknown as HTMLElement, group.items.length)}
                             >
                                 <Tooltip delayDuration={0}>
                                     <TooltipTrigger asChild>
@@ -213,6 +354,13 @@ export function AppSidebar() {
                                                     ? "bg-primary/15 text-primary"
                                                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                                             )}
+                                            onClick={(event) => {
+                                                if (hoveredGroup === group.title) {
+                                                    closeFlyout()
+                                                } else {
+                                                    openFlyout(group.title, event.currentTarget, group.items.length)
+                                                }
+                                            }}
                                         >
                                             <GroupIcon className="h-5 w-5" />
                                         </button>
@@ -221,42 +369,6 @@ export function AppSidebar() {
                                         {group.title}
                                     </TooltipContent>
                                 </Tooltip>
-
-                                {/* Flyout panel */}
-                                {hoveredGroup === group.title && (
-                                    <div
-                                        className="absolute left-full top-0 ml-2 z-50 w-56 bg-popover border border-border rounded-lg shadow-lg py-2 animate-in fade-in-0 zoom-in-95 duration-150"
-                                        onMouseEnter={() => setHoveredGroup(group.title)}
-                                        onMouseLeave={() => setHoveredGroup(null)}
-                                    >
-                                        <div className="px-3 pb-1.5 text-xs font-semibold tracking-wider uppercase text-muted-foreground/80">
-                                            {group.title}
-                                        </div>
-                                        {group.items.map((item) => {
-                                            const isActive = location === item.url
-                                            const Icon = item.icon
-                                            return (
-                                                <Link
-                                                    key={item.url}
-                                                    href={item.url}
-                                                    className={cn(
-                                                        "flex items-center gap-2.5 px-3 py-2 text-sm transition-colors",
-                                                        isActive
-                                                            ? "bg-primary text-primary-foreground font-medium"
-                                                            : "hover:bg-accent hover:text-accent-foreground"
-                                                    )}
-                                                    onClick={() => {
-                                                        setHoveredGroup(null)
-                                                        handleLinkClick()
-                                                    }}
-                                                >
-                                                    <Icon className="h-3.5 w-3.5 shrink-0" />
-                                                    <span className="truncate">{item.title}</span>
-                                                </Link>
-                                            )
-                                        })}
-                                    </div>
-                                )}
                             </div>
                         )
                     })}
@@ -275,6 +387,42 @@ export function AppSidebar() {
                         <TooltipContent side="right" sideOffset={8}>Expand sidebar</TooltipContent>
                     </Tooltip>
                 </div>
+                {hoveredGroupData && flyoutPos && createPortal(
+                    <div
+                        ref={flyoutRef}
+                        className="fixed z-[999] w-56 bg-popover border border-border rounded-lg shadow-lg py-2 animate-in fade-in-0 zoom-in-95 duration-150"
+                        style={{ top: flyoutPos.top, left: flyoutPos.left }}
+                        onMouseEnter={() => setHoveredGroup(hoveredGroupData.title)}
+                    >
+                        <div className="px-3 pb-1.5 text-xs font-semibold tracking-wider uppercase text-muted-foreground/80">
+                            {hoveredGroupData.title}
+                        </div>
+                        {hoveredGroupData.items.map((item) => {
+                            const isActive = location === item.url
+                            const Icon = item.icon
+                            return (
+                                <Link
+                                    key={item.url}
+                                    href={item.url}
+                                    className={cn(
+                                        "flex items-center gap-2.5 px-3 py-2 text-sm transition-colors",
+                                        isActive
+                                            ? "bg-primary text-primary-foreground font-medium"
+                                            : "hover:bg-accent hover:text-accent-foreground"
+                                    )}
+                                    onClick={() => {
+                                        closeFlyout()
+                                        handleLinkClick()
+                                    }}
+                                >
+                                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                                    <span className="truncate">{item.title}</span>
+                                </Link>
+                            )
+                        })}
+                    </div>,
+                    document.body
+                )}
             </aside>
         )
     }
@@ -291,7 +439,7 @@ export function AppSidebar() {
             <div className="flex flex-col flex-1 overflow-hidden">
                 <div className="flex h-16 items-center justify-between border-b border-border px-4 bg-card/80">
                     <Link href="/app" className="flex items-center gap-2" onClick={handleLinkClick}>
-                        <img src="/icon-64.png" alt="Toolbit" className="w-7 h-7" />
+                        <img src={appLogoUrl} alt="Toolbit" className="w-8 h-8 object-contain" />
                         <h1 className="font-semibold tracking-tight">
                             <span className="text-lg text-foreground">Toolbit</span>
                         </h1>
@@ -323,10 +471,83 @@ export function AppSidebar() {
 
                     <div className="border-t border-border my-2" />
 
+                    {/* Sidebar search */}
+                    <div className="px-2 pb-2">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                            <input
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Filter tools..."
+                                className="w-full h-9 rounded-md border border-border bg-background pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                            />
+                        </div>
+                    </div>
+
+                    {!search.trim() && favoriteItems.length > 0 && (
+                        <div className="pb-2">
+                            <div className="flex items-center gap-2 px-3 text-[10px] font-semibold tracking-wider uppercase text-muted-foreground/80">
+                                <Star className="h-3 w-3 text-yellow-500" />
+                                Favorites
+                            </div>
+                            <div className="mt-1 space-y-0.5">
+                                {favoriteItems.slice(0, 6).map((item) => {
+                                    const Icon = item.icon
+                                    return (
+                                        <Link
+                                            key={item.id}
+                                            href={item.url}
+                                            className={cn(
+                                                "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
+                                                location === item.url
+                                                    ? "bg-primary text-primary-foreground font-semibold"
+                                                    : "hover:bg-accent hover:text-accent-foreground"
+                                            )}
+                                            onClick={handleLinkClick}
+                                        >
+                                            <Icon className="h-3.5 w-3.5 shrink-0" />
+                                            <span className="truncate">{item.title}</span>
+                                        </Link>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {!search.trim() && recentItems.length > 0 && (
+                        <div className="pb-2">
+                            <div className="flex items-center gap-2 px-3 text-[10px] font-semibold tracking-wider uppercase text-muted-foreground/80">
+                                <Clock className="h-3 w-3" />
+                                Recent
+                            </div>
+                            <div className="mt-1 space-y-0.5">
+                                {recentItems.map((item) => {
+                                    const Icon = item.icon
+                                    return (
+                                        <Link
+                                            key={item.id}
+                                            href={item.url}
+                                            className={cn(
+                                                "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all",
+                                                location === item.url
+                                                    ? "bg-primary text-primary-foreground font-semibold"
+                                                    : "hover:bg-accent hover:text-accent-foreground"
+                                            )}
+                                            onClick={handleLinkClick}
+                                        >
+                                            <Icon className="h-3.5 w-3.5 shrink-0" />
+                                            <span className="truncate">{item.title}</span>
+                                        </Link>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Tool groups with collapsible sections */}
-                    {toolGroups.map((group) => {
+                    {filteredGroups.map((group) => {
                         const GroupIcon = group.icon
-                        const isExpanded = expandedGroups.has(group.title)
+                        const isExpanded = search.trim().length > 0 || expandedGroups.has(group.title)
                         const hasActiveItem = group.items.some(i => i.url === location)
 
                         return (
@@ -378,6 +599,12 @@ export function AppSidebar() {
                             </div>
                         )
                     })}
+
+                    {filteredGroups.length === 0 && (
+                        <div className="px-3 py-6 text-xs text-muted-foreground">
+                            No tools match your search.
+                        </div>
+                    )}
                 </nav>
             </div>
         </aside>

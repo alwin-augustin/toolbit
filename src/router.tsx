@@ -14,7 +14,7 @@ export function AppRouter() {
     return (
         <Switch>
             {/* App home dashboard */}
-            <Route path="/app">
+            <Route path={/^\/app\/?$/}>
                 <Suspense fallback={<LoadingFallback />}>
                     <AppHome />
                 </Suspense>
@@ -30,6 +30,13 @@ export function AppRouter() {
                     </ToolErrorBoundary>
                 </Route>
             ))}
+
+            {/* Fallback to dashboard if no tool route matches */}
+            <Route path="/app/:rest*">
+                <Suspense fallback={<LoadingFallback />}>
+                    <AppHome />
+                </Suspense>
+            </Route>
         </Switch>
     );
 }

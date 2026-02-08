@@ -4,9 +4,12 @@ import { useLocation } from "wouter";
 import { TOOLS, TOOL_CATEGORIES } from "@/config/tools.config";
 import {
     FileJson,
-    Code,
-    Shield,
-    Type,
+    Lock,
+    Wand2,
+    ArrowRightLeft,
+    Microscope,
+    Hammer,
+    FileText,
     Clock,
     Hash,
     Search,
@@ -18,13 +21,16 @@ import {
     Zap,
     Copy,
     Home,
+    Clipboard,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 import { getRecentHistory, type ToolHistoryEntry } from "@/lib/history-db";
 import { listWorkspaces, type Workspace } from "@/lib/workspace-db";
+import { listSnippets, type Snippet } from "@/lib/snippet-db";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { detectContentType } from "@/lib/smart-detect";
 
 interface QuickTransformResult {
     label: string;
@@ -36,6 +42,28 @@ function computeQuickTransforms(query: string): QuickTransformResult[] {
     if (!trimmed || trimmed.length < 3) return [];
 
     const results: QuickTransformResult[] = [];
+
+    // json: "json { ... }" -> pretty print
+    const jsonMatch = trimmed.match(/^json\s+([\s\S]+)$/i);
+    if (jsonMatch) {
+        try {
+            const parsed = JSON.parse(jsonMatch[1]);
+            results.push({ label: "JSON Pretty Print", result: JSON.stringify(parsed, null, 2) });
+        } catch { /* ignore */ }
+    }
+
+    // url encode/decode: "url encode hello" or "url decode %2F"
+    const urlMatch = trimmed.match(/^url\s+(encode|decode)\s+([\s\S]+)$/i);
+    if (urlMatch) {
+        try {
+            const value = urlMatch[2];
+            if (urlMatch[1].toLowerCase() === "encode") {
+                results.push({ label: "URL Encode", result: encodeURIComponent(value) });
+            } else {
+                results.push({ label: "URL Decode", result: decodeURIComponent(value) });
+            }
+        } catch { /* ignore */ }
+    }
 
     // base64 encode: "base64 hello world" or "b64 hello"
     const b64Match = trimmed.match(/^(?:base64|b64)\s+(.+)$/i);
@@ -109,13 +137,13 @@ function computeQuickTransforms(query: string): QuickTransformResult[] {
 }
 
 const categoryIcons: Record<string, typeof FileJson> = {
-    json: FileJson,
-    encoding: Code,
-    text: Type,
-    web: Code,
-    security: Shield,
-    converters: Clock,
-    utilities: Hash,
+    format: FileJson,
+    encode: Lock,
+    generate: Wand2,
+    transform: ArrowRightLeft,
+    analyze: Microscope,
+    build: Hammer,
+    text: FileText,
 };
 
 export function CommandPalette() {
@@ -127,10 +155,13 @@ export function CommandPalette() {
     const [favorites, setFavorites] = useState<string[]>([]);
     const [recentHistory, setRecentHistory] = useState<ToolHistoryEntry[]>([]);
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+    const [snippets, setSnippets] = useState<Snippet[]>([]);
     const { setWorkspace } = useWorkspace();
     const { copyToClipboard } = useCopyToClipboard();
+    const [clipboardText, setClipboardText] = useState("");
 
     const quickTransforms = useMemo(() => computeQuickTransforms(search), [search]);
+    const clipboardSuggestions = useMemo(() => detectContentType(clipboardText), [clipboardText]);
 
     // Load recent tools and favorites from localStorage when palette opens
     useEffect(() => {
@@ -141,6 +172,14 @@ export function CommandPalette() {
             setFavorites(favs);
             getRecentHistory(10).then(setRecentHistory).catch(() => setRecentHistory([]));
             listWorkspaces().then(setWorkspaces).catch(() => setWorkspaces([]));
+            listSnippets().then(setSnippets).catch(() => setSnippets([]));
+            if (navigator.clipboard?.readText) {
+                navigator.clipboard.readText()
+                    .then((text) => setClipboardText(text.trim() ? text : ""))
+                    .catch(() => setClipboardText(""));
+            } else {
+                setClipboardText("");
+            }
         }
     }, [open]);
 
@@ -161,6 +200,18 @@ export function CommandPalette() {
 
         document.addEventListener("keydown", down);
         return () => document.removeEventListener("keydown", down);
+    }, []);
+
+    useEffect(() => {
+        const handler = (event: Event) => {
+            const detail = (event as CustomEvent<{ search?: string }>).detail;
+            setOpen(true);
+            if (typeof detail?.search === "string") {
+                setSearch(detail.search);
+            }
+        };
+        window.addEventListener("open-command-palette", handler as EventListener);
+        return () => window.removeEventListener("open-command-palette", handler as EventListener);
     }, []);
 
     const handleSelect = useCallback((path: string, toolId: string) => {
@@ -321,6 +372,33 @@ export function CommandPalette() {
                         </Command.Group>
                     )}
 
+                    {/* Clipboard Suggestions */}
+                    {!search && clipboardText && clipboardSuggestions.length > 0 && (
+                        <Command.Group heading="Clipboard" className="px-2 py-1.5">
+                            {clipboardSuggestions.map((suggestion) => (
+                                <Command.Item
+                                    key={`clipboard-${suggestion.toolId}`}
+                                    value={`clipboard ${suggestion.toolName}`}
+                                    onSelect={() => {
+                                        sessionStorage.setItem("toolbit:smart-paste", clipboardText);
+                                        setOpen(false);
+                                        setSearch("");
+                                        setLocation(suggestion.path);
+                                    }}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm aria-selected:bg-accent aria-selected:text-accent-foreground"
+                                >
+                                    <Clipboard className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-medium truncate">{suggestion.toolName}</div>
+                                        <div className="text-xs text-muted-foreground truncate">
+                                            {suggestion.reason}
+                                        </div>
+                                    </div>
+                                </Command.Item>
+                            ))}
+                        </Command.Group>
+                    )}
+
                     {/* Favorites */}
                     {!search && favoriteToolsData.length > 0 && (
                         <Command.Group heading="Favorites" className="px-2 py-1.5">
@@ -414,6 +492,34 @@ export function CommandPalette() {
                                         <div className="font-medium truncate">{workspace.name}</div>
                                         <div className="text-xs text-muted-foreground truncate">
                                             {workspace.tools.length} tools
+                                        </div>
+                                    </div>
+                                </Command.Item>
+                            ))}
+                        </Command.Group>
+                    )}
+
+                    {/* Snippets */}
+                    {!search && snippets.length > 0 && (
+                        <Command.Group heading="Snippets" className="px-2 py-1.5">
+                            {snippets.slice(0, 8).map((snippet) => (
+                                <Command.Item
+                                    key={snippet.id}
+                                    value={`${snippet.name} ${snippet.content}`}
+                                    onSelect={() => {
+                                        copyToClipboard(snippet.content);
+                                        setOpen(false);
+                                        setSearch("");
+                                    }}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm aria-selected:bg-accent aria-selected:text-accent-foreground"
+                                >
+                                    <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 text-primary shrink-0">
+                                        <Copy className="h-4 w-4" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-medium truncate">{snippet.name}</div>
+                                        <div className="text-xs text-muted-foreground truncate">
+                                            {previewText(snippet.content, 80)}
                                         </div>
                                     </div>
                                 </Command.Item>

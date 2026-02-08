@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ToolCard } from "@/components/ToolCard"
+import { ToolEmptyState } from "@/components/ToolEmptyState"
 import { useToast } from "@/hooks/use-toast"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
@@ -50,6 +51,7 @@ export default function RegexTester() {
     const [replacement, setReplacement] = useState("")
     const [showReplace, setShowReplace] = useState(false)
     const [showPatterns, setShowPatterns] = useState(false)
+    const [showExplain, setShowExplain] = useState(false)
     const { toast } = useToast()
     const shareState = useMemo(
         () => ({ pattern, flags, testString, replacement, showReplace }),
@@ -206,6 +208,14 @@ export default function RegexTester() {
                         Pattern
                     </label>
                     <div className="flex gap-1">
+                        <Button
+                            variant={showExplain ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setShowExplain(!showExplain)}
+                            className="text-xs"
+                        >
+                            Explain
+                        </Button>
                         <div className="relative">
                             <Button
                                 variant="outline"
@@ -284,6 +294,43 @@ export default function RegexTester() {
                     data-testid="test-string"
                 />
             </div>
+
+            {!pattern.trim() && !testString.trim() && (
+                <ToolEmptyState
+                    title="Start with a pattern and a test string"
+                    description="Match, capture, and replace with real-time highlights."
+                    actions={
+                        <>
+                            <Button variant="outline" size="sm" onClick={loadSample}>
+                                <Sparkles className="h-3 w-3 mr-1" />
+                                Load sample regex
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
+                            >
+                                Browse snippets
+                            </Button>
+                        </>
+                    }
+                    hint="Tip: Use Common Patterns for quick starters."
+                />
+            )}
+
+            {showExplain && (
+                <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm space-y-2">
+                    <div className="font-medium">Regex basics</div>
+                    <div className="text-xs text-muted-foreground">
+                        Patterns are JavaScript RegExp syntax. Flags control matching behavior.
+                    </div>
+                    <ul className="text-xs text-muted-foreground list-disc pl-4">
+                        <li><span className="font-mono">g</span> finds all matches, <span className="font-mono">i</span> ignores case.</li>
+                        <li>Use parentheses for capture groups, like <span className="font-mono">(\\w+)</span>.</li>
+                        <li>Escapes like <span className="font-mono">\\d</span> match digits and <span className="font-mono">\\s</span> matches whitespace.</li>
+                    </ul>
+                </div>
+            )}
 
             {/* Highlighted Matches */}
             {highlightedText && highlightedText.length > 0 && (
