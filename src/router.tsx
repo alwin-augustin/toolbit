@@ -1,8 +1,10 @@
-import { Switch, Route, Redirect } from "wouter";
-import { Suspense } from "react";
+import { Switch, Route } from "wouter";
+import { Suspense, lazy } from "react";
 import { ToolErrorBoundary } from "@/components/ToolErrorBoundary";
 import { LoadingFallback } from "@/components/LoadingFallback";
 import { TOOLS } from "@/config/tools.config";
+
+const AppHome = lazy(() => import("@/components/AppHome"));
 
 /**
  * Auto-generated App Router
@@ -11,9 +13,11 @@ import { TOOLS } from "@/config/tools.config";
 export function AppRouter() {
     return (
         <Switch>
-            {/* Redirect /app to default tool */}
+            {/* App home dashboard */}
             <Route path="/app">
-                <Redirect to="/app/json-formatter" />
+                <Suspense fallback={<LoadingFallback />}>
+                    <AppHome />
+                </Suspense>
             </Route>
 
             {/* Auto-generated tool routes from metadata */}
