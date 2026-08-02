@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import CronParser from '@/components/tools/CronParser'
+import CronParser from '@/components/tools/utilities/CronParser'
 
 describe('CronParser', () => {
   it('renders the component with correct title', () => {

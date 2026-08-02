@@ -1,148 +1,133 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Copy, Code } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { ToolCard } from "@/components/ToolCard";
+import { useEffect, useMemo, useState } from "react";
+import { Button, Tabs } from "@/ds/components";
+import { CodeEditor } from "@/v2/CodeEditor";
+import { Panel, PanelHeader, CopyAction, ValidityBadge, EditorSplit } from "@/v2/EditorPanels";
+import { useEditorStatus } from "@/v2/workspace-store";
 import { useUrlState } from "@/hooks/use-url-state";
 import { useToolHistory } from "@/hooks/use-tool-history";
-import Editor from "react-simple-code-editor";
-import Prism from "prismjs";
 
+type Mode = "escape" | "unescape";
 
+function escapeHtml(input: string): string {
+    return input
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function unescapeHtml(input: string): string {
+    return input
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&amp;/g, "&"); // This should be last
+}
+
+const SAMPLE = '<div class="example">Hello & "welcome" to <HTML> escape tool!</div>';
+
+const ENTITIES: [string, string][] = [
+    ["<", "&lt;"],
+    [">", "&gt;"],
+    ["&", "&amp;"],
+    ['"', "&quot;"],
+    ["'", "&#39;"],
+];
 
 export default function HtmlEscape() {
     const [input, setInput] = useState("");
-    const [output, setOutput] = useState("");
-    const [markupReady, setMarkupReady] = useState(false);
-    const { toast } = useToast();
-    const { getShareUrl } = useUrlState(input, setInput);
+    const [mode, setMode] = useState<Mode>("escape");
+    const setStatus = useEditorStatus((s) => s.setStatus);
+    useUrlState(input, setInput);
     const { addEntry } = useToolHistory("html-escape", "HTML Escape");
 
-    const escapeHtml = () => {
-        const escaped = input
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-        setOutput(escaped);
-        addEntry({ input, output: escaped, metadata: { action: "escape" } });
-    };
+    const output = useMemo(() => {
+        if (!input) return "";
+        return mode === "escape" ? escapeHtml(input) : unescapeHtml(input);
+    }, [input, mode]);
 
-    const unescapeHtml = () => {
-        const unescaped = input
-            .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>')
-            .replace(/&quot;/g, '"')
-            .replace(/&#39;/g, "'")
-            .replace(/&amp;/g, '&'); // This should be last
-        setOutput(unescaped);
-        addEntry({ input, output: unescaped, metadata: { action: "unescape" } });
-    };
-
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(output);
-        toast({ description: "Copied to clipboard!" });
-    };
-
-    const loadSample = () => {
-        setInput('<div class="example">Hello & "welcome" to <HTML> escape tool!</div>');
-    };
-
-    const editorClassName = "flex-grow min-h-[20rem] font-mono text-sm rounded-md border border-input bg-background px-3 py-2 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm";
+    const hasInput = input.trim().length > 0;
 
     useEffect(() => {
-        let active = true;
-        import("prismjs/components/prism-markup")
-            .then(() => {
-                if (active) setMarkupReady(true);
-            })
-            .catch(() => {});
-        return () => {
-            active = false;
-        };
-    }, []);
+        setStatus({
+            valid: hasInput ? true : null,
+            validityLabel: hasInput ? (mode === "escape" ? "Escaped" : "Unescaped") : "",
+        });
+    }, [hasInput, mode, setStatus]);
+
+    useEffect(() => {
+        if (!hasInput) return;
+        const t = setTimeout(() => addEntry({ input, output, metadata: { action: mode } }), 1500);
+        return () => clearTimeout(t);
+    }, [input, output, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
-        <ToolCard
-            title="HTML Escape / Unescape"
-            description="Escape HTML entities or unescape HTML-encoded text"
-            icon={<Code className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "html-escape",
-                toolName: "HTML Escape",
-                onRestore: (entry) => {
-                    setInput(entry.input || "");
-                    setOutput(entry.output || "");
-                },
-            }}
-        >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-2 flex flex-col h-full">
-                    <label htmlFor="html-input" className="text-sm font-medium">
-                        Input
-                    </label>
-                    <Editor
-                        id="html-input"
-                        placeholder="Enter HTML to escape or escaped HTML to unescape..."
-                        value={input}
-                        onValueChange={setInput}
-                        highlight={(code) => (markupReady && Prism.languages.markup ? Prism.highlight(code, Prism.languages.markup, "markup") : code)}
-                        padding={10}
-                        className={editorClassName}
-                        data-testid="input-html"
-                    />
-                    <div className="flex gap-2">
-                        <Button onClick={escapeHtml} data-testid="button-escape">
-                            Escape HTML
-                        </Button>
-                        <Button onClick={unescapeHtml} variant="outline" data-testid="button-unescape">
-                            Unescape HTML
-                        </Button>
-                        <Button onClick={loadSample} variant="outline" data-testid="button-sample">
-                            Load Sample
-                        </Button>
-                    </div>
+        <EditorSplit>
+            <Panel>
+                <PanelHeader
+                    title={mode === "escape" ? "HTML" : "Escaped HTML"}
+                    action={
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <Tabs
+                                variant="segment"
+                                value={mode}
+                                onChange={(v) => setMode(v as Mode)}
+                                items={[
+                                    { value: "escape", label: "Escape" },
+                                    { value: "unescape", label: "Unescape" },
+                                ]}
+                            />
+                            <Button variant="ghost" size="sm" onClick={() => setInput(SAMPLE)}>
+                                Load sample
+                            </Button>
+                        </div>
+                    }
+                />
+                <CodeEditor
+                    value={input}
+                    onChange={setInput}
+                    reportStatus
+                    placeholder={
+                        mode === "escape"
+                            ? "Enter HTML to escape…"
+                            : "Enter escaped HTML to unescape…"
+                    }
+                />
+            </Panel>
+            <Panel>
+                <PanelHeader
+                    title={mode === "escape" ? "Escaped" : "Unescaped"}
+                    badge={
+                        <ValidityBadge
+                            valid={hasInput ? true : null}
+                            validLabel={mode === "escape" ? "escaped" : "unescaped"}
+                        />
+                    }
+                    action={<CopyAction text={output} />}
+                />
+                <CodeEditor value={output} readOnly placeholder="Result will appear here…" />
+                <div
+                    style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "4px 16px",
+                        padding: "8px 12px",
+                        borderTop: "1px solid hsl(var(--border-faint))",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "var(--text-xs)",
+                        color: "hsl(var(--text-muted))",
+                        flexShrink: 0,
+                    }}
+                >
+                    {ENTITIES.map(([char, entity]) => (
+                        <span key={entity}>
+                            {char} → {entity}
+                        </span>
+                    ))}
                 </div>
-
-                <div className="space-y-2 flex flex-col h-full">
-                    <label htmlFor="html-output" className="text-sm font-medium">
-                        Output
-                    </label>
-                    <Editor
-                        id="html-output"
-                        placeholder="Result will appear here..."
-                        value={output}
-                        readOnly
-                        onValueChange={() => {}}
-                        highlight={(code) => (markupReady && Prism.languages.markup ? Prism.highlight(code, Prism.languages.markup, "markup") : code)}
-                        padding={10}
-                        className={editorClassName}
-                        data-testid="output-html"
-                    />
-                    <Button
-                        onClick={copyToClipboard}
-                        disabled={!output}
-                        variant="outline"
-                        data-testid="button-copy"
-                    >
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy
-                    </Button>
-                </div>
-            </div>
-
-            <div className="bg-muted p-3 rounded-md text-sm">
-                <p className="font-medium mb-2">Common HTML Entities:</p>
-                <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                    <span>&lt; → &amp;lt;</span>
-                    <span>&gt; → &amp;gt;</span>
-                    <span>&amp; → &amp;amp;</span>
-                    <span>" → &amp;quot;</span>
-                    <span>' → &amp;#39;</span>
-                </div>
-            </div>
-        </ToolCard>
+            </Panel>
+        </EditorSplit>
     );
 }

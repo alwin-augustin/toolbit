@@ -7,6 +7,7 @@ export interface Workspace {
     id: string
     name: string
     createdAt: number
+    updatedAt?: number
     tools: WorkspaceToolState[]
 }
 
@@ -71,7 +72,9 @@ export async function listWorkspaces(): Promise<Workspace[]> {
     })
 
     await transactionDone(tx)
-    return results
+    return results.sort((a, b) =>
+        (b.updatedAt ?? b.createdAt) - (a.updatedAt ?? a.createdAt),
+    )
 }
 
 export async function getWorkspace(id: string): Promise<Workspace | null> {
@@ -87,7 +90,12 @@ export async function saveWorkspace(workspace: Workspace): Promise<void> {
     const db = await openDb()
     const tx = db.transaction(STORE_NAME, "readwrite")
     const store = tx.objectStore(STORE_NAME)
-    await requestToPromise(store.put(workspace))
+    await requestToPromise(store.put({
+        ...workspace,
+        createdAt: workspace.createdAt || Date.now(),
+        updatedAt: Date.now(),
+        tools: workspace.tools.map((tool) => ({ ...tool })),
+    }))
     await transactionDone(tx)
 }
 

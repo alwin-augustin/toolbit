@@ -5,17 +5,19 @@ import { useHashLocation } from "wouter/use-hash-location";
 import { lazy, Suspense } from "react";
 import { AppRouter } from "./router";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { LandingPage } from "@/components/LandingPage";
-import { AppLayout } from "@/components/AppLayout";
+import { WorkspaceShell } from "@/v2/WorkspaceShell";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { LoadingFallback } from "@/components/LoadingFallback";
-import { CommandPalette } from "@/components/CommandPalette";
-import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { isElectronApp } from "@/hooks/use-electron";
 
 // Lazy load legal pages
 const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
 const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
+
+// Dev preview of the v2 design system — lazy so its stylesheet only
+// loads when the route is visited and never leaks into the legacy app.
+const DesignSystemPreview = lazy(() => import("@/pages/design-system-preview"));
+const LandingPage = lazy(() => import("@/components/LandingPage").then((module) => ({ default: module.LandingPage })));
 
 function App() {
     const useHashRouter =
@@ -27,9 +29,23 @@ function App() {
             <ErrorBoundary>
                 <TooltipProvider>
                     <Switch>
-                        {/* Landing page route */}
+                        {/* The application is the primary experience. */}
                         <Route path="/">
-                            <LandingPage />
+                            <WorkspaceShell>
+                                <AppRouter />
+                            </WorkspaceShell>
+                        </Route>
+
+                        {/* SEO and product context page */}
+                        <Route path="/about">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <LandingPage />
+                            </Suspense>
+                        </Route>
+                        <Route path="/about.html">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <LandingPage />
+                            </Suspense>
                         </Route>
 
                         {/* Legal pages */}
@@ -44,22 +60,27 @@ function App() {
                             </Suspense>
                         </Route>
 
-                        {/* App routes with sidebar layout */}
+                        {/* Dev-only design system preview (issue #13) */}
+                        <Route path="/design-system">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <DesignSystemPreview />
+                            </Suspense>
+                        </Route>
+
+                        {/* App routes with v2 workspace shell */}
                         <Route path="/app">
-                            <AppLayout>
+                            <WorkspaceShell>
                                 <AppRouter />
-                            </AppLayout>
+                            </WorkspaceShell>
                         </Route>
                         <Route path="/app/:rest*">
-                            <AppLayout>
+                            <WorkspaceShell>
                                 <AppRouter />
-                            </AppLayout>
+                            </WorkspaceShell>
                         </Route>
                     </Switch>
                     <Toaster />
                     <OfflineIndicator />
-                    <CommandPalette />
-                    <KeyboardShortcutsHelp />
                 </TooltipProvider>
             </ErrorBoundary>
         </Router>

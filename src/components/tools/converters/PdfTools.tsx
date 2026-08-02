@@ -1,10 +1,8 @@
 import { useState, useCallback, useRef, useMemo } from "react"
 import { PDFDocument, degrees } from "pdf-lib"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ToolCard } from "@/components/ToolCard"
-import { useToast } from "@/hooks/use-toast"
-import { FileText, Merge, Scissors, RotateCw, Trash2, Download, ArrowUp, ArrowDown } from "lucide-react"
+import { Alert, Button, Card, IconButton, Select, Input, Tabs } from "@/ds/components"
+import { ToolPage, SectionTitle, Field, Row, Grid2 } from "@/v2/restyle-kit"
+import { FileText, Merge, Scissors, RotateCw, Trash2, Download, ArrowUp, ArrowDown, Upload } from "lucide-react"
 import { useUrlState } from "@/hooks/use-url-state"
 
 interface PdfFile {
@@ -15,6 +13,8 @@ interface PdfFile {
 }
 
 type Mode = "merge" | "split" | "rotate"
+
+type Status = { tone: "success" | "danger"; message: string }
 
 function formatSize(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`
@@ -29,13 +29,13 @@ export default function PdfTools() {
     const [rotateAngle, setRotateAngle] = useState(90)
     const [rotatePages, setRotatePages] = useState("all")
     const [processing, setProcessing] = useState(false)
+    const [status, setStatus] = useState<Status | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const { toast } = useToast()
     const shareState = useMemo(
         () => ({ mode, splitRange, rotateAngle, rotatePages }),
         [mode, splitRange, rotateAngle, rotatePages],
     )
-    const { getShareUrl } = useUrlState(shareState, (state) => {
+    useUrlState(shareState, (state) => {
         setMode(state.mode === "split" || state.mode === "rotate" ? state.mode : "merge")
         setSplitRange(typeof state.splitRange === "string" ? state.splitRange : "1-3")
         setRotateAngle(typeof state.rotateAngle === "number" ? state.rotateAngle : 90)
@@ -47,11 +47,11 @@ export default function PdfTools() {
         for (let i = 0; i < fileList.length; i++) {
             const file = fileList[i]
             if (file.type !== "application/pdf") {
-                toast({ title: `${file.name} is not a PDF`, variant: "destructive" })
+                setStatus({ tone: "danger", message: `${file.name} is not a PDF` })
                 continue
             }
             if (file.size > 50 * 1024 * 1024) {
-                toast({ title: `${file.name} exceeds 50MB limit`, variant: "destructive" })
+                setStatus({ tone: "danger", message: `${file.name} exceeds 50MB limit` })
                 continue
             }
             try {
@@ -59,11 +59,11 @@ export default function PdfTools() {
                 const pdf = await PDFDocument.load(data)
                 newFiles.push({ name: file.name, data, pageCount: pdf.getPageCount(), size: file.size })
             } catch {
-                toast({ title: `Failed to load ${file.name}`, variant: "destructive" })
+                setStatus({ tone: "danger", message: `Failed to load ${file.name}` })
             }
         }
         setFiles(prev => [...prev, ...newFiles])
-    }, [toast])
+    }, [])
 
     const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) addFiles(e.target.files)
@@ -96,7 +96,7 @@ export default function PdfTools() {
 
     const mergePdfs = useCallback(async () => {
         if (files.length < 2) {
-            toast({ title: "Need at least 2 PDFs to merge", variant: "destructive" })
+            setStatus({ tone: "danger", message: "Need at least 2 PDFs to merge" })
             return
         }
         setProcessing(true)
@@ -109,17 +109,17 @@ export default function PdfTools() {
             }
             const data = await merged.save()
             downloadPdf(data, "merged.pdf")
-            toast({ title: `Merged ${files.length} PDFs (${formatSize(data.byteLength)})` })
+            setStatus({ tone: "success", message: `Merged ${files.length} PDFs (${formatSize(data.byteLength)})` })
         } catch (err) {
-            toast({ title: `Merge failed: ${err instanceof Error ? err.message : "Unknown error"}`, variant: "destructive" })
+            setStatus({ tone: "danger", message: `Merge failed: ${err instanceof Error ? err.message : "Unknown error"}` })
         } finally {
             setProcessing(false)
         }
-    }, [files, downloadPdf, toast])
+    }, [files, downloadPdf])
 
     const splitPdf = useCallback(async () => {
         if (files.length < 1) {
-            toast({ title: "Upload a PDF to split", variant: "destructive" })
+            setStatus({ tone: "danger", message: "Upload a PDF to split" })
             return
         }
         setProcessing(true)
@@ -143,7 +143,7 @@ export default function PdfTools() {
             }
 
             if (pageIndices.length === 0) {
-                toast({ title: "No valid pages in range", variant: "destructive" })
+                setStatus({ tone: "danger", message: "No valid pages in range" })
                 return
             }
 
@@ -153,17 +153,17 @@ export default function PdfTools() {
 
             const data = await newPdf.save()
             downloadPdf(data, `split_p${splitRange.replace(/[^0-9,-]/g, "")}.pdf`)
-            toast({ title: `Extracted ${pageIndices.length} pages` })
+            setStatus({ tone: "success", message: `Extracted ${pageIndices.length} pages` })
         } catch (err) {
-            toast({ title: `Split failed: ${err instanceof Error ? err.message : "Unknown error"}`, variant: "destructive" })
+            setStatus({ tone: "danger", message: `Split failed: ${err instanceof Error ? err.message : "Unknown error"}` })
         } finally {
             setProcessing(false)
         }
-    }, [files, splitRange, downloadPdf, toast])
+    }, [files, splitRange, downloadPdf])
 
     const rotatePdf = useCallback(async () => {
         if (files.length < 1) {
-            toast({ title: "Upload a PDF to rotate", variant: "destructive" })
+            setStatus({ tone: "danger", message: "Upload a PDF to rotate" })
             return
         }
         setProcessing(true)
@@ -195,44 +195,55 @@ export default function PdfTools() {
 
             const data = await source.save()
             downloadPdf(data, `rotated_${rotateAngle}deg.pdf`)
-            toast({ title: `Rotated ${pageIndices.length} pages by ${rotateAngle}°` })
+            setStatus({ tone: "success", message: `Rotated ${pageIndices.length} pages by ${rotateAngle} degrees` })
         } catch (err) {
-            toast({ title: `Rotate failed: ${err instanceof Error ? err.message : "Unknown error"}`, variant: "destructive" })
+            setStatus({ tone: "danger", message: `Rotate failed: ${err instanceof Error ? err.message : "Unknown error"}` })
         } finally {
             setProcessing(false)
         }
-    }, [files, rotateAngle, rotatePages, downloadPdf, toast])
+    }, [files, rotateAngle, rotatePages, downloadPdf])
 
     const totalPages = files.reduce((sum, f) => sum + f.pageCount, 0)
     const totalSize = files.reduce((sum, f) => sum + f.size, 0)
 
     return (
-        <ToolCard
-            title="PDF Tools"
-            description="Merge, split, and rotate PDFs — all processing happens in your browser"
-            icon={<FileText className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-        >
-            <div className="space-y-4">
-                {/* Mode Selector */}
-                <div className="flex gap-1">
-                    <Button variant={mode === "merge" ? "default" : "outline"} size="sm" onClick={() => setMode("merge")}>
-                        <Merge className="h-4 w-4 mr-1" /> Merge
-                    </Button>
-                    <Button variant={mode === "split" ? "default" : "outline"} size="sm" onClick={() => setMode("split")}>
-                        <Scissors className="h-4 w-4 mr-1" /> Split / Extract
-                    </Button>
-                    <Button variant={mode === "rotate" ? "default" : "outline"} size="sm" onClick={() => setMode("rotate")}>
-                        <RotateCw className="h-4 w-4 mr-1" /> Rotate
-                    </Button>
-                </div>
+        <ToolPage maxWidth={760}>
+            <Row>
+                <Tabs
+                    variant="segment"
+                    value={mode}
+                    onChange={(v) => setMode(v as Mode)}
+                    items={[
+                        { value: "merge", label: "Merge", icon: <Merge size={14} /> },
+                        { value: "split", label: "Split / Extract", icon: <Scissors size={14} /> },
+                        { value: "rotate", label: "Rotate", icon: <RotateCw size={14} /> },
+                    ]}
+                />
+            </Row>
 
-                {/* File Upload */}
+            {status && (
+                <Alert tone={status.tone}>{status.message}</Alert>
+            )}
+
+            <Card>
                 <div
-                    className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => fileInputRef.current?.click()}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click() }}
                     onDragOver={(e) => { e.preventDefault(); e.stopPropagation() }}
                     onDrop={(e) => { e.preventDefault(); e.stopPropagation(); if (e.dataTransfer.files) addFiles(e.dataTransfer.files) }}
+                    style={{
+                        display: "grid",
+                        justifyItems: "center",
+                        gap: 8,
+                        padding: "28px 16px",
+                        border: "2px dashed hsl(var(--border))",
+                        borderRadius: "var(--radius-lg)",
+                        cursor: "pointer",
+                        color: "hsl(var(--text-muted))",
+                        textAlign: "center",
+                    }}
                 >
                     <input
                         ref={fileInputRef}
@@ -240,109 +251,138 @@ export default function PdfTools() {
                         accept=".pdf"
                         multiple={mode === "merge"}
                         onChange={handleFileInput}
-                        className="hidden"
+                        style={{ display: "none" }}
                     />
-                    <FileText className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
+                    <Upload size={28} />
+                    <span style={{ fontSize: "var(--text-sm)" }}>
                         Click or drag PDF files here {mode === "merge" ? "(multiple)" : "(single)"}
-                    </p>
+                    </span>
                 </div>
+            </Card>
 
-                {/* File List */}
-                {files.length > 0 && (
-                    <div className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                            <span className="font-medium">{files.length} file{files.length !== 1 ? "s" : ""} — {totalPages} pages — {formatSize(totalSize)}</span>
-                            <Button variant="ghost" size="sm" className="text-xs" onClick={() => setFiles([])}>
-                                Clear all
-                            </Button>
-                        </div>
+            {files.length > 0 && (
+                <Card>
+                    <div style={{ display: "grid", gap: 8 }}>
+                        <Row>
+                            <SectionTitle>
+                                {files.length} file{files.length !== 1 ? "s" : ""} — {totalPages} pages — {formatSize(totalSize)}
+                            </SectionTitle>
+                            <div style={{ marginLeft: "auto" }}>
+                                <Button variant="ghost" size="sm" onClick={() => setFiles([])}>
+                                    Clear all
+                                </Button>
+                            </div>
+                        </Row>
                         {files.map((file, i) => (
-                            <div key={i} className="flex items-center gap-2 p-2 rounded border bg-muted/20 text-sm">
-                                <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                                <span className="flex-1 truncate font-medium">{file.name}</span>
-                                <span className="text-xs text-muted-foreground">{file.pageCount} pg</span>
-                                <span className="text-xs text-muted-foreground">{formatSize(file.size)}</span>
+                            <div
+                                key={i}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    padding: "6px 10px",
+                                    border: "1px solid hsl(var(--border))",
+                                    borderRadius: "var(--radius-md)",
+                                    background: "hsl(var(--surface-1))",
+                                    fontSize: "var(--text-sm)",
+                                }}
+                            >
+                                <FileText size={16} style={{ color: "hsl(var(--text-muted))", flexShrink: 0 }} />
+                                <span
+                                    style={{
+                                        flex: 1,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        color: "hsl(var(--text-strong))",
+                                    }}
+                                >
+                                    {file.name}
+                                </span>
+                                <span style={{ fontSize: "var(--text-xs)", color: "hsl(var(--text-muted))" }}>{file.pageCount} pg</span>
+                                <span style={{ fontSize: "var(--text-xs)", color: "hsl(var(--text-muted))" }}>{formatSize(file.size)}</span>
                                 {mode === "merge" && (
                                     <>
-                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => moveFile(i, -1)} disabled={i === 0}>
-                                            <ArrowUp className="h-3 w-3" />
-                                        </Button>
-                                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => moveFile(i, 1)} disabled={i === files.length - 1}>
-                                            <ArrowDown className="h-3 w-3" />
-                                        </Button>
+                                        <IconButton size="sm" title="Move up" onClick={() => moveFile(i, -1)} disabled={i === 0}>
+                                            <ArrowUp size={12} />
+                                        </IconButton>
+                                        <IconButton size="sm" title="Move down" onClick={() => moveFile(i, 1)} disabled={i === files.length - 1}>
+                                            <ArrowDown size={12} />
+                                        </IconButton>
                                     </>
                                 )}
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => removeFile(i)}>
-                                    <Trash2 className="h-3 w-3" />
-                                </Button>
+                                <IconButton size="sm" title="Remove" onClick={() => removeFile(i)}>
+                                    <Trash2 size={12} />
+                                </IconButton>
                             </div>
                         ))}
                     </div>
-                )}
+                </Card>
+            )}
 
-                {/* Mode-specific options */}
-                {mode === "split" && files.length > 0 && (
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Page Range (e.g., 1-3 or 1,3,5-7)</label>
-                        <div className="flex gap-2">
-                            <Input
-                                value={splitRange}
-                                onChange={(e) => setSplitRange(e.target.value)}
-                                placeholder="1-3"
-                                className="font-mono"
-                            />
-                            <Button onClick={splitPdf} disabled={processing}>
-                                <Download className="h-4 w-4 mr-1" /> {processing ? "Processing..." : "Extract Pages"}
-                            </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                            Total pages: {files[0]?.pageCount || 0}
-                        </p>
+            {mode === "split" && files.length > 0 && (
+                <Card>
+                    <div style={{ display: "grid", gap: 10 }}>
+                        <Field
+                            label="Page range (e.g., 1-3 or 1,3,5-7)"
+                            hint={`Total pages: ${files[0]?.pageCount || 0}`}
+                        >
+                            <Row wrap={false}>
+                                <Input
+                                    mono
+                                    value={splitRange}
+                                    onChange={(e) => setSplitRange(e.target.value)}
+                                    placeholder="1-3"
+                                />
+                                <Button onClick={splitPdf} disabled={processing} iconLeft={<Download size={14} />}>
+                                    {processing ? "Processing..." : "Extract pages"}
+                                </Button>
+                            </Row>
+                        </Field>
                     </div>
-                )}
+                </Card>
+            )}
 
-                {mode === "rotate" && files.length > 0 && (
-                    <div className="space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium">Rotation Angle</label>
-                                <select
+            {mode === "rotate" && files.length > 0 && (
+                <Card>
+                    <div style={{ display: "grid", gap: 12 }}>
+                        <Grid2>
+                            <Field label="Rotation angle">
+                                <Select
+                                    fullWidth
                                     value={rotateAngle}
                                     onChange={(e) => setRotateAngle(Number(e.target.value))}
-                                    className="w-full rounded border bg-background px-2 py-1.5 text-sm"
                                 >
-                                    <option value={90}>90° clockwise</option>
-                                    <option value={180}>180°</option>
-                                    <option value={270}>270° clockwise</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium">Pages</label>
+                                    <option value={90}>90 degrees clockwise</option>
+                                    <option value={180}>180 degrees</option>
+                                    <option value={270}>270 degrees clockwise</option>
+                                </Select>
+                            </Field>
+                            <Field label="Pages">
                                 <Input
+                                    mono
                                     value={rotatePages}
                                     onChange={(e) => setRotatePages(e.target.value)}
                                     placeholder="all or 1-3,5"
-                                    className="text-sm"
                                 />
-                            </div>
-                        </div>
-                        <Button onClick={rotatePdf} disabled={processing} className="w-full">
-                            <RotateCw className="h-4 w-4 mr-1" /> {processing ? "Processing..." : "Rotate & Download"}
+                            </Field>
+                        </Grid2>
+                        <Button onClick={rotatePdf} disabled={processing} iconLeft={<RotateCw size={14} />}>
+                            {processing ? "Processing..." : "Rotate & download"}
                         </Button>
                     </div>
-                )}
+                </Card>
+            )}
 
-                {mode === "merge" && files.length >= 2 && (
-                    <Button onClick={mergePdfs} disabled={processing} className="w-full">
-                        <Merge className="h-4 w-4 mr-1" /> {processing ? "Merging..." : `Merge ${files.length} PDFs`}
-                    </Button>
-                )}
+            {mode === "merge" && files.length >= 2 && (
+                <Button onClick={mergePdfs} disabled={processing} iconLeft={<Merge size={14} />}>
+                    {processing ? "Merging..." : `Merge ${files.length} PDFs`}
+                </Button>
+            )}
 
-                <p className="text-xs text-muted-foreground">
-                    All processing happens locally in your browser. No files are uploaded to any server.
-                </p>
-            </div>
-        </ToolCard>
+            <p style={{ margin: 0, fontSize: "var(--text-xs)", color: "hsl(var(--text-faint))" }}>
+                All processing happens locally in your browser. No files are uploaded to any server.
+            </p>
+        </ToolPage>
     )
 }

@@ -1,10 +1,9 @@
 import { useState, useCallback, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { ToolCard } from "@/components/ToolCard"
-import { useToast } from "@/hooks/use-toast"
-import { Copy, Globe, Plus, Send, Trash2, Save, FolderOpen } from "lucide-react"
+import { FolderOpen, Plus, Save, Send, Trash2 } from "lucide-react"
+import { Button, Badge, IconButton, Input, Select, Textarea, Checkbox, Tabs } from "@/ds/components"
+import { Panel, PanelHeader, CopyAction, EditorSplit } from "@/v2/EditorPanels"
+import { CodeEditor } from "@/v2/CodeEditor"
+import { Row } from "@/v2/restyle-kit"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 
@@ -25,12 +24,14 @@ interface SavedRequest {
     bodyType: string
 }
 
-const METHOD_COLORS: Record<HttpMethod, string> = {
-    GET: "bg-green-500",
-    POST: "bg-blue-500",
-    PUT: "bg-orange-500",
-    PATCH: "bg-yellow-500",
-    DELETE: "bg-red-500",
+type BadgeTone = "neutral" | "primary" | "success" | "warning" | "danger"
+
+const METHOD_TONES: Record<HttpMethod, BadgeTone> = {
+    GET: "success",
+    POST: "primary",
+    PUT: "warning",
+    PATCH: "warning",
+    DELETE: "danger",
 }
 
 const STORAGE_KEY = "toolbit-api-requests"
@@ -62,7 +63,6 @@ export default function ApiRequestBuilder() {
     const [loading, setLoading] = useState(false)
     const [activeTab, setActiveTab] = useState<"headers" | "body" | "saved">("headers")
     const [savedRequests, setSavedRequests] = useState<SavedRequest[]>(loadSavedRequests)
-    const { toast } = useToast()
     const shareState = useMemo(
         () => ({
             method,
@@ -74,7 +74,7 @@ export default function ApiRequestBuilder() {
         }),
         [method, url, headers, body, bodyType, activeTab],
     )
-    const { getShareUrl } = useUrlState(shareState, (state) => {
+    useUrlState(shareState, (state) => {
         setMethod(state.method === "POST" || state.method === "PUT" || state.method === "PATCH" || state.method === "DELETE" ? state.method : "GET")
         setUrl(typeof state.url === "string" ? state.url : "")
         setHeaders(Array.isArray(state.headers) ? (state.headers as Header[]) : [{ key: "Content-Type", value: "application/json", enabled: true }])
@@ -100,7 +100,6 @@ export default function ApiRequestBuilder() {
 
     const sendRequest = useCallback(async () => {
         if (!url.trim()) {
-            toast({ description: "Enter a URL", variant: "destructive" })
             return
         }
 
@@ -174,7 +173,7 @@ export default function ApiRequestBuilder() {
         } finally {
             setLoading(false)
         }
-    }, [url, method, headers, body, bodyType, toast, addEntry])
+    }, [url, method, headers, body, bodyType, addEntry])
 
     const saveCurrentRequest = () => {
         const name = prompt("Save request as:")
@@ -183,7 +182,6 @@ export default function ApiRequestBuilder() {
         const updated = [...savedRequests, req]
         setSavedRequests(updated)
         saveRequests(updated)
-        toast({ description: `Saved "${name}"` })
     }
 
     const loadRequest = (req: SavedRequest) => {
@@ -193,7 +191,6 @@ export default function ApiRequestBuilder() {
         setBody(req.body)
         setBodyType(req.bodyType as "json" | "text" | "form")
         setActiveTab("headers")
-        toast({ description: `Loaded "${req.name}"` })
     }
 
     const deleteRequest = (index: number) => {
@@ -210,213 +207,199 @@ export default function ApiRequestBuilder() {
         setActiveTab("headers")
     }
 
-    const copyResponse = () => {
-        navigator.clipboard.writeText(response)
-        toast({ description: "Response copied!" })
-    }
+    const statusTone: BadgeTone = responseStatus
+        ? responseStatus < 300 ? "success"
+        : responseStatus < 400 ? "warning"
+        : "danger"
+        : "danger"
 
-    const statusColor = responseStatus
-        ? responseStatus < 300 ? "text-green-500"
-        : responseStatus < 400 ? "text-yellow-500"
-        : "text-red-500"
-        : ""
+    const responseLooksJson = response.trimStart().startsWith("{") || response.trimStart().startsWith("[")
+
+    const mutedText = { fontSize: "var(--text-sm)", color: "hsl(var(--text-muted))" } as const
 
     return (
-        <ToolCard
-            title="API Request Builder"
-            description="Send HTTP requests and inspect responses"
-            icon={<Globe className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "api-request-builder",
-                toolName: "API Request Builder",
-                onRestore: (entry) => {
-                    try {
-                        const parsed = JSON.parse(entry.input || "{}") as SavedRequest
-                        setMethod(parsed.method || "GET")
-                        setUrl(parsed.url || "")
-                        setHeaders(parsed.headers || [{ key: "Content-Type", value: "application/json", enabled: true }])
-                        setBody(parsed.body || "")
-                        setBodyType(parsed.bodyType as "json" | "text" | "form")
-                    } catch {
-                        // ignore
+        <EditorSplit>
+            <Panel>
+                <PanelHeader
+                    title="Request"
+                    badge={<Badge tone={METHOD_TONES[method]}>{method}</Badge>}
+                    action={
+                        <Button variant="ghost" size="sm" onClick={loadSample}>
+                            Load sample
+                        </Button>
                     }
-                },
-            }}
-        >
-            {/* URL Bar */}
-            <div className="flex gap-2">
-                <div className="relative">
-                    <select
-                        value={method}
-                        onChange={(e) => setMethod(e.target.value as HttpMethod)}
-                        className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm font-mono font-bold appearance-none pr-6 cursor-pointer"
-                    >
-                        {(["GET", "POST", "PUT", "PATCH", "DELETE"] as HttpMethod[]).map(m => (
-                            <option key={m} value={m}>{m}</option>
-                        ))}
-                    </select>
-                    <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${METHOD_COLORS[method]}`} />
-                </div>
-                <Input
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://api.example.com/users"
-                    className="flex-1 font-mono text-sm"
-                    onKeyDown={(e) => e.key === "Enter" && sendRequest()}
                 />
-                <Button onClick={sendRequest} disabled={loading}>
-                    <Send className="h-4 w-4 mr-1" />
-                    {loading ? "Sending..." : "Send"}
-                </Button>
-                <Button variant="outline" onClick={loadSample}>
-                    Sample
-                </Button>
-            </div>
+                <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: 12, display: "grid", gap: 12, alignContent: "start" }}>
+                    <Row wrap={false}>
+                        <Select
+                            value={method}
+                            onChange={(e) => setMethod(e.target.value as HttpMethod)}
+                            style={{ fontFamily: "var(--font-mono)" }}
+                        >
+                            {(["GET", "POST", "PUT", "PATCH", "DELETE"] as HttpMethod[]).map(m => (
+                                <option key={m} value={m}>{m}</option>
+                            ))}
+                        </Select>
+                        <Input
+                            mono
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
+                            placeholder="https://api.example.com/users"
+                            style={{ flex: 1 }}
+                            onKeyDown={(e) => e.key === "Enter" && sendRequest()}
+                        />
+                        <Button onClick={sendRequest} disabled={loading || !url.trim()} iconLeft={<Send size={14} />}>
+                            {loading ? "Sending..." : "Send"}
+                        </Button>
+                    </Row>
 
-            {/* Tabs */}
-            <div className="flex gap-1 border-b">
-                {(["headers", "body", "saved"] as const).map(tab => (
-                    <button
-                        key={tab}
-                        className={`px-3 py-2 text-sm font-medium capitalize border-b-2 transition-colors ${
-                            activeTab === tab
-                                ? "border-primary text-primary"
-                                : "border-transparent text-muted-foreground hover:text-foreground"
-                        }`}
-                        onClick={() => setActiveTab(tab)}
-                    >
-                        {tab === "saved" ? (
-                            <span className="flex items-center gap-1">
-                                <FolderOpen className="h-3 w-3" />
-                                Saved ({savedRequests.length})
-                            </span>
-                        ) : tab}
-                    </button>
-                ))}
-                <button
-                    className="ml-auto px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
-                    onClick={saveCurrentRequest}
-                >
-                    <Save className="h-3 w-3 inline mr-1" />
-                    Save
-                </button>
-            </div>
+                    <Row>
+                        <Tabs
+                            variant="underline"
+                            value={activeTab}
+                            onChange={(v) => setActiveTab(v as "headers" | "body" | "saved")}
+                            items={[
+                                { value: "headers", label: "Headers" },
+                                { value: "body", label: "Body" },
+                                { value: "saved", label: `Saved (${savedRequests.length})`, icon: <FolderOpen size={13} /> },
+                            ]}
+                            style={{ flex: 1 }}
+                        />
+                        <Button variant="ghost" size="sm" iconLeft={<Save size={13} />} onClick={saveCurrentRequest}>
+                            Save
+                        </Button>
+                    </Row>
 
-            {/* Headers Tab */}
-            {activeTab === "headers" && (
-                <div className="space-y-2">
-                    {headers.map((h, i) => (
-                        <div key={i} className="flex gap-2 items-center">
-                            <input
-                                type="checkbox"
-                                checked={h.enabled}
-                                onChange={(e) => updateHeader(i, "enabled", e.target.checked)}
-                                className="rounded"
-                            />
-                            <Input
-                                value={h.key}
-                                onChange={(e) => updateHeader(i, "key", e.target.value)}
-                                placeholder="Header name"
-                                className="flex-1 font-mono text-sm"
-                            />
-                            <Input
-                                value={h.value}
-                                onChange={(e) => updateHeader(i, "value", e.target.value)}
-                                placeholder="Value"
-                                className="flex-1 font-mono text-sm"
-                            />
-                            <Button variant="ghost" size="icon" onClick={() => removeHeader(i)}>
-                                <Trash2 className="h-3 w-3" />
-                            </Button>
-                        </div>
-                    ))}
-                    <Button variant="outline" size="sm" onClick={addHeader}>
-                        <Plus className="h-3 w-3 mr-1" />
-                        Add Header
-                    </Button>
-                </div>
-            )}
-
-            {/* Body Tab */}
-            {activeTab === "body" && (
-                <div className="space-y-2">
-                    <div className="flex gap-2">
-                        {(["json", "text", "form"] as const).map(t => (
-                            <Button
-                                key={t}
-                                variant={bodyType === t ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setBodyType(t)}
-                                className="uppercase text-xs"
-                            >
-                                {t}
-                            </Button>
-                        ))}
-                    </div>
-                    <Textarea
-                        value={body}
-                        onChange={(e) => setBody(e.target.value)}
-                        placeholder={bodyType === "json" ? '{"key": "value"}' : "Request body..."}
-                        className="min-h-[150px] font-mono text-sm"
-                    />
-                </div>
-            )}
-
-            {/* Saved Tab */}
-            {activeTab === "saved" && (
-                <div className="space-y-2">
-                    {savedRequests.length === 0 ? (
-                        <div className="text-sm text-muted-foreground text-center py-4">
-                            No saved requests yet. Click "Save" to save the current request.
-                        </div>
-                    ) : (
-                        savedRequests.map((req, i) => (
-                            <div key={i} className="flex items-center gap-2 p-2 rounded border hover:bg-muted/50">
-                                <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded text-white ${METHOD_COLORS[req.method]}`}>
-                                    {req.method}
-                                </span>
-                                <span className="flex-1 text-sm font-mono truncate">{req.url}</span>
-                                <span className="text-sm text-muted-foreground">{req.name}</span>
-                                <Button variant="ghost" size="sm" onClick={() => loadRequest(req)}>Load</Button>
-                                <Button variant="ghost" size="icon" onClick={() => deleteRequest(i)}>
-                                    <Trash2 className="h-3 w-3" />
+                    {activeTab === "headers" && (
+                        <div style={{ display: "grid", gap: 8 }}>
+                            {headers.map((h, i) => (
+                                <Row key={i} wrap={false}>
+                                    <Checkbox
+                                        checked={h.enabled}
+                                        onChange={(v) => updateHeader(i, "enabled", v)}
+                                    />
+                                    <Input
+                                        mono
+                                        value={h.key}
+                                        onChange={(e) => updateHeader(i, "key", e.target.value)}
+                                        placeholder="Header name"
+                                        style={{ flex: 1 }}
+                                    />
+                                    <Input
+                                        mono
+                                        value={h.value}
+                                        onChange={(e) => updateHeader(i, "value", e.target.value)}
+                                        placeholder="Value"
+                                        style={{ flex: 1 }}
+                                    />
+                                    <IconButton size="sm" title="Remove header" onClick={() => removeHeader(i)}>
+                                        <Trash2 size={13} />
+                                    </IconButton>
+                                </Row>
+                            ))}
+                            <div>
+                                <Button variant="outline" size="sm" iconLeft={<Plus size={13} />} onClick={addHeader}>
+                                    Add header
                                 </Button>
                             </div>
-                        ))
+                        </div>
                     )}
-                </div>
-            )}
 
-            {/* Response */}
-            {(response || responseStatus !== null) && (
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <label className="text-sm font-medium">Response</label>
-                            {responseStatus !== null && (
-                                <span className={`text-sm font-mono font-bold ${statusColor}`}>
-                                    {responseStatus === 0 ? "Error" : responseStatus}
-                                </span>
-                            )}
-                            {responseTime !== null && (
-                                <span className="text-sm text-muted-foreground">
-                                    {responseTime}ms
-                                </span>
+                    {activeTab === "body" && (
+                        <div style={{ display: "grid", gap: 8 }}>
+                            <Tabs
+                                variant="segment"
+                                value={bodyType}
+                                onChange={(v) => setBodyType(v as "json" | "text" | "form")}
+                                items={[
+                                    { value: "json", label: "JSON" },
+                                    { value: "text", label: "Text" },
+                                    { value: "form", label: "Form" },
+                                ]}
+                            />
+                            <Textarea
+                                mono
+                                value={body}
+                                onChange={(e) => setBody(e.target.value)}
+                                placeholder={bodyType === "json" ? '{"key": "value"}' : "Request body..."}
+                                style={{ minHeight: 150 }}
+                            />
+                        </div>
+                    )}
+
+                    {activeTab === "saved" && (
+                        <div style={{ display: "grid", gap: 8 }}>
+                            {savedRequests.length === 0 ? (
+                                <div style={{ ...mutedText, textAlign: "center", padding: "16px 0" }}>
+                                    No saved requests yet. Click "Save" to save the current request.
+                                </div>
+                            ) : (
+                                savedRequests.map((req, i) => (
+                                    <div
+                                        key={i}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 8,
+                                            padding: 8,
+                                            border: "1px solid hsl(var(--border))",
+                                            borderRadius: "var(--radius-md)",
+                                            background: "hsl(var(--surface-1))",
+                                        }}
+                                    >
+                                        <Badge tone={METHOD_TONES[req.method]}>{req.method}</Badge>
+                                        <span
+                                            style={{
+                                                flex: 1,
+                                                fontFamily: "var(--font-mono)",
+                                                fontSize: "var(--text-sm)",
+                                                color: "hsl(var(--text-body))",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {req.url}
+                                        </span>
+                                        <span style={mutedText}>{req.name}</span>
+                                        <Button variant="ghost" size="sm" onClick={() => loadRequest(req)}>Load</Button>
+                                        <IconButton size="sm" title="Delete request" onClick={() => deleteRequest(i)}>
+                                            <Trash2 size={13} />
+                                        </IconButton>
+                                    </div>
+                                ))
                             )}
                         </div>
-                        <Button variant="outline" size="sm" onClick={copyResponse}>
-                            <Copy className="h-3 w-3 mr-1" />
-                            Copy
-                        </Button>
-                    </div>
-                    <Textarea
-                        value={response}
-                        readOnly
-                        className="min-h-[250px] font-mono text-sm"
-                    />
+                    )}
                 </div>
-            )}
-        </ToolCard>
+            </Panel>
+            <Panel>
+                <PanelHeader
+                    title="Response"
+                    badge={
+                        responseStatus !== null ? (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                                <Badge tone={statusTone}>
+                                    {responseStatus === 0 ? "Error" : responseStatus}
+                                </Badge>
+                                {responseTime !== null && (
+                                    <span style={{ fontSize: "var(--text-xs)", color: "hsl(var(--text-muted))" }}>
+                                        {responseTime}ms
+                                    </span>
+                                )}
+                            </span>
+                        ) : undefined
+                    }
+                    action={<CopyAction text={response} />}
+                />
+                {response || responseStatus !== null ? (
+                    <CodeEditor value={response} language={responseLooksJson ? "json" : "text"} readOnly />
+                ) : (
+                    <div style={{ padding: "16px 12px", fontSize: "var(--text-sm)", color: "hsl(var(--text-faint))" }}>
+                        Send a request to see the response here.
+                    </div>
+                )}
+            </Panel>
+        </EditorSplit>
     )
 }

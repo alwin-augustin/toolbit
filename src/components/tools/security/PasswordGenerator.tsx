@@ -1,9 +1,8 @@
 import { useState, useCallback, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ToolCard } from "@/components/ToolCard"
-import { useToast } from "@/hooks/use-toast"
-import { Copy, RefreshCw, Shield } from "lucide-react"
+import { RefreshCw } from "lucide-react"
+import { Button, Alert, Card, Checkbox, Input } from "@/ds/components"
+import { CopyAction } from "@/v2/EditorPanels"
+import { ToolPage, SectionTitle, Field, Row, Grid2 } from "@/v2/restyle-kit"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 
@@ -31,10 +30,9 @@ function calculateStrength(password: string): { score: number; label: string; co
     const uniqueChars = new Set(password).size
     if (uniqueChars > password.length * 0.7) score += 1
 
-    if (score <= 2) return { score, label: "Weak", color: "bg-destructive" }
-    if (score <= 4) return { score, label: "Medium", color: "bg-yellow-500" }
-    if (score <= 5) return { score, label: "Strong", color: "bg-green-500" }
-    return { score, label: "Very Strong", color: "bg-green-600" }
+    if (score <= 2) return { score, label: "Weak", color: "hsl(var(--danger))" }
+    if (score <= 4) return { score, label: "Medium", color: "hsl(var(--warning))" }
+    return { score, label: score <= 5 ? "Strong" : "Very Strong", color: "hsl(var(--success))" }
 }
 
 export default function PasswordGenerator() {
@@ -45,7 +43,7 @@ export default function PasswordGenerator() {
     const [includeSymbols, setIncludeSymbols] = useState(true)
     const [count, setCount] = useState(1)
     const [passwords, setPasswords] = useState<string[]>([])
-    const { toast } = useToast()
+    const [error, setError] = useState("")
     const shareState = useMemo(
         () => ({
             length,
@@ -57,7 +55,7 @@ export default function PasswordGenerator() {
         }),
         [length, includeLowercase, includeUppercase, includeNumbers, includeSymbols, count],
     )
-    const { getShareUrl } = useUrlState(shareState, (state) => {
+    useUrlState(shareState, (state) => {
         setLength(typeof state.length === "number" ? state.length : 16)
         setIncludeLowercase(state.includeLowercase !== false)
         setIncludeUppercase(state.includeUppercase !== false)
@@ -75,9 +73,10 @@ export default function PasswordGenerator() {
         if (includeSymbols) charset += CHARSETS.symbols
 
         if (!charset) {
-            toast({ description: "Select at least one character type", variant: "destructive" })
+            setError("Select at least one character type")
             return
         }
+        setError("")
 
         const results: string[] = []
         for (let i = 0; i < count; i++) {
@@ -94,136 +93,114 @@ export default function PasswordGenerator() {
             output: results.join("\n"),
             metadata: { action: "generate" },
         })
-    }, [length, includeLowercase, includeUppercase, includeNumbers, includeSymbols, count, toast, addEntry])
-
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text)
-        toast({ description: "Copied to clipboard!" })
-    }
-
-    const copyAll = () => {
-        navigator.clipboard.writeText(passwords.join("\n"))
-        toast({ description: `${passwords.length} password(s) copied!` })
-    }
+    }, [length, includeLowercase, includeUppercase, includeNumbers, includeSymbols, count, addEntry])
 
     return (
-        <ToolCard
-            title="Password Generator"
-            description="Generate secure random passwords with customizable options"
-            icon={<Shield className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "password-generator",
-                toolName: "Password Generator",
-                onRestore: (entry) => {
-                    try {
-                        const parsed = JSON.parse(entry.input || "{}") as { length?: number; includeLowercase?: boolean; includeUppercase?: boolean; includeNumbers?: boolean; includeSymbols?: boolean; count?: number }
-                        setLength(typeof parsed.length === "number" ? parsed.length : 16)
-                        setIncludeLowercase(parsed.includeLowercase !== false)
-                        setIncludeUppercase(parsed.includeUppercase !== false)
-                        setIncludeNumbers(parsed.includeNumbers !== false)
-                        setIncludeSymbols(parsed.includeSymbols !== false)
-                        setCount(typeof parsed.count === "number" ? parsed.count : 1)
-                        if (entry.output) setPasswords(entry.output.split("\n").filter(Boolean))
-                    } catch {
-                        // ignore
-                    }
-                },
-            }}
-        >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <label htmlFor="pw-length" className="text-sm font-medium">
-                        Length: {length}
-                    </label>
-                    <input
-                        id="pw-length"
-                        type="range"
-                        min={4}
-                        max={128}
-                        value={length}
-                        onChange={(e) => setLength(parseInt(e.target.value))}
-                        className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>4</span>
-                        <span>128</span>
-                    </div>
+        <ToolPage maxWidth={720}>
+            <Card>
+                <div style={{ display: "grid", gap: 16 }}>
+                    <SectionTitle>Options</SectionTitle>
+                    <Grid2>
+                        <Field label={`Length: ${length}`}>
+                            <input
+                                id="pw-length"
+                                type="range"
+                                min={4}
+                                max={128}
+                                value={length}
+                                onChange={(e) => setLength(parseInt(e.target.value))}
+                                style={{ width: "100%", accentColor: "hsl(var(--primary))" }}
+                            />
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    fontSize: "var(--text-xs)",
+                                    color: "hsl(var(--text-muted))",
+                                }}
+                            >
+                                <span>4</span>
+                                <span>128</span>
+                            </div>
+                        </Field>
+                        <Field label="Count">
+                            <Input
+                                id="pw-count"
+                                type="number"
+                                min={1}
+                                max={50}
+                                value={count}
+                                onChange={(e) => setCount(Math.max(1, Math.min(50, parseInt(e.target.value) || 1)))}
+                            />
+                        </Field>
+                    </Grid2>
+                    <Field label="Character types">
+                        <Row gap={16}>
+                            <Checkbox checked={includeLowercase} onChange={setIncludeLowercase} label="Lowercase (a-z)" />
+                            <Checkbox checked={includeUppercase} onChange={setIncludeUppercase} label="Uppercase (A-Z)" />
+                            <Checkbox checked={includeNumbers} onChange={setIncludeNumbers} label="Numbers (0-9)" />
+                            <Checkbox checked={includeSymbols} onChange={setIncludeSymbols} label="Symbols (!@#$...)" />
+                        </Row>
+                    </Field>
+                    {error && <Alert tone="danger">{error}</Alert>}
+                    <Row>
+                        <Button iconLeft={<RefreshCw size={14} />} onClick={generate}>
+                            Generate
+                        </Button>
+                        {passwords.length > 1 && (
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <span style={{ fontSize: "var(--text-sm)", color: "hsl(var(--text-muted))" }}>
+                                    Copy all
+                                </span>
+                                <CopyAction text={passwords.join("\n")} />
+                            </div>
+                        )}
+                    </Row>
                 </div>
-                <div className="space-y-2">
-                    <label htmlFor="pw-count" className="text-sm font-medium">Count</label>
-                    <Input
-                        id="pw-count"
-                        type="number"
-                        min={1}
-                        max={50}
-                        value={count}
-                        onChange={(e) => setCount(Math.max(1, Math.min(50, parseInt(e.target.value) || 1)))}
-                    />
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <label className="text-sm font-medium">Character Types</label>
-                <div className="flex flex-wrap gap-4">
-                    <label className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" checked={includeLowercase} onChange={(e) => setIncludeLowercase(e.target.checked)} className="rounded" />
-                        Lowercase (a-z)
-                    </label>
-                    <label className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" checked={includeUppercase} onChange={(e) => setIncludeUppercase(e.target.checked)} className="rounded" />
-                        Uppercase (A-Z)
-                    </label>
-                    <label className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" checked={includeNumbers} onChange={(e) => setIncludeNumbers(e.target.checked)} className="rounded" />
-                        Numbers (0-9)
-                    </label>
-                    <label className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" checked={includeSymbols} onChange={(e) => setIncludeSymbols(e.target.checked)} className="rounded" />
-                        Symbols (!@#$...)
-                    </label>
-                </div>
-            </div>
-
-            <div className="flex gap-2">
-                <Button onClick={generate}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Generate
-                </Button>
-                {passwords.length > 1 && (
-                    <Button variant="outline" onClick={copyAll}>
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy All
-                    </Button>
-                )}
-            </div>
+            </Card>
 
             {passwords.length > 0 && (
-                <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                    {passwords.map((pw, i) => {
-                        const strength = calculateStrength(pw)
-                        return (
-                            <div key={i} className="space-y-1">
-                                <div className="flex gap-2 items-center">
-                                    <Input value={pw} readOnly className="font-mono text-sm" />
-                                    <Button variant="outline" size="icon" onClick={() => copyToClipboard(pw)}>
-                                        <Copy className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                                        <div
-                                            className={`h-full rounded-full transition-all ${strength.color}`}
-                                            style={{ width: `${Math.min(100, (strength.score / 7) * 100)}%` }}
-                                        />
+                <Card>
+                    <div style={{ display: "grid", gap: 12, maxHeight: 400, overflowY: "auto" }}>
+                        <SectionTitle>Generated passwords</SectionTitle>
+                        {passwords.map((pw, i) => {
+                            const strength = calculateStrength(pw)
+                            return (
+                                <div key={i} style={{ display: "grid", gap: 6 }}>
+                                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                                        <Input mono readOnly value={pw} style={{ flex: 1 }} />
+                                        <CopyAction text={pw} />
                                     </div>
-                                    <span className="text-xs text-muted-foreground">{strength.label}</span>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                        <div
+                                            style={{
+                                                flex: 1,
+                                                height: 6,
+                                                borderRadius: 999,
+                                                background: "hsl(var(--surface-2))",
+                                                overflow: "hidden",
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    height: "100%",
+                                                    borderRadius: 999,
+                                                    background: strength.color,
+                                                    width: `${Math.min(100, (strength.score / 7) * 100)}%`,
+                                                    transition: "width 150ms ease",
+                                                }}
+                                            />
+                                        </div>
+                                        <span style={{ fontSize: "var(--text-xs)", color: "hsl(var(--text-muted))" }}>
+                                            {strength.label}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        )
-                    })}
-                </div>
+                            )
+                        })}
+                    </div>
+                </Card>
             )}
-        </ToolCard>
+        </ToolPage>
     )
 }

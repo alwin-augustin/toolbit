@@ -1,19 +1,37 @@
 import { useState, useEffect, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Copy, Palette } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { ToolCard } from "@/components/ToolCard"
+import { Copy, Check } from "lucide-react"
+import { Card, IconButton, Input, Tooltip } from "@/ds/components"
+import { ToolPage, Field, Row, SectionTitle } from "@/v2/restyle-kit"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
+
+/** Copy button that also records the copy into tool history. */
+function CopyValue({ text, onCopy }: { text: string; onCopy: (text: string) => void }) {
+    const [copied, setCopied] = useState(false)
+    return (
+        <Tooltip label={copied ? "Copied" : "Copy value"} side="left">
+            <IconButton
+                size="sm"
+                title="Copy"
+                onClick={() => {
+                    navigator.clipboard.writeText(text)
+                    onCopy(text)
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 1500)
+                }}
+            >
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+            </IconButton>
+        </Tooltip>
+    )
+}
 
 export default function ColorConverter() {
     const [hex, setHex] = useState("#3b82f6")
     const [rgb, setRgb] = useState({ r: 59, g: 130, b: 246 })
     const [hsl, setHsl] = useState({ h: 217, s: 91, l: 60 })
-    const { toast } = useToast()
     const shareState = useMemo(() => ({ hex }), [hex])
-    const { getShareUrl } = useUrlState(shareState, (state) => {
+    useUrlState(shareState, (state) => {
         const nextHex = typeof state.hex === "string" ? state.hex : "#3b82f6"
         setHex(nextHex)
         updateFromHex(nextHex)
@@ -22,6 +40,7 @@ export default function ColorConverter() {
 
     useEffect(() => {
         updateFromHex(hex)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const updateFromHex = (hexValue: string) => {
@@ -112,192 +131,177 @@ export default function ColorConverter() {
         }
     }
 
-    const copyToClipboard = (value: string, format: string) => {
-        navigator.clipboard.writeText(value)
-        toast({ description: `${format} value copied to clipboard!` })
+    const recordCopy = (format: string) => (value: string) => {
         addEntry({ input: hex, output: value, metadata: { action: "copy", format } })
     }
 
     return (
-        <ToolCard
-            title="Color Converter & Picker"
-            description="Convert between HEX, RGB, and HSL color formats"
-            icon={<Palette className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "color-converter",
-                toolName: "Color Converter",
-                onRestore: (entry) => {
-                    const nextHex = entry.input || "#3b82f6"
-                    setHex(nextHex)
-                    updateFromHex(nextHex)
-                },
-            }}
-        >
-            <div className="flex items-center gap-4">
-                <div
-                    className="w-24 h-24 rounded-md border border"
-                    style={{ backgroundColor: hex }}
-                    data-testid="color-preview"
-                />
-                <Input
-                    type="color"
-                    value={hex}
-                    onChange={(e) => {
-                        setHex(e.target.value)
-                        updateFromHex(e.target.value)
-                    }}
-                    className="w-24 h-24 p-1 border-0"
-                    data-testid="color-picker"
-                />
-            </div>
-
-            <div className="space-y-3">
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">HEX</label>
-                    <div className="flex gap-2">
-                        <Input
+        <ToolPage>
+            <Card>
+                <div style={{ display: "grid", gap: 12 }}>
+                    <SectionTitle>Preview</SectionTitle>
+                    <Row gap={16}>
+                        <div
+                            style={{
+                                width: 96,
+                                height: 96,
+                                borderRadius: "var(--radius-md)",
+                                border: "1px solid hsl(var(--border))",
+                                backgroundColor: hex,
+                            }}
+                            data-testid="color-preview"
+                        />
+                        <input
+                            type="color"
                             value={hex}
                             onChange={(e) => {
                                 setHex(e.target.value)
                                 updateFromHex(e.target.value)
                             }}
-                            className="font-mono"
-                            data-testid="input-hex"
+                            style={{
+                                width: 96,
+                                height: 96,
+                                padding: 4,
+                                border: "1px solid hsl(var(--border))",
+                                borderRadius: "var(--radius-md)",
+                                background: "hsl(var(--surface-1))",
+                                cursor: "pointer",
+                            }}
+                            data-testid="color-picker"
                         />
-                        <Button
-                            onClick={() => copyToClipboard(hex, "HEX")}
-                            variant="outline"
-                            size="icon"
-                            data-testid="button-copy-hex"
-                        >
-                            <Copy className="h-4 w-4" />
-                        </Button>
-                    </div>
+                    </Row>
                 </div>
+            </Card>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">RGB</label>
-                    <div className="grid grid-cols-3 gap-2">
-                        <Input
-                            type="number"
-                            min={0}
-                            max={255}
-                            value={rgb.r}
-                            onChange={(e) => {
-                                const newRgb = { ...rgb, r: parseInt(e.target.value) || 0 }
-                                setRgb(newRgb)
-                                updateFromRgb(newRgb.r, newRgb.g, newRgb.b)
-                            }}
-                            placeholder="R"
-                            data-testid="input-r"
-                        />
-                        <Input
-                            type="number"
-                            min={0}
-                            max={255}
-                            value={rgb.g}
-                            onChange={(e) => {
-                                const newRgb = { ...rgb, g: parseInt(e.target.value) || 0 }
-                                setRgb(newRgb)
-                                updateFromRgb(newRgb.r, newRgb.g, newRgb.b)
-                            }}
-                            placeholder="G"
-                            data-testid="input-g"
-                        />
-                        <Input
-                            type="number"
-                            min={0}
-                            max={255}
-                            value={rgb.b}
-                            onChange={(e) => {
-                                const newRgb = { ...rgb, b: parseInt(e.target.value) || 0 }
-                                setRgb(newRgb)
-                                updateFromRgb(newRgb.r, newRgb.g, newRgb.b)
-                            }}
-                            placeholder="B"
-                            data-testid="input-b"
-                        />
-                    </div>
-                    <div className="flex gap-2">
-                        <Input
-                            value={`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`}
-                            readOnly
-                            className="font-mono"
-                            data-testid="output-rgb"
-                        />
-                        <Button
-                            onClick={() => copyToClipboard(`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`, "RGB")}
-                            variant="outline"
-                            size="icon"
-                            data-testid="button-copy-rgb"
-                        >
-                            <Copy className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
+            <Card>
+                <div style={{ display: "grid", gap: 16 }}>
+                    <SectionTitle>Formats</SectionTitle>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">HSL</label>
-                    <div className="grid grid-cols-3 gap-2">
-                        <Input
-                            type="number"
-                            min={0}
-                            max={360}
-                            value={hsl.h}
-                            onChange={(e) => {
-                                const newHsl = { ...hsl, h: parseInt(e.target.value) || 0 }
-                                setHsl(newHsl)
-                                updateFromHsl(newHsl.h, newHsl.s, newHsl.l)
-                            }}
-                            placeholder="H"
-                            data-testid="input-h"
-                        />
-                        <Input
-                            type="number"
-                            min={0}
-                            max={100}
-                            value={hsl.s}
-                            onChange={(e) => {
-                                const newHsl = { ...hsl, s: parseInt(e.target.value) || 0 }
-                                setHsl(newHsl)
-                                updateFromHsl(newHsl.h, newHsl.s, newHsl.l)
-                            }}
-                            placeholder="S"
-                            data-testid="input-s"
-                        />
-                        <Input
-                            type="number"
-                            min={0}
-                            max={100}
-                            value={hsl.l}
-                            onChange={(e) => {
-                                const newHsl = { ...hsl, l: parseInt(e.target.value) || 0 }
-                                setHsl(newHsl)
-                                updateFromHsl(newHsl.h, newHsl.s, newHsl.l)
-                            }}
-                            placeholder="L"
-                            data-testid="input-l"
-                        />
-                    </div>
-                    <div className="flex gap-2">
-                        <Input
-                            value={`hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`}
-                            readOnly
-                            className="font-mono"
-                            data-testid="output-hsl"
-                        />
-                        <Button
-                            onClick={() => copyToClipboard(`hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`, "HSL")}
-                            variant="outline"
-                            size="icon"
-                            data-testid="button-copy-hsl"
-                        >
-                            <Copy className="h-4 w-4" />
-                        </Button>
-                    </div>
+                    <Field label="HEX">
+                        <Row wrap={false}>
+                            <Input
+                                mono
+                                value={hex}
+                                onChange={(e) => {
+                                    setHex(e.target.value)
+                                    updateFromHex(e.target.value)
+                                }}
+                                style={{ flex: 1 }}
+                                data-testid="input-hex"
+                            />
+                            <CopyValue text={hex} onCopy={recordCopy("HEX")} />
+                        </Row>
+                    </Field>
+
+                    <Field label="RGB">
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                            <Input
+                                type="number"
+                                min={0}
+                                max={255}
+                                value={rgb.r}
+                                onChange={(e) => {
+                                    const newRgb = { ...rgb, r: parseInt(e.target.value) || 0 }
+                                    setRgb(newRgb)
+                                    updateFromRgb(newRgb.r, newRgb.g, newRgb.b)
+                                }}
+                                placeholder="R"
+                                data-testid="input-r"
+                            />
+                            <Input
+                                type="number"
+                                min={0}
+                                max={255}
+                                value={rgb.g}
+                                onChange={(e) => {
+                                    const newRgb = { ...rgb, g: parseInt(e.target.value) || 0 }
+                                    setRgb(newRgb)
+                                    updateFromRgb(newRgb.r, newRgb.g, newRgb.b)
+                                }}
+                                placeholder="G"
+                                data-testid="input-g"
+                            />
+                            <Input
+                                type="number"
+                                min={0}
+                                max={255}
+                                value={rgb.b}
+                                onChange={(e) => {
+                                    const newRgb = { ...rgb, b: parseInt(e.target.value) || 0 }
+                                    setRgb(newRgb)
+                                    updateFromRgb(newRgb.r, newRgb.g, newRgb.b)
+                                }}
+                                placeholder="B"
+                                data-testid="input-b"
+                            />
+                        </div>
+                        <Row wrap={false}>
+                            <Input
+                                mono
+                                value={`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`}
+                                readOnly
+                                style={{ flex: 1 }}
+                                data-testid="output-rgb"
+                            />
+                            <CopyValue text={`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`} onCopy={recordCopy("RGB")} />
+                        </Row>
+                    </Field>
+
+                    <Field label="HSL">
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                            <Input
+                                type="number"
+                                min={0}
+                                max={360}
+                                value={hsl.h}
+                                onChange={(e) => {
+                                    const newHsl = { ...hsl, h: parseInt(e.target.value) || 0 }
+                                    setHsl(newHsl)
+                                    updateFromHsl(newHsl.h, newHsl.s, newHsl.l)
+                                }}
+                                placeholder="H"
+                                data-testid="input-h"
+                            />
+                            <Input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={hsl.s}
+                                onChange={(e) => {
+                                    const newHsl = { ...hsl, s: parseInt(e.target.value) || 0 }
+                                    setHsl(newHsl)
+                                    updateFromHsl(newHsl.h, newHsl.s, newHsl.l)
+                                }}
+                                placeholder="S"
+                                data-testid="input-s"
+                            />
+                            <Input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={hsl.l}
+                                onChange={(e) => {
+                                    const newHsl = { ...hsl, l: parseInt(e.target.value) || 0 }
+                                    setHsl(newHsl)
+                                    updateFromHsl(newHsl.h, newHsl.s, newHsl.l)
+                                }}
+                                placeholder="L"
+                                data-testid="input-l"
+                            />
+                        </div>
+                        <Row wrap={false}>
+                            <Input
+                                mono
+                                value={`hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`}
+                                readOnly
+                                style={{ flex: 1 }}
+                                data-testid="output-hsl"
+                            />
+                            <CopyValue text={`hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`} onCopy={recordCopy("HSL")} />
+                        </Row>
+                    </Field>
                 </div>
-            </div>
-        </ToolCard>
+            </Card>
+        </ToolPage>
     )
 }

@@ -1,16 +1,23 @@
 import { useState, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Copy, Clock } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { ToolCard } from "@/components/ToolCard"
-import { ToolEmptyState } from "@/components/ToolEmptyState"
+import { Clock } from "lucide-react"
+import { Button, Card, Input } from "@/ds/components"
+import { CopyAction } from "@/v2/EditorPanels"
+import { ToolPage, Field, Row, Grid2, SectionTitle } from "@/v2/restyle-kit"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
+
+const RESULT_LABELS: Record<string, string> = {
+    unix: "Unix Timestamp",
+    iso: "ISO 8601",
+    local: "Local Time",
+    utc: "UTC",
+    relative: "Relative",
+}
 
 export default function TimestampConverter() {
     const [timestamp, setTimestamp] = useState("")
     const [dateTime, setDateTime] = useState("")
+    const [error, setError] = useState("")
     const [results, setResults] = useState({
         unix: "",
         iso: "",
@@ -18,9 +25,8 @@ export default function TimestampConverter() {
         utc: "",
         relative: ""
     })
-    const { toast } = useToast()
     const shareState = useMemo(() => ({ timestamp, dateTime }), [timestamp, dateTime])
-    const { getShareUrl } = useUrlState(shareState, (state) => {
+    useUrlState(shareState, (state) => {
         setTimestamp(typeof state.timestamp === "string" ? state.timestamp : "")
         setDateTime(typeof state.dateTime === "string" ? state.dateTime : "")
     })
@@ -38,9 +44,10 @@ export default function TimestampConverter() {
                 utc: date.toUTCString(),
                 relative: getRelativeTime(date)
             })
+            setError("")
             addEntry({ input: JSON.stringify({ timestamp, dateTime }), output: JSON.stringify({ unix: ts.toString() }), metadata: { action: "from-timestamp" } })
         } catch (_error) {
-            toast({ description: "Invalid timestamp", variant: "destructive" })
+            setError("Invalid timestamp")
         }
     }
 
@@ -56,9 +63,10 @@ export default function TimestampConverter() {
                 utc: date.toUTCString(),
                 relative: getRelativeTime(date)
             })
+            setError("")
             addEntry({ input: JSON.stringify({ timestamp, dateTime }), output: JSON.stringify({ unix: ts.toString() }), metadata: { action: "from-datetime" } })
         } catch (_error) {
-            toast({ description: "Invalid date/time", variant: "destructive" })
+            setError("Invalid date/time")
         }
     }
 
@@ -74,6 +82,7 @@ export default function TimestampConverter() {
             utc: now.toUTCString(),
             relative: "Now"
         })
+        setError("")
         addEntry({ input: JSON.stringify({ timestamp: ts.toString(), dateTime: "" }), output: JSON.stringify({ unix: ts.toString() }), metadata: { action: "current" } })
     }
 
@@ -88,125 +97,80 @@ export default function TimestampConverter() {
         return `${Math.floor(seconds / 86400)} days ago`
     }
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text)
-        toast({ description: "Copied to clipboard!" })
-    }
-
     return (
-        <ToolCard
-            title="Timestamp Converter"
-            description="Convert between Unix timestamps and human-readable dates"
-            icon={<Clock className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "timestamp-converter",
-                toolName: "Timestamp Converter",
-                onRestore: (entry) => {
-                    try {
-                        const parsed = JSON.parse(entry.input || "{}") as { timestamp?: string; dateTime?: string }
-                        setTimestamp(parsed.timestamp || "")
-                        setDateTime(parsed.dateTime || "")
-                    } catch {
-                        setTimestamp(entry.input || "")
-                    }
-                },
-            }}
-        >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <label htmlFor="timestamp-input" className="text-sm font-medium">
-                        Unix Timestamp
-                    </label>
-                    <div className="flex gap-2">
-                        <Input
-                            id="timestamp-input"
-                            placeholder="1640995200"
-                            value={timestamp}
-                            onChange={(e) => setTimestamp(e.target.value)}
-                            className="font-mono"
-                            data-testid="input-timestamp"
-                        />
-                        <Button onClick={convertFromTimestamp} data-testid="button-convert-timestamp">
-                            Convert
-                        </Button>
-                    </div>
+        <ToolPage>
+            <Card>
+                <div style={{ display: "grid", gap: 12 }}>
+                    <SectionTitle>Input</SectionTitle>
+                    <Grid2>
+                        <Field label="Unix timestamp" hint="Unix timestamps are usually 10 digits (seconds).">
+                            <Row wrap={false}>
+                                <Input
+                                    id="timestamp-input"
+                                    mono
+                                    placeholder="1640995200"
+                                    value={timestamp}
+                                    onChange={(e) => setTimestamp(e.target.value)}
+                                    style={{ flex: 1 }}
+                                    data-testid="input-timestamp"
+                                />
+                                <Button onClick={convertFromTimestamp} data-testid="button-convert-timestamp">
+                                    Convert
+                                </Button>
+                            </Row>
+                        </Field>
+                        <Field label="Date/time">
+                            <Row wrap={false}>
+                                <Input
+                                    id="datetime-input"
+                                    type="datetime-local"
+                                    value={dateTime}
+                                    onChange={(e) => setDateTime(e.target.value)}
+                                    style={{ flex: 1 }}
+                                    data-testid="input-datetime"
+                                />
+                                <Button variant="outline" onClick={convertFromDateTime} data-testid="button-convert-datetime">
+                                    Convert
+                                </Button>
+                            </Row>
+                        </Field>
+                    </Grid2>
+                    <Button
+                        variant="secondary"
+                        iconLeft={<Clock size={14} />}
+                        onClick={getCurrentTimestamp}
+                        data-testid="button-current"
+                    >
+                        Get current timestamp
+                    </Button>
+                    {error && (
+                        <span style={{ fontSize: "var(--text-sm)", color: "hsl(var(--danger))" }}>{error}</span>
+                    )}
                 </div>
-
-                <div className="space-y-2">
-                    <label htmlFor="datetime-input" className="text-sm font-medium">
-                        Date/Time
-                    </label>
-                    <div className="flex gap-2">
-                        <Input
-                            id="datetime-input"
-                            type="datetime-local"
-                            value={dateTime}
-                            onChange={(e) => setDateTime(e.target.value)}
-                            data-testid="input-datetime"
-                        />
-                        <Button onClick={convertFromDateTime} variant="outline" data-testid="button-convert-datetime">
-                            Convert
-                        </Button>
-                    </div>
-                </div>
-            </div>
-
-            <Button onClick={getCurrentTimestamp} className="w-full" data-testid="button-current">
-                Get Current Timestamp
-            </Button>
-
-            {!timestamp.trim() && !dateTime.trim() && !results.unix && (
-                <ToolEmptyState
-                    title="Convert timestamps and dates"
-                    description="Paste a Unix timestamp or pick a date to see all formats."
-                    actions={
-                        <>
-                            <Button variant="outline" size="sm" onClick={getCurrentTimestamp}>
-                                Use current time
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
-                            >
-                                Browse snippets
-                            </Button>
-                        </>
-                    }
-                    hint="Tip: Unix timestamps are usually 10 digits (seconds)."
-                />
-            )}
+            </Card>
 
             {results.unix && (
-                <div className="space-y-3">
-                    {Object.entries({
-                        unix: "Unix Timestamp",
-                        iso: "ISO 8601",
-                        local: "Local Time",
-                        utc: "UTC",
-                        relative: "Relative"
-                    }).map(([key, label]) => (
-                        <div key={key} className="flex items-center gap-2">
-                            <label className="text-sm font-medium w-24">{label}:</label>
-                            <Input
-                                value={results[key as keyof typeof results]}
-                                readOnly
-                                className="font-mono text-sm"
-                                data-testid={`output-${key}`}
-                            />
-                            <Button
-                                onClick={() => copyToClipboard(results[key as keyof typeof results])}
-                                variant="outline"
-                                size="icon"
-                                data-testid={`button-copy-${key}`}
-                            >
-                                <Copy className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    ))}
-                </div>
+                <Card>
+                    <div style={{ display: "grid", gap: 12 }}>
+                        <SectionTitle>Results</SectionTitle>
+                        {Object.entries(RESULT_LABELS).map(([key, label]) => (
+                            <Row key={key} wrap={false}>
+                                <label style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "hsl(var(--text-body))", width: 120, flexShrink: 0 }}>
+                                    {label}
+                                </label>
+                                <Input
+                                    mono
+                                    value={results[key as keyof typeof results]}
+                                    readOnly
+                                    style={{ flex: 1 }}
+                                    data-testid={`output-${key}`}
+                                />
+                                <CopyAction text={results[key as keyof typeof results]} />
+                            </Row>
+                        ))}
+                    </div>
+                </Card>
             )}
-        </ToolCard>
+        </ToolPage>
     )
 }

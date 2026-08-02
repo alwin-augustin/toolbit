@@ -1,6 +1,8 @@
 import { create } from "zustand"
+import { persist } from "zustand/middleware"
+import { TOOLS } from "@/config/tools.config"
 
-interface PipelineStep {
+export interface PipelineStep {
     toolId: string
     toolName: string
     path: string
@@ -18,7 +20,17 @@ interface ToolPipeState {
     clearPipeline: () => void
 }
 
-export const useToolPipe = create<ToolPipeState>((set, get) => ({
+function normalizePipeline(pipeline: PipelineStep[]): PipelineStep[] {
+    const validTools = new Map(TOOLS.map((tool) => [tool.id, tool]))
+    return pipeline.reduce<PipelineStep[]>((steps, step) => {
+        const tool = validTools.get(step.toolId)
+        if (!tool || steps.at(-1)?.toolId === tool.id) return steps
+        steps.push({ toolId: tool.id, toolName: tool.name, path: tool.path })
+        return steps
+    }, [])
+}
+
+export const useToolPipe = create<ToolPipeState>()(persist((set, get) => ({
     data: null,
     sourceToolId: null,
     updatedAt: null,
@@ -34,10 +46,14 @@ export const useToolPipe = create<ToolPipeState>((set, get) => ({
     clearPipe: () => set({ data: null, sourceToolId: null, updatedAt: null, pipeline: [] }),
     addPipelineStep: (step) =>
         set((state) => {
-            // Avoid duplicate consecutive entries
-            const last = state.pipeline[state.pipeline.length - 1]
-            if (last?.toolId === step.toolId) return state
-            return { pipeline: [...state.pipeline, step] }
+            const pipeline = normalizePipeline([...state.pipeline, step])
+            if (pipeline.length === state.pipeline.length) return state
+            return { pipeline }
         }),
-    clearPipeline: () => set({ pipeline: [] }),
+    clearPipeline: () => set({ pipeline: [], data: null, sourceToolId: null, updatedAt: null }),
+}), {
+    name: "toolbit-pipeline",
+    version: 2,
+    migrate: () => ({ pipeline: [] }),
+    partialize: (state) => ({ pipeline: state.pipeline }),
 }))

@@ -1,10 +1,9 @@
 import { useState, useCallback, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { ToolCard } from "@/components/ToolCard"
-import { useToast } from "@/hooks/use-toast"
-import { Copy, RefreshCw, Database } from "lucide-react"
+import { RefreshCw } from "lucide-react"
+import { Button, Badge, Input, Checkbox, Tabs } from "@/ds/components"
+import { CodeEditor } from "@/v2/CodeEditor"
+import { Panel, PanelHeader, CopyAction, EditorSplit } from "@/v2/EditorPanels"
+import { Field, Row } from "@/v2/restyle-kit"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 
@@ -142,12 +141,11 @@ export default function FakeDataGenerator() {
     const [format, setFormat] = useState<OutputFormat>("json")
     const [fields, setFields] = useState<FieldKey[]>(["firstName", "lastName", "email", "phone"])
     const [output, setOutput] = useState("")
-    const { toast } = useToast()
     const shareState = useMemo(
         () => ({ count, format, fields }),
         [count, format, fields],
     )
-    const { getShareUrl } = useUrlState(shareState, (state) => {
+    useUrlState(shareState, (state) => {
         setCount(typeof state.count === "number" ? state.count : 10)
         setFormat(state.format === "csv" || state.format === "sql" ? state.format : "json")
         if (Array.isArray(state.fields) && state.fields.length > 0) {
@@ -165,10 +163,7 @@ export default function FakeDataGenerator() {
     }, [])
 
     const generate = useCallback(() => {
-        if (fields.length === 0) {
-            toast({ description: "Select at least one field", variant: "destructive" })
-            return
-        }
+        if (fields.length === 0) return
         const records = Array.from({ length: count }, generateRecord)
         const output = formatRecords(records, format, fields)
         setOutput(output)
@@ -177,107 +172,83 @@ export default function FakeDataGenerator() {
             output,
             metadata: { action: "generate" },
         })
-    }, [count, format, fields, toast, addEntry])
-
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(output)
-        toast({ description: "Copied to clipboard!" })
-    }
+    }, [count, format, fields, addEntry])
 
     return (
-        <ToolCard
-            title="Fake Data Generator"
-            description="Generate realistic test data with names, emails, addresses, and more"
-            icon={<Database className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "fake-data-generator",
-                toolName: "Fake Data Generator",
-                onRestore: (entry) => {
-                    try {
-                        const parsed = JSON.parse(entry.input || "{}") as { count?: number; format?: OutputFormat; fields?: FieldKey[] }
-                        setCount(typeof parsed.count === "number" ? parsed.count : 10)
-                        setFormat(parsed.format === "csv" || parsed.format === "sql" ? parsed.format : "json")
-                        if (Array.isArray(parsed.fields) && parsed.fields.length > 0) {
-                            setFields(parsed.fields)
-                        }
-                        if (entry.output) setOutput(entry.output)
-                    } catch {
-                        // ignore
-                    }
-                },
-            }}
-        >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <label htmlFor="fake-count" className="text-sm font-medium">Number of Records</label>
-                    <Input
-                        id="fake-count"
-                        type="number"
-                        min={1}
-                        max={1000}
-                        value={count}
-                        onChange={(e) => setCount(Math.max(1, Math.min(1000, parseInt(e.target.value) || 1)))}
-                    />
-                </div>
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Output Format</label>
-                    <div className="flex gap-2">
-                        {(["json", "csv", "sql"] as OutputFormat[]).map(f => (
+        <EditorSplit>
+            <Panel>
+                <PanelHeader
+                    title="Fake Data"
+                    badge={output ? <Badge tone="primary">{`${count} records · ${format.toUpperCase()}`}</Badge> : undefined}
+                    action={
+                        <div style={{ display: "flex", gap: 6 }}>
                             <Button
-                                key={f}
-                                variant={format === f ? "default" : "outline"}
                                 size="sm"
-                                onClick={() => setFormat(f)}
-                                className="uppercase text-xs"
+                                iconLeft={<RefreshCw size={13} />}
+                                onClick={generate}
+                                disabled={fields.length === 0}
                             >
-                                {f}
+                                Generate
                             </Button>
-                        ))}
-                    </div>
+                            <CopyAction text={output} />
+                        </div>
+                    }
+                />
+                <div
+                    style={{
+                        display: "grid",
+                        gap: 12,
+                        padding: "10px 12px",
+                        borderBottom: "1px solid hsl(var(--border-faint))",
+                        background: "hsl(var(--surface-1))",
+                        flexShrink: 0,
+                    }}
+                >
+                    <Row gap={16} align="flex-end">
+                        <Field label="Records">
+                            <Input
+                                id="fake-count"
+                                type="number"
+                                min={1}
+                                max={1000}
+                                value={count}
+                                onChange={(e) => setCount(Math.max(1, Math.min(1000, parseInt(e.target.value) || 1)))}
+                                style={{ width: 90 }}
+                            />
+                        </Field>
+                        <Field label="Format">
+                            <Tabs
+                                variant="segment"
+                                items={[
+                                    { value: "json", label: "JSON" },
+                                    { value: "csv", label: "CSV" },
+                                    { value: "sql", label: "SQL" },
+                                ]}
+                                value={format}
+                                onChange={(v) => setFormat(v as OutputFormat)}
+                            />
+                        </Field>
+                    </Row>
+                    <Field label="Fields" hint={fields.length === 0 ? "Select at least one field" : undefined}>
+                        <Row gap={12}>
+                            {ALL_FIELDS.map(({ key, label }) => (
+                                <Checkbox
+                                    key={key}
+                                    checked={fields.includes(key)}
+                                    onChange={() => toggleField(key)}
+                                    label={label}
+                                />
+                            ))}
+                        </Row>
+                    </Field>
                 </div>
-            </div>
-
-            <div className="space-y-2">
-                <label className="text-sm font-medium">Fields</label>
-                <div className="flex flex-wrap gap-2">
-                    {ALL_FIELDS.map(({ key, label }) => (
-                        <Button
-                            key={key}
-                            variant={fields.includes(key) ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => toggleField(key)}
-                            className="text-xs"
-                        >
-                            {label}
-                        </Button>
-                    ))}
-                </div>
-            </div>
-
-            <div className="flex gap-2">
-                <Button onClick={generate}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Generate
-                </Button>
-                {output && (
-                    <Button variant="outline" onClick={copyToClipboard}>
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy
-                    </Button>
-                )}
-            </div>
-
-            {output && (
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Output ({count} records)</label>
-                    <Textarea
-                        value={output}
-                        readOnly
-                        className="min-h-[300px] font-mono text-sm"
-                    />
-                </div>
-            )}
-        </ToolCard>
+                <CodeEditor
+                    value={output}
+                    readOnly
+                    language={format === "json" ? "json" : "text"}
+                    placeholder="Press Generate to create test data."
+                />
+            </Panel>
+        </EditorSplit>
     )
 }

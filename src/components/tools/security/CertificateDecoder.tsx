@@ -1,13 +1,14 @@
-import { useState, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { ToolCard } from "@/components/ToolCard"
-import { useToast } from "@/hooks/use-toast"
-import { Copy, Lock, CheckCircle, AlertCircle, Clock } from "lucide-react"
+import { useEffect, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import { Button, Badge } from "@/ds/components";
+import { CheckCircle, AlertCircle, Clock } from "lucide-react";
 import * as asn1js from "asn1js"
 import * as pkijs from "pkijs"
-import { useUrlState } from "@/hooks/use-url-state"
-import { useToolHistory } from "@/hooks/use-tool-history"
+import { CodeEditor } from "@/v2/CodeEditor";
+import { Panel, PanelHeader, CopyAction, ValidityBadge, EditorSplit } from "@/v2/EditorPanels";
+import { useEditorStatus } from "@/v2/workspace-store";
+import { useUrlState } from "@/hooks/use-url-state";
+import { useToolHistory } from "@/hooks/use-tool-history";
 
 interface CertInfo {
     subject: Record<string, string>
@@ -213,183 +214,251 @@ qJ5VMlFdKJl1vj9FPr+j1aHR+KCf9FYPcPeBaJkRZ1WM8lxV3bOJ7BFYL6dO0u/a
 4z/2bTKDRw==
 -----END CERTIFICATE-----`
 
+function SectionLabel({ children }: { children: string }) {
+    return (
+        <div
+            style={{
+                padding: "12px 0 4px",
+                fontFamily: "var(--font-mono)",
+                fontSize: "var(--text-2xs)",
+                letterSpacing: "var(--tracking-wider)",
+                textTransform: "uppercase",
+                color: "hsl(var(--text-faint))",
+            }}
+        >
+            {children}
+        </div>
+    );
+}
+
+function InfoRow({ label, value, small }: { label: string; value: ReactNode; small?: boolean }) {
+    return (
+        <div
+            style={{
+                display: "flex",
+                gap: 12,
+                padding: "4px 0",
+                borderBottom: "1px solid hsl(var(--border-faint))",
+                alignItems: "baseline",
+            }}
+        >
+            <span style={{ fontSize: "var(--text-xs)", color: "hsl(var(--text-muted))", width: 110, flexShrink: 0 }}>
+                {label}
+            </span>
+            <span
+                style={{
+                    fontFamily: "var(--font-mono)",
+                    fontSize: small ? "var(--text-xs)" : "var(--text-sm)",
+                    color: "hsl(var(--text-body))",
+                    wordBreak: "break-all",
+                }}
+            >
+                {value}
+            </span>
+        </div>
+    );
+}
+
+const statusBadgeStyle: CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4 };
+
+function StatusBadge({ status }: { status: CertInfo["validityStatus"] }) {
+    switch (status) {
+        case "valid":
+            return (
+                <Badge tone="success">
+                    <span style={statusBadgeStyle}>
+                        <CheckCircle size={12} /> Valid
+                    </span>
+                </Badge>
+            );
+        case "expired":
+            return (
+                <Badge tone="danger">
+                    <span style={statusBadgeStyle}>
+                        <AlertCircle size={12} /> Expired
+                    </span>
+                </Badge>
+            );
+        case "not_yet_valid":
+            return (
+                <Badge tone="warning">
+                    <span style={statusBadgeStyle}>
+                        <Clock size={12} /> Not yet valid
+                    </span>
+                </Badge>
+            );
+    }
+}
+
+const formatDate = (d: Date) => d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+
 export default function CertificateDecoder() {
     const [input, setInput] = useState("")
     const [certInfo, setCertInfo] = useState<CertInfo | null>(null)
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
-    const { toast } = useToast()
-    const { getShareUrl } = useUrlState(input, setInput)
+    const setStatus = useEditorStatus((s) => s.setStatus);
+    useUrlState(input, setInput)
     const { addEntry } = useToolHistory("certificate-decoder", "Certificate Decoder")
 
-    const decode = useCallback(async () => {
+    useEffect(() => {
         if (!input.trim()) {
             setCertInfo(null)
             setError("")
+            setLoading(false)
             return
         }
+        let cancelled = false
         setLoading(true)
-        try {
-            const info = await decodeCertificate(input)
-            setCertInfo(info)
-            setError("")
-            addEntry({ input, output: JSON.stringify(info), metadata: { action: "decode" } })
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to decode certificate")
-            setCertInfo(null)
-            addEntry({ input, output: "error", metadata: { action: "decode" } })
-        } finally {
-            setLoading(false)
+        const t = setTimeout(() => {
+            decodeCertificate(input)
+                .then((info) => {
+                    if (cancelled) return
+                    setCertInfo(info)
+                    setError("")
+                    addEntry({ input, output: JSON.stringify(info), metadata: { action: "decode" } })
+                })
+                .catch((err: unknown) => {
+                    if (cancelled) return
+                    setError(err instanceof Error ? err.message : "Failed to decode certificate")
+                    setCertInfo(null)
+                })
+                .finally(() => {
+                    if (!cancelled) setLoading(false)
+                })
+        }, 400)
+        return () => {
+            cancelled = true
+            clearTimeout(t)
         }
-    }, [input, addEntry])
+    }, [input]) // eslint-disable-line react-hooks/exhaustive-deps
 
-    const copyJson = useCallback(() => {
-        if (!certInfo) return
-        const json = {
-            ...certInfo,
-            notBefore: certInfo.notBefore.toISOString(),
-            notAfter: certInfo.notAfter.toISOString(),
-        }
-        navigator.clipboard.writeText(JSON.stringify(json, null, 2))
-        toast({ title: "Certificate details copied as JSON" })
-    }, [certInfo, toast])
+    const valid: boolean | null = !input.trim() ? null : error ? false : certInfo ? true : null
 
-    const formatDate = (d: Date) => d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+    useEffect(() => {
+        setStatus({
+            valid,
+            validityLabel: valid === null ? "" : valid ? "Valid certificate" : "Invalid certificate",
+        });
+    }, [valid, setStatus]);
 
-    const validityBadge = (status: CertInfo["validityStatus"]) => {
-        switch (status) {
-            case "valid": return <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 dark:text-green-300 bg-green-500/10 px-2 py-0.5 rounded-full"><CheckCircle className="h-3 w-3" />Valid</span>
-            case "expired": return <span className="inline-flex items-center gap-1 text-xs font-medium text-red-700 dark:text-red-300 bg-red-500/10 px-2 py-0.5 rounded-full"><AlertCircle className="h-3 w-3" />Expired</span>
-            case "not_yet_valid": return <span className="inline-flex items-center gap-1 text-xs font-medium text-yellow-700 dark:text-yellow-300 bg-yellow-500/10 px-2 py-0.5 rounded-full"><Clock className="h-3 w-3" />Not Yet Valid</span>
-        }
-    }
-
-    const InfoRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
-        <div className="flex gap-3 py-1.5 border-b border-border/30 last:border-0">
-            <span className="text-xs text-muted-foreground w-28 shrink-0 pt-0.5">{label}</span>
-            <span className="text-sm font-mono break-all">{value}</span>
-        </div>
-    )
+    const copyText = certInfo
+        ? JSON.stringify(
+              {
+                  ...certInfo,
+                  notBefore: certInfo.notBefore.toISOString(),
+                  notAfter: certInfo.notAfter.toISOString(),
+              },
+              null,
+              2
+          )
+        : ""
 
     return (
-        <ToolCard
-            title="Certificate Decoder"
-            description="Decode and inspect SSL/TLS certificates (PEM format)"
-            icon={<Lock className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "certificate-decoder",
-                toolName: "Certificate Decoder",
-                onRestore: (entry) => {
-                    setInput(entry.input || "")
-                },
-            }}
-        >
-            <div className="space-y-4">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Input */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">PEM Certificate</label>
-                        <Textarea
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"
-                            className="font-mono text-xs min-h-[350px]"
-                        />
-                        <div className="flex gap-2">
-                            <Button onClick={decode} className="flex-1" disabled={loading || !input.trim()}>
-                                {loading ? "Decoding..." : "Decode Certificate"}
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => { setInput(SAMPLE_PEM) }}>
-                                Sample
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Output */}
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <label className="text-sm font-medium">Certificate Details</label>
-                            {certInfo && (
-                                <Button variant="outline" size="sm" onClick={copyJson}>
-                                    <Copy className="h-4 w-4 mr-1" /> JSON
-                                </Button>
-                            )}
-                        </div>
-
-                        {error && (
-                            <div className="p-3 rounded-md border border-destructive/50 bg-destructive/5">
-                                <p className="text-sm text-destructive">{error}</p>
+        <EditorSplit>
+            <Panel>
+                <PanelHeader
+                    title="PEM certificate"
+                    action={
+                        <Button variant="ghost" size="sm" onClick={() => setInput(SAMPLE_PEM)}>
+                            Load sample
+                        </Button>
+                    }
+                />
+                <CodeEditor
+                    value={input}
+                    onChange={setInput}
+                    reportStatus
+                    placeholder={"-----BEGIN CERTIFICATE-----\n…\n-----END CERTIFICATE-----"}
+                />
+            </Panel>
+            <Panel>
+                <PanelHeader
+                    title="Certificate details"
+                    badge={
+                        loading ? (
+                            <Badge tone="neutral">decoding…</Badge>
+                        ) : (
+                            <ValidityBadge valid={valid} validLabel="decoded" invalidLabel="invalid" />
+                        )
+                    }
+                    action={<CopyAction text={copyText} />}
+                />
+                <div style={{ flex: 1, overflow: "auto", padding: "0 12px 12px" }}>
+                    {error && (
+                        <p
+                            style={{
+                                margin: 0,
+                                padding: "10px 0",
+                                fontFamily: "var(--font-mono)",
+                                fontSize: "var(--text-sm)",
+                                color: "hsl(var(--danger))",
+                            }}
+                        >
+                            {error}
+                        </p>
+                    )}
+                    {!certInfo && !error && (
+                        <p
+                            style={{
+                                margin: 0,
+                                padding: "24px 0",
+                                textAlign: "center",
+                                fontSize: "var(--text-sm)",
+                                color: "hsl(var(--text-faint))",
+                            }}
+                        >
+                            Paste a PEM certificate to decode
+                        </p>
+                    )}
+                    {certInfo && (
+                        <>
+                            <div style={{ padding: "10px 0 0" }}>
+                                <StatusBadge status={certInfo.validityStatus} />
                             </div>
-                        )}
 
-                        {certInfo && (
-                            <div className="border rounded-md p-3 space-y-3 bg-muted/20 overflow-auto max-h-[500px]">
-                                {/* Validity */}
-                                <div className="flex items-center justify-between">
-                                    {validityBadge(certInfo.validityStatus)}
-                                </div>
+                            <SectionLabel>Subject</SectionLabel>
+                            {Object.entries(certInfo.subject).map(([k, v]) => (
+                                <InfoRow key={k} label={k} value={v} />
+                            ))}
 
-                                {/* Subject */}
-                                <div>
-                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1">Subject</h4>
-                                    {Object.entries(certInfo.subject).map(([k, v]) => (
-                                        <InfoRow key={k} label={k} value={v} />
-                                    ))}
-                                </div>
+                            <SectionLabel>Issuer</SectionLabel>
+                            {Object.entries(certInfo.issuer).map(([k, v]) => (
+                                <InfoRow key={k} label={k} value={v} />
+                            ))}
 
-                                {/* Issuer */}
-                                <div>
-                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1">Issuer</h4>
-                                    {Object.entries(certInfo.issuer).map(([k, v]) => (
-                                        <InfoRow key={k} label={k} value={v} />
-                                    ))}
-                                </div>
+                            <SectionLabel>Validity period</SectionLabel>
+                            <InfoRow label="Not Before" value={formatDate(certInfo.notBefore)} />
+                            <InfoRow label="Not After" value={formatDate(certInfo.notAfter)} />
 
-                                {/* Dates */}
-                                <div>
-                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1">Validity Period</h4>
-                                    <InfoRow label="Not Before" value={formatDate(certInfo.notBefore)} />
-                                    <InfoRow label="Not After" value={formatDate(certInfo.notAfter)} />
-                                </div>
+                            <SectionLabel>Technical details</SectionLabel>
+                            <InfoRow label="Serial Number" value={certInfo.serialNumber} small />
+                            <InfoRow label="Signature" value={certInfo.signatureAlgorithm} />
+                            <InfoRow
+                                label="Public Key"
+                                value={`${certInfo.publicKeyAlgorithm} (${certInfo.publicKeySize})`}
+                            />
 
-                                {/* Technical */}
-                                <div>
-                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1">Technical Details</h4>
-                                    <InfoRow label="Serial Number" value={<span className="text-xs">{certInfo.serialNumber}</span>} />
-                                    <InfoRow label="Signature" value={certInfo.signatureAlgorithm} />
-                                    <InfoRow label="Public Key" value={`${certInfo.publicKeyAlgorithm} (${certInfo.publicKeySize})`} />
-                                </div>
-
-                                {/* SANs */}
-                                {certInfo.sans.length > 0 && (
-                                    <div>
-                                        <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1">Subject Alternative Names</h4>
-                                        <div className="flex flex-wrap gap-1">
-                                            {certInfo.sans.map((san, i) => (
-                                                <span key={i} className="text-xs font-mono px-2 py-0.5 rounded bg-muted">{san}</span>
-                                            ))}
-                                        </div>
+                            {certInfo.sans.length > 0 && (
+                                <>
+                                    <SectionLabel>Subject alternative names</SectionLabel>
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, padding: "4px 0" }}>
+                                        {certInfo.sans.map((san, i) => (
+                                            <Badge key={i} tone="neutral">
+                                                {san}
+                                            </Badge>
+                                        ))}
                                     </div>
-                                )}
+                                </>
+                            )}
 
-                                {/* Fingerprints */}
-                                <div>
-                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1">Fingerprints</h4>
-                                    <InfoRow label="SHA-1" value={<span className="text-xs">{certInfo.fingerprints.sha1}</span>} />
-                                    <InfoRow label="SHA-256" value={<span className="text-xs break-all">{certInfo.fingerprints.sha256}</span>} />
-                                </div>
-                            </div>
-                        )}
-
-                        {!certInfo && !error && (
-                            <div className="min-h-[350px] border rounded-md flex items-center justify-center bg-muted/30">
-                                <p className="text-sm text-muted-foreground">Paste a PEM certificate and click Decode</p>
-                            </div>
-                        )}
-                    </div>
+                            <SectionLabel>Fingerprints</SectionLabel>
+                            <InfoRow label="SHA-1" value={certInfo.fingerprints.sha1} small />
+                            <InfoRow label="SHA-256" value={certInfo.fingerprints.sha256} small />
+                        </>
+                    )}
                 </div>
-            </div>
-        </ToolCard>
+            </Panel>
+        </EditorSplit>
     )
 }

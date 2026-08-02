@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import Base64Encoder from '@/components/tools/Base64Encoder'
+import Base64Encoder from '@/components/tools/encoding/Base64Encoder'
 
 // Mock the toast hook
 vi.mock('@/hooks/use-toast', () => ({

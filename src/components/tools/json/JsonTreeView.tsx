@@ -51,13 +51,14 @@ function TreeNode({ keyName, value, path, depth, nodeCounter, nodeLimit }: TreeN
 
     // Count this node against the limit
     nodeCounter.current++
-    if (nodeCounter.current > nodeLimit) return null
 
     const copyPath = useCallback((e: React.MouseEvent) => {
         e.stopPropagation()
         navigator.clipboard.writeText(path)
         toast({ description: `Copied: ${path}` })
     }, [path, toast])
+
+    if (nodeCounter.current > nodeLimit) return null
 
     const entries = isExpandable
         ? type === "array"

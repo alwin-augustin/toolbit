@@ -1,11 +1,10 @@
 import { useState, useMemo, useCallback } from "react"
+import type { CSSProperties } from "react"
 import { parsePatch, type StructuredPatch, type StructuredPatchHunk } from "diff"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { ToolCard } from "@/components/ToolCard"
-import { useToast } from "@/hooks/use-toast"
+import { Button, Textarea } from "@/ds/components"
 import { FileDropZone } from "@/components/FileDropZone"
-import { Copy, GitBranch, ChevronDown, ChevronRight, FileText } from "lucide-react"
+import { Copy, Check, ChevronDown, ChevronRight, FileText, Sparkles } from "lucide-react"
+import { ToolPage, Row } from "@/v2/restyle-kit"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 
@@ -45,11 +44,52 @@ index 111aaaa..222bbbb 100644
 +  maxRetries: 3,
  };`
 
+const ADDED_BG = "hsl(var(--success) / 0.15)"
+const REMOVED_BG = "hsl(var(--danger) / 0.15)"
+
+function lineToneStyle(isAdd: boolean, isDel: boolean): CSSProperties {
+    if (isAdd) return { background: ADDED_BG }
+    if (isDel) return { background: REMOVED_BG }
+    return {}
+}
+
+function prefixColor(isAdd: boolean, isDel: boolean): string {
+    if (isAdd) return "hsl(var(--success))"
+    if (isDel) return "hsl(var(--danger))"
+    return "hsl(var(--text-faint))"
+}
+
+function DiffLineRow({ line }: { line: string }) {
+    const isAdd = line.startsWith("+")
+    const isDel = line.startsWith("-")
+    const prefix = line[0] || " "
+    const content = line.substring(1)
+    return (
+        <div style={{ display: "flex", ...lineToneStyle(isAdd, isDel) }}>
+            <span
+                style={{
+                    userSelect: "none",
+                    padding: "0 8px",
+                    fontSize: "var(--text-xs)",
+                    lineHeight: "24px",
+                    width: 24,
+                    textAlign: "center",
+                    flexShrink: 0,
+                    color: prefixColor(isAdd, isDel),
+                }}
+            >
+                {prefix}
+            </span>
+            <span style={{ padding: "0 8px", lineHeight: "24px", whiteSpace: "pre" }}>{content}</span>
+        </div>
+    )
+}
+
 export default function GitDiffViewer() {
     const [input, setInput] = useState("")
     const [collapsedFiles, setCollapsedFiles] = useState<Set<number>>(new Set())
-    const { toast } = useToast()
-    const { getShareUrl } = useUrlState(input, setInput)
+    const [copied, setCopied] = useState(false)
+    useUrlState(input, setInput)
     const { addEntry } = useToolHistory("diff-tool", "Git Diff Viewer")
 
     const normalizedInput = useMemo(() => {
@@ -58,7 +98,7 @@ export default function GitDiffViewer() {
             let i = 0
             while (i < value.length) {
                 const char = value[i]
-                if (char === "\u001b" && value[i + 1] === "[") {
+                if (char === "" && value[i + 1] === "[") {
                     i += 2
                     while (i < value.length && value[i] !== "m") i++
                     if (i < value.length && value[i] === "m") i++
@@ -112,9 +152,10 @@ export default function GitDiffViewer() {
 
     const copyDiff = useCallback(() => {
         navigator.clipboard.writeText(normalizedInput)
-        toast({ title: "Copied to clipboard" })
+        setCopied(true)
+        setTimeout(() => setCopied(false), 1500)
         addEntry({ input: normalizedInput, output: normalizedInput, metadata: { action: "copy" } })
-    }, [normalizedInput, toast, addEntry])
+    }, [normalizedInput, addEntry])
 
     const getFileName = (file: StructuredPatch): string => {
         return file.newFileName?.replace(/^[ab]\//, "") || file.oldFileName?.replace(/^[ab]\//, "") || "unknown"
@@ -132,147 +173,164 @@ export default function GitDiffViewer() {
     }
 
     return (
-        <ToolCard
-            title="Git Diff Viewer"
-            description="Paste git diff output to view syntax-highlighted changes"
-            icon={<GitBranch className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "diff-tool",
-                toolName: "Git Diff Viewer",
-                onRestore: (entry) => {
-                    setInput(entry.input || "")
-                },
-            }}
-        >
-            <div className="space-y-4">
-                {/* Input */}
-                <FileDropZone
-                    onFileContent={handleFileDrop}
-                    accept={[".diff", ".patch"]}
-                >
-                    <Textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Paste git diff output here..."
-                        className="font-mono text-sm min-h-[150px]"
-                    />
-                </FileDropZone>
+        <ToolPage maxWidth={1000}>
+            {/* Input */}
+            <FileDropZone
+                onFileContent={handleFileDrop}
+                accept={[".diff", ".patch"]}
+            >
+                <Textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Paste git diff output here..."
+                    style={{ minHeight: 150, width: "100%", resize: "vertical" }}
+                />
+            </FileDropZone>
 
-                <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={loadSample}>
-                        Load Sample
+            <Row>
+                <Button variant="outline" size="sm" iconLeft={<Sparkles size={13} />} onClick={loadSample}>
+                    Load sample
+                </Button>
+                {input && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        iconLeft={copied ? <Check size={13} /> : <Copy size={13} />}
+                        onClick={copyDiff}
+                    >
+                        {copied ? "Copied" : "Copy"}
                     </Button>
-                    {input && (
-                        <Button variant="outline" size="sm" onClick={copyDiff}>
-                            <Copy className="h-4 w-4 mr-1" /> Copy
-                        </Button>
-                    )}
-                    {input && (
-                        <Button variant="outline" size="sm" onClick={() => setInput("")}>
-                            Clear
-                        </Button>
-                    )}
+                )}
+                {input && (
+                    <Button variant="ghost" size="sm" onClick={() => setInput("")}>
+                        Clear
+                    </Button>
+                )}
+            </Row>
+
+            {/* Stats */}
+            {parsed.files.length > 0 && (
+                <div style={{ display: "flex", gap: 16, fontSize: "var(--text-sm)" }}>
+                    <span style={{ fontWeight: 500, color: "hsl(var(--text-strong))" }}>
+                        {parsed.stats.files} file{parsed.stats.files !== 1 ? "s" : ""} changed
+                    </span>
+                    <span style={{ color: "hsl(var(--success))" }}>+{parsed.stats.additions} additions</span>
+                    <span style={{ color: "hsl(var(--danger))" }}>-{parsed.stats.deletions} deletions</span>
                 </div>
+            )}
 
-                {/* Stats */}
-                {parsed.files.length > 0 && (
-                    <div className="flex gap-4 text-sm">
-                        <span className="font-medium">{parsed.stats.files} file{parsed.stats.files !== 1 ? "s" : ""} changed</span>
-                        <span className="text-green-600 dark:text-green-400">+{parsed.stats.additions} additions</span>
-                        <span className="text-red-600 dark:text-red-400">-{parsed.stats.deletions} deletions</span>
-                    </div>
-                )}
+            {/* File List */}
+            {parsed.files.map((file, fileIdx) => {
+                const name = getFileName(file)
+                const stats = fileStats(file)
+                const isCollapsed = collapsedFiles.has(fileIdx)
 
-                {/* File List */}
-                {parsed.files.map((file, fileIdx) => {
-                    const name = getFileName(file)
-                    const stats = fileStats(file)
-                    const isCollapsed = collapsedFiles.has(fileIdx)
-
-                    return (
-                        <div key={fileIdx} className="border rounded-md overflow-hidden">
-                            {/* File Header */}
-                            <button
-                                onClick={() => toggleFile(fileIdx)}
-                                className="w-full flex items-center gap-2 px-3 py-2 bg-muted/50 hover:bg-muted transition-colors text-sm text-left"
+                return (
+                    <div
+                        key={fileIdx}
+                        style={{
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "var(--radius-md)",
+                            background: "hsl(var(--surface-0))",
+                            overflow: "hidden",
+                        }}
+                    >
+                        {/* File Header */}
+                        <button
+                            onClick={() => toggleFile(fileIdx)}
+                            style={{
+                                width: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                padding: "8px 12px",
+                                background: "hsl(var(--surface-1))",
+                                border: "none",
+                                cursor: "pointer",
+                                fontSize: "var(--text-sm)",
+                                textAlign: "left",
+                                color: "hsl(var(--text-body))",
+                            }}
+                        >
+                            {isCollapsed ? <ChevronRight size={16} style={{ flexShrink: 0 }} /> : <ChevronDown size={16} style={{ flexShrink: 0 }} />}
+                            <FileText size={16} style={{ flexShrink: 0, color: "hsl(var(--text-muted))" }} />
+                            <span
+                                style={{
+                                    fontFamily: "var(--font-mono)",
+                                    fontWeight: 500,
+                                    flex: 1,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    color: "hsl(var(--text-strong))",
+                                }}
                             >
-                                {isCollapsed ? <ChevronRight className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
-                                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                <span className="font-mono font-medium flex-1 truncate">{name}</span>
-                                <span className="text-green-600 dark:text-green-400 text-xs font-mono">+{stats.add}</span>
-                                <span className="text-red-600 dark:text-red-400 text-xs font-mono">-{stats.del}</span>
-                            </button>
+                                {name}
+                            </span>
+                            <span style={{ color: "hsl(var(--success))", fontSize: "var(--text-xs)", fontFamily: "var(--font-mono)" }}>+{stats.add}</span>
+                            <span style={{ color: "hsl(var(--danger))", fontSize: "var(--text-xs)", fontFamily: "var(--font-mono)" }}>-{stats.del}</span>
+                        </button>
 
-                            {/* Hunks */}
-                            {!isCollapsed && (
-                                <div className="overflow-x-auto">
-                                    {file.hunks.map((hunk: StructuredPatchHunk, hunkIdx: number) => (
-                                        <div key={hunkIdx}>
-                                            <div className="bg-blue-500/10 text-blue-700 dark:text-blue-300 px-3 py-0.5 text-xs font-mono border-y border-border/50">
-                                                @@ -{hunk.oldStart},{hunk.oldLines} +{hunk.newStart},{hunk.newLines} @@
-                                            </div>
-                                            <div className="text-sm font-mono">
-                                                {hunk.lines.map((line: string, lineIdx: number) => {
-                                                    const isAdd = line.startsWith("+")
-                                                    const isDel = line.startsWith("-")
-                                                    const bgClass = isAdd
-                                                        ? "bg-green-500/10 text-green-800 dark:text-green-200"
-                                                        : isDel
-                                                        ? "bg-red-500/10 text-red-800 dark:text-red-200"
-                                                        : ""
-                                                    const prefix = line[0] || " "
-                                                    const content = line.substring(1)
-
-                                                    return (
-                                                        <div key={lineIdx} className={`flex ${bgClass}`}>
-                                                            <span className={`select-none px-2 text-xs leading-6 w-6 text-center shrink-0 ${
-                                                                isAdd ? "text-green-600" : isDel ? "text-red-600" : "text-muted-foreground"
-                                                            }`}>
-                                                                {prefix}
-                                                            </span>
-                                                            <span className="px-2 leading-6 whitespace-pre">{content}</span>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
+                        {/* Hunks */}
+                        {!isCollapsed && (
+                            <div style={{ overflowX: "auto" }}>
+                                {file.hunks.map((hunk: StructuredPatchHunk, hunkIdx: number) => (
+                                    <div key={hunkIdx}>
+                                        <div
+                                            style={{
+                                                background: "hsl(var(--primary) / 0.1)",
+                                                color: "hsl(var(--primary))",
+                                                padding: "2px 12px",
+                                                fontSize: "var(--text-xs)",
+                                                fontFamily: "var(--font-mono)",
+                                                borderTop: "1px solid hsl(var(--border-faint))",
+                                                borderBottom: "1px solid hsl(var(--border-faint))",
+                                            }}
+                                        >
+                                            @@ -{hunk.oldStart},{hunk.oldLines} +{hunk.newStart},{hunk.newLines} @@
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )
-                })}
-                {normalizedInput.trim() && parsed.files.length === 0 && (
-                    <div className="border rounded-md p-3 text-sm">
-                        <div className="font-medium mb-2">Could not parse diff.</div>
-                        <div className="text-muted-foreground mb-3">
-                            If you copied from a terminal, try `git diff --no-color`.
-                        </div>
-                        <div className="font-mono text-xs border rounded-md overflow-hidden">
-                            {normalizedInput.split("\n").map((line, idx) => {
-                                const isAdd = line.startsWith("+")
-                                const isDel = line.startsWith("-")
-                                const bgClass = isAdd
-                                    ? "bg-green-500/10 text-green-800 dark:text-green-200"
-                                    : isDel
-                                    ? "bg-red-500/10 text-red-800 dark:text-red-200"
-                                    : ""
-                                return (
-                                    <div key={idx} className={`flex ${bgClass}`}>
-                                        <span className={`select-none px-2 text-xs leading-6 w-6 text-center shrink-0 ${
-                                            isAdd ? "text-green-600" : isDel ? "text-red-600" : "text-muted-foreground"
-                                        }`}>
-                                            {line[0] || " "}
-                                        </span>
-                                        <span className="px-2 leading-6 whitespace-pre">{line.substring(1)}</span>
+                                        <div style={{ fontSize: "var(--text-sm)", fontFamily: "var(--font-mono)" }}>
+                                            {hunk.lines.map((line: string, lineIdx: number) => (
+                                                <DiffLineRow key={lineIdx} line={line} />
+                                            ))}
+                                        </div>
                                     </div>
-                                )
-                            })}
-                        </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
-        </ToolCard>
+                )
+            })}
+            {normalizedInput.trim() && parsed.files.length === 0 && (
+                <div
+                    style={{
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "var(--radius-md)",
+                        padding: 12,
+                        fontSize: "var(--text-sm)",
+                        display: "grid",
+                        gap: 8,
+                    }}
+                >
+                    <div style={{ fontWeight: 500, color: "hsl(var(--text-strong))" }}>Could not parse diff.</div>
+                    <div style={{ color: "hsl(var(--text-muted))" }}>
+                        If you copied from a terminal, try `git diff --no-color`.
+                    </div>
+                    <div
+                        style={{
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "var(--text-xs)",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "var(--radius-md)",
+                            overflow: "hidden",
+                        }}
+                    >
+                        {normalizedInput.split("\n").map((line, idx) => (
+                            <DiffLineRow key={idx} line={line} />
+                        ))}
+                    </div>
+                </div>
+            )}
+        </ToolPage>
     )
 }

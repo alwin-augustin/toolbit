@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { detectContentType } from "@/lib/smart-detect";
 import {
@@ -17,8 +17,7 @@ import {
     FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useElectron } from "@/hooks/use-electron";
-import appLogoUrl from "@/assets/app-logo.svg";
+import appLogoUrl from "@/ds/assets/logo-mark.svg";
 
 const toolCategories = [
     {
@@ -103,9 +102,20 @@ const features = [
 ];
 
 export function LandingPage() {
-    const { isElectron } = useElectron();
     const [demoInput, setDemoInput] = useState("");
     const suggestions = useMemo(() => detectContentType(demoInput), [demoInput]);
+
+    useEffect(() => {
+        const title = "About Toolbit — Local-first developer tools";
+        const description = "Toolbit is a local-first developer workspace for formatting, transforming, inspecting, and generating code and data without sending it to a server.";
+        document.title = title;
+        document.querySelector('meta[name="description"]')?.setAttribute("content", description);
+        document.querySelector('link[rel="canonical"]')?.setAttribute("href", `${window.location.origin}/about`);
+        document.querySelector('meta[property="og:title"]')?.setAttribute("content", title);
+        document.querySelector('meta[property="og:description"]')?.setAttribute("content", description);
+        document.querySelector('meta[name="twitter:title"]')?.setAttribute("content", title);
+        document.querySelector('meta[name="twitter:description"]')?.setAttribute("content", description);
+    }, []);
 
     return (
         <div className="min-h-screen bg-background">
@@ -130,7 +140,7 @@ export function LandingPage() {
                             >
                                 <Github className="h-5 w-5" />
                             </a>
-                            <Link href="/app/json-formatter">
+                            <Link href="/">
                                 <Button>Launch App</Button>
                             </Link>
                         </div>
@@ -146,14 +156,14 @@ export function LandingPage() {
                         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
                             <div className="text-center lg:text-left">
                                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-                                    Local-first developer tools
+                                    A focused workspace for everyday developer work
                                     <br />
-                                    <span className="text-primary">for JSON, Base64, JWT, YAML, XML, SQL & more</span>
+                                    <span className="text-primary">format, transform, inspect, and generate locally</span>
                                 </h1>
                                 <p className="text-xl text-muted-foreground mb-6 max-w-2xl mx-auto lg:mx-0">
-                                    Toolbit is a privacy-first toolbox with 40+ utilities. Format JSON/YAML/XML/SQL,
-                                    decode JWT, encode Base64, generate UUIDs and hashes, test regex, parse cron,
-                                    build API requests, and more — all offline and on-device.
+                                    Toolbit brings the small tools developers reach for every day into one calm,
+                                    local-first workspace. Your inputs stay on your device, your work can move through
+                                    compatible pipelines, and the app keeps working when the network does not.
                                 </p>
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                                     <Link href="/app/json-formatter">
@@ -161,18 +171,6 @@ export function LandingPage() {
                                             Launch App <ArrowRight className="ml-2 h-5 w-5" />
                                         </Button>
                                     </Link>
-                                    {!isElectron && (
-                                        <a
-                                            href="https://github.com/alwin-augustin/toolbit/releases"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            <Button size="lg" variant="outline" className="text-base px-8">
-                                                <Download className="mr-2 h-5 w-5" />
-                                                Download Desktop App
-                                            </Button>
-                                        </a>
-                                    )}
                                 </div>
                                 <div className="mt-6 text-sm text-muted-foreground">
                                     No signup. No tracking. Works offline. Open source.
@@ -287,25 +285,39 @@ export function LandingPage() {
                 </div>
             </section>
 
-            {/* SEO-rich overview */}
+            {/* Capability overview */}
             <section className="border-t border-border bg-background cv-auto">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-                    <div className="max-w-5xl mx-auto space-y-4">
-                        <h2 className="text-2xl font-bold">Everything you need for daily development tasks</h2>
-                        <p className="text-muted-foreground text-sm sm:text-base">
-                            Toolbit bundles essential developer tools into one fast, local-first workspace:
-                            JSON/YAML/XML/SQL formatters, Base64 encoder/decoder, JWT decoder, UUID and hash generators,
-                            regex tester, cron parser, timestamp and color converters, API request builder, Docker command
-                            builder, and more. All processing happens in your browser for speed and privacy.
-                        </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-muted-foreground">
-                            <div>Format & Validate: JSON, YAML, XML, SQL, GraphQL</div>
-                            <div>Encode & Decode: Base64, URL, HTML, JWT, Certificates</div>
-                            <div>Generate: UUIDs, Passwords, Hashes, Fake Data, QR</div>
-                            <div>Transform: CSV, Case, Timestamps, Colors, Units, Images</div>
-                            <div>Analyze: Regex, Diff, Git patches, Cron, HTTP status</div>
-                            <div>Build: API requests, WebSockets, Docker commands</div>
-                            <div>Text & Docs: Markdown, PDFs, Whitespace, Date tools</div>
+                    <div className="max-w-6xl mx-auto">
+                        <div className="max-w-3xl mb-8">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-3">Built around your workflow</p>
+                            <h2 className="text-2xl sm:text-3xl font-bold mb-3">The tools around the code</h2>
+                            <p className="text-muted-foreground text-sm sm:text-base">
+                                Toolbit keeps common developer tasks close at hand, with local processing, focused editors,
+                                and compatible pipelines that help you move from one step to the next.
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {toolCategories.map((category) => {
+                                const Icon = category.icon;
+                                return (
+                                    <Link
+                                        key={category.title}
+                                        href={category.link}
+                                        className="group rounded-lg border border-border bg-card/50 p-4 transition-colors hover:border-primary/40 hover:bg-primary/5"
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                                                <Icon className="h-4 w-4" />
+                                            </span>
+                                            <div>
+                                                <h3 className="font-semibold text-foreground group-hover:text-primary">{category.title}</h3>
+                                                <p className="mt-1 text-sm leading-6 text-muted-foreground">{category.description}</p>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

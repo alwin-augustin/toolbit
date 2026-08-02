@@ -1,12 +1,10 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import { List } from "react-window"
 import type { CSSProperties, ReactElement } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { GitCompare, Copy, Download, Columns, AlignJustify } from "lucide-react"
-import { ToolCard } from "@/components/ToolCard"
-import { ToolEmptyState } from "@/components/ToolEmptyState"
-import { useToast } from "@/hooks/use-toast"
+import { Download, Columns, AlignJustify, Sparkles } from "lucide-react"
+import { Button, IconButton, Checkbox, Textarea } from "@/ds/components"
+import { CopyAction } from "@/v2/EditorPanels"
+import { ToolPage, Field, Row, Grid2 } from "@/v2/restyle-kit"
 import * as Diff from "diff"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
@@ -88,6 +86,39 @@ function formatCurrency(amount, currency = "USD") {
   }).format(amount);
 }`
 
+/* Diff line washes built from design tokens. */
+const ADDED_BG = "hsl(var(--success) / 0.15)"
+const REMOVED_BG = "hsl(var(--danger) / 0.15)"
+
+const monoText: CSSProperties = {
+    fontFamily: "var(--font-mono)",
+    fontSize: "var(--text-sm)",
+}
+
+const gutterStyle: CSSProperties = {
+    width: 40,
+    textAlign: "right",
+    padding: "0 8px",
+    color: "hsl(var(--text-faint))",
+    fontSize: "var(--text-xs)",
+    lineHeight: "24px",
+    userSelect: "none",
+    flexShrink: 0,
+    borderRight: "1px solid hsl(var(--border-faint))",
+}
+
+function lineToneStyle(type: DiffLine["type"]): CSSProperties {
+    if (type === "added") return { background: ADDED_BG }
+    if (type === "removed") return { background: REMOVED_BG }
+    return {}
+}
+
+function prefixToneColor(type?: DiffLine["type"]): string {
+    if (type === "added") return "hsl(var(--success))"
+    if (type === "removed") return "hsl(var(--danger))"
+    return "hsl(var(--text-faint))"
+}
+
 export default function DiffTool() {
     const [text1, setText1] = useState("")
     const [text2, setText2] = useState("")
@@ -96,13 +127,12 @@ export default function DiffTool() {
     const [ignoreWhitespace, setIgnoreWhitespace] = useState(false)
     const [hasCompared, setHasCompared] = useState(false)
     const [isComputing, setIsComputing] = useState(false)
-    const { toast } = useToast()
     const diffRef = useRef<HTMLDivElement>(null)
     const shareState = useMemo(
         () => ({ text1, text2, viewMode, ignoreWhitespace }),
         [text1, text2, viewMode, ignoreWhitespace],
     )
-    const { getShareUrl } = useUrlState(shareState, (state) => {
+    useUrlState(shareState, (state) => {
         setText1(typeof state.text1 === "string" ? state.text1 : "")
         setText2(typeof state.text2 === "string" ? state.text2 : "")
         setViewMode(state.viewMode === "side-by-side" ? "side-by-side" : "unified")
@@ -187,7 +217,7 @@ export default function DiffTool() {
                 return
             }
         } catch (_error) {
-            toast({ description: "Worker failed, running on main thread." })
+            // Worker failed — fall through to the main-thread diff below.
         }
 
         const lines = computeDiff(text1, text2, ignoreWhitespace)
@@ -199,7 +229,7 @@ export default function DiffTool() {
             metadata: { action: "compare", viewMode, ignoreWhitespace, usedWorker: false },
         })
         setIsComputing(false)
-    }, [text1, text2, ignoreWhitespace, addEntry, viewMode, toast, runWorkerDiff])
+    }, [text1, text2, ignoreWhitespace, addEntry, viewMode, runWorkerDiff])
 
     const loadSample = () => {
         setText1(SAMPLE_ORIGINAL)
@@ -208,15 +238,17 @@ export default function DiffTool() {
         setHasCompared(false)
     }
 
-    const copyDiff = () => {
-        const text = diffLines.map(l => {
-            if (l.type === "added") return `+ ${l.value}`
-            if (l.type === "removed") return `- ${l.value}`
-            return `  ${l.value}`
-        }).join("\n")
-        navigator.clipboard.writeText(text)
-        toast({ description: "Diff copied!" })
-    }
+    const diffAsText = useMemo(
+        () =>
+            diffLines
+                .map((l) => {
+                    if (l.type === "added") return `+ ${l.value}`
+                    if (l.type === "removed") return `- ${l.value}`
+                    return `  ${l.value}`
+                })
+                .join("\n"),
+        [diffLines],
+    )
 
     const exportPatch = () => {
         const patch = generatePatch(text1, text2, ignoreWhitespace)
@@ -227,7 +259,6 @@ export default function DiffTool() {
         a.download = "changes.patch"
         a.click()
         URL.revokeObjectURL(url)
-        toast({ description: "Patch file downloaded!" })
     }
 
     const stats = {
@@ -236,158 +267,100 @@ export default function DiffTool() {
         unchanged: diffLines.filter(l => l.type === "unchanged").length,
     }
 
-    const lineClass = (type: "added" | "removed" | "unchanged") => {
-        if (type === "added") return "bg-green-50 text-green-900 dark:bg-green-950/40 dark:text-green-200"
-        if (type === "removed") return "bg-red-50 text-red-900 dark:bg-red-950/40 dark:text-red-200"
-        return ""
-    }
-
-    const linePrefix = (type: "added" | "removed" | "unchanged") => {
-        if (type === "added") return "+"
-        if (type === "removed") return "-"
-        return " "
-    }
-
     return (
-        <ToolCard
-            title="Diff Tool"
-            description="Compare two texts and highlight differences"
-            icon={<GitCompare className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "diff-tool",
-                toolName: "Diff Tool",
-                onRestore: (entry) => {
-                    try {
-                        const parsed = JSON.parse(entry.input || "{}") as { text1?: string; text2?: string }
-                        setText1(parsed.text1 || "")
-                        setText2(parsed.text2 || "")
-                    } catch {
-                        setText1(entry.input || "")
-                    }
-                },
-            }}
-            pipeSource={{
-                toolId: "diff-tool",
-                output: generatePatch(text1, text2, ignoreWhitespace),
-            }}
-        >
+        <ToolPage maxWidth={1100}>
             {/* Controls */}
-            <div className="flex flex-wrap items-center gap-2">
-                <Button onClick={compare} data-testid="button-compare" disabled={isComputing}>
+            <Row>
+                <Button onClick={compare} disabled={isComputing} data-testid="button-compare">
                     Compare
                 </Button>
-                <Button onClick={loadSample} variant="outline" data-testid="button-sample">
+                <Button variant="outline" iconLeft={<Sparkles size={13} />} onClick={loadSample} data-testid="button-sample">
                     Sample
                 </Button>
-                <div className="flex items-center gap-1.5 ml-auto">
-                    <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={ignoreWhitespace}
-                            onChange={(e) => setIgnoreWhitespace(e.target.checked)}
-                            className="rounded"
-                        />
-                        Ignore whitespace
-                    </label>
+                <div style={{ marginLeft: "auto" }}>
+                    <Checkbox
+                        checked={ignoreWhitespace}
+                        onChange={setIgnoreWhitespace}
+                        label="Ignore whitespace"
+                    />
                 </div>
-            </div>
+            </Row>
 
             {/* Input areas */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Original</label>
+            <Grid2>
+                <Field label="Original">
                     <Textarea
                         value={text1}
                         onChange={(e) => setText1(e.target.value)}
                         placeholder="Paste original text..."
-                        className="h-48 font-mono text-sm"
+                        style={{ height: 192, resize: "vertical" }}
                         data-testid="input-text1"
                     />
-                </div>
-                <div className="space-y-1.5">
-                    <label className="text-sm font-medium">Modified</label>
+                </Field>
+                <Field label="Modified">
                     <Textarea
                         value={text2}
                         onChange={(e) => setText2(e.target.value)}
                         placeholder="Paste modified text..."
-                        className="h-48 font-mono text-sm"
+                        style={{ height: 192, resize: "vertical" }}
                         data-testid="input-text2"
                     />
-                </div>
-            </div>
-
-            {!text1.trim() && !text2.trim() && (
-                <ToolEmptyState
-                    title="Paste two versions to compare"
-                    description="Get a clean diff view with added and removed lines."
-                    actions={
-                        <>
-                            <Button variant="outline" size="sm" onClick={loadSample}>
-                                Load sample diff
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
-                            >
-                                Browse snippets
-                            </Button>
-                        </>
-                    }
-                    hint="Tip: Use unified or side‑by‑side view from the toolbar."
-                />
-            )}
+                </Field>
+            </Grid2>
 
             {/* Results */}
             {hasCompared && (
-                <div className="space-y-3">
+                <div style={{ display: "grid", gap: 10 }}>
                     {/* Results toolbar */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        <div className="flex items-center gap-3 text-sm">
-                            <span className="text-green-600 font-medium">+{stats.added}</span>
-                            <span className="text-red-600 font-medium">-{stats.removed}</span>
-                            <span className="text-muted-foreground">{stats.unchanged} unchanged</span>
+                    <Row>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: "var(--text-sm)" }}>
+                            <span style={{ color: "hsl(var(--success))", fontWeight: 500 }}>+{stats.added}</span>
+                            <span style={{ color: "hsl(var(--danger))", fontWeight: 500 }}>-{stats.removed}</span>
+                            <span style={{ color: "hsl(var(--text-muted))" }}>{stats.unchanged} unchanged</span>
                         </div>
-                        <div className="flex items-center gap-1 ml-auto">
-                            <Button
-                                variant={viewMode === "unified" ? "default" : "outline"}
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto" }}>
+                            <IconButton
+                                variant={viewMode === "unified" ? "solid" : "outline"}
                                 size="sm"
-                                onClick={() => setViewMode("unified")}
                                 title="Unified view"
+                                onClick={() => setViewMode("unified")}
                             >
-                                <AlignJustify className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                                variant={viewMode === "side-by-side" ? "default" : "outline"}
+                                <AlignJustify size={14} />
+                            </IconButton>
+                            <IconButton
+                                variant={viewMode === "side-by-side" ? "solid" : "outline"}
                                 size="sm"
-                                onClick={() => setViewMode("side-by-side")}
                                 title="Side-by-side view"
+                                onClick={() => setViewMode("side-by-side")}
                             >
-                                <Columns className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={copyDiff}>
-                                <Copy className="h-3.5 w-3.5 mr-1" />
-                                Copy
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={exportPatch}>
-                                <Download className="h-3.5 w-3.5 mr-1" />
+                                <Columns size={14} />
+                            </IconButton>
+                            <CopyAction text={diffAsText} />
+                            <Button variant="outline" size="sm" iconLeft={<Download size={13} />} onClick={exportPatch}>
                                 .patch
                             </Button>
                         </div>
-                    </div>
+                    </Row>
 
                     {/* Diff output */}
-                    <div ref={diffRef} className="border rounded-md overflow-hidden">
+                    <div
+                        ref={diffRef}
+                        style={{
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "var(--radius-md)",
+                            background: "hsl(var(--surface-0))",
+                            overflow: "hidden",
+                        }}
+                    >
                         {viewMode === "unified" ? (
-                            <UnifiedView lines={diffLines} lineClass={lineClass} linePrefix={linePrefix} />
+                            <UnifiedView lines={diffLines} />
                         ) : (
                             <SideBySideView lines={diffLines} />
                         )}
                     </div>
                 </div>
             )}
-        </ToolCard>
+        </ToolPage>
     )
 }
 
@@ -395,70 +368,68 @@ const ROW_HEIGHT = 24
 const LIST_MAX_HEIGHT = 500
 const VIRTUALIZE_THRESHOLD = 200
 
-interface UnifiedRowProps {
-    lines: DiffLine[]
-    lineClass: (type: DiffLine["type"]) => string
-    linePrefix: (type: DiffLine["type"]) => string
+function linePrefix(type: DiffLine["type"]): string {
+    if (type === "added") return "+"
+    if (type === "removed") return "-"
+    return " "
 }
 
-function UnifiedRow({ index, style, lines, lineClass, linePrefix }: UnifiedRowProps & {
+interface UnifiedRowProps {
+    lines: DiffLine[]
+}
+
+function UnifiedLineContent({ line }: { line: DiffLine }) {
+    return (
+        <>
+            <span style={gutterStyle}>{line.lineNumOld ?? ""}</span>
+            <span style={gutterStyle}>{line.lineNumNew ?? ""}</span>
+            <span
+                style={{
+                    width: 20,
+                    textAlign: "center",
+                    color: prefixToneColor(line.type),
+                    userSelect: "none",
+                    flexShrink: 0,
+                    lineHeight: "24px",
+                }}
+            >
+                {linePrefix(line.type)}
+            </span>
+            <span style={{ flex: 1, padding: "0 8px", lineHeight: "24px", whiteSpace: "pre" }}>
+                {line.value}
+            </span>
+        </>
+    )
+}
+
+function UnifiedRow({ index, style, lines }: UnifiedRowProps & {
     ariaAttributes: { "aria-posinset": number; "aria-setsize": number; role: "listitem" }
     index: number
     style: CSSProperties
 }): ReactElement {
     const line = lines[index]
     return (
-        <div style={style} className={`flex ${lineClass(line.type)}`}>
-            <span className="w-10 text-right px-2 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
-                {line.lineNumOld ?? ""}
-            </span>
-            <span className="w-10 text-right px-2 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
-                {line.lineNumNew ?? ""}
-            </span>
-            <span className="w-5 text-center text-muted-foreground/80 select-none shrink-0 leading-6">
-                {linePrefix(line.type)}
-            </span>
-            <span className="flex-1 px-2 leading-6 whitespace-pre">
-                {line.value}
-            </span>
+        <div style={{ ...style, display: "flex", ...lineToneStyle(line.type) }}>
+            <UnifiedLineContent line={line} />
         </div>
     )
 }
 
-function UnifiedView({
-    lines,
-    lineClass,
-    linePrefix,
-}: {
-    lines: DiffLine[]
-    lineClass: (type: DiffLine["type"]) => string
-    linePrefix: (type: DiffLine["type"]) => string
-}) {
+function UnifiedView({ lines }: { lines: DiffLine[] }) {
+    const rowProps = useMemo(() => ({ lines }), [lines])
+
     // For small diffs, render directly without virtualization overhead
     if (lines.length <= VIRTUALIZE_THRESHOLD) {
         return (
-            <div className="font-mono text-sm max-h-[500px] overflow-y-auto">
+            <div style={{ ...monoText, maxHeight: LIST_MAX_HEIGHT, overflowY: "auto" }}>
                 {lines.map((line, i) => (
-                    <div key={i} className={`flex ${lineClass(line.type)}`}>
-                        <span className="w-10 text-right px-2 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
-                            {line.lineNumOld ?? ""}
-                        </span>
-                        <span className="w-10 text-right px-2 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
-                            {line.lineNumNew ?? ""}
-                        </span>
-                        <span className="w-5 text-center text-muted-foreground/80 select-none shrink-0 leading-6">
-                            {linePrefix(line.type)}
-                        </span>
-                        <span className="flex-1 px-2 leading-6 whitespace-pre">
-                            {line.value}
-                        </span>
+                    <div key={i} style={{ display: "flex", ...lineToneStyle(line.type) }}>
+                        <UnifiedLineContent line={line} />
                     </div>
                 ))}
             </div>
         )
     }
-
-    const rowProps = useMemo(() => ({ lines, lineClass, linePrefix }), [lines, lineClass, linePrefix])
 
     return (
         <List
@@ -466,8 +437,7 @@ function UnifiedView({
             rowCount={lines.length}
             rowHeight={ROW_HEIGHT}
             rowProps={rowProps}
-            className="font-mono text-sm"
-            style={{ maxHeight: LIST_MAX_HEIGHT }}
+            style={{ ...monoText, maxHeight: LIST_MAX_HEIGHT }}
         />
     )
 }
@@ -478,35 +448,60 @@ interface SideRowProps {
     pairs: SidePair[]
 }
 
+const sideGutterStyle: CSSProperties = {
+    width: 32,
+    textAlign: "right",
+    padding: "0 4px",
+    color: "hsl(var(--text-faint))",
+    fontSize: "var(--text-xs)",
+    lineHeight: "24px",
+    userSelect: "none",
+    flexShrink: 0,
+    borderRight: "1px solid hsl(var(--border-faint))",
+}
+
+function cellToneStyle(type?: DiffLine["type"]): CSSProperties {
+    if (type === "added") return { background: ADDED_BG }
+    if (type === "removed") return { background: REMOVED_BG }
+    return {}
+}
+
+function SidePairContent({ pair }: { pair: SidePair }) {
+    return (
+        <>
+            <div
+                style={{
+                    flex: 1,
+                    display: "flex",
+                    minWidth: 0,
+                    borderRight: "1px solid hsl(var(--border))",
+                    ...cellToneStyle(pair.left?.type),
+                }}
+            >
+                <span style={sideGutterStyle}>{pair.left?.lineNumOld ?? ""}</span>
+                <span style={{ flex: 1, padding: "0 8px", lineHeight: "24px", whiteSpace: "pre", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {pair.left?.value ?? ""}
+                </span>
+            </div>
+            <div style={{ flex: 1, display: "flex", minWidth: 0, ...cellToneStyle(pair.right?.type) }}>
+                <span style={sideGutterStyle}>{pair.right?.lineNumNew ?? ""}</span>
+                <span style={{ flex: 1, padding: "0 8px", lineHeight: "24px", whiteSpace: "pre", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {pair.right?.value ?? ""}
+                </span>
+            </div>
+        </>
+    )
+}
+
 function SideBySideRow({ index, style, pairs }: SideRowProps & {
     ariaAttributes: { "aria-posinset": number; "aria-setsize": number; role: "listitem" }
     index: number
     style: CSSProperties
 }): ReactElement {
     const pair = pairs[index]
-    const cellClass = (type?: "added" | "removed" | "unchanged") => {
-        if (type === "added") return "bg-green-50 dark:bg-green-950/40"
-        if (type === "removed") return "bg-red-50 dark:bg-red-950/40"
-        return ""
-    }
     return (
-        <div style={style} className="flex">
-            <div className={`flex-1 flex border-r ${cellClass(pair.left?.type)}`}>
-                <span className="w-8 text-right px-1 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
-                    {pair.left?.lineNumOld ?? ""}
-                </span>
-                <span className="flex-1 px-2 leading-6 whitespace-pre truncate">
-                    {pair.left?.value ?? ""}
-                </span>
-            </div>
-            <div className={`flex-1 flex ${cellClass(pair.right?.type)}`}>
-                <span className="w-8 text-right px-1 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
-                    {pair.right?.lineNumNew ?? ""}
-                </span>
-                <span className="flex-1 px-2 leading-6 whitespace-pre truncate">
-                    {pair.right?.value ?? ""}
-                </span>
-            </div>
+        <div style={{ ...style, display: "flex" }}>
+            <SidePairContent pair={pair} />
         </div>
     )
 }
@@ -536,41 +531,20 @@ function SideBySideView({ lines }: { lines: DiffLine[] }) {
         return result
     }, [lines])
 
-    const cellClass = (type?: "added" | "removed" | "unchanged") => {
-        if (type === "added") return "bg-green-50 dark:bg-green-950/40"
-        if (type === "removed") return "bg-red-50 dark:bg-red-950/40"
-        return ""
-    }
+    const rowProps = useMemo(() => ({ pairs }), [pairs])
 
     // For small diffs, render directly
     if (pairs.length <= VIRTUALIZE_THRESHOLD) {
         return (
-            <div className="font-mono text-sm max-h-[500px] overflow-y-auto">
+            <div style={{ ...monoText, maxHeight: LIST_MAX_HEIGHT, overflowY: "auto" }}>
                 {pairs.map((pair, i) => (
-                    <div key={i} className="flex">
-                        <div className={`flex-1 flex border-r ${cellClass(pair.left?.type)}`}>
-                            <span className="w-8 text-right px-1 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
-                                {pair.left?.lineNumOld ?? ""}
-                            </span>
-                            <span className="flex-1 px-2 leading-6 whitespace-pre truncate">
-                                {pair.left?.value ?? ""}
-                            </span>
-                        </div>
-                        <div className={`flex-1 flex ${cellClass(pair.right?.type)}`}>
-                            <span className="w-8 text-right px-1 text-muted-foreground/60 text-xs leading-6 select-none shrink-0 border-r">
-                                {pair.right?.lineNumNew ?? ""}
-                            </span>
-                            <span className="flex-1 px-2 leading-6 whitespace-pre truncate">
-                                {pair.right?.value ?? ""}
-                            </span>
-                        </div>
+                    <div key={i} style={{ display: "flex" }}>
+                        <SidePairContent pair={pair} />
                     </div>
                 ))}
             </div>
         )
     }
-
-    const rowProps = useMemo(() => ({ pairs }), [pairs])
 
     return (
         <List
@@ -578,8 +552,7 @@ function SideBySideView({ lines }: { lines: DiffLine[] }) {
             rowCount={pairs.length}
             rowHeight={ROW_HEIGHT}
             rowProps={rowProps}
-            className="font-mono text-sm"
-            style={{ maxHeight: LIST_MAX_HEIGHT }}
+            style={{ ...monoText, maxHeight: LIST_MAX_HEIGHT }}
         />
     )
 }

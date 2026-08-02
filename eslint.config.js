@@ -1,4 +1,5 @@
 import eslint from '@eslint/js';
+import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -18,11 +19,24 @@ export default tseslint.config(
       'release/**',
       'scripts/**/*.cjs',  // Ignore CommonJS files in scripts
       'scripts/*.js',
+      'design/**',  // Design system source-of-truth assets, not app code
     ],
   },
   {
-    files: ['**/*.ts', '**/*.tsx'],
+    // Type declarations copied verbatim from /design — keep them identical
+    files: ['src/ds/components/**/*.d.ts'],
     rules: {
+      '@typescript-eslint/no-empty-object-type': 'off',
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    plugins: {
+      'react-hooks': reactHooks,
+    },
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       '@typescript-eslint/no-unused-vars': ['warn', {
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_',

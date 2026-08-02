@@ -70,7 +70,7 @@ const CronParser: React.FC = () => {
       setNextDates([]);
       setError(err instanceof Error ? err.message : 'Invalid cron expression');
     }
-  }, [expression]);
+  }, [expression, addEntry]);
 
   const fields = expression.trim().split(/\s+/);
 

@@ -1,9 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ToolCard } from "@/components/ToolCard"
-import { useToast } from "@/hooks/use-toast"
-import { Copy, Key, Plus, Trash2, Shield } from "lucide-react"
+import { Key, Plus, Trash2 } from "lucide-react"
+import { Button, IconButton, Input, Select, Alert, Card } from "@/ds/components"
+import { CopyAction } from "@/v2/EditorPanels"
+import { ToolPage, SectionTitle, Field, Row, Grid2 } from "@/v2/restyle-kit"
 
 interface Account {
     name: string
@@ -77,7 +76,6 @@ export default function TotpGenerator() {
     const [accountName, setAccountName] = useState("")
     const [error, setError] = useState("")
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-    const { toast } = useToast()
 
     const generate = useCallback(async () => {
         if (!secret.trim()) {
@@ -116,8 +114,7 @@ export default function TotpGenerator() {
         setAccounts(newAccounts)
         saveAccounts(newAccounts)
         setAccountName("")
-        toast({ title: "Account saved" })
-    }, [accountName, secret, digits, period, accounts, toast])
+    }, [accountName, secret, digits, period, accounts])
 
     const removeAccount = useCallback((index: number) => {
         const newAccounts = accounts.filter((_, i) => i !== index)
@@ -131,120 +128,159 @@ export default function TotpGenerator() {
         setPeriod(account.period)
     }, [])
 
-    const copyCode = useCallback(() => {
-        if (code) {
-            navigator.clipboard.writeText(code)
-            toast({ title: "Code copied" })
-        }
-    }, [code, toast])
-
     const progressPercent = (timeLeft / period) * 100
+    const expiring = timeLeft <= 5
 
     return (
-        <ToolCard
-            title="TOTP/2FA Generator"
-            description="Generate time-based one-time passwords (TOTP) offline"
-            icon={<Shield className="h-5 w-5" />}
-        >
-            <div className="space-y-4">
-                {/* Secret Input */}
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Secret Key (Base32)</label>
-                    <Input
-                        value={secret}
-                        onChange={(e) => setSecret(e.target.value)}
-                        placeholder="JBSWY3DPEHPK3PXP"
-                        className="font-mono"
-                    />
-                    {error && <p className="text-xs text-destructive">{error}</p>}
+        <ToolPage maxWidth={640}>
+            <Card>
+                <div style={{ display: "grid", gap: 16 }}>
+                    <SectionTitle>Secret</SectionTitle>
+                    <Field label="Secret key (Base32)">
+                        <Input
+                            mono
+                            value={secret}
+                            onChange={(e) => setSecret(e.target.value)}
+                            placeholder="JBSWY3DPEHPK3PXP"
+                            invalid={!!error}
+                        />
+                    </Field>
+                    {error && <Alert tone="danger">{error}</Alert>}
+                    <Grid2>
+                        <Field label="Digits">
+                            <Select fullWidth value={digits} onChange={(e) => setDigits(Number(e.target.value))}>
+                                <option value={6}>6 digits</option>
+                                <option value={8}>8 digits</option>
+                            </Select>
+                        </Field>
+                        <Field label="Period">
+                            <Select fullWidth value={period} onChange={(e) => setPeriod(Number(e.target.value))}>
+                                <option value={30}>30 seconds</option>
+                                <option value={60}>60 seconds</option>
+                            </Select>
+                        </Field>
+                    </Grid2>
                 </div>
+            </Card>
 
-                {/* Options */}
-                <div className="flex gap-4">
-                    <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground">Digits</label>
-                        <select
-                            value={digits}
-                            onChange={(e) => setDigits(Number(e.target.value))}
-                            className="block w-full rounded-md border bg-background px-2 py-1.5 text-sm"
+            {code && (
+                <Card>
+                    <div style={{ display: "grid", gap: 12, justifyItems: "center", padding: "12px 0" }}>
+                        <div
+                            style={{
+                                fontFamily: "var(--font-mono)",
+                                fontSize: "var(--text-3xl, 2rem)",
+                                fontWeight: 700,
+                                letterSpacing: "0.3em",
+                                color: "hsl(var(--text-strong))",
+                            }}
+                            data-testid="totp-code"
                         >
-                            <option value={6}>6 digits</option>
-                            <option value={8}>8 digits</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1">
-                        <label className="text-xs text-muted-foreground">Period</label>
-                        <select
-                            value={period}
-                            onChange={(e) => setPeriod(Number(e.target.value))}
-                            className="block w-full rounded-md border bg-background px-2 py-1.5 text-sm"
-                        >
-                            <option value={30}>30 seconds</option>
-                            <option value={60}>60 seconds</option>
-                        </select>
-                    </div>
-                </div>
-
-                {/* Code Display */}
-                {code && (
-                    <div className="text-center py-6 rounded-lg border bg-muted/30">
-                        <div className="text-4xl font-mono font-bold tracking-[0.3em] mb-3">{code}</div>
-                        <div className="flex items-center justify-center gap-3">
-                            <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
+                            {code}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            <div
+                                style={{
+                                    width: 128,
+                                    height: 8,
+                                    borderRadius: 999,
+                                    background: "hsl(var(--surface-2))",
+                                    overflow: "hidden",
+                                }}
+                            >
                                 <div
-                                    className={`h-full rounded-full transition-all duration-1000 ${timeLeft <= 5 ? "bg-red-500" : "bg-primary"}`}
-                                    style={{ width: `${progressPercent}%` }}
+                                    style={{
+                                        height: "100%",
+                                        borderRadius: 999,
+                                        width: `${progressPercent}%`,
+                                        background: expiring ? "hsl(var(--danger))" : "hsl(var(--primary))",
+                                        transition: "width 1s linear",
+                                    }}
                                 />
                             </div>
-                            <span className={`text-sm font-mono ${timeLeft <= 5 ? "text-red-500 font-bold" : "text-muted-foreground"}`}>
+                            <span
+                                style={{
+                                    fontFamily: "var(--font-mono)",
+                                    fontSize: "var(--text-sm)",
+                                    fontWeight: expiring ? 700 : 400,
+                                    color: expiring ? "hsl(var(--danger))" : "hsl(var(--text-muted))",
+                                }}
+                            >
                                 {timeLeft}s
                             </span>
-                            <Button variant="ghost" size="sm" onClick={copyCode}>
-                                <Copy className="h-4 w-4" />
-                            </Button>
+                            <CopyAction text={code} />
                         </div>
                     </div>
-                )}
+                </Card>
+            )}
 
-                {/* Save Account */}
-                <div className="flex gap-2">
-                    <Input
-                        value={accountName}
-                        onChange={(e) => setAccountName(e.target.value)}
-                        placeholder="Account name (e.g., GitHub)"
-                        className="flex-1"
-                    />
-                    <Button variant="outline" size="sm" onClick={addAccount} disabled={!accountName.trim() || !secret.trim()}>
-                        <Plus className="h-4 w-4 mr-1" /> Save
-                    </Button>
+            <Card>
+                <div style={{ display: "grid", gap: 12 }}>
+                    <SectionTitle>Saved accounts</SectionTitle>
+                    <Row wrap={false}>
+                        <Input
+                            value={accountName}
+                            onChange={(e) => setAccountName(e.target.value)}
+                            placeholder="Account name (e.g., GitHub)"
+                            style={{ flex: 1 }}
+                        />
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            iconLeft={<Plus size={14} />}
+                            onClick={addAccount}
+                            disabled={!accountName.trim() || !secret.trim()}
+                        >
+                            Save
+                        </Button>
+                    </Row>
+                    {accounts.map((account, i) => (
+                        <div
+                            key={i}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 8,
+                                padding: "6px 10px",
+                                borderRadius: "var(--radius-md)",
+                                border: "1px solid hsl(var(--border))",
+                                background: "hsl(var(--surface-1))",
+                                fontSize: "var(--text-sm)",
+                            }}
+                        >
+                            <button
+                                onClick={() => loadAccount(account)}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    flex: 1,
+                                    textAlign: "left",
+                                    background: "none",
+                                    border: "none",
+                                    padding: 0,
+                                    cursor: "pointer",
+                                    color: "hsl(var(--text-body))",
+                                    font: "inherit",
+                                }}
+                            >
+                                <Key size={14} />
+                                <span style={{ fontWeight: 500 }}>{account.name}</span>
+                                <span style={{ fontSize: "var(--text-xs)", color: "hsl(var(--text-muted))" }}>
+                                    ({account.digits} digits, {account.period}s)
+                                </span>
+                            </button>
+                            <IconButton size="sm" title="Remove account" onClick={() => removeAccount(i)}>
+                                <Trash2 size={14} />
+                            </IconButton>
+                        </div>
+                    ))}
+                    <span style={{ fontSize: "var(--text-xs)", color: "hsl(var(--text-muted))" }}>
+                        All secrets are stored locally in your browser. No data is sent to any server.
+                    </span>
                 </div>
-
-                {/* Saved Accounts */}
-                {accounts.length > 0 && (
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium">Saved Accounts</label>
-                        {accounts.map((account, i) => (
-                            <div key={i} className="flex items-center justify-between gap-2 p-2 rounded border bg-muted/20 text-sm">
-                                <button
-                                    onClick={() => loadAccount(account)}
-                                    className="flex items-center gap-2 hover:text-primary transition-colors text-left flex-1"
-                                >
-                                    <Key className="h-3.5 w-3.5" />
-                                    <span className="font-medium">{account.name}</span>
-                                    <span className="text-xs text-muted-foreground">({account.digits} digits, {account.period}s)</span>
-                                </button>
-                                <Button variant="ghost" size="sm" onClick={() => removeAccount(i)}>
-                                    <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                <p className="text-xs text-muted-foreground">
-                    All secrets are stored locally in your browser. No data is sent to any server.
-                </p>
-            </div>
-        </ToolCard>
+            </Card>
+        </ToolPage>
     )
 }

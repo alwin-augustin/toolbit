@@ -122,7 +122,7 @@ export default function Base64Encoder() {
         reader.readAsDataURL(file);
         // Reset input so same file can be re-selected
         e.target.value = "";
-    }, [setInput, toast]);
+    }, [setInput, setOutput, toast]);
 
     const handleGenerateDataUri = useCallback(() => {
         if (!input.trim()) return;

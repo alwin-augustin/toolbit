@@ -1,0 +1,45 @@
+/* ============================================================
+   Typography — Toolbit v2
+   UI: Geist  ·  Code/data: JetBrains Mono
+   Dense, IDE-grade scale. Default UI text is 14px; workspace
+   chrome (statusbar, meta) runs 11–12px.
+   ============================================================ */
+
+:root {
+  /* font families */
+  --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* weights */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* type scale — dense developer UI */
+  --text-2xs: 0.6875rem; /* @kind other */
+  --text-xs:  0.75rem; /* @kind other */
+  --text-sm:  0.8125rem; /* @kind other */
+  --text-base: 0.875rem; /* @kind other */
+  --text-md:  1rem; /* @kind other */
+  --text-lg:  1.125rem; /* @kind other */
+  --text-xl:  1.375rem; /* @kind other */
+  --text-2xl: 1.75rem; /* @kind other */
+  --text-3xl: 2.25rem; /* @kind other */
+  --text-4xl: 3rem; /* @kind other */
+  --text-5xl: 3.75rem; /* @kind other */
+
+  /* line heights */
+  --leading-none: 1; /* @kind other */
+  --leading-tight: 1.2; /* @kind other */
+  --leading-snug: 1.35; /* @kind other */
+  --leading-normal: 1.5; /* @kind other */
+  --leading-relaxed: 1.65; /* @kind other */
+
+  /* letter spacing */
+  --tracking-tighter: -0.03em; /* @kind other */
+  --tracking-tight: -0.015em; /* @kind other */
+  --tracking-normal: 0em; /* @kind other */
+  --tracking-wide: 0.02em; /* @kind other */
+  --tracking-wider: 0.08em; /* @kind other */
+}

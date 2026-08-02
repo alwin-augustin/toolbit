@@ -1,0 +1,75 @@
+/* ============================================================
+   Motion — Toolbit v2.1  ("productive motion")
+   Modeled on IBM Carbon's productive/expressive split and
+   Material's enter/exit asymmetry, tuned for an IDE:
+   · Motion is feedback, never decoration. No bounce, no loops
+     (sole exception: the functional cursor-blink idiom).
+   · Small things move fast; only overlays earn >200ms.
+   · Enter decelerates, exit accelerates (exits ~30% shorter).
+   · Everything collapses to 0ms under prefers-reduced-motion.
+
+   Duration roles
+     instant 50ms  — press feedback, caret, toggles
+     fast    100ms — hover, focus ring, small fades
+     base    150ms — default state change, row expand
+     slow    250ms — popovers, dropdowns, toasts
+     slower  350ms — dialogs, command palette, sheets
+   ============================================================ */
+
+:root {
+  --duration-instant: 50ms; /* @kind other */
+  --duration-fast: 100ms; /* @kind other */
+  --duration-base: 150ms; /* @kind other */
+  --duration-slow: 250ms; /* @kind other */
+  --duration-slower: 350ms; /* @kind other */
+
+  /* easing roles */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1); /* @kind other */
+  --ease-enter: cubic-bezier(0, 0, 0.3, 1); /* @kind other */
+  --ease-exit: cubic-bezier(0.4, 0.14, 1, 1); /* @kind other */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* @kind other */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* @kind other */
+}
+
+/* ---- Motion recipes (consumers get these via styles.css) ---- */
+
+@keyframes tb-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes tb-scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes tb-slide-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes tb-slide-down {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* Functional loop — terminal caret idiom (logo bit, empty editors). */
+@keyframes tb-cursor-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0.15; }
+}
+
+.tb-enter-fade { animation: tb-fade-in var(--duration-base) var(--ease-enter) both; }
+.tb-enter-scale { animation: tb-scale-in var(--duration-slow) var(--ease-enter) both; }   /* dialogs, palette */
+.tb-enter-slide-up { animation: tb-slide-up var(--duration-slow) var(--ease-enter) both; }   /* toasts, popovers from below */
+.tb-enter-slide-down { animation: tb-slide-down var(--duration-slow) var(--ease-enter) both; } /* dropdowns, menus */
+.tb-cursor-blink { animation: tb-cursor-blink 1.1s steps(1) infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms; /* @kind other */
+    --duration-fast: 0ms; /* @kind other */
+    --duration-base: 0ms; /* @kind other */
+    --duration-slow: 0ms; /* @kind other */
+    --duration-slower: 0ms; /* @kind other */
+  }
+  .tb-enter-fade, .tb-enter-scale, .tb-enter-slide-up, .tb-enter-slide-down, .tb-cursor-blink {
+    animation: none;
+  }
+}

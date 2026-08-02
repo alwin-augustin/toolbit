@@ -122,7 +122,8 @@ export async function getHistoryByToolId(toolId: string, limit = MAX_PER_TOOL): 
     const results: ToolHistoryEntry[] = []
 
     await new Promise<void>((resolve, reject) => {
-        index.openCursor(range, "prev").onsuccess = (event) => {
+        const request = index.openCursor(range, "prev")
+        request.onsuccess = (event) => {
             const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result
             if (!cursor || results.length >= limit) {
                 resolve()
@@ -131,7 +132,7 @@ export async function getHistoryByToolId(toolId: string, limit = MAX_PER_TOOL): 
             results.push(cursor.value as ToolHistoryEntry)
             cursor.continue()
         }
-        index.openCursor(range, "prev").onerror = () => reject(index.openCursor(range, "prev").error)
+        request.onerror = () => reject(request.error)
     })
 
     await transactionDone(tx)
@@ -146,7 +147,8 @@ export async function getRecentHistory(limit = 10): Promise<ToolHistoryEntry[]> 
     const results: ToolHistoryEntry[] = []
 
     await new Promise<void>((resolve, reject) => {
-        index.openCursor(null, "prev").onsuccess = (event) => {
+        const request = index.openCursor(null, "prev")
+        request.onsuccess = (event) => {
             const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result
             if (!cursor || results.length >= limit) {
                 resolve()
@@ -155,7 +157,7 @@ export async function getRecentHistory(limit = 10): Promise<ToolHistoryEntry[]> 
             results.push(cursor.value as ToolHistoryEntry)
             cursor.continue()
         }
-        index.openCursor(null, "prev").onerror = () => reject(index.openCursor(null, "prev").error)
+        request.onerror = () => reject(request.error)
     })
 
     await transactionDone(tx)
@@ -170,7 +172,8 @@ export async function clearHistoryByToolId(toolId: string) {
     const range = IDBKeyRange.only(toolId)
 
     await new Promise<void>((resolve, reject) => {
-        index.openCursor(range).onsuccess = (event) => {
+        const request = index.openCursor(range)
+        request.onsuccess = (event) => {
             const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result
             if (!cursor) {
                 resolve()
@@ -179,7 +182,7 @@ export async function clearHistoryByToolId(toolId: string) {
             store.delete(cursor.primaryKey)
             cursor.continue()
         }
-        index.openCursor(range).onerror = () => reject(index.openCursor(range).error)
+        request.onerror = () => reject(request.error)
     })
 
     await transactionDone(tx)

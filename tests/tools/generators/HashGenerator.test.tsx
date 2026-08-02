@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import HashGenerator from '@/components/tools/HashGenerator'
+import HashGenerator from '@/components/tools/security/HashGenerator'
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({

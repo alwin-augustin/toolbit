@@ -1,0 +1,78 @@
+<!-- @dsCard group="Components" viewport="700x360" name="Core — Buttons, Badges, Tags" subtitle="Actions, icon buttons, badges, tags, kbd" -->
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="../../styles.css" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; padding: 24px; background: hsl(var(--surface-0)); }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .lbl { font-family: var(--font-mono); font-size: var(--text-2xs); letter-spacing: var(--tracking-wider); text-transform: uppercase; color: hsl(var(--text-faint)); margin: 0 0 8px; }
+  .grp { margin-bottom: 22px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { Button, IconButton, Badge, Tag, Kbd } = window.ToolbitDesignSystem_4ae95c;
+  const Copy = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>;
+  const Arrow = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>;
+
+  function Demo() {
+    return (
+      <div>
+        <div className="grp">
+          <p className="lbl">Button variants</p>
+          <div className="row">
+            <Button>Format</Button>
+            <Button variant="secondary">Minify</Button>
+            <Button variant="outline">Sample</Button>
+            <Button variant="ghost">Clear</Button>
+            <Button variant="destructive">Delete</Button>
+            <Button variant="link">Learn more</Button>
+          </div>
+        </div>
+        <div className="grp">
+          <p className="lbl">Sizes · with icon · disabled</p>
+          <div className="row">
+            <Button size="sm">Small</Button>
+            <Button size="default">Default</Button>
+            <Button size="lg" iconRight={<Arrow/>}>Launch app</Button>
+            <Button disabled>Disabled</Button>
+            <IconButton title="Copy"><Copy/></IconButton>
+            <IconButton variant="outline" title="Copy"><Copy/></IconButton>
+            <IconButton variant="solid" title="Copy"><Copy/></IconButton>
+          </div>
+        </div>
+        <div className="grp">
+          <p className="lbl">Badges</p>
+          <div className="row">
+            <Badge>8 tools</Badge>
+            <Badge tone="primary">PWA</Badge>
+            <Badge tone="success">Valid</Badge>
+            <Badge tone="warning" variant="outline">Large file</Badge>
+            <Badge tone="danger">Error</Badge>
+            <Badge tone="primary" variant="solid">New</Badge>
+          </div>
+        </div>
+        <div className="grp">
+          <p className="lbl">Tags · Kbd</p>
+          <div className="row">
+            <Tag icon={<Arrow/>}>JSON Formatter</Tag>
+            <Tag active>JWT Decoder</Tag>
+            <Tag>Base64</Tag>
+            <span style={{fontSize:'var(--text-sm)',color:'hsl(var(--text-muted))'}}>Press <Kbd>⌘K</Kbd> to search · <Kbd>Cmd+V</Kbd> to paste</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>

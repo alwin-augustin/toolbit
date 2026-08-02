@@ -5,11 +5,13 @@
 
 import { lazy, ComponentType } from 'react';
 
+export type ToolCategory = 'format' | 'encode' | 'generate' | 'transform' | 'analyze' | 'build' | 'text';
+
 export interface ToolMetadata {
     id: string;
     name: string;
     description: string;
-    category: 'format' | 'encode' | 'generate' | 'transform' | 'analyze' | 'build' | 'text';
+    category: ToolCategory;
     path: string;
     component: ComponentType;
     keywords?: string[];

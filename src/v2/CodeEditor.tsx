@@ -1,0 +1,132 @@
+import { useEffect, useRef } from "react";
+import { EditorState, type Extension } from "@codemirror/state";
+import { EditorView, keymap, lineNumbers, placeholder as cmPlaceholder } from "@codemirror/view";
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import { bracketMatching, syntaxHighlighting, HighlightStyle } from "@codemirror/language";
+import { json } from "@codemirror/lang-json";
+import { tags } from "@lezer/highlight";
+import { useEditorStatus } from "./workspace-store";
+
+export type EditorLanguage = "json" | "text";
+
+/* Syntax palette from the design system tokens (--code-*). */
+const toolbitHighlight = HighlightStyle.define([
+    { tag: tags.propertyName, color: "hsl(var(--code-key))" },
+    { tag: tags.string, color: "hsl(var(--code-string))" },
+    { tag: tags.number, color: "hsl(var(--code-number))" },
+    { tag: [tags.keyword, tags.bool, tags.null], color: "hsl(var(--code-keyword))" },
+    { tag: [tags.punctuation, tags.separator, tags.bracket], color: "hsl(var(--code-punc))" },
+]);
+
+const toolbitTheme = EditorView.theme({
+    "&": {
+        height: "100%",
+        fontSize: "var(--text-sm)",
+        backgroundColor: "transparent",
+        color: "hsl(var(--text-strong))",
+    },
+    ".cm-content": {
+        fontFamily: "var(--font-mono)",
+        lineHeight: "var(--leading-relaxed)",
+        padding: "10px 0",
+        caretColor: "hsl(var(--text-strong))",
+    },
+    ".cm-line": { padding: "0 12px" },
+    "&.cm-focused": { outline: "none" },
+    ".cm-gutters": {
+        backgroundColor: "transparent",
+        borderRight: "none",
+        color: "hsl(var(--text-faint))",
+        fontFamily: "var(--font-mono)",
+        fontSize: "var(--text-xs)",
+    },
+    ".cm-activeLineGutter": { backgroundColor: "transparent", color: "hsl(var(--text-muted))" },
+    ".cm-cursor": { borderLeftColor: "hsl(var(--text-strong))" },
+    ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": {
+        backgroundColor: "hsl(var(--primary) / 0.25)",
+    },
+    ".cm-placeholder": { color: "hsl(var(--text-faint))" },
+});
+
+interface CodeEditorProps {
+    value: string;
+    onChange?: (value: string) => void;
+    language?: EditorLanguage;
+    readOnly?: boolean;
+    placeholder?: string;
+    /** Report caret position + byte size into the status bar. */
+    reportStatus?: boolean;
+    showLineNumbers?: boolean;
+}
+
+export function CodeEditor({
+    value,
+    onChange,
+    language = "text",
+    readOnly = false,
+    placeholder,
+    reportStatus = false,
+    showLineNumbers = true,
+}: CodeEditorProps) {
+    const hostRef = useRef<HTMLDivElement>(null);
+    const viewRef = useRef<EditorView | null>(null);
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
+    const setStatus = useEditorStatus((s) => s.setStatus);
+
+    useEffect(() => {
+        if (!hostRef.current) return;
+
+        const extensions: Extension[] = [
+            history(),
+            keymap.of([...defaultKeymap, ...historyKeymap]),
+            bracketMatching(),
+            syntaxHighlighting(toolbitHighlight),
+            toolbitTheme,
+            EditorView.lineWrapping,
+            EditorState.readOnly.of(readOnly),
+        ];
+        if (showLineNumbers) extensions.push(lineNumbers());
+        if (language === "json") extensions.push(json());
+        if (placeholder) extensions.push(cmPlaceholder(placeholder));
+        extensions.push(
+            EditorView.updateListener.of((update) => {
+                if (update.docChanged) {
+                    onChangeRef.current?.(update.state.doc.toString());
+                }
+                if (reportStatus && (update.docChanged || update.selectionSet)) {
+                    const pos = update.state.selection.main.head;
+                    const line = update.state.doc.lineAt(pos);
+                    setStatus({
+                        ln: line.number,
+                        col: pos - line.from + 1,
+                        bytes: new Blob([update.state.doc.toString()]).size,
+                    });
+                }
+            })
+        );
+
+        const view = new EditorView({
+            state: EditorState.create({ doc: value, extensions }),
+            parent: hostRef.current,
+        });
+        viewRef.current = view;
+        return () => {
+            view.destroy();
+            viewRef.current = null;
+        };
+        // Recreate the editor only when structural options change.
+    }, [language, readOnly, placeholder, showLineNumbers, reportStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Sync external value changes into the editor.
+    useEffect(() => {
+        const view = viewRef.current;
+        if (!view) return;
+        const current = view.state.doc.toString();
+        if (current !== value) {
+            view.dispatch({ changes: { from: 0, to: current.length, insert: value } });
+        }
+    }, [value]);
+
+    return <div ref={hostRef} style={{ flex: 1, minHeight: 0, overflow: "auto" }} />;
+}

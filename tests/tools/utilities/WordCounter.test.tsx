@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import WordCounter from '@/components/tools/WordCounter'
+import WordCounter from '@/components/tools/text/WordCounter'
 
 describe('WordCounter', () => {
   it('renders the component with correct title', () => {

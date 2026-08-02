@@ -178,15 +178,15 @@ export function useUrlState<T extends Record<string, unknown> | string>(
     const [isOversize, setIsOversize] = useState(false)
     const isHashRouter = () => window.location.hash.startsWith("#/")
 
-    const getStateToken = () => {
+    const getStateToken = useCallback(() => {
         if (isHashRouter()) {
             const params = new URLSearchParams(window.location.search)
             return params.get(STATE_PARAM) || ""
         }
         return window.location.hash.slice(1)
-    }
+    }, [])
 
-    const updateUrlWithToken = (token: string) => {
+    const updateUrlWithToken = useCallback((token: string) => {
         if (isHashRouter()) {
             const url = new URL(window.location.href)
             if (token) {
@@ -209,7 +209,7 @@ export function useUrlState<T extends Record<string, unknown> | string>(
             const origin = window.location.origin === "null" ? "" : window.location.origin
             setShareUrl(`${origin}${window.location.pathname}`)
         }
-    }
+    }, [])
 
     // On mount, restore state from URL hash
     useEffect(() => {
@@ -247,7 +247,7 @@ export function useUrlState<T extends Record<string, unknown> | string>(
                 }
             }
         })()
-    }, [enabled, mode, setValue])
+    }, [enabled, mode, setValue, getStateToken])
 
     // Debounced update of URL hash when value changes
     useEffect(() => {
@@ -280,7 +280,7 @@ export function useUrlState<T extends Record<string, unknown> | string>(
             cancelled = true
             clearTimeout(timer)
         }
-    }, [value, enabled, mode, maxBytes, compress])
+    }, [value, enabled, mode, maxBytes, compress, getStateToken, updateUrlWithToken])
 
     const getShareUrl = useCallback((): string => shareUrl, [shareUrl])
 

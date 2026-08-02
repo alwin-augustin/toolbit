@@ -1,27 +1,83 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { minify } from 'terser';
-import { Button } from '@/components/ui/button';
-import Editor from 'react-simple-code-editor';
-import Prism from 'prismjs';
-import { FileDropZone } from '@/components/FileDropZone';
-import { ToolCard } from '@/components/ToolCard';
+import { Upload } from 'lucide-react';
+import { Button } from '@/ds/components';
+import { CodeEditor } from '@/v2/CodeEditor';
+import { Panel, PanelHeader, CopyAction, ValidityBadge, EditorSplit } from '@/v2/EditorPanels';
+import { useEditorStatus } from '@/v2/workspace-store';
 import { useUrlState } from '@/hooks/use-url-state';
-import { Code } from 'lucide-react';
 import { useToolHistory } from '@/hooks/use-tool-history';
 import { useWorkspace } from '@/hooks/use-workspace';
 
-
+/** Self-contained drop target: reads a dropped file as text. */
+function DropPanel({ onText, children }: { onText: (text: string) => void; children: React.ReactNode }) {
+  const [dragging, setDragging] = useState(false);
+  const counter = useRef(0);
+  return (
+    <div
+      style={{ position: 'relative', display: 'grid', minHeight: 0 }}
+      onDragEnter={(e) => {
+        e.preventDefault();
+        counter.current++;
+        setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        e.preventDefault();
+        counter.current--;
+        if (counter.current === 0) setDragging(false);
+      }}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        counter.current = 0;
+        setDragging(false);
+        const file = e.dataTransfer.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (typeof ev.target?.result === 'string') onText(ev.target.result);
+        };
+        reader.readAsText(file);
+      }}
+    >
+      {children}
+      {dragging && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            borderRadius: 'var(--radius-lg)',
+            border: '2px dashed hsl(var(--primary))',
+            background: 'hsl(var(--primary) / 0.08)',
+            color: 'hsl(var(--primary))',
+            pointerEvents: 'none',
+          }}
+        >
+          <Upload size={28} />
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>Drop file here</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const JsJsonMinifier: React.FC = () => {
   const [code, setCode] = useState('');
   const [minifiedCode, setMinifiedCode] = useState('');
-  const [jsReady, setJsReady] = useState(false);
+  const [valid, setValid] = useState<boolean | null>(null);
   const shareState = useMemo(() => ({ code }), [code]);
-  const { getShareUrl } = useUrlState(shareState, (state) => {
+  useUrlState(shareState, (state) => {
     setCode(typeof state.code === 'string' ? state.code : '');
   });
   const { addEntry } = useToolHistory('js-json-minifier', 'JS/JSON Minifier');
   const consumeWorkspaceState = useWorkspace((state) => state.consumeState);
+  const setStatus = useEditorStatus((s) => s.setStatus);
 
   useEffect(() => {
     if (code) return;
@@ -44,80 +100,69 @@ const JsJsonMinifier: React.FC = () => {
     }
   }, [code, consumeWorkspaceState]);
 
-  useEffect(() => {
-    let active = true;
-    import('prismjs/components/prism-javascript')
-      .then(() => {
-        if (active) setJsReady(true);
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, []);
-
   const handleMinify = async () => {
     try {
       const result = await minify(code);
       setMinifiedCode(result.code || '');
+      setValid(true);
       addEntry({ input: code, output: result.code || '', metadata: { action: 'minify' } });
     } catch (_error) {
       setMinifiedCode('Invalid JavaScript input');
+      setValid(false);
     }
   };
 
-  const editorClassName = "flex-grow min-h-[20rem] font-mono text-sm rounded-md border border-input bg-background px-3 py-2 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm";
+  useEffect(() => {
+    setStatus({
+      valid,
+      validityLabel: valid === null ? '' : valid ? 'Minified' : 'Invalid JavaScript',
+    });
+  }, [valid, setStatus]);
 
   return (
-    <ToolCard
-      title="JS/JSON Minifier"
-      description="Minify JavaScript code"
-      icon={<Code className="h-5 w-5" />}
-      shareUrl={getShareUrl()}
-      history={{
-        toolId: 'js-json-minifier',
-        toolName: 'JS/JSON Minifier',
-        onRestore: (entry) => {
-          setCode(entry.input || '');
-          setMinifiedCode(entry.output || '');
-        },
-      }}
-      pipeSource={{
-        toolId: 'js-json-minifier',
-        output: minifiedCode || '',
-      }}
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <FileDropZone onFileContent={setCode} accept={[".js", ".ts", ".jsx", ".tsx", "text/javascript"]}>
-        <div className="flex flex-col h-full">
-          <label className="text-sm font-medium mb-2">JavaScript</label>
-          <Editor
+    <EditorSplit>
+      <DropPanel onText={setCode}>
+        <Panel>
+          <PanelHeader
+            title="JavaScript"
+            action={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCode('function greet(name) {\n  const message = "Hello, " + name + "!";\n  return message;\n}\n')}
+                >
+                  Load sample
+                </Button>
+                <Button size="sm" onClick={handleMinify}>
+                  Minify
+                </Button>
+              </div>
+            }
+          />
+          <CodeEditor
             value={code}
-            onValueChange={setCode}
-            highlight={(code) => (jsReady && Prism.languages.javascript ? Prism.highlight(code, Prism.languages.javascript, 'javascript') : code)}
-            padding={10}
-            placeholder="Enter JavaScript"
-            className={editorClassName}
+            onChange={setCode}
+            reportStatus
+            placeholder="Paste JavaScript or drop a file to minify."
           />
-        </div>
-        </FileDropZone>
-        <div className="flex flex-col h-full">
-          <label className="text-sm font-medium mb-2">Minified</label>
-          <Editor
-            value={minifiedCode}
-            onValueChange={() => {}}
-            readOnly
-            highlight={(code) => (jsReady && Prism.languages.javascript ? Prism.highlight(code, Prism.languages.javascript, 'javascript') : code)}
-            padding={10}
-            placeholder="Minified output"
-            className={editorClassName}
-          />
-        </div>
-        <div className="col-span-1 lg:col-span-2">
-          <Button onClick={handleMinify}>Minify</Button>
-        </div>
-      </div>
-    </ToolCard>
+        </Panel>
+      </DropPanel>
+      <Panel>
+        <PanelHeader
+          title="Minified"
+          badge={<ValidityBadge valid={valid} validLabel="minified" invalidLabel="invalid input" />}
+          action={<CopyAction text={valid ? minifiedCode : ''} />}
+        />
+        {valid === false ? (
+          <div style={{ padding: '10px 12px', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'hsl(var(--danger))' }}>
+            {minifiedCode}
+          </div>
+        ) : (
+          <CodeEditor value={minifiedCode} readOnly placeholder="Minified output" />
+        )}
+      </Panel>
+    </EditorSplit>
   );
 };
 

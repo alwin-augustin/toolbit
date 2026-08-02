@@ -106,6 +106,10 @@ export default defineConfig(({ mode }) => {
             // Source maps for debugging (only in dev)
             sourcemap: isDev,
             rollupOptions: {
+                input: {
+                    main: path.resolve(import.meta.dirname, "index.html"),
+                    about: path.resolve(import.meta.dirname, "about.html"),
+                },
                 output: {
                     // Enable code splitting with proper chunking strategy
                     manualChunks: isElectron ? undefined : (id) => {
@@ -114,6 +118,9 @@ export default defineConfig(({ mode }) => {
                             // Separate large libraries into their own chunks
                             if (id.includes('prismjs')) return 'prism';
                             if (id.includes('marked') || id.includes('dompurify')) return 'markdown';
+                            if (id.includes('@codemirror') || id.includes('@lezer')) return 'codemirror';
+                            if (id.includes('date-fns') || id.includes('cron-parser') || id.includes('cronstrue')) return 'date-tools';
+                            if (id.includes('lucide-react') || id.includes('radix-ui')) return 'ui-vendor';
                             // Keep Radix in vendor to avoid circular chunk dependencies.
                             return 'vendor';
                         }

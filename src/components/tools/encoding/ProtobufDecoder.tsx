@@ -1,11 +1,11 @@
-import { useState, useCallback, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { ToolCard } from "@/components/ToolCard"
-import { useToast } from "@/hooks/use-toast"
-import { Copy, Binary, FileCode } from "lucide-react"
-import { useUrlState } from "@/hooks/use-url-state"
-import { useToolHistory } from "@/hooks/use-tool-history"
+import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
+import { Button, Tabs } from "@/ds/components";
+import { CodeEditor } from "@/v2/CodeEditor";
+import { Panel, PanelHeader, CopyAction, ValidityBadge, EditorSplit } from "@/v2/EditorPanels";
+import { useEditorStatus } from "@/v2/workspace-store";
+import { useUrlState } from "@/hooks/use-url-state";
+import { useToolHistory } from "@/hooks/use-tool-history";
 
 interface DecodedField {
     fieldNumber: number
@@ -152,23 +152,29 @@ function fieldsToJson(fields: DecodedField[]): Record<string, unknown> {
     return result
 }
 
-function renderFields(fields: DecodedField[], depth = 0): React.ReactNode {
+const mono: CSSProperties = { fontFamily: "var(--font-mono)", fontSize: "var(--text-sm)" };
+
+function renderFields(fields: DecodedField[], depth = 0): ReactNode {
     return fields.map((field, i) => (
-        <div key={i} className="font-mono text-sm" style={{ paddingLeft: `${depth * 16}px` }}>
-            <div className="flex items-baseline gap-2 py-0.5">
-                <span className="text-blue-600 dark:text-blue-400">field {field.fieldNumber}</span>
-                <span className="text-xs text-muted-foreground">({field.wireTypeName})</span>
+        <div key={i} style={{ ...mono, paddingLeft: depth * 16 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, padding: "2px 0" }}>
+                <span style={{ color: "hsl(var(--code-key))", whiteSpace: "nowrap" }}>
+                    field {field.fieldNumber}
+                </span>
+                <span style={{ fontSize: "var(--text-xs)", color: "hsl(var(--text-faint))", whiteSpace: "nowrap" }}>
+                    ({field.wireTypeName})
+                </span>
                 {!Array.isArray(field.value) && (
                     <>
-                        <span className="text-muted-foreground">=</span>
-                        <span className="text-green-700 dark:text-green-300 break-all">
+                        <span style={{ color: "hsl(var(--text-muted))" }}>=</span>
+                        <span style={{ color: "hsl(var(--code-string))", wordBreak: "break-all" }}>
                             {typeof field.value === "string" ? `"${field.value}"` : String(field.value)}
                         </span>
                     </>
                 )}
             </div>
             {Array.isArray(field.value) && (
-                <div className="border-l border-border/50 ml-2">
+                <div style={{ borderLeft: "1px solid hsl(var(--border-faint))", marginLeft: 8 }}>
                     {renderFields(field.value, depth + 1)}
                 </div>
             )}
@@ -178,123 +184,124 @@ function renderFields(fields: DecodedField[], depth = 0): React.ReactNode {
 
 const SAMPLE_HEX = "08 96 01 12 0b 48 65 6c 6c 6f 20 57 6f 72 6c 64 18 01 22 0a 0a 04 4a 6f 68 6e 10 1e"
 
+type Format = "hex" | "base64";
+
 export default function ProtobufDecoder() {
     const [input, setInput] = useState("")
-    const [format, setFormat] = useState<"hex" | "base64">("hex")
-    const [decoded, setDecoded] = useState<DecodedField[] | null>(null)
-    const [error, setError] = useState("")
-    const { toast } = useToast()
+    const [format, setFormat] = useState<Format>("hex")
+    const setStatus = useEditorStatus((s) => s.setStatus);
     const shareState = useMemo(() => ({ input, format }), [input, format])
-    const { getShareUrl } = useUrlState(shareState, (state) => {
+    useUrlState(shareState, (state) => {
         setInput(typeof state.input === "string" ? state.input : "")
         setFormat(state.format === "base64" ? "base64" : "hex")
     })
     const { addEntry } = useToolHistory("protobuf-decoder", "Protobuf Decoder")
 
-    const decode = useCallback(() => {
-        if (!input.trim()) {
-            setDecoded(null)
-            setError("")
-            return
-        }
+    const result = useMemo(() => {
+        if (!input.trim()) return { decoded: null as DecodedField[] | null, error: "", valid: null as boolean | null }
         try {
             const bytes = format === "hex" ? hexToBytes(input) : base64ToBytes(input)
             const fields = decodeProtobuf(bytes)
             if (fields.length === 0) throw new Error("No fields decoded - input may not be valid protobuf")
-            setDecoded(fields)
-            setError("")
-            addEntry({ input: JSON.stringify({ format, input }), output: JSON.stringify(fieldsToJson(fields), null, 2), metadata: { action: "decode" } })
+            return { decoded: fields, error: "", valid: true as boolean | null }
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Decode failed")
-            setDecoded(null)
-            addEntry({ input: JSON.stringify({ format, input }), output: "error", metadata: { action: "decode" } })
+            return {
+                decoded: null,
+                error: err instanceof Error ? err.message : "Decode failed",
+                valid: false as boolean | null,
+            }
         }
-    }, [input, format, addEntry])
+    }, [input, format])
 
-    const copyJson = useCallback(() => {
-        if (!decoded) return
-        const json = fieldsToJson(decoded)
-        navigator.clipboard.writeText(JSON.stringify(json, null, 2))
-        toast({ title: "JSON copied" })
-    }, [decoded, toast])
+    useEffect(() => {
+        setStatus({
+            valid: result.valid,
+            validityLabel: result.valid === null ? "" : result.valid ? "Decoded" : "Invalid protobuf",
+        });
+    }, [result.valid, setStatus]);
+
+    useEffect(() => {
+        if (result.valid !== true || !result.decoded) return;
+        const fields = result.decoded;
+        const t = setTimeout(
+            () =>
+                addEntry({
+                    input: JSON.stringify({ format, input }),
+                    output: JSON.stringify(fieldsToJson(fields), null, 2),
+                    metadata: { action: "decode" },
+                }),
+            1500
+        );
+        return () => clearTimeout(t);
+    }, [input, format, result.valid]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const copyText = result.decoded ? JSON.stringify(fieldsToJson(result.decoded), null, 2) : ""
 
     return (
-        <ToolCard
-            title="Protobuf Decoder"
-            description="Decode raw Protocol Buffer binary data into readable fields"
-            icon={<Binary className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "protobuf-decoder",
-                toolName: "Protobuf Decoder",
-                onRestore: (entry) => {
-                    try {
-                        const parsed = JSON.parse(entry.input || "{}") as { input?: string; format?: string }
-                        setInput(parsed.input || "")
-                        setFormat(parsed.format === "base64" ? "base64" : "hex")
-                    } catch {
-                        setInput(entry.input || "")
+        <EditorSplit>
+            <Panel>
+                <PanelHeader
+                    title={`Raw protobuf (${format})`}
+                    action={
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <Tabs
+                                variant="segment"
+                                value={format}
+                                onChange={(v) => setFormat(v as Format)}
+                                items={[
+                                    { value: "hex", label: "Hex" },
+                                    { value: "base64", label: "Base64" },
+                                ]}
+                            />
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    setInput(SAMPLE_HEX)
+                                    setFormat("hex")
+                                }}
+                            >
+                                Load sample
+                            </Button>
+                        </div>
                     }
-                },
-            }}
-        >
-            <div className="space-y-4">
-                <div className="flex gap-2 items-center">
-                    <label className="text-sm font-medium">Input Format:</label>
-                    <select
-                        value={format}
-                        onChange={(e) => setFormat(e.target.value as "hex" | "base64")}
-                        className="rounded border bg-background px-2 py-1 text-sm"
-                    >
-                        <option value="hex">Hex</option>
-                        <option value="base64">Base64</option>
-                    </select>
-                    <Button variant="outline" size="sm" onClick={() => { setInput(SAMPLE_HEX); setFormat("hex") }}>
-                        Load Sample
-                    </Button>
+                />
+                <CodeEditor
+                    value={input}
+                    onChange={setInput}
+                    reportStatus
+                    placeholder={format === "hex" ? "08 96 01 12 0b 48 65 6c 6c 6f…" : "CJYBEgtIZWxsbyBXb3JsZBgB…"}
+                />
+            </Panel>
+            <Panel>
+                <PanelHeader
+                    title="Decoded fields"
+                    badge={<ValidityBadge valid={result.valid} validLabel="decoded" invalidLabel="invalid" />}
+                    action={<CopyAction text={copyText} />}
+                />
+                <div style={{ flex: 1, overflow: "auto", padding: "8px 12px" }}>
+                    {result.error && (
+                        <p style={{ margin: 0, ...mono, color: "hsl(var(--danger))" }}>{result.error}</p>
+                    )}
+                    {result.decoded && renderFields(result.decoded)}
+                    {!result.decoded && !result.error && (
+                        <p style={{ margin: 0, padding: "24px 0", textAlign: "center", fontSize: "var(--text-sm)", color: "hsl(var(--text-faint))" }}>
+                            Paste protobuf data to decode
+                        </p>
+                    )}
                 </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Input */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Raw Protobuf ({format})</label>
-                        <Textarea
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            placeholder={format === "hex" ? "08 96 01 12 0b 48 65 6c 6c 6f..." : "CJYBEgtIZWxsbyBXb3JsZBgB..."}
-                            className="font-mono text-sm min-h-[300px]"
-                        />
-                        <Button onClick={decode} className="w-full">
-                            <FileCode className="h-4 w-4 mr-1" /> Decode
-                        </Button>
-                    </div>
-
-                    {/* Output */}
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <label className="text-sm font-medium">Decoded Fields</label>
-                            {decoded && (
-                                <Button variant="outline" size="sm" onClick={copyJson}>
-                                    <Copy className="h-4 w-4 mr-1" /> Copy JSON
-                                </Button>
-                            )}
-                        </div>
-                        <div className="min-h-[300px] border rounded-md p-3 bg-muted/30 overflow-auto">
-                            {error && <p className="text-sm text-destructive">{error}</p>}
-                            {decoded && renderFields(decoded)}
-                            {!decoded && !error && (
-                                <p className="text-sm text-muted-foreground text-center py-8">
-                                    Paste protobuf data and click Decode
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <p className="text-xs text-muted-foreground">
+                <div
+                    style={{
+                        padding: "8px 12px",
+                        borderTop: "1px solid hsl(var(--border-faint))",
+                        fontSize: "var(--text-xs)",
+                        color: "hsl(var(--text-faint))",
+                        flexShrink: 0,
+                    }}
+                >
                     Schema-less decoding: field numbers and wire types are shown. For full type information, use a .proto schema file.
-                </p>
-            </div>
-        </ToolCard>
+                </div>
+            </Panel>
+        </EditorSplit>
     )
 }

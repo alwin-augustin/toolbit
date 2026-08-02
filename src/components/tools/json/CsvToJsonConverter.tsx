@@ -1,38 +1,92 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Papa, { ParseResult } from 'papaparse';
-import { Button } from '@/components/ui/button';
-import { Copy, FileJson } from 'lucide-react';
-import Editor from 'react-simple-code-editor';
-import Prism from 'prismjs';
-import { FileDropZone } from '@/components/FileDropZone';
-import { ToolCard } from '@/components/ToolCard';
-import { ToolEmptyState } from "@/components/ToolEmptyState";
+import { Upload } from 'lucide-react';
+import { Button } from '@/ds/components';
+import { CodeEditor } from '@/v2/CodeEditor';
+import { Panel, PanelHeader, CopyAction, ValidityBadge, EditorSplit } from '@/v2/EditorPanels';
+import { useEditorStatus } from '@/v2/workspace-store';
 import { useUrlState } from '@/hooks/use-url-state';
 import { useToolHistory } from '@/hooks/use-tool-history';
 import { useWorkspace } from '@/hooks/use-workspace';
 
-
+/** Self-contained drop target: reads a dropped file as text. */
+function DropPanel({ onText, children }: { onText: (text: string) => void; children: React.ReactNode }) {
+  const [dragging, setDragging] = useState(false);
+  const counter = useRef(0);
+  return (
+    <div
+      style={{ position: 'relative', display: 'grid', minHeight: 0 }}
+      onDragEnter={(e) => {
+        e.preventDefault();
+        counter.current++;
+        setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        e.preventDefault();
+        counter.current--;
+        if (counter.current === 0) setDragging(false);
+      }}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        counter.current = 0;
+        setDragging(false);
+        const file = e.dataTransfer.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (typeof ev.target?.result === 'string') onText(ev.target.result);
+        };
+        reader.readAsText(file);
+      }}
+    >
+      {children}
+      {dragging && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            borderRadius: 'var(--radius-lg)',
+            border: '2px dashed hsl(var(--primary))',
+            background: 'hsl(var(--primary) / 0.08)',
+            color: 'hsl(var(--primary))',
+            pointerEvents: 'none',
+          }}
+        >
+          <Upload size={28} />
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>Drop file here</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const CsvToJsonConverter: React.FC = () => {
   const [csv, setCsv] = useState('');
   const [json, setJson] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [jsonReady, setJsonReady] = useState(false);
+  const [parseErrors, setParseErrors] = useState<number | null>(null);
   const shareState = useMemo(() => ({ csv }), [csv]);
-  const { getShareUrl } = useUrlState(shareState, (state) => {
+  useUrlState(shareState, (state) => {
     setCsv(typeof state.csv === 'string' ? state.csv : '');
   });
   const { addEntry } = useToolHistory('csv-to-json', 'CSV to JSON');
   const consumeWorkspaceState = useWorkspace((state) => state.consumeState);
+  const setStatus = useEditorStatus((s) => s.setStatus);
 
   useEffect(() => {
     if (csv) return;
     // Check for smart-paste data from AppHome
-    const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+    const smartPaste = sessionStorage.getItem('toolbit:smart-paste');
     if (smartPaste) {
-        sessionStorage.removeItem("toolbit:smart-paste");
-        setCsv(smartPaste.trim());
-        return;
+      sessionStorage.removeItem('toolbit:smart-paste');
+      setCsv(smartPaste.trim());
+      return;
     }
     const workspaceState = consumeWorkspaceState('csv-to-json');
     if (workspaceState) {
@@ -46,125 +100,65 @@ const CsvToJsonConverter: React.FC = () => {
     }
   }, [csv, consumeWorkspaceState]);
 
-  useEffect(() => {
-    let active = true;
-    import('prismjs/components/prism-json')
-      .then(() => {
-        if (active) setJsonReady(true);
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, []);
-
   const handleConvert = () => {
     Papa.parse(csv, {
       header: true,
       complete: (result: ParseResult<Record<string, string>[]>) => {
         const output = JSON.stringify(result.data, null, 2);
         setJson(output);
+        setParseErrors(result.errors.length);
         addEntry({ input: csv, output, metadata: { action: 'convert' } });
       },
     });
   };
 
-  const handleCopy = async () => {
-    if (json) {
-      await navigator.clipboard.writeText(json);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
+  const valid = parseErrors === null ? null : parseErrors === 0;
 
-  const editorClassName = "flex-grow min-h-[20rem] font-mono text-sm rounded-md border border-input bg-background px-3 py-2 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm";
+  useEffect(() => {
+    setStatus({
+      valid,
+      validityLabel: valid === null ? '' : valid ? 'Converted' : `${parseErrors} parse warning${parseErrors === 1 ? '' : 's'}`,
+    });
+  }, [valid, parseErrors, setStatus]);
 
   return (
-    <ToolCard
-      title="CSV to JSON Converter"
-      description="Convert CSV data into JSON format"
-      icon={<FileJson className="h-5 w-5" />}
-      shareUrl={getShareUrl()}
-      history={{
-        toolId: 'csv-to-json',
-        toolName: 'CSV to JSON',
-        onRestore: (entry) => {
-          setCsv(entry.input || '');
-          setJson(entry.output || '');
-        },
-      }}
-      pipeSource={{
-        toolId: 'csv-to-json',
-        output: json || '',
-      }}
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <FileDropZone onFileContent={setCsv} accept={[".csv", ".tsv", ".txt", "text/csv"]}>
-        <div className="flex flex-col h-full">
-          <label className="text-sm font-medium mb-2">CSV</label>
-          <Editor
+    <EditorSplit>
+      <DropPanel onText={setCsv}>
+        <Panel>
+          <PanelHeader
+            title="CSV"
+            action={
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCsv('name,role,active\nAlice,Engineer,true\nBob,Designer,false')}
+                >
+                  Load sample
+                </Button>
+                <Button size="sm" onClick={handleConvert}>
+                  Convert
+                </Button>
+              </div>
+            }
+          />
+          <CodeEditor
             value={csv}
-            onValueChange={setCsv}
-            highlight={(code) => code}
-            padding={10}
-            placeholder="Enter CSV data"
-            className={editorClassName}
+            onChange={setCsv}
+            reportStatus
+            placeholder="Paste CSV data or drop a file — the first row is used as column headers."
           />
-          {!csv.trim() && (
-            <ToolEmptyState
-              title="Paste CSV or drop a file"
-              description="Convert tabular data into structured JSON arrays."
-              actions={
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCsv("name,role,active\\nAlice,Engineer,true\\nBob,Designer,false")}
-                  >
-                    Load sample CSV
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
-                  >
-                    Browse snippets
-                  </Button>
-                </>
-              }
-              hint="Tip: The first row is used as column headers."
-            />
-          )}
-        </div>
-        </FileDropZone>
-        <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium">JSON</label>
-            <Button
-              onClick={handleCopy}
-              variant="outline"
-              size="sm"
-              disabled={!json}
-            >
-              <Copy className="h-4 w-4 mr-2" />
-              {copied ? 'Copied!' : 'Copy'}
-            </Button>
-          </div>
-          <Editor
-            value={json}
-            onValueChange={() => {}}
-            readOnly
-            highlight={(code) => (jsonReady && Prism.languages.json ? Prism.highlight(code, Prism.languages.json, 'json') : code)}
-            padding={10}
-            placeholder="JSON output"
-            className={editorClassName}
-          />
-        </div>
-        <div className="col-span-1 lg:col-span-2">
-          <Button onClick={handleConvert}>Convert</Button>
-        </div>
-      </div>
-    </ToolCard>
+        </Panel>
+      </DropPanel>
+      <Panel>
+        <PanelHeader
+          title="JSON"
+          badge={<ValidityBadge valid={valid} validLabel="converted" invalidLabel="parse warnings" />}
+          action={<CopyAction text={json} />}
+        />
+        <CodeEditor value={json} language="json" readOnly placeholder="JSON output" />
+      </Panel>
+    </EditorSplit>
   );
 };
 

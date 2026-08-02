@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import UrlEncoder from '@/components/tools/UrlEncoder'
+import UrlEncoder from '@/components/tools/encoding/UrlEncoder'
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({

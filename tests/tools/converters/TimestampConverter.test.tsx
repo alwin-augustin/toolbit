@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import TimestampConverter from '@/components/tools/TimestampConverter'
+import TimestampConverter from '@/components/tools/converters/TimestampConverter'
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { ToolCard } from "@/components/ToolCard"
-import { useToast } from "@/hooks/use-toast"
+import { Trash2, Sparkles } from "lucide-react"
+import { Button } from "@/ds/components"
+import { CodeEditor } from "@/v2/CodeEditor"
+import { Panel, PanelHeader, CopyAction, EditorSplit } from "@/v2/EditorPanels"
+import { useEditorStatus } from "@/v2/workspace-store"
 import { useUrlState } from "@/hooks/use-url-state"
-import { Copy, Database, Trash2, Sparkles } from "lucide-react"
 import { useToolHistory } from "@/hooks/use-tool-history"
 import { useToolPipe } from "@/hooks/use-tool-pipe"
 import { useWorkspace } from "@/hooks/use-workspace"
@@ -100,11 +100,11 @@ function uppercaseKeywords(sql: string): string {
 export default function SqlFormatter() {
     const [input, setInput] = useState("")
     const [output, setOutput] = useState("")
-    const { toast } = useToast()
-    const { getShareUrl } = useUrlState(input, setInput)
+    useUrlState(input, setInput)
     const { addEntry } = useToolHistory("sql-formatter", "SQL Formatter")
     const { consumePipeData } = useToolPipe()
     const consumeWorkspaceState = useWorkspace((state) => state.consumeState)
+    const setStatus = useEditorStatus((s) => s.setStatus)
 
     useEffect(() => {
         if (input) return
@@ -132,6 +132,11 @@ export default function SqlFormatter() {
         }
     }, [consumePipeData, input, setInput, setOutput, consumeWorkspaceState])
 
+    // SQL formatting has no validation step; keep the status bar neutral.
+    useEffect(() => {
+        setStatus({ valid: null, validityLabel: "" })
+    }, [setStatus])
+
     const loadSample = () => {
         setInput("SELECT u.id, u.name, u.email, o.total FROM users u INNER JOIN orders o ON u.id = o.user_id WHERE u.active = 1 AND o.total > 100 ORDER BY o.total DESC LIMIT 10;")
         setOutput("")
@@ -155,71 +160,63 @@ export default function SqlFormatter() {
         addEntry({ input, output: result, metadata: { action: "uppercase" } })
     }
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(output)
-        toast({ description: "Copied to clipboard!" })
-    }
-
     return (
-        <ToolCard
-            title="SQL Formatter"
-            description="Format, minify, and uppercase SQL queries"
-            icon={<Database className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "sql-formatter",
-                toolName: "SQL Formatter",
-                onRestore: (entry) => {
-                    setInput(entry.input || "")
-                    setOutput(entry.output || "")
-                },
-            }}
-            pipeSource={{
-                toolId: "sql-formatter",
-                output: output || "",
-            }}
-        >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <label htmlFor="sql-input" className="text-sm font-medium">
-                        Input SQL
-                    </label>
-                    <Textarea
-                        id="sql-input"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="SELECT * FROM users WHERE id = 1;"
-                        className="min-h-[300px] font-mono text-sm"
-                    />
-                    <div className="flex gap-2 flex-wrap">
-                        <Button onClick={handleFormat}>Format</Button>
-                        <Button variant="outline" onClick={loadSample}>
-                            <Sparkles className="h-4 w-4 mr-1" />
-                            Sample
+        <EditorSplit>
+            <Panel>
+                <PanelHeader
+                    title="Input SQL"
+                    action={
+                        <Button variant="ghost" size="sm" iconLeft={<Sparkles size={14} />} onClick={loadSample}>
+                            Load sample
                         </Button>
-                        <Button onClick={handleMinify} variant="outline">Minify</Button>
-                        <Button onClick={handleUppercase} variant="outline">Uppercase Keywords</Button>
-                        <Button variant="outline" onClick={() => { setInput(""); setOutput("") }}>
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Clear
-                        </Button>
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Output</label>
-                    <Textarea
-                        value={output}
-                        readOnly
-                        placeholder="Formatted SQL will appear here..."
-                        className="min-h-[300px] font-mono text-sm"
-                    />
-                    <Button variant="outline" onClick={copyToClipboard} disabled={!output}>
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy
+                    }
+                />
+                <div
+                    style={{
+                        display: "flex",
+                        gap: 6,
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        padding: "8px 10px",
+                        flexShrink: 0,
+                        borderBottom: "1px solid hsl(var(--border-faint))",
+                    }}
+                >
+                    <Button size="sm" onClick={handleFormat}>
+                        Format
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={handleMinify}>
+                        Minify
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={handleUppercase}>
+                        Uppercase keywords
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        iconLeft={<Trash2 size={14} />}
+                        onClick={() => { setInput(""); setOutput("") }}
+                    >
+                        Clear
                     </Button>
                 </div>
-            </div>
-        </ToolCard>
+                <CodeEditor
+                    value={input}
+                    onChange={setInput}
+                    language="text"
+                    reportStatus
+                    placeholder="SELECT * FROM users WHERE id = 1;"
+                />
+            </Panel>
+            <Panel>
+                <PanelHeader title="Output" action={<CopyAction text={output} />} />
+                <CodeEditor
+                    value={output}
+                    language="text"
+                    readOnly
+                    placeholder="Formatted SQL will appear here..."
+                />
+            </Panel>
+        </EditorSplit>
     )
 }

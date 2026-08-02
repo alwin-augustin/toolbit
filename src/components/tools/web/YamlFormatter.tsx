@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Copy, FileText, ArrowLeftRight, Loader2 } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { ArrowLeftRight, Loader2 } from "lucide-react"
 import * as yaml from "js-yaml"
-import { ToolCard } from "@/components/ToolCard"
+import { Button } from "@/ds/components"
+import { CodeEditor } from "@/v2/CodeEditor"
+import { Panel, PanelHeader, CopyAction, ValidityBadge, EditorSplit } from "@/v2/EditorPanels"
+import { useEditorStatus } from "@/v2/workspace-store"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 import { useToolPipe } from "@/hooks/use-tool-pipe"
@@ -27,11 +27,11 @@ export default function YamlFormatter() {
     const [output, setOutput] = useState("")
     const [isValid, setIsValid] = useState(true)
     const [isProcessing, setIsProcessing] = useState(false)
-    const { toast } = useToast()
-    const { getShareUrl } = useUrlState(input, setInput)
+    useUrlState(input, setInput)
     const { addEntry } = useToolHistory("yaml-formatter", "YAML Formatter")
     const { consumePipeData } = useToolPipe()
     const consumeWorkspaceState = useWorkspace((state) => state.consumeState)
+    const setStatus = useEditorStatus((s) => s.setStatus)
 
     useEffect(() => {
         if (input) return
@@ -102,83 +102,99 @@ export default function YamlFormatter() {
     const yamlToJson = () => processYaml("yaml-to-json")
     const jsonToYaml = () => processYaml("json-to-yaml")
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(output)
-        toast({ description: "Copied to clipboard!" })
-    }
+    useEffect(() => {
+        setStatus({
+            valid: output ? isValid : null,
+            validityLabel: output ? (isValid ? "Valid YAML" : "Invalid input") : "",
+        })
+    }, [output, isValid, setStatus])
 
     return (
-        <ToolCard
-            title="YAML Formatter & Converter"
-            description="Format YAML and convert between YAML and JSON"
-            icon={<FileText className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "yaml-formatter",
-                toolName: "YAML Formatter",
-                onRestore: (entry) => {
-                    setInput(entry.input || "")
-                    setOutput(entry.output || "")
-                },
-            }}
-            pipeSource={{
-                toolId: "yaml-formatter",
-                output: output || "",
-            }}
-        >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-2 flex flex-col h-full">
-                    <label htmlFor="yaml-input" className="text-sm font-medium">
-                        Input (YAML or JSON)
-                    </label>
-                    <Textarea
-                        id="yaml-input"
-                        placeholder="key: value"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        className="flex-grow font-mono text-sm"
-                        data-testid="input-yaml"
-                    />
-                    <div className="flex gap-2 flex-wrap items-center">
-                        <Button onClick={formatYaml} disabled={isProcessing} data-testid="button-format-yaml">
-                            {isProcessing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
-                            Format YAML
-                        </Button>
-                        <Button onClick={yamlToJson} variant="outline" disabled={isProcessing} data-testid="button-yaml-to-json">
-                            <ArrowLeftRight className="h-4 w-4 mr-2" />
-                            YAML → JSON
-                        </Button>
-                        <Button onClick={jsonToYaml} variant="outline" disabled={isProcessing} data-testid="button-json-to-yaml">
-                            <ArrowLeftRight className="h-4 w-4 mr-2" />
-                            JSON → YAML
-                        </Button>
-                        {input.length > WORKER_THRESHOLD && <span className="text-xs text-muted-foreground">Large input — using background thread</span>}
-                    </div>
-                </div>
-
-                <div className="space-y-2 flex flex-col h-full">
-                    <label htmlFor="yaml-output" className="text-sm font-medium">
-                        Output
-                    </label>
-                    <Textarea
-                        id="yaml-output"
-                        placeholder="Formatted output will appear here..."
-                        value={output}
-                        readOnly
-                        className={`flex-grow font-mono text-sm ${isValid ? '' : 'text-destructive'}`}
-                        data-testid="output-yaml"
-                    />
+        <EditorSplit>
+            <Panel>
+                <PanelHeader title="Input (YAML or JSON)" />
+                <div
+                    style={{
+                        display: "flex",
+                        gap: 6,
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        padding: "8px 10px",
+                        flexShrink: 0,
+                        borderBottom: "1px solid hsl(var(--border-faint))",
+                    }}
+                >
                     <Button
-                        onClick={copyToClipboard}
-                        disabled={!output}
-                        variant="outline"
-                        data-testid="button-copy"
+                        size="sm"
+                        onClick={formatYaml}
+                        disabled={isProcessing}
+                        iconLeft={isProcessing ? <Loader2 size={14} /> : undefined}
+                        data-testid="button-format-yaml"
                     >
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy
+                        Format YAML
                     </Button>
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={yamlToJson}
+                        disabled={isProcessing}
+                        iconLeft={<ArrowLeftRight size={14} />}
+                        data-testid="button-yaml-to-json"
+                    >
+                        YAML to JSON
+                    </Button>
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={jsonToYaml}
+                        disabled={isProcessing}
+                        iconLeft={<ArrowLeftRight size={14} />}
+                        data-testid="button-json-to-yaml"
+                    >
+                        JSON to YAML
+                    </Button>
+                    {input.length > WORKER_THRESHOLD && (
+                        <span style={{ fontSize: "var(--text-xs)", color: "hsl(var(--text-muted))" }}>
+                            Large input — using background thread
+                        </span>
+                    )}
                 </div>
-            </div>
-        </ToolCard>
+                <CodeEditor
+                    value={input}
+                    onChange={setInput}
+                    language="text"
+                    reportStatus
+                    placeholder="key: value"
+                />
+            </Panel>
+            <Panel>
+                <PanelHeader
+                    title="Output"
+                    badge={output ? <ValidityBadge valid={isValid} validLabel="valid" invalidLabel="error" /> : undefined}
+                    action={<CopyAction text={isValid ? output : ""} />}
+                />
+                {output && !isValid ? (
+                    <div
+                        style={{
+                            padding: "10px 12px",
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "var(--text-sm)",
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                            color: "hsl(var(--danger))",
+                        }}
+                    >
+                        {output}
+                    </div>
+                ) : (
+                    <CodeEditor
+                        value={output}
+                        language="text"
+                        readOnly
+                        placeholder="Formatted output will appear here..."
+                    />
+                )}
+            </Panel>
+        </EditorSplit>
     )
 }

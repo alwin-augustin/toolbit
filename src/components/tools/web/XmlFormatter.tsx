@@ -1,10 +1,9 @@
 import { useState, useCallback, useMemo, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { ToolCard } from "@/components/ToolCard"
-import { useToast } from "@/hooks/use-toast"
-import { Copy, FileCode, Minimize2, ArrowRightLeft, Search } from "lucide-react"
+import { FileCode, Minimize2, ArrowRightLeft, Search, Sparkles, ShieldCheck } from "lucide-react"
+import { Button, Input, Tabs } from "@/ds/components"
+import { CodeEditor } from "@/v2/CodeEditor"
+import { Panel, PanelHeader, CopyAction, ValidityBadge, EditorSplit } from "@/v2/EditorPanels"
+import { useEditorStatus } from "@/v2/workspace-store"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 import { useToolPipe } from "@/hooks/use-tool-pipe"
@@ -183,12 +182,12 @@ export default function XmlFormatter() {
     const [activeTab, setActiveTab] = useState<"format" | "convert" | "xpath">("format")
     const [xpathQuery, setXpathQuery] = useState("")
     const [xpathResults, setXpathResults] = useState<string[]>([])
-    const { toast } = useToast()
+    const [validNotice, setValidNotice] = useState(false)
     const shareState = useMemo(
         () => ({ input, activeTab, xpathQuery }),
         [input, activeTab, xpathQuery],
     )
-    const { getShareUrl } = useUrlState(shareState, (state) => {
+    useUrlState(shareState, (state) => {
         setInput(typeof state.input === "string" ? state.input : "")
         setActiveTab(state.activeTab === "convert" || state.activeTab === "xpath" ? state.activeTab : "format")
         setXpathQuery(typeof state.xpathQuery === "string" ? state.xpathQuery : "")
@@ -196,6 +195,7 @@ export default function XmlFormatter() {
     const { addEntry } = useToolHistory("xml-formatter", "XML Formatter")
     const { consumePipeData } = useToolPipe()
     const consumeWorkspaceState = useWorkspace((state) => state.consumeState)
+    const setStatus = useEditorStatus((s) => s.setStatus)
 
     useEffect(() => {
         if (input) return
@@ -222,6 +222,19 @@ export default function XmlFormatter() {
             setInput(payload.data)
         }
     }, [consumePipeData, input, setInput, setOutput, consumeWorkspaceState])
+
+    // Live validity for the status bar.
+    const liveValid = useMemo(() => {
+        if (!input.trim()) return null
+        return validateXml(input).valid
+    }, [input])
+
+    useEffect(() => {
+        setStatus({
+            valid: liveValid,
+            validityLabel: liveValid === null ? "" : liveValid ? "Valid XML" : "Invalid XML",
+        })
+    }, [liveValid, setStatus])
 
     const handlePrettify = useCallback(() => {
         if (!input.trim()) return
@@ -285,159 +298,174 @@ export default function XmlFormatter() {
         const validation = validateXml(input)
         if (validation.valid) {
             setError("")
-            toast({ description: "XML is valid" })
+            setValidNotice(true)
         } else {
+            setValidNotice(false)
             setError(validation.error || "Invalid XML")
         }
-    }, [input, toast])
+    }, [input])
 
-    const copyOutput = () => {
-        const text = activeTab === "xpath" ? xpathResults.join("\n") : output
-        navigator.clipboard.writeText(text)
-        toast({ description: "Copied!" })
-    }
+    const handleInputChange = useCallback((value: string) => {
+        setInput(value)
+        setValidNotice(false)
+    }, [])
 
     const loadSample = () => {
         setInput(SAMPLE_XML)
         setError("")
         setOutput("")
         setXpathResults([])
+        setValidNotice(false)
     }
 
+    const copyText = activeTab === "xpath" ? xpathResults.join("\n") : output
+    const hasResults = activeTab === "xpath" ? xpathResults.length > 0 : Boolean(output)
+
     return (
-        <ToolCard
-            title="XML Formatter"
-            description="Format, minify, convert, and query XML data"
-            icon={<FileCode className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "xml-formatter",
-                toolName: "XML Formatter",
-                onRestore: (entry) => {
-                    setInput(entry.input || "")
-                    setOutput(entry.output || "")
-                },
-            }}
-            pipeSource={{
-                toolId: "xml-formatter",
-                output: output || "",
-            }}
-        >
-            <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex gap-1 border rounded-md p-0.5">
-                    {(["format", "convert", "xpath"] as const).map(tab => (
-                        <button
-                            key={tab}
-                            className={`px-3 py-1.5 text-sm font-medium rounded capitalize transition-colors ${
-                                activeTab === tab
-                                    ? "bg-primary text-primary-foreground"
-                                    : "text-muted-foreground hover:text-foreground"
-                            }`}
-                            onClick={() => { setActiveTab(tab); setError(""); setOutput(""); setXpathResults([]) }}
-                        >
-                            {tab === "xpath" ? "XPath" : tab}
-                        </button>
-                    ))}
-                </div>
-                <Button variant="outline" size="sm" onClick={loadSample}>
-                    Sample
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleValidate}>
-                    Validate
-                </Button>
-            </div>
-
-            <div>
-                <label className="text-sm font-medium mb-1.5 block">Input XML</label>
-                <Textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Paste your XML here..."
-                    className="min-h-[200px] font-mono text-sm"
+        <EditorSplit>
+            <Panel>
+                <PanelHeader
+                    title="Input XML"
+                    action={
+                        <div style={{ display: "flex", gap: 6 }}>
+                            <Button variant="secondary" size="sm" iconLeft={<ShieldCheck size={14} />} onClick={handleValidate}>
+                                Validate
+                            </Button>
+                            <Button variant="ghost" size="sm" iconLeft={<Sparkles size={14} />} onClick={loadSample}>
+                                Load sample
+                            </Button>
+                        </div>
+                    }
                 />
-            </div>
-
-            {activeTab === "format" && (
-                <div className="flex gap-2">
-                    <Button onClick={handlePrettify}>
-                        <FileCode className="h-4 w-4 mr-1" />
-                        Prettify
-                    </Button>
-                    <Button variant="outline" onClick={handleMinify}>
-                        <Minimize2 className="h-4 w-4 mr-1" />
-                        Minify
-                    </Button>
-                </div>
-            )}
-
-            {activeTab === "convert" && (
-                <div className="flex gap-2">
-                    <Button onClick={handleToJson}>
-                        <ArrowRightLeft className="h-4 w-4 mr-1" />
-                        XML to JSON
-                    </Button>
-                </div>
-            )}
-
-            {activeTab === "xpath" && (
-                <div className="flex gap-2">
-                    <Input
-                        value={xpathQuery}
-                        onChange={(e) => setXpathQuery(e.target.value)}
-                        placeholder="e.g. //book[@category='fiction']/title"
-                        className="flex-1 font-mono text-sm"
-                        onKeyDown={(e) => e.key === "Enter" && handleXPath()}
+                <div
+                    style={{
+                        display: "flex",
+                        gap: 8,
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        padding: "8px 10px",
+                        flexShrink: 0,
+                        borderBottom: "1px solid hsl(var(--border-faint))",
+                    }}
+                >
+                    <Tabs
+                        variant="segment"
+                        items={[
+                            { value: "format", label: "Format" },
+                            { value: "convert", label: "Convert" },
+                            { value: "xpath", label: "XPath" },
+                        ]}
+                        value={activeTab}
+                        onChange={(value) => {
+                            setActiveTab(value as "format" | "convert" | "xpath")
+                            setError("")
+                            setOutput("")
+                            setXpathResults([])
+                        }}
                     />
-                    <Button onClick={handleXPath}>
-                        <Search className="h-4 w-4 mr-1" />
-                        Query
-                    </Button>
-                </div>
-            )}
-
-            {error && (
-                <div className="text-sm text-red-500 bg-red-50 dark:bg-red-950/30 p-3 rounded-md font-mono whitespace-pre-wrap">
-                    {error}
-                </div>
-            )}
-
-            {activeTab !== "xpath" && output && (
-                <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-sm font-medium">Output</label>
-                        <Button variant="outline" size="sm" onClick={copyOutput}>
-                            <Copy className="h-3 w-3 mr-1" />
-                            Copy
+                    {activeTab === "format" && (
+                        <>
+                            <Button size="sm" iconLeft={<FileCode size={14} />} onClick={handlePrettify}>
+                                Prettify
+                            </Button>
+                            <Button variant="secondary" size="sm" iconLeft={<Minimize2 size={14} />} onClick={handleMinify}>
+                                Minify
+                            </Button>
+                        </>
+                    )}
+                    {activeTab === "convert" && (
+                        <Button size="sm" iconLeft={<ArrowRightLeft size={14} />} onClick={handleToJson}>
+                            XML to JSON
                         </Button>
+                    )}
+                    {activeTab === "xpath" && (
+                        <>
+                            <Input
+                                mono
+                                value={xpathQuery}
+                                onChange={(e) => setXpathQuery(e.target.value)}
+                                placeholder="e.g. //book[@category='fiction']/title"
+                                onKeyDown={(e) => e.key === "Enter" && handleXPath()}
+                                style={{ flex: 1, minWidth: 180 }}
+                            />
+                            <Button size="sm" iconLeft={<Search size={14} />} onClick={handleXPath}>
+                                Query
+                            </Button>
+                        </>
+                    )}
+                    {validNotice && (
+                        <span style={{ fontSize: "var(--text-xs)", color: "hsl(var(--success))" }}>
+                            XML is valid
+                        </span>
+                    )}
+                </div>
+                <CodeEditor
+                    value={input}
+                    onChange={handleInputChange}
+                    language="text"
+                    reportStatus
+                    placeholder="Paste your XML here..."
+                />
+            </Panel>
+            <Panel>
+                <PanelHeader
+                    title={
+                        activeTab === "xpath"
+                            ? `Results${xpathResults.length > 0 ? ` (${xpathResults.length} match${xpathResults.length !== 1 ? "es" : ""})` : ""}`
+                            : "Output"
+                    }
+                    badge={error ? <ValidityBadge valid={false} invalidLabel="error" /> : undefined}
+                    action={<CopyAction text={copyText} />}
+                />
+                {error ? (
+                    <div
+                        style={{
+                            padding: "10px 12px",
+                            fontFamily: "var(--font-mono)",
+                            fontSize: "var(--text-sm)",
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                            color: "hsl(var(--danger))",
+                        }}
+                    >
+                        {error}
                     </div>
-                    <Textarea
+                ) : activeTab === "xpath" ? (
+                    hasResults ? (
+                        <div style={{ flex: 1, minHeight: 0, overflow: "auto", padding: 10, display: "grid", gap: 6, alignContent: "start" }}>
+                            {xpathResults.map((result, i) => (
+                                <div
+                                    key={i}
+                                    style={{
+                                        padding: "8px 10px",
+                                        borderRadius: "var(--radius-md)",
+                                        border: "1px solid hsl(var(--border-faint))",
+                                        background: "hsl(var(--surface-1))",
+                                        fontFamily: "var(--font-mono)",
+                                        fontSize: "var(--text-sm)",
+                                        whiteSpace: "pre-wrap",
+                                        wordBreak: "break-all",
+                                        color: "hsl(var(--text-body))",
+                                    }}
+                                >
+                                    {result}
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div style={{ padding: "10px 12px", fontSize: "var(--text-sm)", color: "hsl(var(--text-faint))" }}>
+                            XPath matches will appear here.
+                        </div>
+                    )
+                ) : (
+                    <CodeEditor
                         value={output}
+                        language={activeTab === "convert" ? "json" : "text"}
                         readOnly
-                        className="min-h-[200px] font-mono text-sm"
+                        placeholder="Output will appear here..."
                     />
-                </div>
-            )}
-
-            {activeTab === "xpath" && xpathResults.length > 0 && (
-                <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-sm font-medium">
-                            Results ({xpathResults.length} match{xpathResults.length !== 1 ? "es" : ""})
-                        </label>
-                        <Button variant="outline" size="sm" onClick={copyOutput}>
-                            <Copy className="h-3 w-3 mr-1" />
-                            Copy
-                        </Button>
-                    </div>
-                    <div className="space-y-1">
-                        {xpathResults.map((result, i) => (
-                            <div key={i} className="p-2 rounded border bg-muted/30 font-mono text-sm whitespace-pre-wrap break-all">
-                                {result}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </ToolCard>
+                )}
+            </Panel>
+        </EditorSplit>
     )
 }

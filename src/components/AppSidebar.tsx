@@ -161,7 +161,7 @@ export function AppSidebar() {
             })
         })
         return map
-    }, [toolGroups])
+    }, [])
 
     const handleLinkClick = () => {
         if (window.innerWidth < 1024) {
@@ -272,7 +272,7 @@ export function AppSidebar() {
                 }),
             }))
             .filter(group => group.items.length > 0)
-    }, [search, toolByPath, toolGroups])
+    }, [search, toolByPath])
 
     const isDesktop = typeof window !== "undefined" ? window.innerWidth >= 1024 : true
 

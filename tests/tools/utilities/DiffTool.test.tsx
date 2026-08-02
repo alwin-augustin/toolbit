@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import DiffTool from '@/components/tools/DiffTool'
+import DiffTool from '@/components/tools/text/DiffTool'
 
 describe('DiffTool', () => {
   it('renders the component with correct title', () => {

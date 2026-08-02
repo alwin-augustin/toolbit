@@ -1,10 +1,18 @@
 import { useState, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Calendar } from "lucide-react"
-import { ToolCard } from "@/components/ToolCard"
+import { Button, Card, Input } from "@/ds/components"
+import { ToolPage, SectionTitle, Field, Row, Grid2 } from "@/v2/restyle-kit"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
+
+const RESULT_LABELS = {
+    years: "Years",
+    months: "Months",
+    weeks: "Weeks",
+    days: "Days",
+    hours: "Hours",
+    minutes: "Minutes",
+    seconds: "Seconds",
+} as const
 
 export default function DateCalculator() {
     const [startDate, setStartDate] = useState("")
@@ -20,7 +28,7 @@ export default function DateCalculator() {
         seconds: 0
     })
     const shareState = useMemo(() => ({ startDate, endDate }), [startDate, endDate])
-    const { getShareUrl } = useUrlState(shareState, (state) => {
+    useUrlState(shareState, (state) => {
         setStartDate(typeof state.startDate === "string" ? state.startDate : "")
         setEndDate(typeof state.endDate === "string" ? state.endDate : "")
     })
@@ -68,101 +76,79 @@ export default function DateCalculator() {
     }
 
     return (
-        <ToolCard
-            title="Date Calculator"
-            description="Calculate the difference between two dates"
-            icon={<Calendar className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "date-calculator",
-                toolName: "Date Calculator",
-                onRestore: (entry) => {
-                    try {
-                        const parsed = JSON.parse(entry.input || "{}") as { startDate?: string; endDate?: string }
-                        setStartDate(parsed.startDate || "")
-                        setEndDate(parsed.endDate || "")
-                    } catch {
-                        setStartDate("")
-                        setEndDate("")
-                    }
-                },
-            }}
-        >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <label htmlFor="start-date" className="text-sm font-medium">
-                            Start Date
-                        </label>
-                        <div className="flex gap-2">
-                            <Input
-                                id="start-date"
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                data-testid="input-start-date"
-                            />
-                            <Button
-                                onClick={() => setToday('start')}
-                                variant="outline"
-                                data-testid="button-start-today"
-                            >
-                                Today
-                            </Button>
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label htmlFor="end-date" className="text-sm font-medium">
-                            End Date
-                        </label>
-                        <div className="flex gap-2">
-                            <Input
-                                id="end-date"
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                data-testid="input-end-date"
-                            />
-                            <Button
-                                onClick={() => setToday('end')}
-                                variant="outline"
-                                data-testid="button-end-today"
-                            >
-                                Today
-                            </Button>
-                        </div>
-                    </div>
+        <ToolPage maxWidth={720}>
+            <Card>
+                <div style={{ display: "grid", gap: 14 }}>
+                    <SectionTitle>Date range</SectionTitle>
+                    <Grid2>
+                        <Field label="Start date">
+                            <Row wrap={false}>
+                                <Input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                />
+                                <Button variant="outline" onClick={() => setToday('start')}>
+                                    Today
+                                </Button>
+                            </Row>
+                        </Field>
+                        <Field label="End date">
+                            <Row wrap={false}>
+                                <Input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                />
+                                <Button variant="outline" onClick={() => setToday('end')}>
+                                    Today
+                                </Button>
+                            </Row>
+                        </Field>
+                    </Grid2>
+                    <Button onClick={calculateDifference} disabled={!startDate || !endDate}>
+                        Calculate difference
+                    </Button>
                 </div>
+            </Card>
 
-                <Button
-                    onClick={calculateDifference}
-                    className="w-full"
-                    disabled={!startDate || !endDate}
-                    data-testid="button-calculate"
-                >
-                    Calculate Difference
-                </Button>
-
-                {hasCalculated && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {Object.entries({
-                            years: "Years",
-                            months: "Months",
-                            weeks: "Weeks",
-                            days: "Days",
-                            hours: "Hours",
-                            minutes: "Minutes",
-                            seconds: "Seconds"
-                        }).map(([key, label]) => (
-                            <div key={key} className="text-center p-4 border rounded-md">
-                                <div className="text-xl font-bold text-primary" data-testid={`result-${key}`}>
-                                    {result[key as keyof typeof result].toLocaleString()}
+            {hasCalculated && (
+                <Card>
+                    <div style={{ display: "grid", gap: 12 }}>
+                        <SectionTitle>Difference</SectionTitle>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+                            {(Object.keys(RESULT_LABELS) as Array<keyof typeof RESULT_LABELS>).map((key) => (
+                                <div
+                                    key={key}
+                                    style={{
+                                        display: "grid",
+                                        gap: 2,
+                                        justifyItems: "center",
+                                        padding: "12px 8px",
+                                        border: "1px solid hsl(var(--border))",
+                                        borderRadius: "var(--radius-md)",
+                                        background: "hsl(var(--surface-1))",
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            fontFamily: "var(--font-mono)",
+                                            fontSize: "var(--text-lg)",
+                                            fontWeight: "var(--weight-semibold)" as React.CSSProperties["fontWeight"],
+                                            color: "hsl(var(--primary))",
+                                        }}
+                                    >
+                                        {result[key].toLocaleString()}
+                                    </span>
+                                    <span style={{ fontSize: "var(--text-xs)", color: "hsl(var(--text-muted))" }}>
+                                        {RESULT_LABELS[key]}
+                                    </span>
                                 </div>
-                                <div className="text-sm text-muted-foreground">{label}</div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                )}
-        </ToolCard>
+                </Card>
+            )}
+        </ToolPage>
     )
 }

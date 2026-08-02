@@ -1,10 +1,9 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { ToolCard } from "@/components/ToolCard"
-import { useToast } from "@/hooks/use-toast"
-import { Copy, Plug, Unplug, Send, Trash2, ArrowDown, ArrowUp } from "lucide-react"
+import type { ReactNode } from "react"
+import { Copy, Check, Plug, Unplug, Send, Trash2, ArrowDown, ArrowUp } from "lucide-react"
+import { Button, IconButton, Input, Textarea, Checkbox, StatusPill } from "@/ds/components"
+import { Panel, PanelHeader, EditorSplit } from "@/v2/EditorPanels"
+import { Row, Stat } from "@/v2/restyle-kit"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 
@@ -15,11 +14,13 @@ interface Message {
     timestamp: Date
 }
 
-const STATUS_COLORS: Record<string, string> = {
-    disconnected: "bg-gray-400",
-    connecting: "bg-yellow-500 animate-pulse",
-    connected: "bg-green-500",
-    error: "bg-red-500",
+type PillTone = "neutral" | "primary" | "success" | "warning" | "danger"
+
+const STATUS_TONES: Record<string, PillTone> = {
+    disconnected: "neutral",
+    connecting: "warning",
+    connected: "success",
+    error: "danger",
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -27,6 +28,30 @@ const STATUS_LABELS: Record<string, string> = {
     connecting: "Connecting...",
     connected: "Connected",
     error: "Error",
+}
+
+const DIRECTION_COLORS: Record<Message["direction"], string> = {
+    sent: "hsl(var(--primary))",
+    received: "hsl(var(--success))",
+    system: "hsl(var(--text-faint))",
+    error: "hsl(var(--danger))",
+}
+
+function MessageCopyButton({ onCopy }: { onCopy: () => void }) {
+    const [copied, setCopied] = useState(false)
+    return (
+        <IconButton
+            size="sm"
+            title="Copy message"
+            onClick={() => {
+                onCopy()
+                setCopied(true)
+                setTimeout(() => setCopied(false), 1500)
+            }}
+        >
+            {copied ? <Check size={12} /> : <Copy size={12} />}
+        </IconButton>
+    )
 }
 
 export default function WebSocketTester() {
@@ -38,9 +63,8 @@ export default function WebSocketTester() {
     const wsRef = useRef<WebSocket | null>(null)
     const msgIdRef = useRef(0)
     const logRef = useRef<HTMLDivElement>(null)
-    const { toast } = useToast()
     const shareState = useMemo(() => ({ url, autoReconnect }), [url, autoReconnect])
-    const { getShareUrl } = useUrlState(shareState, (state) => {
+    useUrlState(shareState, (state) => {
         setUrl(typeof state.url === "string" ? state.url : "wss://echo.websocket.events")
         setAutoReconnect(state.autoReconnect === true)
     })
@@ -113,9 +137,8 @@ export default function WebSocketTester() {
 
     const copyMessage = useCallback((content: string) => {
         navigator.clipboard.writeText(content)
-        toast({ title: "Copied to clipboard" })
         addEntry({ input: url, output: content, metadata: { action: "copy" } })
-    }, [toast, addEntry, url])
+    }, [addEntry, url])
 
     useEffect(() => {
         if (logRef.current) {
@@ -129,135 +152,148 @@ export default function WebSocketTester() {
         }
     }, [])
 
-    const directionColors: Record<string, string> = {
-        sent: "border-l-blue-500 bg-blue-500/5",
-        received: "border-l-green-500 bg-green-500/5",
-        system: "border-l-gray-400 bg-gray-500/5",
-        error: "border-l-red-500 bg-red-500/5",
+    const directionIcons: Record<string, ReactNode> = {
+        sent: <ArrowUp size={12} style={{ color: DIRECTION_COLORS.sent }} />,
+        received: <ArrowDown size={12} style={{ color: DIRECTION_COLORS.received }} />,
     }
 
-    const directionIcons: Record<string, React.ReactNode> = {
-        sent: <ArrowUp className="h-3 w-3 text-blue-500" />,
-        received: <ArrowDown className="h-3 w-3 text-green-500" />,
-    }
+    const isActive = status === "connected" || status === "connecting"
 
     return (
-        <ToolCard
-            title="WebSocket Tester"
-            description="Connect to WebSocket servers, send and receive messages in real-time"
-            icon={<Plug className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "websocket-tester",
-                toolName: "WebSocket Tester",
-                onRestore: (entry) => {
-                    setUrl(entry.input || "wss://echo.websocket.events")
-                },
-            }}
-        >
-            <div className="space-y-4">
-                {/* Connection */}
-                <div className="flex gap-2 items-center">
-                    <div className={`w-3 h-3 rounded-full shrink-0 ${STATUS_COLORS[status]}`} title={STATUS_LABELS[status]} />
-                    <Input
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
-                        placeholder="wss://echo.websocket.events"
-                        className="flex-1"
-                        disabled={status === "connected" || status === "connecting"}
-                    />
-                    {status === "connected" || status === "connecting" ? (
-                        <Button variant="destructive" onClick={disconnect} size="sm">
-                            <Unplug className="h-4 w-4 mr-1" /> Disconnect
-                        </Button>
-                    ) : (
-                        <Button onClick={connect} size="sm">
-                            <Plug className="h-4 w-4 mr-1" /> Connect
-                        </Button>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-4 text-sm">
-                    <label className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            checked={autoReconnect}
-                            onChange={(e) => setAutoReconnect(e.target.checked)}
-                            className="rounded"
+        <EditorSplit>
+            <Panel>
+                <PanelHeader
+                    title="Connection"
+                    badge={<StatusPill tone={STATUS_TONES[status]}>{STATUS_LABELS[status]}</StatusPill>}
+                />
+                <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: 12, display: "grid", gap: 12, alignContent: "start" }}>
+                    <Row wrap={false}>
+                        <Input
+                            mono
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
+                            placeholder="wss://echo.websocket.events"
+                            style={{ flex: 1 }}
+                            disabled={isActive}
                         />
-                        Auto-reconnect
-                    </label>
-                    <span className="text-muted-foreground">{STATUS_LABELS[status]}</span>
-                </div>
+                        {isActive ? (
+                            <Button variant="destructive" size="sm" iconLeft={<Unplug size={14} />} onClick={disconnect}>
+                                Disconnect
+                            </Button>
+                        ) : (
+                            <Button size="sm" iconLeft={<Plug size={14} />} onClick={connect}>
+                                Connect
+                            </Button>
+                        )}
+                    </Row>
 
-                {/* Message Log */}
+                    <Checkbox
+                        checked={autoReconnect}
+                        onChange={(v) => setAutoReconnect(v)}
+                        label="Auto-reconnect"
+                    />
+
+                    <div style={{ display: "grid", gap: 6 }}>
+                        <label style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "hsl(var(--text-body))" }}>
+                            Message
+                        </label>
+                        <Textarea
+                            mono
+                            value={messageInput}
+                            onChange={(e) => setMessageInput(e.target.value)}
+                            placeholder='Type a message... (e.g., {"type": "hello"})'
+                            style={{ minHeight: 80 }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault()
+                                    sendMessage()
+                                }
+                            }}
+                            disabled={status !== "connected"}
+                        />
+                        <Row>
+                            <Button
+                                size="sm"
+                                iconLeft={<Send size={14} />}
+                                onClick={sendMessage}
+                                disabled={status !== "connected" || !messageInput.trim()}
+                            >
+                                Send
+                            </Button>
+                            <span style={{ fontSize: "var(--text-xs)", color: "hsl(var(--text-faint))" }}>
+                                Enter to send, Shift+Enter for a new line
+                            </span>
+                        </Row>
+                    </div>
+
+                    <div style={{ borderTop: "1px solid hsl(var(--border-faint))", paddingTop: 8 }}>
+                        <Stat label="Sent" value={messages.filter(m => m.direction === "sent").length} />
+                        <Stat label="Received" value={messages.filter(m => m.direction === "received").length} />
+                        <Stat label="Total" value={messages.length} />
+                    </div>
+                </div>
+            </Panel>
+            <Panel>
+                <PanelHeader
+                    title="Message log"
+                    action={
+                        <IconButton size="sm" title="Clear log" onClick={() => setMessages([])}>
+                            <Trash2 size={14} />
+                        </IconButton>
+                    }
+                />
                 <div
                     ref={logRef}
-                    className="h-80 overflow-y-auto border rounded-md p-2 space-y-1 bg-muted/30"
+                    style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: 8, display: "grid", gap: 4, alignContent: "start" }}
                 >
                     {messages.length === 0 && (
-                        <p className="text-center text-muted-foreground text-sm py-8">
+                        <div style={{ textAlign: "center", padding: "32px 0", fontSize: "var(--text-sm)", color: "hsl(var(--text-faint))" }}>
                             Connect to a WebSocket server to start
-                        </p>
+                        </div>
                     )}
                     {messages.map((msg) => (
                         <div
                             key={msg.id}
-                            className={`border-l-2 pl-3 py-1.5 pr-2 rounded-r text-sm group ${directionColors[msg.direction]}`}
+                            style={{
+                                borderLeft: `2px solid ${DIRECTION_COLORS[msg.direction]}`,
+                                background: "hsl(var(--surface-1))",
+                                borderRadius: "0 var(--radius-md) var(--radius-md) 0",
+                                padding: "6px 8px 6px 12px",
+                                fontSize: "var(--text-sm)",
+                            }}
                         >
-                            <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 6,
+                                        fontSize: "var(--text-xs)",
+                                        color: "hsl(var(--text-muted))",
+                                    }}
+                                >
                                     {directionIcons[msg.direction]}
-                                    <span className="capitalize font-medium">{msg.direction}</span>
+                                    <span style={{ textTransform: "capitalize", fontWeight: 500 }}>{msg.direction}</span>
                                     <span>{msg.timestamp.toLocaleTimeString()}</span>
                                 </div>
-                                <button
-                                    onClick={() => copyMessage(msg.content)}
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                    title="Copy"
-                                >
-                                    <Copy className="h-3 w-3 text-muted-foreground" />
-                                </button>
+                                <MessageCopyButton onCopy={() => copyMessage(msg.content)} />
                             </div>
-                            <pre className="mt-1 whitespace-pre-wrap break-all font-mono text-xs">
+                            <pre
+                                style={{
+                                    margin: "4px 0 0",
+                                    whiteSpace: "pre-wrap",
+                                    wordBreak: "break-all",
+                                    fontFamily: "var(--font-mono)",
+                                    fontSize: "var(--text-xs)",
+                                    color: "hsl(var(--text-body))",
+                                }}
+                            >
                                 {formatContent(msg.content)}
                             </pre>
                         </div>
                     ))}
                 </div>
-
-                {/* Send Message */}
-                <div className="flex gap-2">
-                    <Textarea
-                        value={messageInput}
-                        onChange={(e) => setMessageInput(e.target.value)}
-                        placeholder='Type a message... (e.g., {"type": "hello"})'
-                        className="flex-1 min-h-[60px]"
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault()
-                                sendMessage()
-                            }
-                        }}
-                        disabled={status !== "connected"}
-                    />
-                    <div className="flex flex-col gap-1">
-                        <Button onClick={sendMessage} disabled={status !== "connected" || !messageInput.trim()} size="sm">
-                            <Send className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" onClick={() => setMessages([])} size="sm" title="Clear log">
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Stats */}
-                <div className="flex gap-4 text-xs text-muted-foreground">
-                    <span>Sent: {messages.filter(m => m.direction === "sent").length}</span>
-                    <span>Received: {messages.filter(m => m.direction === "received").length}</span>
-                    <span>Total: {messages.length}</span>
-                </div>
-            </div>
-        </ToolCard>
+            </Panel>
+        </EditorSplit>
     )
 }

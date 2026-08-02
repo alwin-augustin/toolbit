@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en" class="dark" data-density="comfortable">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
 
     <!-- Primary Meta Tags -->
-    <title>Toolbit — 40+ Local-First Developer Tools (JSON, Base64, JWT, YAML, XML, SQL)</title>
-    <meta name="title" content="Toolbit — 40+ Local-First Developer Tools (JSON, Base64, JWT, YAML, XML, SQL)">
-    <meta name="description" content="Toolbit is a privacy-first toolbox with 40+ developer utilities: JSON/YAML/XML/SQL formatters, Base64 encoder/decoder, JWT decoder, UUID & hash generators, regex tester, cron parser, API request builder, Docker command builder, and more. Runs locally, works offline.">
+    <title>Toolbit — Local-first developer workspace</title>
+    <meta name="title" content="Toolbit — Local-first developer workspace">
+    <meta name="description" content="Toolbit is a local-first developer workspace for formatting, transforming, inspecting, and generating code and data without sending it to a server.">
     <meta name="author" content="Toolbit">
     <meta name="robots" content="index, follow">
     <meta name="keywords" content="developer tools, JSON formatter, Base64 encoder, JWT decoder, YAML formatter, XML formatter, SQL formatter, UUID generator, hash generator, regex tester, cron parser, API request builder, Docker command builder">
@@ -22,8 +22,8 @@
     <meta property="og:url" content="https://toolbit.pages.dev/">
     <meta property="og:site_name" content="Toolbit">
     <meta property="og:locale" content="en_US">
-    <meta property="og:title" content="Toolbit — 40+ Local-First Developer Tools (JSON, Base64, JWT, YAML, XML, SQL)">
-    <meta property="og:description" content="Privacy-first toolbox with 40+ developer utilities. JSON/YAML/XML/SQL formatters, Base64, JWT, UUID, hashes, regex, cron, API tools, and more. Runs locally, works offline.">
+    <meta property="og:title" content="Toolbit — Local-first developer workspace">
+    <meta property="og:description" content="Format, transform, inspect, and generate code and data locally with Toolbit.">
     <meta property="og:image" content="https://toolbit.pages.dev/pwa-512x512.png">
     <meta property="og:image:width" content="512">
     <meta property="og:image:height" content="512">
@@ -32,13 +32,26 @@
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://toolbit.pages.dev/">
-    <meta name="twitter:title" content="Toolbit — 40+ Local-First Developer Tools (JSON, Base64, JWT, YAML, XML, SQL)">
-    <meta name="twitter:description" content="Privacy-first toolbox with 40+ developer utilities. JSON/YAML/XML/SQL formatters, Base64, JWT, UUID, hashes, regex, cron, API tools, and more. Runs locally, works offline.">
+    <meta name="twitter:title" content="Toolbit — Local-first developer workspace">
+    <meta name="twitter:description" content="Format, transform, inspect, and generate code and data locally with Toolbit.">
     <meta name="twitter:image" content="https://toolbit.pages.dev/pwa-512x512.png">
     <meta name="twitter:image:alt" content="Toolbit - Developer Utilities">
 
     <!-- Structured Data -->
-    <script type="application/ld+json" src="/structured-data.json"></script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Toolbit",
+      "description": "Local-first developer workspace for formatting, transforming, inspecting, and generating code and data.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web browser, macOS, Windows, Linux",
+      "url": "https://toolbit.pages.dev/",
+      "image": "https://toolbit.pages.dev/pwa-512x512.png",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+    </script>
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#1e40af" />

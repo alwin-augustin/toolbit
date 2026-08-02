@@ -1,11 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { Copy, Hash, Sparkles, Loader2 } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { ToolCard } from "@/components/ToolCard"
-import { ToolEmptyState } from "@/components/ToolEmptyState"
+import { Loader2, Sparkles } from "lucide-react"
+import { Button, Badge, Input, Alert } from "@/ds/components"
+import { CodeEditor } from "@/v2/CodeEditor"
+import { Panel, PanelHeader, CopyAction, EditorSplit } from "@/v2/EditorPanels"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 import { useToolPipe } from "@/hooks/use-tool-pipe"
@@ -84,12 +81,19 @@ function arrayBufferToHex(buffer: ArrayBuffer): string {
     return hex
 }
 
+const HASH_LABELS: { key: keyof HashResult; label: string }[] = [
+    { key: "md5", label: "MD5" },
+    { key: "sha1", label: "SHA-1" },
+    { key: "sha256", label: "SHA-256" },
+    { key: "sha512", label: "SHA-512" },
+]
+
 export default function HashGenerator() {
     const [input, setInput] = useState("")
     const [hashes, setHashes] = useState<HashResult>({ md5: "", sha1: "", sha256: "", sha512: "" })
     const [isComputing, setIsComputing] = useState(false)
-    const { toast } = useToast()
-    const { getShareUrl } = useUrlState(input, setInput)
+    const [error, setError] = useState("")
+    useUrlState(input, setInput)
     const { addEntry } = useToolHistory("hash-generator", "Hash Generator")
     const { consumePipeData } = useToolPipe()
     const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -135,6 +139,7 @@ export default function HashGenerator() {
     const generateHashes = useCallback(async (text: string) => {
         if (!text.trim()) {
             setHashes({ md5: "", sha1: "", sha256: "", sha512: "" })
+            setError("")
             return
         }
         setIsComputing(true)
@@ -150,12 +155,13 @@ export default function HashGenerator() {
                 result = await computeMainThread(text)
             }
             setHashes(result)
+            setError("")
             addEntry({ input: text, output: JSON.stringify(result, null, 2), metadata: { action: "generate" } })
         } catch {
-            toast({ description: "Error generating hashes", variant: "destructive" })
+            setError("Error generating hashes")
         }
         setIsComputing(false)
-    }, [addEntry, computeMainThread, computeWithWorker, toast])
+    }, [addEntry, computeMainThread, computeWithWorker])
 
     // Auto-compute with debounce
     useEffect(() => {
@@ -164,101 +170,51 @@ export default function HashGenerator() {
         return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
     }, [input, generateHashes])
 
-    const copyToClipboard = (hash: string, type: string) => {
-        navigator.clipboard.writeText(hash)
-        toast({ description: `${type.toUpperCase()} hash copied to clipboard!` })
-    }
+    const hasOutput = Object.values(hashes).some(hash => hash)
+    const allHashes = HASH_LABELS.map(({ label, key }) => `${label}: ${hashes[key]}`).join("\n")
 
     return (
-        <ToolCard
-            title="Hash Generator"
-            description="Generate MD5, SHA-1, SHA-256, and SHA-512 hashes"
-            icon={<Hash className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "hash-generator",
-                toolName: "Hash Generator",
-                onRestore: (entry) => {
-                    setInput(entry.input || "")
-                },
-            }}
-        >
-            <div className="space-y-2">
-                <label htmlFor="hash-input" className="text-sm font-medium">
-                    Input Text
-                </label>
-                <Textarea
-                    id="hash-input"
-                    placeholder="Enter text to hash..."
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    className="h-32 font-mono text-sm"
-                    data-testid="input-hash"
-                />
-                <div className="flex gap-2 items-center">
-                    <Button variant="ghost" size="sm" onClick={() => setInput("Hello, World!")}>
-                        <Sparkles className="h-3 w-3 mr-1" />
-                        Sample
-                    </Button>
-                    {isComputing && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-                    {!isComputing && input.trim() && <span className="text-xs text-muted-foreground">Auto-computed</span>}
-                </div>
-            </div>
-
-            {!input.trim() && !Object.values(hashes).some(hash => hash) && (
-                <ToolEmptyState
-                    title="Enter text to generate hashes"
-                    description="Generate MD5, SHA-1, SHA-256, and SHA-512 locally."
-                    actions={
-                        <>
-                            <Button variant="outline" size="sm" onClick={() => setInput("Hello, World!")}>
-                                <Sparkles className="h-3 w-3 mr-1" />
-                                Load sample text
+        <EditorSplit>
+            <Panel>
+                <PanelHeader
+                    title="Input"
+                    action={
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            {isComputing && <Loader2 size={14} style={{ color: "hsl(var(--text-muted))", animation: "spin 1s linear infinite" }} />}
+                            <Button size="sm" variant="ghost" iconLeft={<Sparkles size={13} />} onClick={() => setInput("Hello, World!")}>
+                                Sample
                             </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
-                            >
-                                Browse snippets
-                            </Button>
-                        </>
+                        </div>
                     }
-                    hint="Tip: Hashes update only when you click Generate."
                 />
-            )}
-
-            {Object.values(hashes).some(hash => hash) && (
-                <div className="space-y-3">
-                    {Object.entries({
-                        md5: "MD5",
-                        sha1: "SHA-1",
-                        sha256: "SHA-256",
-                        sha512: "SHA-512"
-                    }).map(([key, label]) => (
-                        <div key={key} className="space-y-2">
-                            <label className="text-sm font-medium">{label}</label>
-                            <div className="flex gap-2">
-                                <Input
-                                    value={hashes[key as keyof typeof hashes]}
-                                    readOnly
-                                    className="font-mono text-sm"
-                                    data-testid={`output-${key}`}
-                                />
-                                <Button
-                                    onClick={() => copyToClipboard(hashes[key as keyof typeof hashes], label)}
-                                    disabled={!hashes[key as keyof typeof hashes]}
-                                    variant="outline"
-                                    size="icon"
-                                    data-testid={`button-copy-${key}`}
-                                >
-                                    <Copy className="h-4 w-4" />
-                                </Button>
+                <CodeEditor value={input} onChange={setInput} placeholder="Enter text to hash..." showLineNumbers={false} />
+            </Panel>
+            <Panel>
+                <PanelHeader
+                    title="Digests"
+                    badge={hasOutput ? <Badge tone="primary">auto-computed</Badge> : undefined}
+                    action={hasOutput ? <CopyAction text={allHashes} /> : undefined}
+                />
+                <div style={{ display: "grid", gap: 12, padding: 12, alignContent: "start", overflowY: "auto" }}>
+                    {error && <Alert tone="danger">{error}</Alert>}
+                    {!hasOutput && !error && (
+                        <span style={{ fontSize: "var(--text-sm)", color: "hsl(var(--text-faint))" }}>
+                            MD5, SHA-1, SHA-256, and SHA-512 are computed locally as you type.
+                        </span>
+                    )}
+                    {hasOutput && HASH_LABELS.map(({ key, label }) => (
+                        <div key={key} style={{ display: "grid", gap: 6 }}>
+                            <label style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "hsl(var(--text-body))" }}>
+                                {label}
+                            </label>
+                            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                                <Input mono readOnly value={hashes[key]} data-testid={`output-${key}`} style={{ flex: 1 }} />
+                                <CopyAction text={hashes[key]} />
                             </div>
                         </div>
                     ))}
                 </div>
-            )}
-        </ToolCard>
+            </Panel>
+        </EditorSplit>
     )
 }

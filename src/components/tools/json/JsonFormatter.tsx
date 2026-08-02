@@ -124,7 +124,7 @@ export default function JsonFormatter() {
             setOutput(`Error: ${result.error}`);
             setValidation(false, result.error);
         }
-    }, [input, indentSize, inputSizeBytes, setOutput, setValidation]);
+    }, [input, indentSize, inputSizeBytes, setOutput, setValidation, addEntry]);
 
     const handleMinify = useCallback(async () => {
         if (!input.trim()) return;
@@ -151,7 +151,7 @@ export default function JsonFormatter() {
             setOutput(`Error: ${result.error}`);
             setValidation(false, result.error);
         }
-    }, [input, inputSizeBytes, setOutput, setValidation]);
+    }, [input, inputSizeBytes, setOutput, setValidation, addEntry]);
 
     const handleLoadSample = () => {
         setInput(SAMPLE_JSON);

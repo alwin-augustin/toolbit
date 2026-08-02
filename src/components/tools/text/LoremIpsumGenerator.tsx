@@ -1,10 +1,9 @@
 import { useState, useCallback, useMemo } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { ToolCard } from "@/components/ToolCard"
-import { useToast } from "@/hooks/use-toast"
-import { Copy, TextCursorInput, Trash2 } from "lucide-react"
+import { RefreshCw } from "lucide-react"
+import { Button, Badge, Input, Checkbox, Tabs } from "@/ds/components"
+import { CodeEditor } from "@/v2/CodeEditor"
+import { Panel, PanelHeader, CopyAction, EditorSplit } from "@/v2/EditorPanels"
+import { Field, Row } from "@/v2/restyle-kit"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 
@@ -62,12 +61,11 @@ export default function LoremIpsumGenerator() {
     const [startWithLorem, setStartWithLorem] = useState(true)
     const [htmlOutput, setHtmlOutput] = useState(false)
     const [output, setOutput] = useState("")
-    const { toast } = useToast()
     const shareState = useMemo(
         () => ({ count, mode, startWithLorem, htmlOutput }),
         [count, mode, startWithLorem, htmlOutput],
     )
-    const { getShareUrl } = useUrlState(shareState, (state) => {
+    useUrlState(shareState, (state) => {
         setCount(typeof state.count === "number" ? state.count : 3)
         setMode(state.mode === "sentences" || state.mode === "words" ? state.mode : "paragraphs")
         setStartWithLorem(state.startWithLorem !== false)
@@ -123,115 +121,78 @@ export default function LoremIpsumGenerator() {
         })
     }, [count, mode, startWithLorem, htmlOutput, addEntry])
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(output)
-        toast({ description: "Copied to clipboard!" })
-    }
-
     return (
-        <ToolCard
-            title="Lorem Ipsum Generator"
-            description="Generate placeholder text for designs and mockups"
-            icon={<TextCursorInput className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "lorem-ipsum-generator",
-                toolName: "Lorem Ipsum Generator",
-                onRestore: (entry) => {
-                    try {
-                        const parsed = JSON.parse(entry.input || "{}") as { count?: number; mode?: GenerateMode; startWithLorem?: boolean; htmlOutput?: boolean }
-                        setCount(typeof parsed.count === "number" ? parsed.count : 3)
-                        setMode(parsed.mode === "sentences" || parsed.mode === "words" ? parsed.mode : "paragraphs")
-                        setStartWithLorem(parsed.startWithLorem !== false)
-                        setHtmlOutput(parsed.htmlOutput === true)
-                        if (entry.output) setOutput(entry.output)
-                    } catch {
-                        // ignore
-                    }
-                },
-            }}
-        >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                    <label htmlFor="lorem-count" className="text-sm font-medium">Count</label>
-                    <Input
-                        id="lorem-count"
-                        type="number"
-                        min={1}
-                        max={100}
-                        value={count}
-                        onChange={(e) => setCount(Math.max(1, parseInt(e.target.value) || 1))}
-                    />
-                </div>
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Type</label>
-                    <div className="flex gap-1">
-                        {(["paragraphs", "sentences", "words"] as GenerateMode[]).map((m) => (
-                            <Button
-                                key={m}
-                                variant={mode === m ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setMode(m)}
-                                className="text-xs capitalize"
-                            >
-                                {m}
+        <EditorSplit>
+            <Panel>
+                <PanelHeader
+                    title="Lorem Ipsum"
+                    badge={output ? <Badge tone="primary">{`${count} ${mode}`}</Badge> : undefined}
+                    action={
+                        <div style={{ display: "flex", gap: 6 }}>
+                            <Button size="sm" iconLeft={<RefreshCw size={13} />} onClick={generate}>
+                                Generate
                             </Button>
-                        ))}
-                    </div>
-                </div>
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Options</label>
-                    <div className="flex flex-col gap-2">
-                        <label className="flex items-center gap-2 text-sm">
-                            <input
-                                type="checkbox"
-                                checked={startWithLorem}
-                                onChange={(e) => setStartWithLorem(e.target.checked)}
-                                className="rounded"
-                            />
-                            Start with "Lorem ipsum..."
-                        </label>
+                            <CopyAction text={output} />
+                        </div>
+                    }
+                />
+                <div
+                    style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        alignItems: "flex-end",
+                        gap: 16,
+                        padding: "10px 12px",
+                        borderBottom: "1px solid hsl(var(--border-faint))",
+                        background: "hsl(var(--surface-1))",
+                        flexShrink: 0,
+                    }}
+                >
+                    <Field label="Count">
+                        <Input
+                            id="lorem-count"
+                            type="number"
+                            min={1}
+                            max={100}
+                            value={count}
+                            onChange={(e) => setCount(Math.max(1, parseInt(e.target.value) || 1))}
+                            style={{ width: 90 }}
+                        />
+                    </Field>
+                    <Field label="Type">
+                        <Tabs
+                            variant="segment"
+                            items={[
+                                { value: "paragraphs", label: "Paragraphs" },
+                                { value: "sentences", label: "Sentences" },
+                                { value: "words", label: "Words" },
+                            ]}
+                            value={mode}
+                            onChange={(v) => setMode(v as GenerateMode)}
+                        />
+                    </Field>
+                    <Row gap={16}>
+                        <Checkbox
+                            checked={startWithLorem}
+                            onChange={setStartWithLorem}
+                            label={'Start with "Lorem ipsum..."'}
+                        />
                         {mode === "paragraphs" && (
-                            <label className="flex items-center gap-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    checked={htmlOutput}
-                                    onChange={(e) => setHtmlOutput(e.target.checked)}
-                                    className="rounded"
-                                />
-                                HTML {"<p>"} tags
-                            </label>
+                            <Checkbox
+                                checked={htmlOutput}
+                                onChange={setHtmlOutput}
+                                label={"HTML <p> tags"}
+                            />
                         )}
-                    </div>
+                    </Row>
                 </div>
-            </div>
-
-            <div className="flex gap-2">
-                <Button onClick={generate}>Generate</Button>
-                {output && (
-                    <>
-                        <Button variant="outline" onClick={copyToClipboard}>
-                            <Copy className="h-4 w-4 mr-2" />
-                            Copy
-                        </Button>
-                        <Button variant="outline" onClick={() => setOutput("")}>
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Clear
-                        </Button>
-                    </>
-                )}
-            </div>
-
-            {output && (
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Output</label>
-                    <Textarea
-                        value={output}
-                        readOnly
-                        className="min-h-[200px] font-mono text-sm"
-                    />
-                </div>
-            )}
-        </ToolCard>
+                <CodeEditor
+                    value={output}
+                    readOnly
+                    showLineNumbers={false}
+                    placeholder="Press Generate to create placeholder text."
+                />
+            </Panel>
+        </EditorSplit>
     )
 }

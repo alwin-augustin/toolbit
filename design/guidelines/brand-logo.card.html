@@ -1,0 +1,41 @@
+<!-- @dsCard group="Brand" viewport="700x200" name="Logo — Cursor Bit" subtitle="Lowercase t + spectrum cursor; wordmark accents the 'bit'" -->
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin:0; padding:22px; background:hsl(var(--surface-0)); color:hsl(var(--text-body)); font-family:var(--font-sans); }
+  .lbl { font-family:var(--font-mono); font-size:var(--text-2xs); letter-spacing:var(--tracking-wider); text-transform:uppercase; color:hsl(var(--text-faint)); margin:0 0 10px; }
+  .meta { font-family:var(--font-mono); font-size:var(--text-2xs); color:hsl(var(--text-faint)); }
+</style>
+</head>
+<body>
+<div style="display:flex;gap:16px;align-items:stretch">
+  <div style="flex:1.2;display:flex;align-items:center;gap:16px;padding:20px;background:hsl(var(--surface-1));border:1px solid hsl(var(--border));border-radius:var(--radius-xl)">
+    <img src="../assets/logo-mark.svg" width="64" height="64" alt="Toolbit mark"/>
+    <div>
+      <div style="font-size:var(--text-2xl);font-weight:var(--weight-bold);letter-spacing:var(--tracking-tight);color:hsl(var(--text-strong))">tool<span style="color:hsl(var(--primary))">bit</span></div>
+      <div class="meta">tile + lowercase lockup</div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:20px;background:hsl(var(--surface-1));border:1px solid hsl(var(--border));border-radius:var(--radius-xl)">
+    <div style="display:flex;align-items:center;gap:14px">
+      <img src="../assets/logo-glyph.svg" width="40" height="40" alt=""/>
+      <span class="meta">glyph on dark chrome</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <svg width="40" height="40" viewBox="0 0 64 64">
+        <path d="M25 15.5v32M16 27.5h18" fill="none" stroke="#F2F4F8" stroke-width="8" stroke-linecap="round"/>
+        <g class="tb-cursor-blink">
+          <rect x="38" y="34.5" width="13" height="3.6" rx="1.8" fill="hsl(227 100% 76%)"/>
+          <rect x="38" y="39.2" width="13" height="3.6" rx="1.8" fill="hsl(187 63% 48%)"/>
+          <rect x="38" y="43.9" width="13" height="3.6" rx="1.8" fill="hsl(130 35% 56%)"/>
+        </g>
+      </svg>
+      <span class="meta">loading state — caret blink</span>
+    </div>
+  </div>
+</div>
+<div class="meta" style="margin-top:10px">The syntax-palette bars in the cursor = highlighting / piped stages. ≤16px: bars collapse to a solid bit (see favicon-32).</div>
+</body></html>

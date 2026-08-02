@@ -1,12 +1,21 @@
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Copy, Type, Sparkles } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { ToolCard } from "@/components/ToolCard"
-import { ToolEmptyState } from "@/components/ToolEmptyState"
+import { Sparkles } from "lucide-react"
+import { Button, Card, Input, Textarea } from "@/ds/components"
+import { CopyAction } from "@/v2/EditorPanels"
+import { ToolPage, Field, Row, Grid2, SectionTitle } from "@/v2/restyle-kit"
 import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
+
+const CASE_LABELS: Record<string, string> = {
+    upper: "UPPER CASE",
+    lower: "lower case",
+    title: "Title Case",
+    camel: "camelCase",
+    pascal: "PascalCase",
+    snake: "snake_case",
+    kebab: "kebab-case",
+    constant: "CONSTANT_CASE",
+}
 
 export default function CaseConverter() {
     const [input, setInput] = useState("")
@@ -20,8 +29,7 @@ export default function CaseConverter() {
         kebab: "",
         constant: ""
     })
-    const { toast } = useToast()
-    const { getShareUrl } = useUrlState(input, setInput)
+    useUrlState(input, setInput)
     const { addEntry } = useToolHistory("case-converter", "Case Converter")
 
     const convertCases = () => {
@@ -47,104 +55,58 @@ export default function CaseConverter() {
         addEntry({ input, output: JSON.stringify(output, null, 2), metadata: { action: "convert" } })
     }
 
-    const copyToClipboard = (text: string, type: string) => {
-        navigator.clipboard.writeText(text)
-        toast({ description: `${type} case copied to clipboard!` })
-    }
-
     return (
-        <ToolCard
-            title="Case Converter"
-            description="Convert text to different case formats"
-            icon={<Type className="h-5 w-5" />}
-            shareUrl={getShareUrl()}
-            history={{
-                toolId: "case-converter",
-                toolName: "Case Converter",
-                onRestore: (entry) => {
-                    setInput(entry.input || "")
-                },
-            }}
-        >
-            <div className="space-y-2">
-                <label htmlFor="case-input" className="text-sm font-medium">
-                    Input Text
-                </label>
-                <Textarea
-                    id="case-input"
-                    placeholder="Hello World Example"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    className="h-20 font-mono text-sm"
-                    data-testid="input-case"
-                />
-                <div className="flex gap-2">
-                    <Button onClick={convertCases} data-testid="button-convert">
-                        Convert All Cases
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setInput("the quick brown fox jumps over the lazy dog")}>
-                        <Sparkles className="h-3 w-3 mr-1" />
-                        Sample
-                    </Button>
+        <ToolPage>
+            <Card>
+                <div style={{ display: "grid", gap: 12 }}>
+                    <SectionTitle>Input</SectionTitle>
+                    <Field label="Input text" hint="Spaces are converted into separators for snake/kebab/camel.">
+                        <Textarea
+                            id="case-input"
+                            placeholder="Hello World Example"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            rows={3}
+                            data-testid="input-case"
+                        />
+                    </Field>
+                    <Row>
+                        <Button onClick={convertCases} data-testid="button-convert">
+                            Convert all cases
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            iconLeft={<Sparkles size={14} />}
+                            onClick={() => setInput("the quick brown fox jumps over the lazy dog")}
+                        >
+                            Sample
+                        </Button>
+                    </Row>
                 </div>
-            </div>
+            </Card>
 
-            {!input.trim() && (
-                <ToolEmptyState
-                    title="Paste text to convert cases"
-                    description="Generate camelCase, snake_case, kebab-case, and more."
-                    actions={
-                        <>
-                            <Button variant="outline" size="sm" onClick={() => setInput("the quick brown fox jumps over the lazy dog")}>
-                                <Sparkles className="h-3 w-3 mr-1" />
-                                Load sample text
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => window.dispatchEvent(new CustomEvent("open-snippets"))}
-                            >
-                                Browse snippets
-                            </Button>
-                        </>
-                    }
-                    hint="Tip: Spaces are converted into separators for snake/kebab/camel."
-                />
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries({
-                    upper: "UPPER CASE",
-                    lower: "lower case",
-                    title: "Title Case",
-                    camel: "camelCase",
-                    pascal: "PascalCase",
-                    snake: "snake_case",
-                    kebab: "kebab-case",
-                    constant: "CONSTANT_CASE"
-                }).map(([key, label]) => (
-                    <div key={key} className="space-y-2">
-                        <label className="text-sm font-medium">{label}</label>
-                        <div className="flex gap-2">
-                            <Textarea
-                                value={results[key as keyof typeof results]}
-                                readOnly
-                                className="h-10 font-mono text-sm resize-none"
-                                data-testid={`output-${key}`}
-                            />
-                            <Button
-                                onClick={() => copyToClipboard(results[key as keyof typeof results], label)}
-                                disabled={!results[key as keyof typeof results]}
-                                variant="outline"
-                                size="icon"
-                                data-testid={`button-copy-${key}`}
-                            >
-                                <Copy className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </ToolCard>
+            <Card>
+                <div style={{ display: "grid", gap: 12 }}>
+                    <SectionTitle>Results</SectionTitle>
+                    <Grid2>
+                        {Object.entries(CASE_LABELS).map(([key, label]) => (
+                            <Field key={key} label={label}>
+                                <Row wrap={false}>
+                                    <Input
+                                        mono
+                                        value={results[key as keyof typeof results]}
+                                        readOnly
+                                        style={{ flex: 1 }}
+                                        data-testid={`output-${key}`}
+                                    />
+                                    <CopyAction text={results[key as keyof typeof results]} />
+                                </Row>
+                            </Field>
+                        ))}
+                    </Grid2>
+                </div>
+            </Card>
+        </ToolPage>
     )
 }
