@@ -7,6 +7,7 @@ import {
     CATEGORY_GROUPS,
     COMPARISON_PAGES,
     GUIDE_PAGES,
+    BLOG_POSTS,
     POPULAR_TOOL_SLUGS,
     getToolPage,
 } from '@/seo/seo-content.js';
@@ -43,10 +44,15 @@ describe('SEO content', () => {
                 expect(slugs, `${guide.slug} highlights a missing tool`).toContain(slug);
             }
         }
+        for (const post of BLOG_POSTS) {
+            for (const slug of post.tools) {
+                expect(slugs, `${post.slug} links to a missing tool`).toContain(slug);
+            }
+        }
     });
 
     it('gives every page unique, length-appropriate metadata', () => {
-        const pages = [...TOOL_PAGES, ...COMPARISON_PAGES, ...GUIDE_PAGES];
+        const pages = [...TOOL_PAGES, ...COMPARISON_PAGES, ...GUIDE_PAGES, ...BLOG_POSTS];
         const titles = new Set<string>();
         const descriptions = new Set<string>();
 
@@ -59,6 +65,25 @@ describe('SEO content', () => {
             expect(page.title.length).toBeLessThanOrEqual(70);
             expect(page.description.length).toBeGreaterThanOrEqual(70);
             expect(page.description.length).toBeLessThanOrEqual(200);
+        }
+    });
+
+    it('dates every blog post and gives it real content', () => {
+        const seen = new Set<string>();
+        for (const post of BLOG_POSTS) {
+            expect(seen, `duplicate blog slug: ${post.slug}`).not.toContain(post.slug);
+            seen.add(post.slug);
+
+            expect(post.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+            expect(Number.isNaN(Date.parse(post.date))).toBe(false);
+            expect(post.sections.length).toBeGreaterThanOrEqual(3);
+
+            // A post short enough to be filler is worse than no post at all.
+            const words = post.sections
+                .flatMap((section) => section.paragraphs)
+                .join(' ')
+                .split(/\s+/).length;
+            expect(words, `${post.slug} is too thin to publish`).toBeGreaterThan(400);
         }
     });
 

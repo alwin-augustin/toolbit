@@ -111,9 +111,16 @@ pointing `/app/<slug>` at its `/tools/<slug>` landing page. Editing a tool's
 marketing copy means editing that one file.
 
 ```bash
-npm run seo:generate    # regenerate static pages into dist/
-npm run seo:og-image    # re-render public/og-image.png (needs Chromium)
+npm run seo:generate     # regenerate static pages into dist/
+npm run seo:og-image     # re-render the Open Graph cards (needs Chromium)
+npm run seo:screenshots  # recapture app screenshots (needs a build first)
 ```
+
+`seo:og-image` renders one 1200x630 card per page into `public/og/`, and
+`seo:screenshots` captures the images used by the PWA install prompt and this
+README. Both are committed, so a normal build never runs them — re-run when the
+branding changes or the UI moves. Both shell out to Chromium and use Pillow
+(`pip install pillow`) to palette-quantise the output if it is available.
 
 ## Contributing
 Pull requests are welcome.

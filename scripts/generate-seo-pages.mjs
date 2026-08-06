@@ -22,7 +22,7 @@
  *     node scripts/generate-seo-pages.mjs [--out dist]
  */
 
-import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -34,6 +34,7 @@ import {
     WHY_TOOLBIT,
     COMPARISON_PAGES,
     GUIDE_PAGES,
+    BLOG_POSTS,
     POPULAR_TOOL_SLUGS,
     getToolPage,
     getToolPagesByCategory,
@@ -156,12 +157,14 @@ const NAV_LINKS = [
     ['/developer-toolbox', 'Developer toolbox'],
     ['/offline-developer-tools', 'Offline tools'],
     ['/compare/toolbit-vs-devtoys', 'Comparisons'],
+    ['/blog', 'Blog'],
     ['/about', 'About'],
 ];
 
 const FOOTER_LINKS = [
     ['/', 'Toolbit workspace'],
     ['/tools', 'All tools'],
+    ['/blog', 'Blog'],
     ['/local-first-developer-tools', 'Local-first tools'],
     ['/offline-developer-tools', 'Offline tools'],
     ['/developer-toolbox', 'Developer toolbox'],
@@ -171,6 +174,23 @@ const FOOTER_LINKS = [
     ['/privacy', 'Privacy'],
     ['/terms', 'Terms'],
 ];
+
+/** Social card for a page: a generated per-page card, or the site card. */
+function ogImageFor(pathname) {
+    const slug = pathname.replace(/^\//, '').replace(/\//g, '-');
+    return existsSync(path.join(root, 'public/og', `${slug}.png`))
+        ? `/og/${slug}.png`
+        : SITE.ogImage;
+}
+
+function formatDate(iso) {
+    return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC',
+    });
+}
 
 function breadcrumbHtml(trail) {
     const parts = trail.map((crumb, index) =>
@@ -244,6 +264,7 @@ function toolCardsHtml(slugs) {
 function renderPage(page) {
     const canonical = absoluteUrl(page.pathname);
     const graph = page.schema ?? [];
+    const ogImage = absoluteUrl(ogImageFor(page.pathname));
     return `<!doctype html>
 <html lang="en" class="dark" data-density="comfortable">
 <head>
@@ -260,14 +281,14 @@ function renderPage(page) {
   <meta property="og:url" content="${canonical}" />
   <meta property="og:title" content="${escapeHtml(page.title)}" />
   <meta property="og:description" content="${escapeHtml(page.description)}" />
-  <meta property="og:image" content="${absoluteUrl(SITE.ogImage)}" />
+  <meta property="og:image" content="${ogImage}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="${canonical}" />
   <meta name="twitter:title" content="${escapeHtml(page.title)}" />
   <meta name="twitter:description" content="${escapeHtml(page.description)}" />
-  <meta name="twitter:image" content="${absoluteUrl(SITE.ogImage)}" />
+  <meta name="twitter:image" content="${ogImage}" />
   <link rel="icon" type="image/svg+xml" href="/icon.svg?v=2" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2" />
   <link rel="shortcut icon" href="/favicon.ico?v=2" />
@@ -510,6 +531,114 @@ ${page.sections
     });
 }
 
+/* -------------------------------------------------------------- blog */
+
+function renderBlogIndex() {
+    const trail = [
+        { name: 'Home', url: '/' },
+        { name: 'Blog', url: '/blog' },
+    ];
+
+    const posts = BLOG_POSTS.map(
+        (post) => `<li><a href="/blog/${post.slug}">
+        <span class="name">${escapeHtml(post.h1)}</span>
+        <span class="desc">${escapeHtml(post.description)}</span>
+        <span class="desc" style="margin-top:.4rem"><time datetime="${post.date}">${formatDate(post.date)}</time> · ${escapeHtml(post.readingTime)}</span>
+      </a></li>`,
+    ).join('\n      ');
+
+    const body = `      ${breadcrumbHtml(trail)}
+      <h1>The Toolbit blog</h1>
+      <p class="lede">Notes on the things that surround everyday development work: handling secrets safely, the formats we all half-remember, and why running tools locally changes what you can safely paste into them.</p>
+
+      <h2>Latest posts</h2>
+      <ul class="cards">
+      ${posts}
+      </ul>
+`;
+
+    return renderPage({
+        pathname: '/blog',
+        title: 'Blog — Local-First Development Notes | Toolbit',
+        description:
+            'Practical notes on developer tooling, secret handling, and data formats — from the team behind the local-first Toolbit workspace.',
+        keywords: 'developer blog, local-first development, jwt security, cron expressions, base64 encoding',
+        body,
+        schema: [
+            breadcrumbSchema(trail),
+            {
+                '@type': 'Blog',
+                '@id': `${absoluteUrl('/blog')}#blog`,
+                name: 'The Toolbit blog',
+                url: absoluteUrl('/blog'),
+                isPartOf: { '@id': `${SITE.url}/#website` },
+                publisher: { '@id': `${SITE.url}/#organization` },
+                blogPost: BLOG_POSTS.map((post) => ({
+                    '@type': 'BlogPosting',
+                    headline: post.h1,
+                    url: absoluteUrl(`/blog/${post.slug}`),
+                    datePublished: post.date,
+                    description: post.description,
+                })),
+            },
+        ],
+    });
+}
+
+function renderBlogPost(post) {
+    const trail = [
+        { name: 'Home', url: '/' },
+        { name: 'Blog', url: '/blog' },
+        { name: post.h1, url: `/blog/${post.slug}` },
+    ];
+
+    const body = `      ${breadcrumbHtml(trail)}
+      <h1>${escapeHtml(post.h1)}</h1>
+      <p class="note"><time datetime="${post.date}">${formatDate(post.date)}</time> · ${escapeHtml(post.readingTime)}</p>
+      <p class="lede">${escapeHtml(post.lede)}</p>
+
+${post.sections
+    .map(
+        (section) =>
+            `      <h2>${escapeHtml(section.h2)}</h2>\n${section.paragraphs
+                .map((paragraph) => `      <p>${escapeHtml(paragraph)}</p>`)
+                .join('\n')}`,
+    )
+    .join('\n\n')}
+
+      <h2>Frequently asked questions</h2>
+      ${faqHtml(post.faq)}
+
+      <h2>Tools mentioned in this post</h2>
+      ${toolCardsHtml(post.tools)}
+`;
+
+    return renderPage({
+        pathname: `/blog/${post.slug}`,
+        title: post.title,
+        description: post.description,
+        body,
+        schema: [
+            breadcrumbSchema(trail),
+            faqSchema(post.faq),
+            {
+                '@type': 'BlogPosting',
+                headline: post.h1,
+                description: post.description,
+                url: absoluteUrl(`/blog/${post.slug}`),
+                datePublished: post.date,
+                dateModified: post.date,
+                image: absoluteUrl(ogImageFor(`/blog/${post.slug}`)),
+                inLanguage: 'en',
+                isPartOf: { '@id': `${absoluteUrl('/blog')}#blog` },
+                publisher: { '@id': `${SITE.url}/#organization` },
+                author: { '@id': `${SITE.url}/#organization` },
+                mainEntityOfPage: absoluteUrl(`/blog/${post.slug}`),
+            },
+        ],
+    });
+}
+
 /* ----------------------------------------------- homepage prerender inject */
 
 function homeFallbackMarkup() {
@@ -556,11 +685,51 @@ function homeFallbackMarkup() {
       ).join('')}</dl>
     </section>
 
+    <section>
+      <h2>From the blog</h2>
+      <ul class="tb-boot-links">${BLOG_POSTS.map(
+          (post) => `<li><a href="/blog/${post.slug}">${escapeHtml(post.h1)}</a></li>`,
+      ).join('')}</ul>
+    </section>
+
     <div class="tb-boot-footer">
       <nav>${FOOTER_LINKS.map(([href, label]) => `<a href="${href}">${label}</a>`).join('')}</nav>
       <p>Toolbit is free and open source under the MIT licence. <a href="${SITE.github}">Source on GitHub</a>.</p>
     </div>
   </div>`;
+}
+
+/**
+ * Preloads the UI font in the built entry points.
+ *
+ * Geist is referenced from the stylesheet, so the browser only discovers it
+ * after the CSS parses — a second round trip before any text renders in the
+ * right face. The filename is content-hashed, so this has to happen after the
+ * bundle exists rather than in the source HTML.
+ */
+function injectFontPreload() {
+    const fontsDir = path.join(outDir, 'assets/fonts');
+    if (!existsSync(fontsDir)) return 0;
+
+    const geist = readdirSync(fontsDir).find((file) => /^Geist.*\.woff2$/.test(file));
+    if (!geist) return 0;
+
+    const tag = `<link rel="preload" href="/assets/fonts/${geist}" as="font" type="font/woff2" crossorigin />`;
+    let patched = 0;
+
+    for (const entry of ['index.html', 'about.html']) {
+        const target = path.join(outDir, entry);
+        if (!existsSync(target)) continue;
+
+        let html = readFileSync(target, 'utf8');
+        if (html.includes(tag)) continue;
+
+        html = html.replace('</head>', `  ${tag}\n</head>`);
+        writeFileSync(target, html);
+        patched += 1;
+    }
+
+    return patched;
 }
 
 function injectHomeFallback() {
@@ -595,6 +764,13 @@ function writeSitemap() {
         ...GUIDE_PAGES.map((page) => ({ loc: `/${page.slug}`, priority: '0.8', changefreq: 'monthly' })),
         ...COMPARISON_PAGES.map((page) => ({ loc: `/compare/${page.slug}`, priority: '0.7', changefreq: 'monthly' })),
         ...TOOL_PAGES.map((tool) => ({ loc: `/tools/${tool.slug}`, priority: '0.8', changefreq: 'monthly' })),
+        { loc: '/blog', priority: '0.7', changefreq: 'weekly' },
+        ...BLOG_POSTS.map((post) => ({
+            loc: `/blog/${post.slug}`,
+            priority: '0.6',
+            changefreq: 'yearly',
+            lastmod: post.date,
+        })),
         { loc: '/about', priority: '0.6', changefreq: 'monthly' },
         { loc: '/privacy', priority: '0.3', changefreq: 'yearly' },
         { loc: '/terms', priority: '0.3', changefreq: 'yearly' },
@@ -605,7 +781,7 @@ function writeSitemap() {
 ${urls
     .map(
         (url) =>
-            `  <url><loc>${absoluteUrl(url.loc)}</loc><lastmod>${buildDate}</lastmod><changefreq>${url.changefreq}</changefreq><priority>${url.priority}</priority></url>`,
+            `  <url><loc>${absoluteUrl(url.loc)}</loc><lastmod>${url.lastmod ?? buildDate}</lastmod><changefreq>${url.changefreq}</changefreq><priority>${url.priority}</priority></url>`,
     )
     .join('\n')}
 </urlset>
@@ -649,10 +825,20 @@ for (const page of GUIDE_PAGES) {
     count += 1;
 }
 
+writePage('/blog', renderBlogIndex());
+count += 1;
+
+for (const post of BLOG_POSTS) {
+    writePage(`/blog/${post.slug}`, renderBlogPost(post));
+    count += 1;
+}
+
 const urlCount = writeSitemap();
 writeRobots();
 const prerendered = injectHomeFallback();
+const preloaded = injectFontPreload();
 
 console.log(`SEO: wrote ${count} static pages to ${path.relative(root, outDir) || '.'}/`);
 console.log(`SEO: sitemap.xml lists ${urlCount} URLs, robots.txt points at ${absoluteUrl('/sitemap.xml')}`);
 console.log(`SEO: homepage prerender ${prerendered ? 'injected into index.html' : 'skipped'}`);
+console.log(`SEO: font preload added to ${preloaded} entry point(s)`);

@@ -24,45 +24,23 @@ export default defineConfig(({ mode }) => {
                 filename: 'sw.js',
                 registerType: 'autoUpdate',
                 includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png'],
-                manifest: {
-                    name: 'Toolbit - Developer Utilities',
-                    short_name: 'Toolbit',
-                    description: 'A comprehensive collection of local-only developer utilities including JSON formatter, Base64 encoder, and 20+ essential tools',
-                    theme_color: '#1e40af',
-                    background_color: '#020817',
-                    display: 'standalone',
-                    scope: '/',
-                    start_url: '/',
-                    orientation: 'any',
-                    categories: ['productivity', 'utilities', 'developer tools'],
-                    icons: [
-                        {
-                            src: '/pwa-64x64.png',
-                            sizes: '64x64',
-                            type: 'image/png'
-                        },
-                        {
-                            src: '/pwa-192x192.png',
-                            sizes: '192x192',
-                            type: 'image/png'
-                        },
-                        {
-                            src: '/pwa-512x512.png',
-                            sizes: '512x512',
-                            type: 'image/png',
-                            purpose: 'any'
-                        },
-                        {
-                            src: '/maskable-icon-512x512.png',
-                            sizes: '512x512',
-                            type: 'image/png',
-                            purpose: 'maskable'
-                        }
-                    ]
-                },
+                // The manifest is public/manifest.json, linked from both HTML
+                // entry points. Letting the plugin emit a second one produced
+                // two <link rel="manifest"> tags, and two places to edit.
+                manifest: false,
                 workbox: {
                     maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
                     globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,webmanifest,json}'],
+                    // Social cards and install-prompt screenshots are fetched by
+                    // crawlers and the OS, never by the running app — precaching
+                    // them would cost every visitor ~3MB for nothing.
+                    globIgnores: [
+                        'og/**',
+                        'og-image.png',
+                        'screenshots/**',
+                        'structured-data.json',
+                        'sitemap.xml',
+                    ],
                     // Cache all static assets
                     navigateFallback: null,
                     cleanupOutdatedCaches: true,

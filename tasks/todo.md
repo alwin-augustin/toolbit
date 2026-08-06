@@ -59,11 +59,62 @@ used by exactly one lazily-loaded tool should not be in the entry graph.
 - Verified with `npm run lint`, `npm run check`, `npm run web:build`, and by
   rendering the built output in headless Chromium.
 
-## Not done
+---
 
-- **`/blog`** — deliberately skipped. An empty blog index is thin content and
-  costs more in crawl quality than it earns. Worth adding with the first two or
-  three real posts.
-- **Per-tool Open Graph cards** — every page currently shares the site card.
-  `scripts/generate-og-image.mjs` is already parameterised enough to extend if
-  social previews per tool become worth the build time.
+# Follow-up pass — audit findings
+
+A second look at the deployed site and the build output, after the SEO work.
+
+## Shipped bugs found
+
+- [x] **CSP was blocking two tools in production.** `connect-src 'self'` on the
+      live site meant `ApiRequestBuilder`'s `fetch()` and `WebSocketTester`'s
+      `new WebSocket()` could not reach any external endpoint. Widened to
+      `'self' https: wss:`. The privacy story is unchanged — those two tools are
+      the only ones that make requests, by design, and `script-src 'self'` stays.
+- [x] **`maximum-scale=1` blocked pinch-zoom on mobile** (WCAG 1.4.4). Removed;
+      `about.html` never had it.
+
+## Performance
+
+- [x] **Fonts converted to WOFF2**: 551 kB of TTF became 220 kB, and the UI font
+      is now preloaded (the hashed filename means the tag is injected
+      post-build). The TTFs stay in the repo unreferenced so a design-system
+      resync cannot 404.
+- [x] **Deleted `public/logo.png`** — 1.4 MB, referenced nowhere, precached by
+      the service worker on every first visit.
+- [x] **Service worker precache 4.76 MB → 3.45 MB.** Social cards, install
+      screenshots, and the orphaned `structured-data.json` are now excluded.
+      Tool chunks stay precached deliberately: offline is the product, and the
+      precache runs after load, so it costs bandwidth rather than time-to-interactive.
+- [x] **`Cache-Control` added to `_headers`.** Cloudflare was serving
+      content-hashed assets as `max-age=14400, must-revalidate`; they are now
+      `immutable` for a year, with HTML entry points explicitly kept fresh.
+- [x] **Removed the duplicate manifest.** The page carried two
+      `<link rel="manifest">` tags — one for `public/manifest.json`, one for the
+      plugin's generated copy. The plugin's is disabled; there is one file now.
+
+## Content and polish
+
+- [x] **`/blog` with three real posts**, each 700+ words with FAQ blocks and
+      `BlogPosting` schema. A test enforces a word-count floor so a thin post
+      cannot be merged.
+- [x] **Per-page Open Graph cards** — 52 of them, palette-quantised to about
+      50 kB each (2.6 MB total rather than 7.7 MB).
+- [x] **Real app screenshots** via `scripts/generate-screenshots.mjs`, feeding
+      both the PWA manifest's rich install prompt and the README images, which
+      pointed at files that were not in the repo.
+- [x] **Manifest `id` and `shortcuts`** so JSON Formatter, JWT Decoder, Base64
+      and Regex appear in the installed app's jump list.
+
+## Still open — needs someone with dashboard access
+
+- **`toolbit.pages.dev` returns 200 and serves the old build.** Canonical tags
+  are a hint, not a redirect; until the Pages domain 301s to `toolbit.app` the
+  two keep competing. This is a Cloudflare setting, not a code change.
+- **Post-deploy:** confirm Cloudflare's trailing-slash behaviour matches the
+  canonical form emitted here (`/tools/json-formatter`, no slash), and submit
+  the sitemap in Search Console.
+- **Not attempted:** the 103 kB render-blocking stylesheet, and the ~385 kB
+  `vendor` chunk that is mostly `tailwind-merge`'s class table. Both are real
+  but need more care than a mechanical fix.

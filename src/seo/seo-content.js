@@ -1500,6 +1500,195 @@ export const GUIDE_PAGES = [
     },
 ];
 
+/**
+ * Blog posts.
+ *
+ * Kept deliberately short and only added when there is something worth saying —
+ * a thin blog index costs more in crawl quality than it earns.
+ */
+export const BLOG_POSTS = [
+    {
+        slug: 'never-paste-secrets-into-online-tools',
+        title: 'Pasting a JWT Into an Online Decoder Is a Security Incident | Toolbit',
+        description:
+            'Most online JWT decoders, JSON formatters and Base64 tools post your input to a server. Here is what that means for a real access token, and how to check.',
+        h1: 'Pasting a JWT into an online decoder is a security incident',
+        date: '2026-08-06',
+        readingTime: '5 min read',
+        lede: 'It takes four seconds and feels harmless. You copy a token out of a failing request, paste it into the first decoder Google offers, and read the claims. In a lot of organisations you have just created a reportable event.',
+        sections: [
+            {
+                h2: 'What actually happens when you paste',
+                paragraphs: [
+                    'A JWT is three Base64url segments. Decoding it is a handful of lines of JavaScript — there is no technical reason for the work to happen anywhere but your browser. Yet a large share of the popular decoders POST the token to a backend and render the response.',
+                    'You can check any tool in about ten seconds. Open your browser devtools, switch to the Network tab, paste the token, and watch. If a request goes out carrying your input, the tool has your token. Do the same on the JSON formatters and Base64 decoders you have bookmarked; the results are often surprising.',
+                ],
+            },
+            {
+                h2: 'Why a decoded token still matters',
+                paragraphs: [
+                    'The usual defence is that a JWT payload is not encrypted, so nothing was disclosed by decoding it. That misses the point twice over. First, the signature travelled with it — whoever received that token can replay it against your API until it expires, with whatever scopes it carries. Second, the payload routinely contains a user id, an email address, a tenant identifier, and role claims. Under GDPR that is personal data, and it now sits in a third party\'s logs.',
+                    'The window is often longer than people assume. Access tokens with an hour of life are common; refresh tokens last far longer. "It expires soon" is a hope, not a control.',
+                ],
+            },
+            {
+                h2: 'The same problem, everywhere else',
+                paragraphs: [
+                    'Tokens are the sharpest example, not the only one. The config file you pasted into an online YAML validator had a database password in it. The API response you formatted contained customer records. The CSV you converted to JSON was an export of your user table. The PDF you merged was a signed contract.',
+                    'None of these feel like data exfiltration in the moment, because the mental model is "I used a tool", not "I uploaded a file to a stranger". The architecture is what decides, not the intent.',
+                ],
+            },
+            {
+                h2: 'What to do instead',
+                paragraphs: [
+                    'Prefer tools that do the work in the browser and can prove it. Local-first tools make no network request at all, so the Network tab stays empty no matter what you paste. Toolbit is built this way on purpose: there is no backend to send anything to, and the source is open so the claim is auditable rather than a promise.',
+                    'Where you cannot verify a tool, use a throwaway token or redact the payload first. And if a token has already been through a service you do not control, treat it as compromised: revoke it, rotate the signing key if the token was signed with a shared secret, and move on. Rotation is cheap. Explaining an incident is not.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Is it safe to decode a JWT in Toolbit?',
+                a: 'Yes. The JWT decoder runs entirely in your browser and makes no network request — you can confirm it in the Network tab. It is still good practice to use a test token where one will do.',
+            },
+            {
+                q: 'Does decoding a JWT reveal the signing key?',
+                a: 'No. The signature is included in the token but the key that produced it is not. That is why decoding is safe and verifying is not something a client-side tool should be doing with your production secret.',
+            },
+            {
+                q: 'How do I check whether a tool uploads my input?',
+                a: 'Open devtools, go to the Network tab, clear it, then paste your input and run the tool. Any outbound request carrying your data is your answer.',
+            },
+        ],
+        tools: ['jwt-decoder', 'base64-encoder', 'certificate-decoder'],
+    },
+    {
+        slug: 'cron-expression-guide',
+        title: 'Cron Expressions Explained, Field by Field | Toolbit',
+        description:
+            'A practical guide to reading and writing cron expressions: all five fields, ranges, steps and lists, the day-of-week trap, and how to verify a schedule before you deploy it.',
+        h1: 'Cron expressions explained, field by field',
+        date: '2026-08-06',
+        readingTime: '6 min read',
+        lede: 'Cron syntax is five numbers and some punctuation, and almost everyone reaches for a reference every single time. Here is the whole thing in one page, including the two rules that cause most of the surprises.',
+        sections: [
+            {
+                h2: 'The five fields',
+                paragraphs: [
+                    'A standard cron entry is minute, hour, day-of-month, month, day-of-week — in that order. So 30 2 * * * is "02:30 every day", and 0 9 1 * * is "09:00 on the first of the month".',
+                    'The ranges are: minute 0-59, hour 0-23, day-of-month 1-31, month 1-12 (or JAN-DEC), day-of-week 0-7 where both 0 and 7 mean Sunday (or SUN-SAT). An asterisk means "every value".',
+                ],
+            },
+            {
+                h2: 'Ranges, steps and lists',
+                paragraphs: [
+                    'Three operators cover nearly everything you will write. A range uses a hyphen: 9-17 in the hour field means every hour from nine to five. A list uses commas: 1,15 in day-of-month means the first and the fifteenth. A step uses a slash: */15 in the minute field means every fifteenth minute — 0, 15, 30, 45.',
+                    'They combine. 0 9-17/2 * * 1-5 reads as "at minute zero, every second hour between 09:00 and 17:00, Monday to Friday". Steps apply to whatever precedes them, so 9-17/2 steps within the range rather than across the whole field.',
+                ],
+            },
+            {
+                h2: 'The day-of-month and day-of-week trap',
+                paragraphs: [
+                    'This is the rule that catches everyone. When both day-of-month and day-of-week are restricted — neither is an asterisk — cron treats them as OR, not AND.',
+                    'So 0 0 13 * 5 does not mean "Friday the 13th". It means "every 13th of the month, and also every Friday". If you want the intersection you have to test for it inside the job itself, because cron cannot express it. When only one of the two fields is restricted, it behaves the way you would expect.',
+                ],
+            },
+            {
+                h2: 'Time zones will bite you',
+                paragraphs: [
+                    'Cron runs in the time zone of whatever is running it. Your laptop is probably local time; your server is probably UTC; a Kubernetes CronJob is UTC unless you set spec.timeZone. A schedule that reads "9am" on your machine may fire at 4am in production.',
+                    'Daylight saving is the follow-on problem. A job scheduled at 02:30 local time will run twice on the day the clocks go back and not at all on the day they go forward. If the job is not idempotent, schedule it in UTC or outside the 01:00-03:00 window.',
+                ],
+            },
+            {
+                h2: 'Verify before you deploy',
+                paragraphs: [
+                    'The slowest way to check a cron expression is to deploy it and wait. Paste it into a parser instead: a good one turns the expression into a sentence and lists the next several fire times, which catches an off-by-one field almost immediately.',
+                    'Toolbit has both directions — a parser that explains an existing expression, and a visual builder that assembles one from the schedule you actually want. Both run in the browser, so a schedule containing internal job names stays private.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'What does */5 * * * * mean?',
+                a: 'Every five minutes, at minutes 0, 5, 10 and so on through 55, every hour of every day.',
+            },
+            {
+                q: 'How do I schedule a job for the last day of the month?',
+                a: 'Standard cron cannot express it. Some implementations add an L character; otherwise the usual approach is to run daily and exit early unless tomorrow is the first.',
+            },
+            {
+                q: 'What is the sixth field I sometimes see?',
+                a: 'A leading seconds field, used by Quartz and several application-level schedulers. Unix crontab itself only has five fields.',
+            },
+        ],
+        tools: ['cron-parser', 'crontab-generator', 'timestamp-converter'],
+    },
+    {
+        slug: 'base64-is-not-encryption',
+        title: 'Base64 Is Not Encryption — What It Is For | Toolbit',
+        description:
+            'Base64 is an encoding, not a cipher. What it actually solves, why it appears in JWTs, data URIs and email, and what to reach for when you need real confidentiality.',
+        h1: 'Base64 is not encryption',
+        date: '2026-08-06',
+        readingTime: '4 min read',
+        lede: 'Base64 output looks scrambled, which is exactly the problem: it looks like it is hiding something. It is not. It is a transport format, and treating it as a security control is a recurring source of real vulnerabilities.',
+        sections: [
+            {
+                h2: 'What Base64 actually does',
+                paragraphs: [
+                    'Base64 maps arbitrary bytes onto 64 characters that survive systems which only handle text. It takes three bytes at a time, splits those 24 bits into four six-bit groups, and looks each one up in a fixed alphabet. That is the entire algorithm.',
+                    'There is no key. Anyone can reverse it, and the transformation costs about 33% more bytes than the input. Encoding is a format conversion; encryption requires a secret. Confusing the two is how "we obfuscated the credentials" ends up in a code review.',
+                ],
+            },
+            {
+                h2: 'Where it earns its place',
+                paragraphs: [
+                    'Base64 exists because plenty of channels are not binary-safe. Email attachments are the original case: SMTP was specified for 7-bit text, so MIME encodes binary parts. Data URIs embed an image directly in a stylesheet or an HTML document. HTTP Basic authentication encodes the credential pair so a colon in a password does not break parsing.',
+                    'JWTs use the URL-safe variant, which swaps + and / for - and _ so the value survives inside a URL. Every one of these is a transport concern. None of them is a confidentiality claim — Basic auth in particular is secure only because TLS wraps it, not because of the encoding.',
+                ],
+            },
+            {
+                h2: 'Padding, alphabets, and the bits people trip over',
+                paragraphs: [
+                    'Because the algorithm works in three-byte groups, an input whose length is not a multiple of three has to be padded. That is what the trailing = signs are: one for a remainder of two bytes, two for a remainder of one. Some parsers accept unpadded input and some reject it, which is a common source of "it works in curl but not in the client".',
+                    'There is also more than one alphabet. Standard Base64 uses + and /, which both have meaning inside a URL, so the URL-safe variant substitutes - and _. Mixing them up produces a string that decodes without error but yields the wrong bytes — a particularly annoying bug because nothing throws. If you are decoding a JWT segment, you want the URL-safe alphabet.',
+                    'And Base64 is not Base64url is not Base32 is not hex. They are different alphabets for the same job, with different size overheads: hex doubles the input, Base32 adds 60%, Base64 adds 33%. Pick based on what the channel tolerates, not on which looks most scrambled.',
+                ],
+            },
+            {
+                h2: 'The failure modes',
+                paragraphs: [
+                    'Three keep recurring. Storing a Base64-encoded password in a config file and calling it protected — it is plaintext with extra steps, and any reviewer with a decoder can read it in seconds. Base64-encoding a payload to get it past a filter, which is why naive input validation is bypassed so easily; if your WAF rule matches on a literal string, encoding defeats it without any cleverness. And encoding large binaries into JSON, paying the 33% overhead plus the parse cost, when a separate binary channel would do.',
+                    'The tell for all three is the same: someone reached for Base64 to change who could read something. It cannot do that. It changes what can carry something.',
+                ],
+            },
+            {
+                h2: 'What to use when you need real protection',
+                paragraphs: [
+                    'For data at rest, use authenticated encryption: AES-GCM or ChaCha20-Poly1305, with the key held somewhere that is not the repository. For passwords specifically, do not encrypt at all — hash with Argon2id or bcrypt, which are designed to be slow. For data in transit, TLS. For integrity without confidentiality, an HMAC or a signature.',
+                    'Base64 often still appears alongside these, wrapping the ciphertext or the signature so it can travel as text. That is the correct relationship: encode after you encrypt, never instead.',
+                ],
+            },
+        ],
+        faq: [
+            {
+                q: 'Is Base64 reversible?',
+                a: 'Completely, by anyone, with no key. That is what makes it an encoding rather than a cipher.',
+            },
+            {
+                q: 'Why does Base64 make data bigger?',
+                a: 'Every three bytes become four characters, so output is about 33% larger than input, plus padding.',
+            },
+            {
+                q: 'What is URL-safe Base64?',
+                a: 'A variant that replaces + and / with - and _ so the value can sit in a URL or a JWT segment without being escaped.',
+            },
+        ],
+        tools: ['base64-encoder', 'jwt-decoder', 'hash-generator'],
+    },
+];
+
 /** Tools surfaced as "popular" on the homepage and in the crawlable fallback. */
 export const POPULAR_TOOL_SLUGS = [
     'json-formatter',

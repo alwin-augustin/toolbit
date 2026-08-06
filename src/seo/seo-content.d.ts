@@ -71,6 +71,26 @@ export interface WhyEntry {
     body: string;
 }
 
+export interface BlogSection {
+    h2: string;
+    paragraphs: string[];
+}
+
+export interface BlogPost {
+    slug: string;
+    title: string;
+    description: string;
+    h1: string;
+    /** ISO date, YYYY-MM-DD. */
+    date: string;
+    readingTime: string;
+    lede: string;
+    sections: BlogSection[];
+    faq: FaqEntry[];
+    /** Tool slugs the post links out to. */
+    tools: string[];
+}
+
 export declare const SITE: SiteConfig;
 export declare const CATEGORY_GROUPS: CategoryGroup[];
 export declare const TOOL_PAGES: ToolPage[];
@@ -78,6 +98,7 @@ export declare const SITE_FAQ: FaqEntry[];
 export declare const WHY_TOOLBIT: WhyEntry[];
 export declare const COMPARISON_PAGES: ComparisonPage[];
 export declare const GUIDE_PAGES: GuidePage[];
+export declare const BLOG_POSTS: BlogPost[];
 export declare const POPULAR_TOOL_SLUGS: string[];
 
 export declare function getToolPage(slug: string): ToolPage | undefined;
