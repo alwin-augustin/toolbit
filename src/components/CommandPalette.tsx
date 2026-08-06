@@ -311,7 +311,7 @@ export function CommandPalette() {
                                     value={`quick-transform-${i}-${qt.label}`}
                                     onSelect={() => {
                                         if (qt.result === "→ navigate") {
-                                            handleSelect("/app/hash-generator", "hash-generator");
+                                            handleSelect("/hash-generator", "hash-generator");
                                         } else {
                                             copyToClipboard(qt.result);
                                         }
@@ -338,7 +338,7 @@ export function CommandPalette() {
                                 onSelect={() => {
                                     setOpen(false);
                                     setSearch("");
-                                    setLocation("/app");
+                                    setLocation("/");
                                 }}
                                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm aria-selected:bg-accent aria-selected:text-accent-foreground"
                             >

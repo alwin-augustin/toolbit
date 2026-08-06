@@ -7,15 +7,18 @@
  * that gap without adding a server:
  *
  *   dist/index.html            gets real content injected into #root
+ *   dist/<tool-slug>/          the app shell, with that tool described in #root
  *   dist/tools/index.html      tool directory
- *   dist/tools/<slug>/         one static landing page per tool
  *   dist/compare/<slug>/       comparison pages
- *   dist/<guide>/              long-form guide pages
+ *   dist/blog/, dist/<guide>/  blog and long-form guides
  *   dist/sitemap.xml           every indexable URL
  *   dist/robots.txt            pointing at the sitemap
  *
- * The static pages are plain HTML with inlined CSS — no bundle, no framework —
- * so they render instantly and link into the app for the interactive part.
+ * Tool pages are the application: they reuse the built index.html verbatim and
+ * only swap the head metadata and the contents of #root, so /json-formatter
+ * boots straight into the JSON formatter while still serving a crawler real
+ * text. The marketing pages around them are plain HTML with inlined CSS — no
+ * bundle, no framework — so they render instantly.
  *
  * Run automatically as part of `npm run web:build`, or on its own:
  *
@@ -243,7 +246,7 @@ function toolCardsHtml(slugs) {
         .map((slug) => getToolPage(slug))
         .filter(Boolean)
         .map(
-            (tool) => `<li><a href="/tools/${tool.slug}">
+            (tool) => `<li><a href="/${tool.slug}">
         <span class="name">${escapeHtml(tool.name)}</span>
         <span class="desc">${escapeHtml(cardSummary(tool.description))}</span>
       </a></li>`,
@@ -325,56 +328,136 @@ ${page.body}
 
 /* ------------------------------------------------------------ tool pages */
 
-function renderToolPage(tool) {
+/**
+ * Tool pages are the application, served from a real file at /<slug>.
+ *
+ * The built index.html is reused verbatim as the shell — same bundle, same
+ * stylesheet — with the head metadata swapped for this tool's and the empty
+ * #root filled with a description of the tool. A crawler that does not run
+ * JavaScript reads that description; a browser boots the workspace over it,
+ * exactly as it does on the homepage.
+ */
+function replaceOnce(html, pattern, replacement, label) {
+    if (!pattern.test(html)) {
+        throw new Error(
+            `SEO: could not find ${label} in the built index.html — the shell template and this script have drifted.`,
+        );
+    }
+    return html.replace(pattern, replacement);
+}
+
+const metaPattern = (attr, key) =>
+    new RegExp(`(<meta ${attr}="${key.replace(/[:]/g, '[:]')}" content=")[^"]*(")`);
+
+function toolFallbackMarkup(tool) {
+    const related = tool.related
+        .map((slug) => getToolPage(slug))
+        .filter(Boolean)
+        .map((item) => `<li><a href="/${item.slug}">${escapeHtml(item.name)}</a></li>`)
+        .join('');
+
+    return `<div class="tb-boot">
+    <div class="tb-boot-brand"><img src="/icon.svg" alt="" width="28" height="28" />Toolbit</div>
+    <h1>${escapeHtml(tool.h1)}</h1>
+    <p class="tb-boot-lede">${escapeHtml(tool.lede)}</p>
+
+    <section>
+      <h2>What the ${escapeHtml(tool.name)} does</h2>
+      <ul>${tool.bullets.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
+    </section>
+
+    <section>
+      <h2>How to use it</h2>
+      <ol>${tool.howTo.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>
+    </section>
+
+    <section>
+      <h2>Why it runs locally</h2>
+      <p>Toolbit has no backend. The ${escapeHtml(tool.name)} is implemented with standard browser APIs, so your input is processed in the tab and never uploaded, logged, or retained. That is what makes it safe to paste real data into — and it is also why the tool keeps working with the network disconnected, once you have installed Toolbit as an app.</p>
+    </section>
+
+    <section>
+      <h2>Frequently asked questions</h2>
+      <dl class="tb-boot-faq">${tool.faq
+          .map((entry) => `<dt>${escapeHtml(entry.q)}</dt><dd>${escapeHtml(entry.a)}</dd>`)
+          .join('')}</dl>
+    </section>
+
+    <section>
+      <h2>Related tools</h2>
+      <ul class="tb-boot-links">${related}</ul>
+    </section>
+
+    <div class="tb-boot-footer">
+      <nav><a href="/tools">All ${TOOL_PAGES.length} tools</a>${FOOTER_LINKS.map(
+          ([href, label]) => `<a href="${href}">${label}</a>`,
+      ).join('')}</nav>
+    </div>
+  </div>`;
+}
+
+function renderToolShell(tool, shell) {
+    const pathname = `/${tool.slug}`;
+    const canonical = absoluteUrl(pathname);
+    const ogImage = absoluteUrl(ogImageFor(pathname));
+    let html = shell;
+
+    html = replaceOnce(html, /<title>[^<]*<\/title>/, `<title>${escapeHtml(tool.title)}</title>`, '<title>');
+    html = replaceOnce(html, metaPattern('name', 'title'), `$1${escapeHtml(tool.title)}$2`, 'meta[name=title]');
+    html = replaceOnce(
+        html,
+        metaPattern('name', 'description'),
+        `$1${escapeHtml(tool.description)}$2`,
+        'meta[name=description]',
+    );
+    html = replaceOnce(
+        html,
+        metaPattern('name', 'keywords'),
+        `$1${escapeHtml(tool.keywords.join(', '))}$2`,
+        'meta[name=keywords]',
+    );
+    html = replaceOnce(
+        html,
+        /(<link rel="canonical" href=")[^"]*(")/,
+        `$1${canonical}$2`,
+        'link[rel=canonical]',
+    );
+
+    for (const [attr, key, value] of [
+        ['property', 'og:url', canonical],
+        ['property', 'og:title', tool.title],
+        ['property', 'og:description', tool.description],
+        ['property', 'og:image', ogImage],
+        ['property', 'og:image:alt', `${tool.name} — Toolbit`],
+        ['name', 'twitter:url', canonical],
+        ['name', 'twitter:title', tool.title],
+        ['name', 'twitter:description', tool.description],
+        ['name', 'twitter:image', ogImage],
+        ['name', 'twitter:image:alt', `${tool.name} — Toolbit`],
+    ]) {
+        html = replaceOnce(html, metaPattern(attr, key), `$1${escapeHtml(value)}$2`, `meta[${attr}=${key}]`);
+    }
+
     const trail = [
         { name: 'Home', url: '/' },
         { name: 'Tools', url: '/tools' },
-        { name: tool.name, url: `/tools/${tool.slug}` },
+        { name: tool.name, url: pathname },
     ];
 
-    const body = `      ${breadcrumbHtml(trail)}
-      <h1>${escapeHtml(tool.h1)}</h1>
-      <p class="lede">${escapeHtml(tool.lede)}</p>
-      <div class="cta">
-        <a class="btn" href="/app/${tool.slug}">Open the ${escapeHtml(tool.name)}</a>
-        <a class="btn ghost" href="/tools">Browse all ${TOOL_PAGES.length} tools</a>
-      </div>
-      <p class="note">Free, no sign-up, works offline. Everything runs in your browser.</p>
-
-      <h2>What the ${escapeHtml(tool.name)} does</h2>
-      <ul>${tool.bullets.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
-
-      <h2>How to use it</h2>
-      <ol>${tool.howTo.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>
-
-      <h2>Why it runs locally</h2>
-      <p>Toolbit has no backend. The ${escapeHtml(tool.name)} is implemented with standard browser APIs, so your input is processed in the tab and never uploaded, logged, or retained. That is what makes it safe to paste real data into — and it is also why the tool keeps working with the network disconnected, once you have installed Toolbit as an app.</p>
-
-      <h2>Frequently asked questions</h2>
-      ${faqHtml(tool.faq)}
-
-      <h2>Related tools</h2>
-      ${toolCardsHtml(tool.related)}
-`;
-
-    return renderPage({
-        pathname: `/tools/${tool.slug}`,
-        title: tool.title,
-        description: tool.description,
-        keywords: tool.keywords.join(', '),
-        body,
-        schema: [
+    const schema = jsonLd({
+        '@context': 'https://schema.org',
+        '@graph': [
             {
                 '@type': 'WebApplication',
-                '@id': `${absoluteUrl(`/tools/${tool.slug}`)}#app`,
+                '@id': `${canonical}#app`,
                 name: `${tool.name} — Toolbit`,
-                url: absoluteUrl(`/app/${tool.slug}`),
+                url: canonical,
                 description: tool.description,
                 applicationCategory: 'DeveloperApplication',
                 operatingSystem: 'Web browser, macOS, Windows, Linux',
                 browserRequirements: 'Requires JavaScript. Modern browser recommended.',
                 isAccessibleForFree: true,
-                image: absoluteUrl(SITE.ogImage),
+                image: ogImage,
                 featureList: tool.bullets,
                 isPartOf: { '@id': `${SITE.url}/#website` },
                 publisher: { '@id': `${SITE.url}/#organization` },
@@ -384,6 +467,16 @@ function renderToolPage(tool) {
             faqSchema(tool.faq),
         ],
     });
+
+    html = replaceOnce(html, /<\/head>/, `${schema}\n</head>`, '</head>');
+    html = replaceOnce(
+        html,
+        /<div id="root">\s*<\/div>/,
+        `<div id="root">${toolFallbackMarkup(tool)}</div>`,
+        'empty #root',
+    );
+
+    return html;
 }
 
 /* -------------------------------------------------------- tool directory */
@@ -409,7 +502,7 @@ function renderToolDirectory() {
       <p class="lede">Every Toolbit utility, grouped by what it does. Each one runs entirely in your browser: nothing is uploaded, nothing is tracked, and everything keeps working offline once the app is installed.</p>
       <ul class="chips">${POPULAR_TOOL_SLUGS.map((slug) => {
           const tool = getToolPage(slug);
-          return tool ? `<li><a href="/tools/${tool.slug}">${escapeHtml(tool.name)}</a></li>` : '';
+          return tool ? `<li><a href="/${tool.slug}">${escapeHtml(tool.name)}</a></li>` : '';
       }).join('')}</ul>
 
 ${groups}
@@ -436,7 +529,7 @@ ${groups}
                         '@type': 'ListItem',
                         position: index + 1,
                         name: tool.name,
-                        url: absoluteUrl(`/tools/${tool.slug}`),
+                        url: absoluteUrl(`/${tool.slug}`),
                     })),
                 },
             },
@@ -649,7 +742,7 @@ function homeFallbackMarkup() {
       <h2>${escapeHtml(group.heading)}</h2>
       <p>${escapeHtml(group.blurb)}</p>
       <ul class="tb-boot-links">${tools
-          .map((tool) => `<li><a href="/tools/${tool.slug}">${escapeHtml(tool.name)}</a></li>`)
+          .map((tool) => `<li><a href="/${tool.slug}">${escapeHtml(tool.name)}</a></li>`)
           .join('')}</ul>
     </section>`;
     })
@@ -665,7 +758,7 @@ function homeFallbackMarkup() {
       <h2>Popular tools</h2>
       <ul class="tb-boot-links">${POPULAR_TOOL_SLUGS.map((slug) => {
           const tool = getToolPage(slug);
-          return tool ? `<li><a href="/tools/${tool.slug}">${escapeHtml(tool.name)}</a></li>` : '';
+          return tool ? `<li><a href="/${tool.slug}">${escapeHtml(tool.name)}</a></li>` : '';
       }).join('')}</ul>
     </section>
 
@@ -763,7 +856,7 @@ function writeSitemap() {
         { loc: '/tools', priority: '0.9', changefreq: 'weekly' },
         ...GUIDE_PAGES.map((page) => ({ loc: `/${page.slug}`, priority: '0.8', changefreq: 'monthly' })),
         ...COMPARISON_PAGES.map((page) => ({ loc: `/compare/${page.slug}`, priority: '0.7', changefreq: 'monthly' })),
-        ...TOOL_PAGES.map((tool) => ({ loc: `/tools/${tool.slug}`, priority: '0.8', changefreq: 'monthly' })),
+        ...TOOL_PAGES.map((tool) => ({ loc: `/${tool.slug}`, priority: '0.9', changefreq: 'monthly' })),
         { loc: '/blog', priority: '0.7', changefreq: 'weekly' },
         ...BLOG_POSTS.map((post) => ({
             loc: `/blog/${post.slug}`,
@@ -806,13 +899,24 @@ Sitemap: ${absoluteUrl('/sitemap.xml')}
 
 mkdirSync(outDir, { recursive: true });
 
+// Captured before the homepage prerender is injected, so every tool page
+// starts from the same untouched shell.
+const shellPath = path.join(outDir, 'index.html');
+const shell = existsSync(shellPath) ? readFileSync(shellPath, 'utf8') : null;
+
 let count = 0;
 writePage('/tools', renderToolDirectory());
 count += 1;
 
-for (const tool of TOOL_PAGES) {
-    writePage(`/tools/${tool.slug}`, renderToolPage(tool));
-    count += 1;
+let toolShells = 0;
+if (shell) {
+    for (const tool of TOOL_PAGES) {
+        writePage(`/${tool.slug}`, renderToolShell(tool, shell));
+        toolShells += 1;
+        count += 1;
+    }
+} else {
+    console.warn('  ! dist/index.html not found — skipping per-tool app shells');
 }
 
 for (const page of COMPARISON_PAGES) {
@@ -838,7 +942,9 @@ writeRobots();
 const prerendered = injectHomeFallback();
 const preloaded = injectFontPreload();
 
-console.log(`SEO: wrote ${count} static pages to ${path.relative(root, outDir) || '.'}/`);
+console.log(
+    `SEO: wrote ${count} pages to ${path.relative(root, outDir) || '.'}/ (${toolShells} of them prerendered app shells)`,
+);
 console.log(`SEO: sitemap.xml lists ${urlCount} URLs, robots.txt points at ${absoluteUrl('/sitemap.xml')}`);
 console.log(`SEO: homepage prerender ${prerendered ? 'injected into index.html' : 'skipped'}`);
 console.log(`SEO: font preload added to ${preloaded} entry point(s)`);

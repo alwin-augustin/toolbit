@@ -71,8 +71,8 @@ const offlineAnswer =
 /**
  * Per-tool landing page copy.
  *
- * `slug` doubles as the marketing URL (/tools/<slug>) and as the in-app tool
- * id (/app/<slug>), so the two surfaces never drift apart.
+ * `slug` is the tool's URL (/<slug>) and its in-app id, so the prerendered
+ * description and the running tool can never drift apart.
  */
 export const TOOL_PAGES = [
     {
@@ -1716,12 +1716,10 @@ export function absoluteUrl(pathname = '/') {
     return `${SITE.url}${pathname.startsWith('/') ? pathname : `/${pathname}`}`;
 }
 
-/** Marketing URL for a tool. */
-export function toolPageUrl(slug) {
-    return `/tools/${slug}`;
-}
-
-/** In-app URL for a tool. */
-export function toolAppUrl(slug) {
-    return `/app/${slug}`;
+/**
+ * Canonical URL for a tool. Tools live at the root of the site — the same URL
+ * serves the prerendered description and boots the interactive tool.
+ */
+export function toolUrl(slug) {
+    return `/${slug}`;
 }

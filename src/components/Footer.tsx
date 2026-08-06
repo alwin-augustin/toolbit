@@ -1,6 +1,7 @@
 import { ExternalLink, Home } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { isElectronApp } from "@/hooks/use-electron";
+import { TOOLS } from "@/config/tools.config";
 
 export function Footer() {
     const [location] = useLocation();
@@ -8,7 +9,9 @@ export function Footer() {
     if (hideFooter) {
         return null;
     }
-    const isAppRoute = location.startsWith('/app');
+    // Tools live at the root, so "am I in a tool?" is a lookup rather than a
+    // prefix check.
+    const isAppRoute = TOOLS.some((tool) => tool.path === location.replace(/\/$/, ""));
 
     return (
         <footer className="border-t border-border bg-background/50 backdrop-blur-sm px-6 py-4 text-xs text-muted-foreground">

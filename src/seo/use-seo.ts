@@ -58,16 +58,14 @@ export function applySeo({ title, description, canonicalPath }: SeoDescriptor) {
 
 /** Resolves the metadata for an in-app route. */
 export function seoForLocation(location: string): SeoDescriptor {
-    const match = location.match(/^\/app\/([^/?#]+)/);
+    const match = location.match(/^\/([^/?#]+)/);
     const tool = match ? getToolPage(match[1]) : undefined;
 
     if (tool) {
         return {
             title: tool.title,
             description: tool.description,
-            // The static /tools/<slug> page is the indexable version of a tool;
-            // the app route points at it so the two never compete.
-            canonicalPath: `/tools/${tool.slug}`,
+            canonicalPath: `/${tool.slug}`,
         };
     }
 

@@ -1,6 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Route, Switch, Router } from "wouter";
+import { Route, Switch, Router, Redirect } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import { lazy, Suspense } from "react";
 import { AppRouter } from "./router";
@@ -9,6 +9,16 @@ import { WorkspaceShell } from "@/v2/WorkspaceShell";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { LoadingFallback } from "@/components/LoadingFallback";
 import { isElectronApp } from "@/hooks/use-electron";
+import { TOOLS } from "@/config/tools.config";
+
+/**
+ * Tools live at the root: /json-formatter, not /app/json-formatter.
+ *
+ * Matching on the known tool ids rather than a bare /:slug keeps the root
+ * namespace shared safely with the marketing and legal pages — an unknown
+ * slug falls through to the 404 instead of booting an empty workspace.
+ */
+const TOOL_PATH_PATTERN = new RegExp(`^/(?:${TOOLS.map((tool) => tool.id).join("|")})/?$`);
 
 // Lazy load legal pages
 const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
@@ -68,21 +78,24 @@ function App() {
                             </Suspense>
                         </Route>
 
-                        {/* App routes with v2 workspace shell */}
-                        <Route path="/app">
-                            <WorkspaceShell>
-                                <AppRouter />
-                            </WorkspaceShell>
-                        </Route>
-                        <Route path="/app/:rest*">
+                        {/* Tools, at the root of the site */}
+                        <Route path={TOOL_PATH_PATTERN}>
                             <WorkspaceShell>
                                 <AppRouter />
                             </WorkspaceShell>
                         </Route>
 
-                        {/* Prerendered marketing pages (/tools, /compare, guides)
-                            are served as static files, so anything reaching the
-                            SPA here is genuinely unknown. */}
+                        {/* Legacy /app URLs. Cloudflare 301s these before the
+                            SPA ever sees them; this covers the hash router in
+                            the desktop build and any in-page link we missed. */}
+                        <Route path="/app">{() => <Redirect to="/" replace />}</Route>
+                        <Route path="/app/:rest*">
+                            {(params) => <Redirect to={`/${params["rest*"] ?? ""}`} replace />}
+                        </Route>
+
+                        {/* Prerendered marketing pages (/tools, /compare, /blog,
+                            guides) are served as static files, so anything
+                            reaching the SPA here is genuinely unknown. */}
                         <Route>
                             <Suspense fallback={<LoadingFallback />}>
                                 <NotFound />

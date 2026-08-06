@@ -321,7 +321,7 @@ function AppHome() {
                             size="sm"
                             variant="outline"
                             className="text-xs"
-                            onClick={() => setLocation("/app/jwt-decoder")}
+                            onClick={() => setLocation("/jwt-decoder")}
                         >
                             Open JWT Decoder
                         </Button>

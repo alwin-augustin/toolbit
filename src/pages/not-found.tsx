@@ -43,7 +43,7 @@ export default function NotFound() {
                     {popular.map((tool) => (
                         <li key={tool.slug}>
                             <a
-                                href={`/tools/${tool.slug}`}
+                                href={`/${tool.slug}`}
                                 className="inline-block rounded-full border border-border px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
                             >
                                 {tool.name}

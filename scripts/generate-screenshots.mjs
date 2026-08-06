@@ -67,7 +67,7 @@ const MIME = {
     '.xml': 'application/xml',
 };
 
-/** Static file server with SPA fallback, so /app/<slug> resolves. */
+/** Static file server with SPA fallback, so an unknown path still boots the app. */
 const server = createServer((req, res) => {
     const url = decodeURIComponent((req.url ?? '/').split('?')[0]);
     const candidates = [
@@ -90,8 +90,8 @@ const server = createServer((req, res) => {
 
 const shots = [
     { name: 'app-home', url: '/', width: 1440, height: 900 },
-    { name: 'tool-view', url: '/app/json-formatter', width: 1440, height: 900 },
-    { name: 'jwt-decoder', url: '/app/jwt-decoder', width: 1440, height: 900 },
+    { name: 'tool-view', url: '/json-formatter', width: 1440, height: 900 },
+    { name: 'jwt-decoder', url: '/jwt-decoder', width: 1440, height: 900 },
     { name: 'mobile-home', url: '/', width: 430, height: 860 },
 ];
 

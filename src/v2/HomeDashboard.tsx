@@ -45,7 +45,7 @@ export function HomeDashboard({ onSearch, onHistory, onCategory }: HomeDashboard
 
     const openTool = (id: string) => {
         if (input.trim()) sessionStorage.setItem("toolbit:smart-paste", input);
-        setLocation(`/app/${id}`);
+        setLocation(`/${id}`);
     };
 
     const categoryCount = (category: ToolCategory) => TOOLS.filter((tool) => tool.category === category).length;
@@ -115,7 +115,7 @@ export function HomeDashboard({ onSearch, onHistory, onCategory }: HomeDashboard
                             const tool = TOOLS.find((candidate) => candidate.id === entry.toolId);
                             if (!tool) return null;
                             return (
-                                <button key={`${entry.toolId}-${entry.timestamp}`} type="button" className="tb-recent-row" onClick={() => setLocation(`/app/${entry.toolId}`)}>
+                                <button key={`${entry.toolId}-${entry.timestamp}`} type="button" className="tb-recent-row" onClick={() => setLocation(`/${entry.toolId}`)}>
                                     <span className="tb-tool-mark"><FileJson size={14} /></span>
                                     <span className="tb-recent-copy"><strong>{tool.name}</strong><small style={mono}>{preview(entry.input)}</small></span>
                                     <time>{timeAgo(entry.timestamp)}</time>
@@ -151,7 +151,7 @@ export function HomeDashboard({ onSearch, onHistory, onCategory }: HomeDashboard
                 </div>
                 <div className="tb-tool-grid">
                     {TOOLS.slice(0, 8).map((tool) => (
-                        <button key={tool.id} type="button" className="tb-tool-card" onClick={() => setLocation(`/app/${tool.id}`)}>
+                        <button key={tool.id} type="button" className="tb-tool-card" onClick={() => setLocation(`/${tool.id}`)}>
                             <span className="tb-tool-mark">{tool.name.slice(0, 2).toUpperCase()}</span>
                             <span><strong>{tool.name}</strong><small>{tool.description}</small></span>
                         </button>

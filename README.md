@@ -100,15 +100,20 @@ The app is client‑rendered, so `npm run web:build` runs `vite build` and then
 `scripts/generate-seo-pages.mjs`, which prerenders the crawlable surface into
 `dist/`:
 
-- `/tools` plus a static landing page for every tool at `/tools/<slug>`
+- the app shell for every tool at `/<slug>`, with that tool described in `#root`
+- `/tools`, the tool directory
 - comparison pages under `/compare/` and long‑form guides
 - `sitemap.xml` and `robots.txt`
 - real HTML injected into `dist/index.html`'s `#root`, replaced by React on mount
 
 All of that copy lives in `src/seo/seo-content.js`, which the app imports too —
-`src/seo/use-seo.ts` uses it to set per‑route title, description, and canonical,
-pointing `/app/<slug>` at its `/tools/<slug>` landing page. Editing a tool's
-marketing copy means editing that one file.
+`src/seo/use-seo.ts` uses it to set per‑route title, description, and canonical.
+Editing a tool's marketing copy means editing that one file.
+
+Tools are served from the root — `/json-formatter`, not `/app/json-formatter`.
+Each one is a real HTML file containing the full app shell, so the URL both
+reads as a page to a crawler and boots straight into the tool in a browser.
+`public/_redirects` keeps the old `/app/*` URLs alive with a 301.
 
 ```bash
 npm run seo:generate     # regenerate static pages into dist/

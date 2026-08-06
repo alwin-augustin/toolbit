@@ -51,84 +51,84 @@ const toolGroups = [
         title: "Format & Validate",
         icon: FileJson,
         items: [
-            { title: "JSON Formatter", url: "/app/json-formatter", icon: FileJson },
-            { title: "JSON Schema Validator", url: "/app/json-validator", icon: Shield },
-            { title: "CSS Formatter/Minifier", url: "/app/css-formatter", icon: Code },
-            { title: "YAML Formatter", url: "/app/yaml-formatter", icon: Code },
-            { title: "XML Formatter", url: "/app/xml-formatter", icon: FileCode },
-            { title: "SQL Formatter", url: "/app/sql-formatter", icon: Database },
-            { title: "GraphQL Formatter", url: "/app/graphql-formatter", icon: Code },
-            { title: "Nginx Config Validator", url: "/app/nginx-config-validator", icon: Server },
+            { title: "JSON Formatter", url: "/json-formatter", icon: FileJson },
+            { title: "JSON Schema Validator", url: "/json-validator", icon: Shield },
+            { title: "CSS Formatter/Minifier", url: "/css-formatter", icon: Code },
+            { title: "YAML Formatter", url: "/yaml-formatter", icon: Code },
+            { title: "XML Formatter", url: "/xml-formatter", icon: FileCode },
+            { title: "SQL Formatter", url: "/sql-formatter", icon: Database },
+            { title: "GraphQL Formatter", url: "/graphql-formatter", icon: Code },
+            { title: "Nginx Config Validator", url: "/nginx-config-validator", icon: Server },
         ],
     },
     {
         title: "Encode & Decode",
         icon: Lock,
         items: [
-            { title: "Base64 Encoder", url: "/app/base64-encoder", icon: Code },
-            { title: "URL Encoder", url: "/app/url-encoder", icon: LinkIcon },
-            { title: "HTML Escape", url: "/app/html-escape", icon: Braces },
-            { title: "JWT Decoder", url: "/app/jwt-decoder", icon: Shield },
-            { title: "Certificate Decoder", url: "/app/certificate-decoder", icon: Lock },
-            { title: "Protobuf Decoder", url: "/app/protobuf-decoder", icon: Binary },
+            { title: "Base64 Encoder", url: "/base64-encoder", icon: Code },
+            { title: "URL Encoder", url: "/url-encoder", icon: LinkIcon },
+            { title: "HTML Escape", url: "/html-escape", icon: Braces },
+            { title: "JWT Decoder", url: "/jwt-decoder", icon: Shield },
+            { title: "Certificate Decoder", url: "/certificate-decoder", icon: Lock },
+            { title: "Protobuf Decoder", url: "/protobuf-decoder", icon: Binary },
         ],
     },
     {
         title: "Generate",
         icon: Wand2,
         items: [
-            { title: "UUID Generator", url: "/app/uuid-generator", icon: Key },
-            { title: "Password Generator", url: "/app/password-generator", icon: Shield },
-            { title: "Hash Generator", url: "/app/hash-generator", icon: Hash },
-            { title: "TOTP/2FA Generator", url: "/app/totp-generator", icon: Lock },
-            { title: "Lorem Ipsum Generator", url: "/app/lorem-ipsum-generator", icon: TextCursorInput },
-            { title: "Fake Data Generator", url: "/app/fake-data-generator", icon: Database },
-            { title: "QR Code Generator", url: "/app/qr-code-generator", icon: QrCode },
+            { title: "UUID Generator", url: "/uuid-generator", icon: Key },
+            { title: "Password Generator", url: "/password-generator", icon: Shield },
+            { title: "Hash Generator", url: "/hash-generator", icon: Hash },
+            { title: "TOTP/2FA Generator", url: "/totp-generator", icon: Lock },
+            { title: "Lorem Ipsum Generator", url: "/lorem-ipsum-generator", icon: TextCursorInput },
+            { title: "Fake Data Generator", url: "/fake-data-generator", icon: Database },
+            { title: "QR Code Generator", url: "/qr-code-generator", icon: QrCode },
         ],
     },
     {
         title: "Transform",
         icon: ArrowRightLeft,
         items: [
-            { title: "CSV to JSON Converter", url: "/app/csv-to-json", icon: FileJson },
-            { title: "Case Converter", url: "/app/case-converter", icon: Type },
-            { title: "JavaScript Minifier", url: "/app/js-json-minifier", icon: Code },
-            { title: "Timestamp Converter", url: "/app/timestamp-converter", icon: Clock },
-            { title: "Color Converter", url: "/app/color-converter", icon: Palette },
-            { title: "Unit Converter", url: "/app/unit-converter", icon: Hash },
-            { title: "Image Converter", url: "/app/image-converter", icon: Image },
+            { title: "CSV to JSON Converter", url: "/csv-to-json", icon: FileJson },
+            { title: "Case Converter", url: "/case-converter", icon: Type },
+            { title: "JavaScript Minifier", url: "/js-json-minifier", icon: Code },
+            { title: "Timestamp Converter", url: "/timestamp-converter", icon: Clock },
+            { title: "Color Converter", url: "/color-converter", icon: Palette },
+            { title: "Unit Converter", url: "/unit-converter", icon: Hash },
+            { title: "Image Converter", url: "/image-converter", icon: Image },
         ],
     },
     {
         title: "Analyze",
         icon: Microscope,
         items: [
-            { title: "Regex Tester", url: "/app/regex-tester", icon: Search },
-            { title: "Diff Tool", url: "/app/diff-tool", icon: GitCompare },
-            { title: "Git Diff Viewer", url: "/app/git-diff-viewer", icon: GitBranch },
-            { title: "Word Counter", url: "/app/word-counter", icon: Hash },
-            { title: "Cron Expression Parser", url: "/app/cron-parser", icon: Clock },
-            { title: "HTTP Status Codes", url: "/app/http-status-codes", icon: Search },
+            { title: "Regex Tester", url: "/regex-tester", icon: Search },
+            { title: "Diff Tool", url: "/diff-tool", icon: GitCompare },
+            { title: "Git Diff Viewer", url: "/git-diff-viewer", icon: GitBranch },
+            { title: "Word Counter", url: "/word-counter", icon: Hash },
+            { title: "Cron Expression Parser", url: "/cron-parser", icon: Clock },
+            { title: "HTTP Status Codes", url: "/http-status-codes", icon: Search },
         ],
     },
     {
         title: "Build",
         icon: Hammer,
         items: [
-            { title: "API Request Builder", url: "/app/api-request-builder", icon: Globe },
-            { title: "WebSocket Tester", url: "/app/websocket-tester", icon: Plug },
-            { title: "Docker Command Builder", url: "/app/docker-command-builder", icon: Container },
-            { title: "Crontab Generator", url: "/app/crontab-generator", icon: Calendar },
+            { title: "API Request Builder", url: "/api-request-builder", icon: Globe },
+            { title: "WebSocket Tester", url: "/websocket-tester", icon: Plug },
+            { title: "Docker Command Builder", url: "/docker-command-builder", icon: Container },
+            { title: "Crontab Generator", url: "/crontab-generator", icon: Calendar },
         ],
     },
     {
         title: "Text & Docs",
         icon: FileText,
         items: [
-            { title: "Strip Whitespace", url: "/app/strip-whitespace", icon: Eraser },
-            { title: "Markdown Previewer", url: "/app/markdown-previewer", icon: CircleDotDashed },
-            { title: "PDF Tools", url: "/app/pdf-tools", icon: FileText },
-            { title: "Date Calculator", url: "/app/date-calculator", icon: Calendar },
+            { title: "Strip Whitespace", url: "/strip-whitespace", icon: Eraser },
+            { title: "Markdown Previewer", url: "/markdown-previewer", icon: CircleDotDashed },
+            { title: "PDF Tools", url: "/pdf-tools", icon: FileText },
+            { title: "Date Calculator", url: "/date-calculator", icon: Calendar },
         ],
     },
 ]
@@ -310,7 +310,7 @@ export function AppSidebar() {
         return (
             <aside ref={railRef} className="flex flex-col border-r border-border bg-card/50 backdrop-blur-xl w-16 shrink-0">
                 <div className="flex h-16 items-center justify-center border-b border-border">
-                    <Link href="/app" onClick={handleLinkClick}>
+                    <Link href="/" onClick={handleLinkClick}>
                         <img src={appLogoUrl} alt="Toolbit" className="w-8 h-8 object-contain" />
                     </Link>
                 </div>
@@ -319,10 +319,10 @@ export function AppSidebar() {
                     <Tooltip delayDuration={0}>
                         <TooltipTrigger asChild>
                             <Link
-                                href="/app"
+                                href="/"
                                 className={cn(
                                     "flex items-center justify-center w-10 h-10 rounded-lg transition-colors",
-                                    location === "/app"
+                                    location === "/"
                                         ? "bg-primary text-primary-foreground"
                                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                                 )}
@@ -438,7 +438,7 @@ export function AppSidebar() {
         )}>
             <div className="flex flex-col flex-1 overflow-hidden">
                 <div className="flex h-16 items-center justify-between border-b border-border px-4 bg-card/80">
-                    <Link href="/app" className="flex items-center gap-2" onClick={handleLinkClick}>
+                    <Link href="/" className="flex items-center gap-2" onClick={handleLinkClick}>
                         <img src={appLogoUrl} alt="Toolbit" className="w-8 h-8 object-contain" />
                         <h1 className="font-semibold tracking-tight">
                             <span className="text-lg text-foreground">Toolbit</span>
@@ -456,10 +456,10 @@ export function AppSidebar() {
                 <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3">
                     {/* Home link */}
                     <Link
-                        href="/app"
+                        href="/"
                         className={cn(
                             "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all mb-1",
-                            location === "/app"
+                            location === "/"
                                 ? "bg-primary text-primary-foreground font-semibold"
                                 : "hover:bg-accent hover:text-accent-foreground"
                         )}

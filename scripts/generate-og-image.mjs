@@ -270,8 +270,8 @@ if (!siteOnly) {
 
     for (const tool of TOOL_PAGES) {
         cards.push({
-            target: path.join(ogDir, `tools-${tool.slug}.png`),
-            label: `og/tools-${tool.slug}.png`,
+            target: path.join(ogDir, `${tool.slug}.png`),
+            label: `og/${tool.slug}.png`,
             html: contentCard({
                 eyebrow: 'Developer tool',
                 heading: tool.name,

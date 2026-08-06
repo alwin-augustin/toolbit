@@ -1,0 +1,9 @@
+# Tools moved from /app/<slug> to /<slug>. The old URLs are in the wild — they
+# were in the previous sitemap — so they get a permanent redirect rather than a
+# 404, which also passes the ranking signal on to the new URL.
+/app/:slug    /:slug    301
+/app          /         301
+
+# An earlier revision of this branch served per-tool landing pages under
+# /tools/<slug>; those are now the tool pages themselves.
+/tools/:slug  /:slug    301

@@ -22,7 +22,7 @@ import { useWorkspace as useLegacyWorkspace } from "@/hooks/use-workspace";
 import { PRESET_WORKFLOWS } from "@/config/workflows.config";
 
 function toolFromPath(path: string) {
-    const m = path.match(/^\/app\/([^/]+)\/?$/);
+    const m = path.match(/^\/([^/]+)\/?$/);
     if (!m) return undefined;
     return TOOLS.find((t) => t.id === m[1]);
 }
@@ -61,15 +61,16 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
     // rank for its own search terms instead of inheriting the homepage's.
     useRouteSeo();
 
-    // URL is the source of truth: visiting /app/:slug ensures a tab exists.
+    // URL is the source of truth: visiting /:slug ensures a tab exists.
     useEffect(() => {
         if (urlTool) openTool(urlTool.id);
     }, [urlTool?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Restore the active tab's URL when landing on bare /app with persisted tabs.
+    // Restore the active tab's URL when landing on the bare root with
+    // persisted tabs.
     useEffect(() => {
-        if (location.replace(/\/$/, "") === "/app" && activeTabId) {
-            setLocation(`/app/${activeTabId}`, { replace: true });
+        if (location.replace(/\/$/, "") === "" && activeTabId) {
+            setLocation(`/${activeTabId}`, { replace: true });
         }
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -105,14 +106,14 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
 
     const navigateToTool = (id: string) => {
         showTool();
-        setLocation(`/app/${id}`);
+        setLocation(`/${id}`);
     };
 
     const loadWorkspace = (workspace: Parameters<typeof restoreWorkspace>[0]) => {
         restoreWorkspace(workspace);
         workspace.tools.forEach((tool) => openTool(tool.toolId));
         const firstTool = workspace.tools[0]?.toolId;
-        if (firstTool) setLocation(`/app/${firstTool}`);
+        if (firstTool) setLocation(`/${firstTool}`);
         setPhasePanel(null);
     };
 
@@ -122,13 +123,13 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
         showTool();
         workflow.tools.forEach((toolId) => openTool(toolId));
         const firstTool = workflow.tools[0];
-        if (firstTool) setLocation(`/app/${firstTool}`);
+        if (firstTool) setLocation(`/${firstTool}`);
     };
 
     const handleClose = (id: string) => {
         const nextActive = closeTab(id);
         if (id === activeTabId) {
-            setLocation(nextActive ? `/app/${nextActive}` : "/app");
+            setLocation(nextActive ? `/${nextActive}` : "/");
         }
     };
 
@@ -172,7 +173,7 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
 
     const activeTool = TOOLS.find((t) => t.id === activeTabId);
     const normalizedLocation = location.replace(/\/$/, "");
-    const isHome = view.kind === "tool" && !activeTabId && (normalizedLocation === "" || normalizedLocation === "/app");
+    const isHome = view.kind === "tool" && !activeTabId && normalizedLocation === "";
     const crumb: [string, string] =
         view.kind === "catalog"
             ? ["Tool Library", view.category ? categoryMeta(view.category)?.label ?? "All tools" : "All tools"]

@@ -107,6 +107,34 @@ A second look at the deployed site and the build output, after the SEO work.
 - [x] **Manifest `id` and `shortcuts`** so JSON Formatter, JWT Decoder, Base64
       and Regex appear in the installed app's jump list.
 
+---
+
+# Third pass — tools moved to the root
+
+`/app/json-formatter` became `/json-formatter`. The `/app` segment carried no
+meaning and cost a level of URL depth on every page that matters for search.
+
+- [x] `TOOLS[].path` is now `/<id>`, and every internal link, the router, the
+      workspace shell's path matching, and the SPA route table follow it.
+- [x] `App.tsx` matches tool routes against the known tool ids rather than a
+      bare `/:slug`, so the root namespace stays safely shared with `/about`,
+      `/privacy`, `/blog`, `/tools` and the guides. An unknown slug gets the 404
+      instead of an empty workspace.
+- [x] **The separate `/tools/<slug>` landing pages are gone.** Each tool is now
+      a real HTML file at `/<slug>` containing the built app shell — same
+      bundle, same stylesheet — with the head metadata swapped and the tool
+      described inside `#root`. A crawler reads ~300 words of real text; a
+      browser boots straight into the tool. One URL per tool, and the "landing
+      page, then click through to the app" detour is gone.
+- [x] `public/_redirects` 301s `/app/*` and the short-lived `/tools/<slug>` to
+      the new URLs, and `App.tsx` keeps a client-side redirect for the desktop
+      build's hash router.
+- [x] The shell patcher throws if it cannot find a tag it expects to rewrite,
+      so a change to `index.html` fails the build rather than silently shipping
+      42 pages with the homepage's metadata.
+- [x] Two tests guard the new shape: every tool path is `/<id>`, and no tool
+      slug collides with a reserved top-level page.
+
 ## Still open — needs someone with dashboard access
 
 - **`toolbit.pages.dev` returns 200 and serves the old build.** Canonical tags

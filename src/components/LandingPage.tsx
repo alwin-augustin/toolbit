@@ -27,57 +27,57 @@ const toolCategories = [
         icon: FileJson,
         count: 8,
         description: "JSON, YAML, XML, SQL, GraphQL, and config validators",
-        link: "/app/json-formatter"
+        link: "/json-formatter"
     },
     {
         title: "Encode & Decode",
         icon: Lock,
         count: 6,
         description: "Base64, URL, HTML, JWT, certificates, and protobuf",
-        link: "/app/base64-encoder"
+        link: "/base64-encoder"
     },
     {
         title: "Generate",
         icon: Wand2,
         count: 7,
         description: "UUIDs, hashes, passwords, fake data, and QR codes",
-        link: "/app/uuid-generator"
+        link: "/uuid-generator"
     },
     {
         title: "Transform",
         icon: ArrowRightLeft,
         count: 7,
         description: "Convert data formats and transform text",
-        link: "/app/csv-to-json"
+        link: "/csv-to-json"
     },
     {
         title: "Analyze",
         icon: Microscope,
         count: 6,
         description: "Regex, diff, git patches, and cron insights",
-        link: "/app/diff-tool"
+        link: "/diff-tool"
     },
     {
         title: "Build",
         icon: Hammer,
         count: 4,
         description: "API requests, WebSocket tests, and command builders",
-        link: "/app/api-request-builder"
+        link: "/api-request-builder"
     },
     {
         title: "Text & Docs",
         icon: FileText,
         count: 4,
         description: "Whitespace, Markdown, PDFs, and date tools",
-        link: "/app/markdown-previewer"
+        link: "/markdown-previewer"
     }
 ];
 
 const popularTools = [
-    { name: "JSON Formatter", link: "/app/json-formatter" },
-    { name: "Base64 Encoder", link: "/app/base64-encoder" },
-    { name: "JWT Decoder", link: "/app/jwt-decoder" },
-    { name: "Hash Generator", link: "/app/hash-generator" }
+    { name: "JSON Formatter", link: "/json-formatter" },
+    { name: "Base64 Encoder", link: "/base64-encoder" },
+    { name: "JWT Decoder", link: "/jwt-decoder" },
+    { name: "Hash Generator", link: "/hash-generator" }
 ];
 
 const features = [
@@ -165,7 +165,7 @@ export function LandingPage() {
                                     compatible pipelines, and the app keeps working when the network does not.
                                 </p>
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                                    <Link href="/app/json-formatter">
+                                    <Link href="/json-formatter">
                                         <Button size="lg" className="text-base px-8">
                                             Launch App <ArrowRight className="ml-2 h-5 w-5" />
                                         </Button>
@@ -370,7 +370,7 @@ export function LandingPage() {
                             {TOOL_PAGES.map((tool) => (
                                 <li key={tool.slug}>
                                     <a
-                                        href={`/tools/${tool.slug}`}
+                                        href={`/${tool.slug}`}
                                         className="inline-block rounded-full border border-border bg-card/50 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
                                     >
                                         {tool.name}
@@ -395,7 +395,7 @@ export function LandingPage() {
                         <p className="text-lg text-muted-foreground mb-8">
                             Start using Toolbit now. No sign-up, no installation required for web version.
                         </p>
-                        <Link href="/app/json-formatter">
+                        <Link href="/json-formatter">
                             <Button size="lg" className="text-base px-8">
                                 Launch App <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>

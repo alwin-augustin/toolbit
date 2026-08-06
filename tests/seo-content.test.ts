@@ -93,15 +93,45 @@ describe('SEO content', () => {
     });
 });
 
+describe('tool routes', () => {
+    it('serves every tool from the root, with no /app prefix', () => {
+        for (const tool of TOOLS) {
+            expect(tool.path).toBe(`/${tool.id}`);
+        }
+    });
+
+    it('keeps tool slugs clear of the other top-level pages', () => {
+        // /json-formatter and /privacy share a namespace now, so a new tool
+        // slug must never collide with a page that already owns that path.
+        const reserved = new Set([
+            'about',
+            'privacy',
+            'terms',
+            'blog',
+            'tools',
+            'compare',
+            'design-system',
+            'assets',
+            'og',
+            'screenshots',
+            'app',
+            ...GUIDE_PAGES.map((page) => page.slug),
+        ]);
+        for (const slug of slugs) {
+            expect(reserved, `tool slug "${slug}" collides with an existing page`).not.toContain(slug);
+        }
+    });
+});
+
 describe('seoForLocation', () => {
-    it('canonicalises an app route to its static tool page', () => {
-        const seo = seoForLocation('/app/json-formatter');
-        expect(seo.canonicalPath).toBe('/tools/json-formatter');
+    it('resolves a tool from its root-level path', () => {
+        const seo = seoForLocation('/json-formatter');
+        expect(seo.canonicalPath).toBe('/json-formatter');
         expect(seo.title).toBe(getToolPage('json-formatter')?.title);
     });
 
     it('falls back to the site defaults for unknown routes', () => {
-        expect(seoForLocation('/app/not-a-tool').canonicalPath).toBe('/');
+        expect(seoForLocation('/not-a-tool').canonicalPath).toBe('/');
         expect(seoForLocation('/').title).toBe(SITE.title);
     });
 });

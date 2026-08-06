@@ -104,5 +104,4 @@ export declare const POPULAR_TOOL_SLUGS: string[];
 export declare function getToolPage(slug: string): ToolPage | undefined;
 export declare function getToolPagesByCategory(categoryId: string): ToolPage[];
 export declare function absoluteUrl(pathname?: string): string;
-export declare function toolPageUrl(slug: string): string;
-export declare function toolAppUrl(slug: string): string;
+export declare function toolUrl(slug: string): string;
