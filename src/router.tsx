@@ -15,7 +15,7 @@ export function AppRouter() {
     return (
         <Switch>
             {/* App home dashboard */}
-            <Route path={/^(?:\/app)?\/?$/}>
+            <Route path={/^\/?$/}>
                 <Suspense fallback={<LoadingFallback />}>
                     <AppHome />
                 </Suspense>
@@ -36,8 +36,9 @@ export function AppRouter() {
                 );
             })}
 
-            {/* Fallback to dashboard if no tool route matches */}
-            <Route path="/app/:rest*">
+            {/* Reached only when the shell was mounted for a path that is not a
+                tool — fall back to the dashboard rather than an empty pane. */}
+            <Route>
                 <Suspense fallback={<LoadingFallback />}>
                     <AppHome />
                 </Suspense>

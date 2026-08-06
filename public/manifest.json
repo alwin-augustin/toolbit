@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "Toolbit - Developer Utilities",
   "short_name": "Toolbit",
   "description": "Local-first developer utilities: JSON/YAML/XML/SQL formatters, Base64 encoder/decoder, JWT decoder, UUID and hash generators, regex tester, cron parser, API tools, and more.",
@@ -30,6 +31,66 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/app-home.png",
+      "sizes": "1440x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "The Toolbit workspace with smart paste and the tool library"
+    },
+    {
+      "src": "/screenshots/tool-view.png",
+      "sizes": "1440x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JSON Formatter with input, output, and options panels"
+    },
+    {
+      "src": "/screenshots/jwt-decoder.png",
+      "sizes": "1440x900",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JWT Decoder inspecting a token header and claims"
+    },
+    {
+      "src": "/screenshots/mobile-home.png",
+      "sizes": "430x860",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Toolbit on a phone"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "JSON Formatter",
+      "short_name": "JSON",
+      "description": "Format, validate, and beautify JSON",
+      "url": "/app/json-formatter",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "JWT Decoder",
+      "short_name": "JWT",
+      "description": "Decode and inspect JSON Web Tokens",
+      "url": "/app/jwt-decoder",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Base64 Encoder",
+      "short_name": "Base64",
+      "description": "Encode and decode Base64",
+      "url": "/app/base64-encoder",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Regex Tester",
+      "short_name": "Regex",
+      "description": "Test regular expressions with live matches",
+      "url": "/app/regex-tester",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

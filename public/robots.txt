@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://toolbit.pages.dev/sitemap.xml

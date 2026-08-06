@@ -23,6 +23,16 @@ export default tseslint.config(
     ],
   },
   {
+    // Build-time scripts run in Node, not the browser
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+      },
+    },
+  },
+  {
     // Type declarations copied verbatim from /design — keep them identical
     files: ['src/ds/components/**/*.d.ts'],
     rules: {

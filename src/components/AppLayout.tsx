@@ -235,8 +235,8 @@ export function AppLayout({ children }: AppLayoutProps) {
             <nav className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background/95 backdrop-blur-md lg:hidden">
                 <div className="flex items-center justify-around py-2">
                     <Link
-                        href="/app"
-                        className={`flex flex-col items-center gap-1 text-xs ${location === "/app" ? "text-primary" : "text-muted-foreground"}`}
+                        href="/"
+                        className={`flex flex-col items-center gap-1 text-xs ${location === "/" ? "text-primary" : "text-muted-foreground"}`}
                     >
                         <Home className="h-5 w-5" />
                         Home

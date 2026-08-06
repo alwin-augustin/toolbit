@@ -1,8 +1,19 @@
+import { useEffect } from "react";
 import { Link } from "wouter";
 import { ArrowLeft, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { applySeo } from "@/seo/use-seo";
 
 export default function PrivacyPolicy() {
+    useEffect(() => {
+        applySeo({
+            title: "Privacy Policy — Toolbit",
+            description:
+                "Toolbit processes everything locally in your browser. No uploads, no analytics, no tracking, no accounts. Read the full privacy policy.",
+            canonicalPath: "/privacy",
+        });
+    }, []);
+
     return (
         <div className="min-h-screen bg-background">
             <div className="max-w-3xl mx-auto px-4 py-12">

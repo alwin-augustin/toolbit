@@ -95,6 +95,38 @@ See `/privacy` for the full policy.
 - Zustand for client state
 - PWA via `vite-plugin-pwa`
 
+## SEO and prerendering
+The app is client‑rendered, so `npm run web:build` runs `vite build` and then
+`scripts/generate-seo-pages.mjs`, which prerenders the crawlable surface into
+`dist/`:
+
+- the app shell for every tool at `/<slug>`, with that tool described in `#root`
+- `/tools`, the tool directory
+- comparison pages under `/compare/` and long‑form guides
+- `sitemap.xml` and `robots.txt`
+- real HTML injected into `dist/index.html`'s `#root`, replaced by React on mount
+
+All of that copy lives in `src/seo/seo-content.js`, which the app imports too —
+`src/seo/use-seo.ts` uses it to set per‑route title, description, and canonical.
+Editing a tool's marketing copy means editing that one file.
+
+Tools are served from the root — `/json-formatter`, not `/app/json-formatter`.
+Each one is a real HTML file containing the full app shell, so the URL both
+reads as a page to a crawler and boots straight into the tool in a browser.
+`public/_redirects` keeps the old `/app/*` URLs alive with a 301.
+
+```bash
+npm run seo:generate     # regenerate static pages into dist/
+npm run seo:og-image     # re-render the Open Graph cards (needs Chromium)
+npm run seo:screenshots  # recapture app screenshots (needs a build first)
+```
+
+`seo:og-image` renders one 1200x630 card per page into `public/og/`, and
+`seo:screenshots` captures the images used by the PWA install prompt and this
+README. Both are committed, so a normal build never runs them — re-run when the
+branding changes or the UI moves. Both shell out to Chromium and use Pillow
+(`pip install pillow`) to palette-quantise the output if it is available.
+
 ## Contributing
 Pull requests are welcome.
 - Run `npm run check` and `npm run lint`

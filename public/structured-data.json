@@ -6,8 +6,8 @@
   "description": "Local-first developer workspace for formatting, transforming, inspecting, and generating code and data without sending inputs to a server.",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "All",
-  "url": "https://toolbit.pages.dev/",
-  "image": "https://toolbit.pages.dev/pwa-512x512.png",
+  "url": "https://toolbit.app/",
+  "image": "https://toolbit.app/og-image.png",
   "sameAs": [
     "https://github.com/alwin-augustin/toolbit"
   ],
@@ -47,6 +47,6 @@
   ],
   "browserRequirements": "Requires JavaScript. Modern browser recommended.",
   "softwareVersion": "1.0.0",
-  "screenshot": "https://toolbit.pages.dev/pwa-512x512.png",
+  "screenshot": "https://toolbit.app/og-image.png",
   "downloadUrl": "https://github.com/alwin-augustin/toolbit/releases"
 }

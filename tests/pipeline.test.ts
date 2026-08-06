@@ -15,7 +15,7 @@ describe("pipeline behavior", () => {
         useToolPipe.getState().addPipelineStep(step)
 
         expect(useToolPipe.getState().pipeline).toEqual([
-            { toolId: "base64-encoder", toolName: "Base64 Encoder", path: "/app/base64-encoder" },
+            { toolId: "base64-encoder", toolName: "Base64 Encoder", path: "/base64-encoder" },
         ])
         useToolPipe.getState().clearPipeline()
     })

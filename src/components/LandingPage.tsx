@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import appLogoUrl from "@/ds/assets/logo-mark.svg";
+import { applySeo } from "@/seo/use-seo";
+import { TOOL_PAGES } from "@/seo/seo-content.js";
 
 const toolCategories = [
     {
@@ -25,57 +27,57 @@ const toolCategories = [
         icon: FileJson,
         count: 8,
         description: "JSON, YAML, XML, SQL, GraphQL, and config validators",
-        link: "/app/json-formatter"
+        link: "/json-formatter"
     },
     {
         title: "Encode & Decode",
         icon: Lock,
         count: 6,
         description: "Base64, URL, HTML, JWT, certificates, and protobuf",
-        link: "/app/base64-encoder"
+        link: "/base64-encoder"
     },
     {
         title: "Generate",
         icon: Wand2,
         count: 7,
         description: "UUIDs, hashes, passwords, fake data, and QR codes",
-        link: "/app/uuid-generator"
+        link: "/uuid-generator"
     },
     {
         title: "Transform",
         icon: ArrowRightLeft,
         count: 7,
         description: "Convert data formats and transform text",
-        link: "/app/csv-to-json"
+        link: "/csv-to-json"
     },
     {
         title: "Analyze",
         icon: Microscope,
         count: 6,
         description: "Regex, diff, git patches, and cron insights",
-        link: "/app/diff-tool"
+        link: "/diff-tool"
     },
     {
         title: "Build",
         icon: Hammer,
         count: 4,
         description: "API requests, WebSocket tests, and command builders",
-        link: "/app/api-request-builder"
+        link: "/api-request-builder"
     },
     {
         title: "Text & Docs",
         icon: FileText,
         count: 4,
         description: "Whitespace, Markdown, PDFs, and date tools",
-        link: "/app/markdown-previewer"
+        link: "/markdown-previewer"
     }
 ];
 
 const popularTools = [
-    { name: "JSON Formatter", link: "/app/json-formatter" },
-    { name: "Base64 Encoder", link: "/app/base64-encoder" },
-    { name: "JWT Decoder", link: "/app/jwt-decoder" },
-    { name: "Hash Generator", link: "/app/hash-generator" }
+    { name: "JSON Formatter", link: "/json-formatter" },
+    { name: "Base64 Encoder", link: "/base64-encoder" },
+    { name: "JWT Decoder", link: "/jwt-decoder" },
+    { name: "Hash Generator", link: "/hash-generator" }
 ];
 
 const features = [
@@ -106,15 +108,12 @@ export function LandingPage() {
     const suggestions = useMemo(() => detectContentType(demoInput), [demoInput]);
 
     useEffect(() => {
-        const title = "About Toolbit — Local-first developer tools";
-        const description = "Toolbit is a local-first developer workspace for formatting, transforming, inspecting, and generating code and data without sending it to a server.";
-        document.title = title;
-        document.querySelector('meta[name="description"]')?.setAttribute("content", description);
-        document.querySelector('link[rel="canonical"]')?.setAttribute("href", `${window.location.origin}/about`);
-        document.querySelector('meta[property="og:title"]')?.setAttribute("content", title);
-        document.querySelector('meta[property="og:description"]')?.setAttribute("content", description);
-        document.querySelector('meta[name="twitter:title"]')?.setAttribute("content", title);
-        document.querySelector('meta[name="twitter:description"]')?.setAttribute("content", description);
+        applySeo({
+            title: "About Toolbit — Local-first developer tools",
+            description:
+                "Toolbit is a local-first developer workspace for formatting, transforming, inspecting, and generating code and data without sending it to a server.",
+            canonicalPath: "/about",
+        });
     }, []);
 
     return (
@@ -166,7 +165,7 @@ export function LandingPage() {
                                     compatible pipelines, and the app keeps working when the network does not.
                                 </p>
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                                    <Link href="/app/json-formatter">
+                                    <Link href="/json-formatter">
                                         <Button size="lg" className="text-base px-8">
                                             Launch App <ArrowRight className="ml-2 h-5 w-5" />
                                         </Button>
@@ -358,6 +357,36 @@ export function LandingPage() {
                 </div>
             </section>
 
+            {/* Tool index — plain anchors so crawlers follow them to the
+                per-tool landing pages, which are prerendered at build time. */}
+            <section className="border-t border-border bg-background cv-auto">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+                    <div className="max-w-6xl mx-auto">
+                        <h2 className="text-3xl font-bold text-center mb-4">Every tool, one page each</h2>
+                        <p className="text-center text-muted-foreground mb-10">
+                            {TOOL_PAGES.length} utilities, each with its own page explaining what it does and how to use it.
+                        </p>
+                        <ul className="flex flex-wrap justify-center gap-2">
+                            {TOOL_PAGES.map((tool) => (
+                                <li key={tool.slug}>
+                                    <a
+                                        href={`/${tool.slug}`}
+                                        className="inline-block rounded-full border border-border bg-card/50 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+                                    >
+                                        {tool.name}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                        <p className="mt-8 text-center text-sm">
+                            <a href="/tools" className="text-primary hover:underline">
+                                Browse the full tool directory
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </section>
+
             {/* CTA Section */}
             <section className="border-t border-border bg-muted/30 cv-auto">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
@@ -366,7 +395,7 @@ export function LandingPage() {
                         <p className="text-lg text-muted-foreground mb-8">
                             Start using Toolbit now. No sign-up, no installation required for web version.
                         </p>
-                        <Link href="/app/json-formatter">
+                        <Link href="/json-formatter">
                             <Button size="lg" className="text-base px-8">
                                 Launch App <ArrowRight className="ml-2 h-5 w-5" />
                             </Button>

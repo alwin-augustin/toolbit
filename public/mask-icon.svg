@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Safari pinned-tab mask: single layer, solid black, transparent background.
+       Safari recolours it with the `color` attribute on the <link rel="mask-icon">. -->
+  <g fill="none" stroke="#000000" stroke-width="52" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M188 148L96 256l92 108" />
+    <path d="M324 148l92 108-92 108" />
+  </g>
+  <rect x="230" y="132" width="52" height="248" rx="26" fill="#000000" />
+</svg>
