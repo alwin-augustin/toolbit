@@ -98,8 +98,8 @@ const features = [
     },
     {
         icon: Download,
-        title: "Cross-Platform Desktop",
-        description: "Available for macOS, Windows, and Linux. Native app experience on all platforms."
+        title: "Installable Anywhere",
+        description: "Install it from any browser and it gets its own window and icon. No app store, no binary to manage."
     }
 ];
 

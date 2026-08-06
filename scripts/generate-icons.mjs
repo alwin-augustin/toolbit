@@ -17,7 +17,6 @@
  *   public/apple-touch-icon.png         full-bleed square, iOS applies its own mask
  *   public/maskable-icon-512x512.png    glyph inside the 80% safe zone
  *   src/assets/app-logo.svg             kept in step with public/icon.svg
- *   build/icon.{png,ico,icns}           desktop app icons
  *
  * Rendering goes through headless Chromium; resizing and .ico packing need
  * Pillow (pip install pillow).
@@ -177,19 +176,9 @@ try {
         `${p('public/pwa-192x192.png')}=192`,
         `${p('public/pwa-512x512.png')}=512`,
         `${p('public/favicon.ico')}=16,32,48`,
-        `${p('build/favicon-16x16.png')}=16`,
-        `${p('build/favicon-32x32.png')}=32`,
-        `${p('build/favicon.ico')}=16,32,48`,
-        `${p('build/icon.ico')}=16,24,32,48,64,128,256`,
     ]);
 
-    // electron-builder derives the macOS icon from build/icon.png, but a stale
-    // build/icon.icns sitting in buildResources would still carry the old mark.
-    emit(square, [
-        `${p('public/apple-touch-icon.png')}=180`,
-        `${p('build/icon.png')}=1024`,
-        `${p('build/icon.icns')}=1024`,
-    ]);
+    emit(square, [`${p('public/apple-touch-icon.png')}=180`]);
     emit(maskable, [`${p('public/maskable-icon-512x512.png')}=512`]);
 
     const written = [
@@ -205,12 +194,6 @@ try {
         'public/pwa-512x512.png',
         'public/apple-touch-icon.png',
         'public/maskable-icon-512x512.png',
-        'build/icon.png',
-        'build/icon.ico',
-        'build/icon.icns',
-        'build/favicon.ico',
-        'build/favicon-16x16.png',
-        'build/favicon-32x32.png',
     ];
 
     for (const rel of written) {

@@ -19,7 +19,6 @@ export const SITE = {
     ogImage: '/og-image.png',
     logo: '/pwa-512x512.png',
     github: 'https://github.com/alwin-augustin/toolbit',
-    downloads: 'https://github.com/alwin-augustin/toolbit/releases',
     locale: 'en_US',
 };
 
@@ -66,7 +65,7 @@ const privacyAnswer =
     'No. Every Toolbit tool runs entirely in your browser using standard Web APIs. Your input is never uploaded, logged, or sent to a third party — you can open the network tab and watch it stay quiet.';
 
 const offlineAnswer =
-    'Yes. Toolbit installs as a PWA and ships as a desktop app for macOS, Windows, and Linux, so the whole toolbox keeps working on a plane, behind a corporate firewall, or on an air-gapped machine.';
+    'Yes. Toolbit installs as a progressive web app, so the whole toolbox keeps working on a plane, behind a corporate firewall, or on an air-gapped machine.';
 
 /**
  * Per-tool landing page copy.
@@ -724,7 +723,7 @@ export const TOOL_PAGES = [
             'Read close codes and errors when the connection drops.',
         ],
         faq: [
-            { q: 'Can I connect to a ws:// endpoint from an https page?', a: 'Browsers block insecure WebSocket connections from secure pages. Use wss://, or run Toolbit\'s desktop app or a local build for plain ws:// testing.' },
+            { q: 'Can I connect to a ws:// endpoint from an https page?', a: 'Browsers block insecure WebSocket connections from secure pages. Use wss://, or run a local build over http:// for plain ws:// testing.' },
             { q: 'Are my messages logged anywhere?', a: 'No. The frame log lives in your tab and disappears when you close it.' },
             { q: 'Does it support custom headers?', a: 'The browser WebSocket API does not allow custom headers on the handshake; pass authentication via the URL or the first message instead.' },
         ],
@@ -1285,8 +1284,8 @@ export const SITE_FAQ = [
         a: 'No. There is no analytics script, no cookie banner, and no third-party request. The app makes no network calls once it has loaded, apart from requests you explicitly send with the API and WebSocket tools.',
     },
     {
-        q: 'Is there a desktop version?',
-        a: 'Yes. Toolbit ships as a native desktop app for macOS, Windows, and Linux, and installs as a PWA from the browser for offline use.',
+        q: 'Can I install Toolbit like an app?',
+        a: 'Yes. Install it from your browser as a progressive web app and it gets its own window, its own icon, and works with no connection.',
     },
 ];
 
@@ -1309,7 +1308,7 @@ export const COMPARISON_PAGES = [
             'How Toolbit and DevToys compare for offline developer utilities: platform support, tool coverage, privacy, and installation. Both keep your data local.',
         h1: 'Toolbit vs DevToys',
         competitor: 'DevToys',
-        lede: 'DevToys is a well-liked offline toolbox for Windows, later joined by a macOS and Linux build. Toolbit covers similar ground but runs anywhere a browser does, including as an installable desktop app. Both are built on the same principle: your data should not need to travel to a server to be reformatted.',
+        lede: 'DevToys is a well-liked offline toolbox for Windows, later joined by a macOS and Linux build. Toolbit covers similar ground but runs anywhere a browser does, and installs as a progressive web app when you want it in its own window. Both are built on the same principle: your data should not need to travel to a server to be reformatted.',
         sections: [
             {
                 h2: 'Where they overlap',
@@ -1317,7 +1316,7 @@ export const COMPARISON_PAGES = [
             },
             {
                 h2: 'Where Toolbit differs',
-                body: 'Toolbit runs in any browser, so a colleague can use it from a locked-down machine without installing anything, and it installs as a PWA or a native app when you want it on the dock. It adds an API request builder, a WebSocket tester, a Docker command builder, a certificate decoder, and PDF tools. Tools also chain: output from the Base64 decoder can be piped straight into the JWT decoder.',
+                body: 'Toolbit runs in any browser, so a colleague can use it from a locked-down machine without installing anything, and it installs as a progressive web app when you want it on the dock. It adds an API request builder, a WebSocket tester, a Docker command builder, a certificate decoder, and PDF tools. Tools also chain: output from the Base64 decoder can be piped straight into the JWT decoder.',
             },
             {
                 h2: 'Where DevToys differs',
@@ -1330,7 +1329,7 @@ export const COMPARISON_PAGES = [
         ],
         faq: [
             { q: 'Is Toolbit a DevToys clone?', a: 'No. The two projects share a philosophy — local-first developer utilities — but Toolbit is browser-first with a workspace model, tool chaining, and networking tools that DevToys does not include.' },
-            { q: 'Do both work offline?', a: 'Yes. DevToys is a native app, and Toolbit installs as a PWA or a desktop app that works with no connection.' },
+            { q: 'Do both work offline?', a: 'Yes. DevToys is a native app, and Toolbit installs as a progressive web app that works with no connection.' },
             { q: 'Is either one free?', a: 'Both are free and open source.' },
         ],
     },
@@ -1416,7 +1415,7 @@ export const GUIDE_PAGES = [
             },
             {
                 h2: 'How Toolbit works without a connection',
-                body: 'Toolbit is a progressive web app. The first visit caches the application shell and every tool; after that the service worker serves them from disk. There is no API to call because every transformation — parsing, formatting, hashing, encoding — is implemented with standard browser APIs. A native desktop build for macOS, Windows, and Linux is available when you would rather have an icon in the dock.',
+                body: 'Toolbit is a progressive web app. The first visit caches the application shell and every tool; after that the service worker serves them from disk. There is no API to call because every transformation — parsing, formatting, hashing, encoding — is implemented with standard browser APIs. Installing it gives you an icon in the dock and a window of its own, with no app store or binary to manage.',
             },
             {
                 h2: 'What is in the offline toolbox',
@@ -1424,7 +1423,7 @@ export const GUIDE_PAGES = [
             },
             {
                 h2: 'Installing for offline use',
-                body: 'In a Chromium or Edge browser, use the install icon in the address bar. On iOS, use Share then Add to Home Screen. Or download the desktop build for your platform. In every case the tools are then available with no connection, and no data leaves the device.',
+                body: 'In a Chromium or Edge browser, use the install icon in the address bar. On iOS, use Share then Add to Home Screen. On Android, use Add to Home Screen from the browser menu. In every case the tools are then available with no connection, and no data leaves the device.',
             },
         ],
         faq: [

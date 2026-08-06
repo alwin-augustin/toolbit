@@ -14,10 +14,6 @@ export default tseslint.config(
       'postcss.config.js',
       'dist/**',
       'node_modules/**',
-      'electron/**',
-      'build/**',
-      'release/**',
-      'scripts/**/*.cjs',  // Ignore CommonJS files in scripts
       'scripts/*.js',
       'design/**',  // Design system source-of-truth assets, not app code
     ],

@@ -5,11 +5,10 @@
 [![Privacy](https://img.shields.io/badge/privacy-no%20tracking-22c55e.svg)](https://toolbit.app/privacy)
 [![PWA](https://img.shields.io/badge/pwa-ready-6366f1.svg)](https://toolbit.app)
 
-Local‑first developer tools for JSON, Base64, JWT, YAML, XML, SQL, and more. Toolbit runs entirely in your browser or desktop app with zero tracking, zero analytics, and no server‑side processing.
+Local‑first developer tools for JSON, Base64, JWT, YAML, XML, SQL, and more. Toolbit runs entirely in your browser with zero tracking, zero analytics, and no server‑side processing.
 
 **Why Toolbit**
 - 100% local processing and offline‑friendly
-- Web + desktop builds from one codebase
 - Fast, keyboard‑first UX for daily dev workflows
 - Privacy‑focused: no network calls, no cookies, no telemetry
 
@@ -17,7 +16,7 @@ Local‑first developer tools for JSON, Base64, JWT, YAML, XML, SQL, and more. T
 - Smart paste: detect input type and jump to the right tool
 - Tool chaining: send output to the next tool and save workflows
 - History, snippets, and workspaces stored locally
-- PWA installable on desktop and mobile
+- Installable as a PWA on desktop and mobile
 
 ## Tool Categories
 - Format & Validate: JSON, YAML, XML, SQL, GraphQL, JSON Schema
@@ -30,7 +29,6 @@ Local‑first developer tools for JSON, Base64, JWT, YAML, XML, SQL, and more. T
 
 ## Demo
 - Web app: [toolbit.app](https://toolbit.app)
-- Desktop releases: [GitHub Releases](https://github.com/alwin-augustin/toolbit/releases)
 
 ## Screenshots
 ![Toolbit App Home](https://toolbit.app/screenshots/app-home.png)
@@ -60,19 +58,6 @@ npm run web:build
 npm run preview
 ```
 
-### Desktop (local dev)
-```bash
-npm run desktop:dev
-```
-
-### Desktop (build)
-```bash
-npm run desktop:build
-npm run desktop:build:mac
-npm run desktop:build:win
-npm run desktop:build:linux
-```
-
 ## Quality Checks
 ```bash
 npm run check
@@ -91,9 +76,8 @@ See `/privacy` for the full policy.
 
 ## Architecture
 - React 19 + TypeScript + Vite
-- Electron for desktop packaging
 - Zustand for client state
-- PWA via `vite-plugin-pwa`
+- PWA via `vite-plugin-pwa` — installable from the browser, no native packaging
 
 ## SEO and prerendering
 The app is client‑rendered, so `npm run web:build` runs `vite build` and then
@@ -125,9 +109,8 @@ npm run seo:screenshots  # recapture app screenshots (needs a build first)
 ## Brand assets
 `src/ds/assets/logo-mark.svg` is the only logo file. `npm run seo:icons`
 derives everything else from it — the SVG favicon, the classic favicons, the
-PWA, apple-touch and maskable icons, the Safari pinned-tab mask, and the
-desktop app icons in `build/`. Change the mark, run the script, and every
-surface follows.
+PWA, apple-touch and maskable icons, and the Safari pinned-tab mask. Change
+the mark, run the script, and every surface follows.
 
 `seo:og-image` renders one 1200x630 card per page into `public/og/`, and
 `seo:screenshots` captures the images used by the PWA install prompt and this

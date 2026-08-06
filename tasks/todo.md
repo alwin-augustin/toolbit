@@ -179,6 +179,59 @@ all 18 icons from `src/ds/assets/logo-mark.svg`:
   the maskable variant. Caught by measuring corner alpha and glyph bounding
   boxes rather than eyeballing the thumbnails.
 
+---
+
+# Fifth pass — desktop removed, final cleanup
+
+Toolbit is a web app now. Everything Electron is gone.
+
+## Removed
+
+- [x] `.github/workflows/release-desktop.yml` — it fired on every push to
+      `main` and published a **non-draft** GitHub release tagged from
+      `package.json`, so merging would have shipped binaries by accident.
+- [x] `electron/` (main, preload, types), `build/` (electron-builder
+      resources), `scripts/notarize.cjs`, `ELECTRON.md`, `DESKTOP_BUILD.md`
+- [x] `package.json`: the `main` entry, the whole `build` block, all
+      `desktop:*` scripts, and the `electron`, `electron-builder`,
+      `cross-env`, `concurrently` and `wait-on` dependencies
+- [x] `vite.config.ts`: the `ELECTRON` env branch that switched `base`,
+      `target`, chunking and PWA on and off
+- [x] `src/hooks/use-electron.ts`, and the hash router in `App.tsx` that only
+      existed so the app could run over `file://`
+- [x] `.gitignore` and `eslint.config.js` entries for the desktop outputs
+
+## Product claims updated
+
+The site advertised a native desktop app in a dozen places. Left alone, the
+copy would have promised something that no longer ships:
+
+- [x] Site FAQ, the "Is there a desktop version?" answer, the offline guide,
+      the WebSocket and DevToys pages — all now describe PWA install
+- [x] Structured data: `operatingSystem` is `Any (web browser)`, and the
+      `downloadUrl` pointing at GitHub Releases is gone
+- [x] Landing page "Cross-Platform Desktop" card → "Installable Anywhere"
+- [x] README: badges, demo links, desktop build instructions, architecture
+
+## Dead code removed
+
+- [x] `AppLayout`, `AppSidebar`, `Footer`, and the legacy
+      `components/CommandPalette` — an unreachable island; `AppLayout` was
+      imported by nothing and was the only thing importing the other three
+- [x] All eight `components/tools/**/index.ts` barrels — every tool is
+      dynamically imported by path from `tools.config.ts`, so the re-exports
+      had no consumers
+- [x] `firebase-debug.log` committed at the repo root
+
+## Left alone deliberately
+
+- **The published GitHub releases.** Binaries for v1.0.0 are still on the
+  releases page. Unpublishing those is a call only the maintainer can make,
+  and the repo no longer builds replacements.
+- **The 51 failing tests.** They are stale, not broken — they query
+  `data-testid`s and headings the v2 redesign removed. Deleting or repairing
+  them is a decision, not cleanup, and CI still does not run `npm test`.
+
 ## Still open — needs someone with dashboard access
 
 - **`toolbit.pages.dev` returns 200 and serves the old build.** Canonical tags

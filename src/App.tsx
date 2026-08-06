@@ -1,14 +1,12 @@
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Route, Switch, Router, Redirect } from "wouter";
-import { useHashLocation } from "wouter/use-hash-location";
 import { lazy, Suspense } from "react";
 import { AppRouter } from "./router";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { WorkspaceShell } from "@/v2/WorkspaceShell";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { LoadingFallback } from "@/components/LoadingFallback";
-import { isElectronApp } from "@/hooks/use-electron";
 import { TOOLS } from "@/config/tools.config";
 
 /**
@@ -31,12 +29,8 @@ const NotFound = lazy(() => import("@/pages/not-found"));
 const LandingPage = lazy(() => import("@/components/LandingPage").then((module) => ({ default: module.LandingPage })));
 
 function App() {
-    const useHashRouter =
-        typeof window !== "undefined" &&
-        (window.location.protocol === "file:" || isElectronApp());
-
     return (
-        <Router hook={useHashRouter ? useHashLocation : undefined}>
+        <Router>
             <ErrorBoundary>
                 <TooltipProvider>
                     <Switch>
@@ -86,8 +80,8 @@ function App() {
                         </Route>
 
                         {/* Legacy /app URLs. Cloudflare 301s these before the
-                            SPA ever sees them; this covers the hash router in
-                            the desktop build and any in-page link we missed. */}
+                            SPA ever sees them; this is the belt to that
+                            braces, for any in-page link we missed. */}
                         <Route path="/app">{() => <Redirect to="/" replace />}</Route>
                         <Route path="/app/:rest*">
                             {(params) => <Redirect to={`/${params["rest*"] ?? ""}`} replace />}

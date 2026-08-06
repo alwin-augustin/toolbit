@@ -4,7 +4,6 @@ import { VitePWA } from 'vite-plugin-pwa';
 import path from "path";
 
 export default defineConfig(({ mode }) => {
-    const isElectron = process.env.ELECTRON === 'true';
     const isDev = mode === 'development';
     const disablePwa = process.env.VITE_DISABLE_PWA === 'true';
 
@@ -19,7 +18,7 @@ export default defineConfig(({ mode }) => {
         plugins: [
             react(),
             // Only enable PWA for web builds, not Electron
-            !isElectron && !disablePwa && VitePWA({
+            !disablePwa && VitePWA({
                 strategies: 'generateSW',
                 filename: 'sw.js',
                 registerType: 'autoUpdate',
@@ -60,13 +59,12 @@ export default defineConfig(({ mode }) => {
                 "@assets": path.resolve(import.meta.dirname, "attached_assets"),
             },
         },
-        // Base path: use './' for Electron to work with file:// protocol
-        base: isElectron ? './' : '/',
+        base: '/',
         build: {
             outDir: path.resolve(import.meta.dirname, "dist"),
             emptyOutDir: true,
             // Target modern browsers for better optimization
-            target: isElectron ? 'esnext' : 'es2015',
+            target: 'es2015',
             // Enable minification
             minify: 'terser',
             terserOptions: {
@@ -103,7 +101,7 @@ export default defineConfig(({ mode }) => {
                      * forcing tools into category chunks previously dragged
                      * CodeMirror and Prism into the entry graph.
                      */
-                    manualChunks: isElectron ? undefined : (id) => {
+                    manualChunks: (id) => {
                         if (!id.includes('node_modules')) return undefined;
 
                         const match = id.match(/node_modules\/(?:\.pnpm\/)?((?:@[^/]+\/)?[^/]+)/);
@@ -192,7 +190,6 @@ export default defineConfig(({ mode }) => {
                 'zustand',
                 'wouter',
             ],
-            exclude: ['electron'],
         },
         // Performance optimizations
         esbuild: {

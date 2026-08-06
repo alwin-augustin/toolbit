@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
-  "main": "electron/main.js",
   "author": {
     "name": "Toolbit",
     "email": "alwinaugustin@gmail.com"
@@ -25,148 +24,7 @@
     "seo:generate": "node scripts/generate-seo-pages.mjs",
     "seo:og-image": "node scripts/generate-og-image.mjs",
     "seo:icons": "node scripts/generate-icons.mjs",
-    "seo:screenshots": "node scripts/generate-screenshots.mjs",
-    "desktop:dev": "concurrently \"cross-env NODE_ENV=development vite\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
-    "desktop:build": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
-    "desktop:build:win": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win",
-    "desktop:build:mac": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac",
-    "desktop:build:mac:universal": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac --universal",
-    "desktop:build:linux": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --linux",
-    "desktop:clean": "rm -rf release dist"
-  },
-  "build": {
-    "appId": "com.toolbit.app",
-    "productName": "Toolbit",
-    "directories": {
-      "output": "release",
-      "buildResources": "build"
-    },
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "package.json",
-      "!node_modules",
-      "!**/*.{ts,tsx,map}",
-      "!**/*.md",
-      "!**/LICENSE",
-      "!**/.DS_Store"
-    ],
-    "extraMetadata": {
-      "main": "electron/main.js"
-    },
-    "asarUnpack": [
-      "**/*.node"
-    ],
-    "compression": "maximum",
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "icon": "build/icon.ico",
-      "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "verifyUpdateCodeSignature": false
-    },
-    "mac": {
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64",
-            "universal"
-          ]
-        },
-        {
-          "target": "pkg",
-          "arch": [
-            "x64",
-            "arm64",
-            "universal"
-          ]
-        }
-      ],
-      "icon": "build/icon.png",
-      "category": "public.app-category.developer-tools",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.inherit.plist",
-      "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "darkModeSupport": true,
-      "type": "distribution",
-      "minimumSystemVersion": "10.13.0"
-    },
-    "dmg": {
-      "background": "build/dmg-background.png",
-      "iconSize": 96,
-      "iconTextSize": 12,
-      "contents": [
-        {
-          "x": 130,
-          "y": 220
-        },
-        {
-          "x": 410,
-          "y": 220,
-          "type": "link",
-          "path": "/Applications"
-        }
-      ],
-      "window": {
-        "width": 540,
-        "height": 380
-      },
-      "title": "${productName} ${version}",
-      "internetEnabled": false,
-      "sign": false
-    },
-    "pkg": {
-      "allowAnywhere": true,
-      "allowCurrentUserHome": true,
-      "allowRootDirectory": true
-    },
-    "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
-        {
-          "target": "deb",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "icon": "build/icon.png",
-      "category": "Development",
-      "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "synopsis": "A comprehensive collection of developer utilities",
-      "description": "Toolbit provides a comprehensive set of utilities for developers including JSON formatters, encoders/decoders, and more."
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "allowElevation": true,
-      "perMachine": false,
-      "runAfterFinish": true,
-      "deleteAppDataOnUninstall": false
-    },
-    "afterSign": "scripts/notarize.cjs",
-    "buildDependenciesFromSource": false,
-    "nodeGypRebuild": false
+    "seo:screenshots": "node scripts/generate-screenshots.mjs"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.4",
@@ -247,10 +105,6 @@
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "concurrently": "^9.2.1",
-    "cross-env": "^10.1.0",
-    "electron": "^38.8.6",
-    "electron-builder": "^26.15.3",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "fake-indexeddb": "^6.2.5",
@@ -266,7 +120,6 @@
     "typescript-eslint": "^8.45.0",
     "vite": "^6.4.3",
     "vite-plugin-pwa": "^1.0.3",
-    "vitest": "^3.2.7",
-    "wait-on": "^9.0.1"
+    "vitest": "^3.2.7"
   }
 }

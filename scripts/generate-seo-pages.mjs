@@ -454,7 +454,7 @@ function renderToolShell(tool, shell) {
                 url: canonical,
                 description: tool.description,
                 applicationCategory: 'DeveloperApplication',
-                operatingSystem: 'Web browser, macOS, Windows, Linux',
+                operatingSystem: 'Any (web browser)',
                 browserRequirements: 'Requires JavaScript. Modern browser recommended.',
                 isAccessibleForFree: true,
                 image: ogImage,
