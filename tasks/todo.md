@@ -135,6 +135,50 @@ meaning and cost a level of URL depth on every page that matters for search.
 - [x] Two tests guard the new shape: every tool path is `/<id>`, and no tool
       slug collides with a reserved top-level page.
 
+---
+
+# Fourth pass — one logo everywhere
+
+The repo carried **three** different marks, plus a set of PWA icons that were
+solid black squares containing no artwork at all.
+
+| | mark | where it was |
+|---|---|---|
+| A | wrench + wordmark | `public/logo.png`, referenced by nothing |
+| B | t + spectrum | `src/ds/assets/logo-mark.svg` — the app sidebar |
+| C | chevrons | favicon, desktop icon, static pages, all 52 OG cards |
+| D | *nothing* | `pwa-*.png`, `apple-touch-icon.png`, `maskable-*.png` |
+
+D is the one worth calling out: those three files were 512x512 of opaque black
+with no glyph, so the installed PWA and the iOS home-screen icon were blank.
+Pre-existing, unrelated to any of this work.
+
+**B is now the single source of truth.** `scripts/generate-icons.mjs` derives
+all 18 icons from `src/ds/assets/logo-mark.svg`:
+
+- [x] `public/icon.svg`, `src/assets/app-logo.svg` — the rounded tile
+- [x] `public/mask-icon.svg` — monochrome glyph, one layer, for Safari
+- [x] favicons (16, 32, `.ico` with 16/32/48) and `icon-64`
+- [x] PWA icons at 64/192/512 — real artwork for the first time
+- [x] `apple-touch-icon.png` — full-bleed square, since iOS applies its own mask
+- [x] `maskable-icon-512x512.png` — glyph at 62% so it survives Android's
+      circular crop; verified against the 80% safe zone
+- [x] `build/icon.{png,ico,icns}` — desktop app icons, including the stale
+      `.icns` that would otherwise have kept shipping the chevron
+- [x] All 52 Open Graph cards regenerated (they embed `public/icon.svg`)
+
+## Notes
+
+- **`public/logo.png` (mark A) stays deleted.** It was removed in the
+  performance pass for being 1.4 MB and unreferenced; with B chosen it is
+  genuinely unused. It remains recoverable from git history if that changes.
+- The app screenshots already rendered mark B, so they did not need
+  regenerating — the sidebar was the one surface that was already right.
+- One real bug found and fixed while writing the generator: all three master
+  renders wrote to the same temp filename, so every icon initially came out as
+  the maskable variant. Caught by measuring corner alpha and glyph bounding
+  boxes rather than eyeballing the thumbnails.
+
 ## Still open — needs someone with dashboard access
 
 - **`toolbit.pages.dev` returns 200 and serves the old build.** Canonical tags

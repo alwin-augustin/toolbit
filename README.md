@@ -117,9 +117,17 @@ reads as a page to a crawler and boots straight into the tool in a browser.
 
 ```bash
 npm run seo:generate     # regenerate static pages into dist/
+npm run seo:icons        # rebuild every icon from the brand mark
 npm run seo:og-image     # re-render the Open Graph cards (needs Chromium)
 npm run seo:screenshots  # recapture app screenshots (needs a build first)
 ```
+
+## Brand assets
+`src/ds/assets/logo-mark.svg` is the only logo file. `npm run seo:icons`
+derives everything else from it — the SVG favicon, the classic favicons, the
+PWA, apple-touch and maskable icons, the Safari pinned-tab mask, and the
+desktop app icons in `build/`. Change the mark, run the script, and every
+surface follows.
 
 `seo:og-image` renders one 1200x630 card per page into `public/og/`, and
 `seo:screenshots` captures the images used by the PWA install prompt and this
