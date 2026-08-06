@@ -111,27 +111,59 @@ export default defineConfig(({ mode }) => {
                     about: path.resolve(import.meta.dirname, "about.html"),
                 },
                 output: {
-                    // Enable code splitting with proper chunking strategy
+                    /**
+                     * Only node_modules are chunked by hand, and only far enough
+                     * to keep a tool's heavy dependency out of the first paint:
+                     * pdf-lib, pkijs, protobufjs, terser and friends are each
+                     * needed by exactly one lazily-loaded tool, so grouping them
+                     * into one `vendor` blob made the homepage download megabytes
+                     * of parser it would never run.
+                     *
+                     * Application modules are deliberately left to Rollup. Every
+                     * tool is a dynamic import, so Rollup gives each one its own
+                     * chunk and hoists genuinely shared code automatically —
+                     * forcing tools into category chunks previously dragged
+                     * CodeMirror and Prism into the entry graph.
+                     */
                     manualChunks: isElectron ? undefined : (id) => {
-                        // Vendor chunk for node_modules
-                        if (id.includes('node_modules')) {
-                            // Separate large libraries into their own chunks
-                            if (id.includes('prismjs')) return 'prism';
-                            if (id.includes('marked') || id.includes('dompurify')) return 'markdown';
-                            if (id.includes('@codemirror') || id.includes('@lezer')) return 'codemirror';
-                            if (id.includes('date-fns') || id.includes('cron-parser') || id.includes('cronstrue')) return 'date-tools';
-                            if (id.includes('lucide-react') || id.includes('radix-ui')) return 'ui-vendor';
-                            // Keep Radix in vendor to avoid circular chunk dependencies.
-                            return 'vendor';
+                        if (!id.includes('node_modules')) return undefined;
+
+                        const match = id.match(/node_modules\/(?:\.pnpm\/)?((?:@[^/]+\/)?[^/]+)/);
+                        const pkg = match?.[1] ?? '';
+
+                        // Framework: needed for the very first render.
+                        if (['react', 'react-dom', 'scheduler', 'wouter', 'zustand'].includes(pkg)) {
+                            return 'react-vendor';
                         }
-                        // Tool components chunked by category
-                        if (id.includes('/tools/json/')) return 'tools-json';
-                        if (id.includes('/tools/encoding/')) return 'tools-encoding';
-                        if (id.includes('/tools/text/')) return 'tools-text';
-                        if (id.includes('/tools/web/')) return 'tools-web';
-                        if (id.includes('/tools/security/')) return 'tools-security';
-                        if (id.includes('/tools/converters/')) return 'tools-converters';
-                        if (id.includes('/tools/utilities/')) return 'tools-utilities';
+                        if (pkg === 'lucide-react' || pkg.startsWith('@radix-ui') || pkg === 'cmdk') {
+                            return 'ui-vendor';
+                        }
+
+                        // Editors and highlighters: only when a tool opens.
+                        if (pkg === 'prismjs' || pkg === 'react-simple-code-editor') return 'prism';
+                        if (pkg === 'codemirror' || pkg.startsWith('@codemirror') || pkg.startsWith('@lezer')) {
+                            return 'codemirror';
+                        }
+
+                        // Single-tool heavyweights.
+                        if (pkg === 'marked' || pkg === 'dompurify') return 'markdown';
+                        if (['date-fns', 'cron-parser', 'cronstrue'].includes(pkg)) return 'date-tools';
+                        if (pkg === 'pdf-lib') return 'pdf-lib';
+                        if (['pkijs', 'asn1js', 'pvutils'].includes(pkg)) return 'pki';
+                        if (pkg === 'protobufjs' || pkg.startsWith('@protobufjs')) return 'protobuf';
+                        if (pkg === 'graphql') return 'graphql';
+                        if (pkg === 'ajv' || pkg === 'ajv-formats' || pkg === 'fast-uri') return 'ajv';
+                        if (pkg === 'terser' || pkg === 'source-map-support') return 'terser';
+                        if (pkg === 'qrcode') return 'qrcode';
+                        if (pkg === 'papaparse') return 'papaparse';
+                        if (pkg === 'js-yaml') return 'yaml';
+                        if (pkg === 'diff') return 'diff';
+                        if (['csso', 'cssbeautify', 'css-tree', 'mdn-data'].includes(pkg)) return 'css-tools';
+                        if (pkg === 'convert-units') return 'convert-units';
+                        if (pkg.startsWith('@noble')) return 'noble-hashes';
+                        if (pkg === 'react-window') return 'react-window';
+
+                        return 'vendor';
                     },
                     // Optimize asset naming
                     assetFileNames: (assetInfo) => {

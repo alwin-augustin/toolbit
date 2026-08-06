@@ -1,8 +1,19 @@
+import { useEffect } from "react";
 import { Link } from "wouter";
 import { ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { applySeo } from "@/seo/use-seo";
 
 export default function TermsOfService() {
+    useEffect(() => {
+        applySeo({
+            title: "Terms of Service — Toolbit",
+            description:
+                "The terms that apply when you use Toolbit's local-first developer tools. Free to use, no account required, provided as-is under the MIT licence.",
+            canonicalPath: "/terms",
+        });
+    }, []);
+
     return (
         <div className="min-h-screen bg-background">
             <div className="max-w-3xl mx-auto px-4 py-12">

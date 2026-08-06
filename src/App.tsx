@@ -17,6 +17,7 @@ const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
 // Dev preview of the v2 design system — lazy so its stylesheet only
 // loads when the route is visited and never leaks into the legacy app.
 const DesignSystemPreview = lazy(() => import("@/pages/design-system-preview"));
+const NotFound = lazy(() => import("@/pages/not-found"));
 const LandingPage = lazy(() => import("@/components/LandingPage").then((module) => ({ default: module.LandingPage })));
 
 function App() {
@@ -77,6 +78,15 @@ function App() {
                             <WorkspaceShell>
                                 <AppRouter />
                             </WorkspaceShell>
+                        </Route>
+
+                        {/* Prerendered marketing pages (/tools, /compare, guides)
+                            are served as static files, so anything reaching the
+                            SPA here is genuinely unknown. */}
+                        <Route>
+                            <Suspense fallback={<LoadingFallback />}>
+                                <NotFound />
+                            </Suspense>
                         </Route>
                     </Switch>
                     <Toaster />

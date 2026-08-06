@@ -17,6 +17,7 @@ import { HomeDashboard } from "./HomeDashboard";
 import { PhaseTwoPanels } from "./PhaseTwoPanels";
 import { FAVORITES_CHANGED_EVENT, getFavoriteTools, readFavoriteIds } from "./favorites";
 import { useToolPipe } from "@/hooks/use-tool-pipe";
+import { useRouteSeo } from "@/seo/use-seo";
 import { useWorkspace as useLegacyWorkspace } from "@/hooks/use-workspace";
 import { PRESET_WORKFLOWS } from "@/config/workflows.config";
 
@@ -56,14 +57,9 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
 
     const urlTool = toolFromPath(location);
 
-    useEffect(() => {
-        document.title = "Toolbit — Local-first developer workspace";
-        document.querySelector('meta[name="description"]')?.setAttribute(
-            "content",
-            "A local-first developer workspace for formatting, transforming, inspecting, and generating code and data.",
-        );
-        document.querySelector('link[rel="canonical"]')?.setAttribute("href", `${window.location.origin}/`);
-    }, []);
+    // Title, description, and canonical follow the active tool so each one can
+    // rank for its own search terms instead of inheriting the homepage's.
+    useRouteSeo();
 
     // URL is the source of truth: visiting /app/:slug ensures a tab exists.
     useEffect(() => {

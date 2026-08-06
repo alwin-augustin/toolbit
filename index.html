@@ -5,51 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
 
     <!-- Primary Meta Tags -->
-    <title>Toolbit — Local-first developer workspace</title>
-    <meta name="title" content="Toolbit — Local-first developer workspace">
-    <meta name="description" content="Toolbit is a local-first developer workspace for formatting, transforming, inspecting, and generating code and data without sending it to a server.">
+    <title>Toolbit | Local-First Developer Tools, JSON Formatter & API Utilities</title>
+    <meta name="title" content="Toolbit | Local-First Developer Tools, JSON Formatter & API Utilities">
+    <meta name="description" content="Toolbit is a local-first developer workspace with 40+ offline tools including JSON formatter, JWT decoder, Base64 encoder, Regex tester, SQL formatter, UUID generator and more. No uploads. No tracking.">
     <meta name="author" content="Toolbit">
-    <meta name="robots" content="index, follow">
-    <meta name="keywords" content="developer tools, JSON formatter, Base64 encoder, JWT decoder, YAML formatter, XML formatter, SQL formatter, UUID generator, hash generator, regex tester, cron parser, API request builder, Docker command builder">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+    <meta name="keywords" content="json formatter, json beautifier, jwt decoder, yaml formatter, regex tester, uuid generator, sql formatter, base64 encoder, xml formatter, hash generator, url encoder, cron expression parser, csv to json, markdown preview, docker command generator, offline developer tools, local-first developer tools">
     <meta name="application-name" content="Toolbit">
-    <link rel="canonical" href="https://toolbit.pages.dev/">
+    <link rel="canonical" href="https://toolbit.app/">
 
     <!-- Google Site Verification -->
     <meta name="google-site-verification" content="KGFJI6dGyK3ttM_KNCffbTcBlkfK3pMNrl4Szcvy3jU" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://toolbit.pages.dev/">
+    <meta property="og:url" content="https://toolbit.app/">
     <meta property="og:site_name" content="Toolbit">
     <meta property="og:locale" content="en_US">
-    <meta property="og:title" content="Toolbit — Local-first developer workspace">
-    <meta property="og:description" content="Format, transform, inspect, and generate code and data locally with Toolbit.">
-    <meta property="og:image" content="https://toolbit.pages.dev/pwa-512x512.png">
-    <meta property="og:image:width" content="512">
-    <meta property="og:image:height" content="512">
-    <meta property="og:image:alt" content="Toolbit - Developer Utilities">
+    <meta property="og:title" content="Toolbit | Local-First Developer Tools, JSON Formatter & API Utilities">
+    <meta property="og:description" content="40+ offline developer tools — JSON formatter, JWT decoder, Base64 encoder, Regex tester, SQL formatter, UUID generator. Everything runs in your browser. No uploads. No tracking.">
+    <meta property="og:image" content="https://toolbit.app/og-image.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Toolbit — 40+ developer tools that never upload your data">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://toolbit.pages.dev/">
-    <meta name="twitter:title" content="Toolbit — Local-first developer workspace">
-    <meta name="twitter:description" content="Format, transform, inspect, and generate code and data locally with Toolbit.">
-    <meta name="twitter:image" content="https://toolbit.pages.dev/pwa-512x512.png">
-    <meta name="twitter:image:alt" content="Toolbit - Developer Utilities">
+    <meta name="twitter:url" content="https://toolbit.app/">
+    <meta name="twitter:title" content="Toolbit | Local-First Developer Tools, JSON Formatter & API Utilities">
+    <meta name="twitter:description" content="40+ offline developer tools — JSON formatter, JWT decoder, Base64 encoder, Regex tester, SQL formatter, UUID generator. Everything runs in your browser. No uploads. No tracking.">
+    <meta name="twitter:image" content="https://toolbit.app/og-image.png">
+    <meta name="twitter:image:alt" content="Toolbit — 40+ developer tools that never upload your data">
 
-    <!-- Structured Data -->
+    <!-- Structured Data: the entity graph Google uses to connect site, org, and app -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Toolbit",
-      "description": "Local-first developer workspace for formatting, transforming, inspecting, and generating code and data.",
-      "applicationCategory": "DeveloperApplication",
-      "operatingSystem": "Web browser, macOS, Windows, Linux",
-      "url": "https://toolbit.pages.dev/",
-      "image": "https://toolbit.pages.dev/pwa-512x512.png",
-      "isAccessibleForFree": true,
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://toolbit.app/#website",
+          "url": "https://toolbit.app/",
+          "name": "Toolbit",
+          "description": "Local-first developer workspace with 40+ offline tools.",
+          "inLanguage": "en",
+          "publisher": { "@id": "https://toolbit.app/#organization" }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://toolbit.app/#organization",
+          "name": "Toolbit",
+          "url": "https://toolbit.app",
+          "logo": "https://toolbit.app/pwa-512x512.png",
+          "sameAs": ["https://github.com/alwin-augustin/toolbit"]
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://toolbit.app/#software",
+          "name": "Toolbit",
+          "description": "Local-first developer workspace with 40+ offline tools including a JSON formatter, JWT decoder, Base64 encoder, regex tester, SQL formatter, and UUID generator.",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Windows, macOS, Linux",
+          "url": "https://toolbit.app/",
+          "downloadUrl": "https://github.com/alwin-augustin/toolbit/releases",
+          "softwareVersion": "1.0.0",
+          "image": "https://toolbit.app/og-image.png",
+          "screenshot": "https://toolbit.app/og-image.png",
+          "isAccessibleForFree": true,
+          "publisher": { "@id": "https://toolbit.app/#organization" },
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://toolbit.app/#webapp",
+          "name": "Toolbit",
+          "description": "Local-first developer workspace for formatting, transforming, inspecting, and generating code and data.",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Web browser, macOS, Windows, Linux",
+          "browserRequirements": "Requires JavaScript. Modern browser recommended.",
+          "url": "https://toolbit.app/",
+          "image": "https://toolbit.app/og-image.png",
+          "isAccessibleForFree": true,
+          "isPartOf": { "@id": "https://toolbit.app/#website" },
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        }
+      ]
     }
     </script>
 
@@ -75,9 +116,62 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=2" />
     <link rel="shortcut icon" href="/favicon.ico?v=2" />
+    <link rel="mask-icon" href="/mask-icon.svg" color="#3D63DD" />
 
     <!-- Theme Script - Set light mode as default -->
     <script src="/theme-init.js"></script>
+
+    <!--
+      Styles for the crawlable pre-render below. The markup inside #root is
+      injected at build time by scripts/generate-seo-pages.mjs and is replaced
+      by the React app as soon as it mounts, so this only ever paints during
+      the first few hundred milliseconds — or permanently, for a crawler that
+      does not execute JavaScript.
+    -->
+    <style>
+        .tb-boot {
+            --tb-bg: #ffffff;
+            --tb-fg: #14161a;
+            --tb-muted: #5b6070;
+            --tb-line: #e3e5ea;
+            --tb-accent: #2f52c8;
+            box-sizing: border-box;
+            max-width: 62rem;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 4rem;
+            background: var(--tb-bg);
+            color: var(--tb-fg);
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+            line-height: 1.6;
+        }
+        html.dark .tb-boot {
+            --tb-bg: #17181c;
+            --tb-fg: #eceef3;
+            --tb-muted: #a1a6b4;
+            --tb-line: #2b2d34;
+            --tb-accent: #93a9ff;
+        }
+        .tb-boot *, .tb-boot *::before, .tb-boot *::after { box-sizing: inherit; }
+        .tb-boot h1 { font-size: clamp(1.9rem, 4vw, 2.75rem); line-height: 1.15; margin: 0 0 1rem; letter-spacing: -0.02em; }
+        .tb-boot h2 { font-size: 1.25rem; margin: 2.25rem 0 0.5rem; letter-spacing: -0.01em; }
+        .tb-boot h3 { font-size: 1rem; margin: 0 0 0.25rem; }
+        .tb-boot p { margin: 0 0 1rem; color: var(--tb-muted); }
+        .tb-boot a { color: var(--tb-accent); text-decoration: none; }
+        .tb-boot a:hover { text-decoration: underline; }
+        .tb-boot ul { margin: 0 0 1rem; padding-left: 1.1rem; color: var(--tb-muted); }
+        .tb-boot li { margin: 0.2rem 0; }
+        .tb-boot-brand { display: flex; align-items: center; gap: 0.6rem; font-weight: 650; font-size: 1.1rem; margin-bottom: 2rem; }
+        .tb-boot-brand img { width: 28px; height: 28px; }
+        .tb-boot-lede { font-size: 1.05rem; max-width: 46rem; }
+        .tb-boot-links { display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; padding: 0; margin: 0 0 1rem; list-style: none; }
+        .tb-boot-links li { margin: 0; }
+        .tb-boot-links a { display: inline-block; padding: 0.3rem 0.7rem; border: 1px solid var(--tb-line); border-radius: 999px; font-size: 0.9rem; }
+        .tb-boot-grid { display: grid; gap: 1.25rem 2rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin-bottom: 0.5rem; }
+        .tb-boot-faq dt { font-weight: 600; margin-top: 0.9rem; }
+        .tb-boot-faq dd { margin: 0.15rem 0 0; color: var(--tb-muted); }
+        .tb-boot-footer { margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--tb-line); font-size: 0.9rem; color: var(--tb-muted); }
+        .tb-boot-footer a { margin-right: 1rem; }
+    </style>
 </head>
 <body>
 <div id="root"></div>

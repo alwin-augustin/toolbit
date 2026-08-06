@@ -95,6 +95,26 @@ See `/privacy` for the full policy.
 - Zustand for client state
 - PWA via `vite-plugin-pwa`
 
+## SEO and prerendering
+The app is client‑rendered, so `npm run web:build` runs `vite build` and then
+`scripts/generate-seo-pages.mjs`, which prerenders the crawlable surface into
+`dist/`:
+
+- `/tools` plus a static landing page for every tool at `/tools/<slug>`
+- comparison pages under `/compare/` and long‑form guides
+- `sitemap.xml` and `robots.txt`
+- real HTML injected into `dist/index.html`'s `#root`, replaced by React on mount
+
+All of that copy lives in `src/seo/seo-content.js`, which the app imports too —
+`src/seo/use-seo.ts` uses it to set per‑route title, description, and canonical,
+pointing `/app/<slug>` at its `/tools/<slug>` landing page. Editing a tool's
+marketing copy means editing that one file.
+
+```bash
+npm run seo:generate    # regenerate static pages into dist/
+npm run seo:og-image    # re-render public/og-image.png (needs Chromium)
+```
+
 ## Contributing
 Pull requests are welcome.
 - Run `npm run check` and `npm run lint`
