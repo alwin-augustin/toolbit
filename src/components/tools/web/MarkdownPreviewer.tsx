@@ -83,7 +83,15 @@ export default function MarkdownPreviewer() {
                 const renderedHtml = await marked(markdown);
                 setHtml(DOMPurify.sanitize(renderedHtml));
             } catch (error) {
-                setHtml(`<p style="color:hsl(var(--danger))">Error rendering markdown: ${error instanceof Error ? error.message : 'Unknown error'}</p>`);
+                // The message can carry fragments of the user's input, and this
+                // string goes straight into dangerouslySetInnerHTML — so it gets
+                // sanitised on the error path too, not just the happy one.
+                const message = error instanceof Error ? error.message : "Unknown error";
+                setHtml(
+                    DOMPurify.sanitize(
+                        `<p style="color:hsl(var(--danger))">Error rendering markdown: ${message}</p>`,
+                    ),
+                );
             }
         };
         renderMarkdown();

@@ -72,19 +72,20 @@ function createWindow() {
     }
   });
 
-  // Load the app
+  // Load the app. The workspace lives at the root now — /app only survives as
+  // a redirect for old web URLs, so booting into it would cost a redirect on
+  // every launch.
   if (isDev) {
-    // Development: Load from Vite dev server directly to app route
-    mainWindow.loadURL('http://localhost:5173/#/app').catch(err => {
+    mainWindow.loadURL('http://localhost:5173/#/').catch(err => {
       console.error('Failed to load dev server:', err);
       app.quit();
     });
     // Open DevTools in development
     mainWindow.webContents.openDevTools();
   } else {
-    // Production: Load from built files with hash routing to app
+    // Production: Load from built files with hash routing
     const indexPath = path.join(__dirname, '../dist/index.html');
-    mainWindow.loadFile(indexPath, { hash: '/app' }).catch(err => {
+    mainWindow.loadFile(indexPath, { hash: '/' }).catch(err => {
       console.error('Failed to load app:', err);
       app.quit();
     });
