@@ -8,6 +8,8 @@ import { getFavoriteTools, writeFavoriteIds } from "./favorites";
 import type { PipelineStep } from "@/hooks/use-tool-pipe";
 import type { WorkspaceTab } from "./workspace-store";
 import { useFocusTrap } from "./use-focus-trap";
+import { isPostHogEnabled, posthog } from "@/lib/posthog";
+import { posthogLogger } from "@/lib/posthog-logger";
 
 type PanelKind = "workspaces" | "snippets" | "favorites";
 
@@ -83,6 +85,16 @@ function WorkspacePanel({ tabs, pipeline, onLoad }: { tabs: WorkspaceTab[]; pipe
         const ids = pipeline.length > 0 ? pipeline.map((step) => step.toolId) : tabs.map((tab) => tab.id);
         if (!ids.length) return;
         await saveWorkspace(makeWorkspace(name || (pipeline.length ? "Saved pipeline" : "Open tools"), ids));
+        if (isPostHogEnabled) {
+            posthog.capture("workspace_saved", {
+                source: pipeline.length ? "pipeline" : "open_tabs",
+                tool_count: ids.length,
+            });
+            posthogLogger.info("workspace saved", {
+                source: pipeline.length ? "pipeline" : "open_tabs",
+                tool_count: ids.length,
+            });
+        }
         setName("");
         refresh();
     };
@@ -160,6 +172,9 @@ function SnippetPanel() {
     const create = async () => {
         if (!content.trim()) return;
         await saveSnippet({ id: crypto.randomUUID(), name: name.trim() || "Snippet", content, createdAt: Date.now() });
+        if (isPostHogEnabled) {
+            posthog.capture("snippet_saved")
+        }
         setName("");
         setContent("");
         refresh();

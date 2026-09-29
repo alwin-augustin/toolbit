@@ -31,3 +31,5 @@ coverage/
 .DS_Store
 *.iconset
 .vercel
+.env
+.env*

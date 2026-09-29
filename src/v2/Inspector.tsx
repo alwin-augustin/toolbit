@@ -111,8 +111,8 @@ export function Inspector({ toolId, onClose }: InspectorProps) {
                     </span>
                 </div>
                 <p style={{ fontSize: "var(--text-xs)", color: "hsl(var(--text-muted))", lineHeight: "var(--leading-snug)" }}>
-                    Everything runs on this device. No network calls, no cookies, no telemetry — even piped
-                    workflows stay local.
+                    Tool content stays on this device. Anonymous product analytics never include inputs, outputs, or
+                    piped workflow content.
                 </p>
             </div>
         </aside>

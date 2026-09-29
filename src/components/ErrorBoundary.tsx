@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { isPostHogEnabled, posthog } from '@/lib/posthog';
 
 interface Props {
   children: ReactNode;
@@ -34,6 +35,12 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to console
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    if (isPostHogEnabled) {
+      posthog.captureException(error, {
+        error_boundary: "app",
+        component_stack: errorInfo.componentStack || undefined,
+      });
+    }
 
     // Update state with error details
     this.setState({
@@ -41,8 +48,6 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    // In production, you could send error to an error reporting service
-    // Example: logErrorToService(error, errorInfo);
   }
 
   handleReset = () => {

@@ -14,6 +14,7 @@ import { saveWorkspace } from "@/lib/workspace-db";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { AutoSaveRestore } from "@/components/AutoSaveRestore";
+import { isPostHogEnabled, posthog } from "@/lib/posthog";
 
 interface ToolCardProps {
   title: string;
@@ -52,6 +53,9 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
   const handleShare = () => {
     const url = shareUrl || window.location.href;
     navigator.clipboard.writeText(url);
+    if (isPostHogEnabled) {
+      posthog.capture("tool_shared", { tool_id: toolId });
+    }
     toast({ description: "Link copied to clipboard!" });
   };
 
@@ -68,6 +72,12 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
     }
     addPipelineStep({ toolId: targetTool.id, toolName: targetTool.name, path: targetTool.path });
     setPipeData(pipeSource.output, pipeSource.toolId);
+    if (isPostHogEnabled) {
+      posthog.capture("pipeline_tool_selected", {
+        source_tool_id: pipeSource.toolId,
+        target_tool_id: targetTool.id,
+      });
+    }
     setLocation(targetTool.path);
     setShowPipeMenu(false);
   };
@@ -109,6 +119,9 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
           state: JSON.stringify({ input: "", output: "" }),
         })),
       });
+      if (isPostHogEnabled) {
+        posthog.capture("workflow_saved", { tool_count: pipeline.length });
+      }
       toast({ description: "Workflow saved to Workspaces." });
       setShowSaveWorkflow(false);
       setWorkflowName("");

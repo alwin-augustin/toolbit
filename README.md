@@ -2,16 +2,16 @@
 
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 [![Local‑First](https://img.shields.io/badge/local--first-yes-0ea5e9.svg)](https://toolbit.app)
-[![Privacy](https://img.shields.io/badge/privacy-no%20tracking-22c55e.svg)](https://toolbit.app/privacy)
+[![Privacy](https://img.shields.io/badge/privacy-local--first-22c55e.svg)](https://toolbit.app/privacy)
 [![PWA](https://img.shields.io/badge/pwa-ready-6366f1.svg)](https://toolbit.app)
 
-Local‑first developer tools for JSON, Base64, JWT, YAML, XML, SQL, and more. Toolbit runs entirely in your browser or desktop app with zero tracking, zero analytics, and no server‑side processing.
+Local‑first developer tools for JSON, Base64, JWT, YAML, XML, SQL, and more. Toolbit runs entirely in your browser or desktop app: processed content stays on your device and no server-side processing is required.
 
 **Why Toolbit**
 - 100% local processing and offline‑friendly
 - Web + desktop builds from one codebase
 - Fast, keyboard‑first UX for daily dev workflows
-- Privacy‑focused: no network calls, no cookies, no telemetry
+- Privacy-focused: local processing and anonymous product analytics only
 
 ## Highlights
 - Smart paste: detect input type and jump to the right tool
@@ -84,7 +84,7 @@ npm run test
 Toolbit is privacy‑first by design.
 - No data leaves your device
 - No cookies
-- No analytics or telemetry
+- Anonymous product analytics; tool inputs and outputs are never collected
 - LocalStorage and IndexedDB are used only for local preferences and history
 
 See `/privacy` for the full policy.

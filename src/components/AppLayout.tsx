@@ -129,13 +129,13 @@ export function AppLayout({ children }: AppLayoutProps) {
                                 >
                                     <Search className="h-5 w-5" />
                                 </Button>
-                                <div className="hidden lg:flex items-center gap-2 rounded-full border border-border/70 bg-muted/30 px-3 py-1 text-xs text-muted-foreground" title="Toolbit makes no background network calls.">
+                                <div className="hidden lg:flex items-center gap-2 rounded-full border border-border/70 bg-muted/30 px-3 py-1 text-xs text-muted-foreground" title="Toolbit processes your content locally and sends anonymous product analytics.">
                                     <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                                    <span className="text-foreground/80">No network calls made</span>
+                                    <span className="text-foreground/80">Local processing</span>
                                 </div>
                                 <div
                                     className="hidden lg:flex items-center gap-2 rounded-full border border-border/70 bg-muted/30 px-3 py-1 text-xs"
-                                    title="Visual indicator only. Toolbit does not make background network calls."
+                                    title="Visual indicator only. It does not disable anonymous product analytics."
                                 >
                                     <WifiOff className={`h-3.5 w-3.5 ${networkOff ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`} />
                                     <label htmlFor="network-off-toggle" className="text-xs text-muted-foreground">

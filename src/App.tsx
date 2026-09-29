@@ -10,6 +10,7 @@ import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { LoadingFallback } from "@/components/LoadingFallback";
 import { isElectronApp } from "@/hooks/use-electron";
 import { TOOLS } from "@/config/tools.config";
+import { PostHogPageView } from "@/components/PostHogPageView";
 
 /**
  * Tools live at the root: /json-formatter, not /app/json-formatter.
@@ -37,6 +38,7 @@ function App() {
 
     return (
         <Router hook={useHashRouter ? useHashLocation : undefined}>
+            <PostHogPageView />
             <ErrorBoundary>
                 <TooltipProvider>
                     <Switch>

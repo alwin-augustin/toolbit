@@ -1282,7 +1282,7 @@ export const SITE_FAQ = [
     },
     {
         q: 'Does Toolbit track me?',
-        a: 'No. There is no analytics script, no cookie banner, and no third-party request. The app makes no network calls once it has loaded, apart from requests you explicitly send with the API and WebSocket tools.',
+        a: 'Toolbit uses privacy-preserving product analytics to understand aggregate feature use and errors. Tool inputs and outputs are never collected. Apart from analytics and requests you explicitly send with the API and WebSocket tools, processing happens locally in your browser.',
     },
     {
         q: 'Is there a desktop version?',
@@ -1488,7 +1488,7 @@ export const GUIDE_PAGES = [
             },
             {
                 h2: 'Free, open source, and private',
-                body: 'No account, no paid tier, no advertising, no analytics. The source is MIT-licensed on GitHub, and because everything runs client-side you can verify the privacy claim in your own network tab.',
+                body: 'No account, no paid tier, and no advertising. Toolbit uses privacy-preserving analytics for product improvement, while all tool processing remains client-side and tool content is never collected.',
             },
         ],
         faq: [

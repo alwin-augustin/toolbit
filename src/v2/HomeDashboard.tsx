@@ -6,6 +6,7 @@ import { getRecentHistory, type ToolHistoryEntry } from "@/lib/history-db";
 import { detectContentType } from "@/lib/smart-detect";
 import { TOOLS, TOOL_CATEGORIES, type ToolCategory } from "@/config/tools.config";
 import { CATEGORIES } from "./categories";
+import { isPostHogEnabled, posthog } from "@/lib/posthog";
 
 const mono: CSSProperties = { fontFamily: "var(--font-mono)" };
 
@@ -44,7 +45,15 @@ export function HomeDashboard({ onSearch, onHistory, onCategory }: HomeDashboard
     }, []);
 
     const openTool = (id: string) => {
-        if (input.trim()) sessionStorage.setItem("toolbit:smart-paste", input);
+        if (input.trim()) {
+            sessionStorage.setItem("toolbit:smart-paste", input);
+            if (isPostHogEnabled) {
+                posthog.capture("smart_detection_used", {
+                    destination_tool_id: id,
+                    suggestion_count: suggestions.length,
+                });
+            }
+        }
         setLocation(`/${id}`);
     };
 

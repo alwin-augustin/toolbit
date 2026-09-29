@@ -84,7 +84,7 @@ const features = [
     {
         icon: Lock,
         title: "100% Local Processing",
-        description: "Your data never leaves your device. Zero servers, zero tracking, complete privacy."
+        description: "Your processed data never leaves your device. No server-side processing, with privacy-preserving product analytics."
     },
     {
         icon: Zap,
@@ -172,7 +172,7 @@ export function LandingPage() {
                                     </Link>
                                 </div>
                                 <div className="mt-6 text-sm text-muted-foreground">
-                                    No signup. No tracking. Works offline. Open source.
+                                    No signup. Your processed data stays local. Works offline. Open source.
                                 </div>
 
                                 {/* Quick Access */}

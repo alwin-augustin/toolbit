@@ -206,6 +206,7 @@
     "papaparse": "^5.4.1",
     "pdf-lib": "^1.17.1",
     "pkijs": "^3.3.3",
+    "posthog-js": "^1.434.18",
     "prismjs": "^1.30.0",
     "protobufjs": "^8.7.1",
     "pvutils": "^1.1.5",

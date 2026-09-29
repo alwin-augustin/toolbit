@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
         applySeo({
             title: "Privacy Policy — Toolbit",
             description:
-                "Toolbit processes everything locally in your browser. No uploads, no analytics, no tracking, no accounts. Read the full privacy policy.",
+                "Toolbit processes your content locally in your browser and uses anonymous analytics to improve the app. No account required. Read the full privacy policy.",
             canonicalPath: "/privacy",
         });
     }, []);
@@ -99,8 +99,10 @@ export default function PrivacyPolicy() {
                     <section className="space-y-4">
                         <h2 className="text-xl font-semibold text-foreground">Analytics</h2>
                         <p>
-                            Toolbit does not use any analytics, tracking scripts, or user behavior monitoring tools.
-                            We do not collect information about how you use the application.
+                            Toolbit uses PostHog to measure anonymous product usage, diagnose errors, and improve the
+                            application. We collect a randomly generated device identifier, pages and tools used,
+                            feature interactions, and technical error details. We do not send the text, files, tokens,
+                            snippets, or other content you process with Toolbit.
                         </p>
                     </section>
 

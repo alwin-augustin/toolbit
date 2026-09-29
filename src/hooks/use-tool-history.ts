@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { addHistoryEntry, getHistoryByToolId, type ToolHistoryEntry } from "@/lib/history-db"
+import { isPostHogEnabled, posthog } from "@/lib/posthog"
+import { posthogLogger } from "@/lib/posthog-logger"
 
 const MAX_TEXT_LENGTH = 100_000
 
@@ -39,6 +41,16 @@ export function useToolHistory(toolId: string, toolName: string) {
             output: payload.output ? truncateText(payload.output) : undefined,
             metadata: payload.metadata,
         })
+        if (isPostHogEnabled) {
+            posthog.capture("tool_action_completed", {
+                tool_id: toolId,
+                tool_name: toolName,
+            })
+            posthogLogger.info("tool action completed", {
+                tool_id: toolId,
+                tool_name: toolName,
+            })
+        }
         await refresh()
     }, [toolId, toolName, refresh])
 

@@ -20,6 +20,8 @@ import { useToolPipe } from "@/hooks/use-tool-pipe";
 import { useRouteSeo } from "@/seo/use-seo";
 import { useWorkspace as useLegacyWorkspace } from "@/hooks/use-workspace";
 import { PRESET_WORKFLOWS } from "@/config/workflows.config";
+import { isPostHogEnabled, posthog } from "@/lib/posthog";
+import { posthogLogger } from "@/lib/posthog-logger";
 
 function toolFromPath(path: string) {
     const m = path.match(/^\/([^/]+)\/?$/);
@@ -114,6 +116,10 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
         workspace.tools.forEach((tool) => openTool(tool.toolId));
         const firstTool = workspace.tools[0]?.toolId;
         if (firstTool) setLocation(`/${firstTool}`);
+        if (isPostHogEnabled) {
+            posthog.capture("workspace_loaded", { tool_count: workspace.tools.length });
+            posthogLogger.info("workspace loaded", { tool_count: workspace.tools.length });
+        }
         setPhasePanel(null);
     };
 
