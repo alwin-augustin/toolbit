@@ -89,7 +89,7 @@ const features = [
     {
         icon: Zap,
         title: "Works Offline",
-        description: "Install as PWA and use all tools without internet connection. Perfect for air-gapped environments."
+        description: "Install the PWA to use cached local tools offline. Network tools still need a connection."
     },
     {
         icon: Palette,
@@ -98,8 +98,8 @@ const features = [
     },
     {
         icon: Download,
-        title: "Cross-Platform Desktop",
-        description: "Available for macOS, Windows, and Linux. Native app experience on all platforms."
+        title: "Installable Web App",
+        description: "Install the PWA from a supported browser on your computer or mobile device."
     }
 ];
 

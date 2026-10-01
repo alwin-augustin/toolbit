@@ -1,11 +1,4 @@
-import { isPostHogEnabled, posthog } from "@/lib/posthog";
-
-type LogAttributes = Record<string, string | number | boolean>;
-
+import { track, sanitizeProperties } from './telemetry';
 export const posthogLogger = {
-    info(message: string, attributes: LogAttributes) {
-        if (isPostHogEnabled) {
-            posthog.logger.info(message, attributes);
-        }
-    },
+    info(_message: string, attributes: Record<string, unknown>) { track('operational_log', sanitizeProperties(attributes)); },
 };

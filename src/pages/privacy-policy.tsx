@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
         applySeo({
             title: "Privacy Policy — Toolbit",
             description:
-                "Toolbit processes your content locally in your browser and uses anonymous analytics to improve the app. No account required. Read the full privacy policy.",
+                "Toolbit processes your content locally in your browser and uses optional pseudonymous analytics to improve the app. No account required. Read the full privacy policy.",
             canonicalPath: "/privacy",
         });
     }, []);
@@ -30,7 +30,7 @@ export default function PrivacyPolicy() {
                 </div>
 
                 <div className="prose dark:prose-invert max-w-none space-y-6 text-muted-foreground">
-                    <p className="text-sm">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <p className="text-sm">Last updated: October 1, 2026</p>
 
                     <section className="space-y-4">
                         <h2 className="text-xl font-semibold text-foreground">Overview</h2>
@@ -39,8 +39,7 @@ export default function PrivacyPolicy() {
                             how we handle information when you use our developer utilities application.
                         </p>
                         <p className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-foreground">
-                            <strong>The short version:</strong> Toolbit processes all data locally in your browser.
-                            We do not collect, store, or transmit your data to any servers. Your information never leaves your device.
+                            <strong>The short version:</strong> Toolbit processes transformations locally in your browser. Network tools send requests only when you choose to run them. Optional product analytics collects minimized usage events; tool input and output are excluded.
                         </p>
                     </section>
 
@@ -51,10 +50,10 @@ export default function PrivacyPolicy() {
                             within your browser using JavaScript. This means:
                         </p>
                         <ul className="list-disc pl-6 space-y-2">
-                            <li>Your input data is never sent to any external server</li>
-                            <li>No data is stored on our servers (we don't have data servers)</li>
+                            <li>Local transformations do not upload input. HTTP and WebSocket tools contact the endpoints you select.</li>
+                            <li>Toolbit has no accounts or cloud workspace storage.</li>
                             <li>Processing happens instantly on your device</li>
-                            <li>The application works offline after initial load</li>
+                            <li>Cached local tools work offline. Network tools require connectivity.</li>
                         </ul>
                     </section>
 
@@ -67,11 +66,11 @@ export default function PrivacyPolicy() {
                             <li><strong>Theme preference:</strong> Whether you prefer light or dark mode</li>
                             <li><strong>Sidebar state:</strong> Whether the sidebar is open or closed</li>
                             <li><strong>Favorites and recents:</strong> Your pinned tools and recent activity</li>
-                            <li><strong>History, workspaces, snippets:</strong> Optional local history and saved workflows</li>
+                            <li><strong>History, workspaces, snippets:</strong> Normal tool history and explicitly saved documents; secret tools are excluded by default.</li>
                         </ul>
                         <p>
                             This data is stored only on your device and is never transmitted anywhere. You can clear this
-                            data at any time through your browser settings.
+                            data through the Privacy and storage settings or browser settings. History retention defaults to 30 days; applying retention removes expired entries only when you request it. Workspace payloads require an explicit Include data choice. Recipe files contain settings only.
                         </p>
                     </section>
 
@@ -85,23 +84,19 @@ export default function PrivacyPolicy() {
                     <section className="space-y-4">
                         <h2 className="text-xl font-semibold text-foreground">Third-Party Services</h2>
                         <p>
-                            The web version of Toolbit uses the following external resources:
+                            Toolbit uses the following external resources:
                         </p>
                         <ul className="list-disc pl-6 space-y-2">
                             <li><strong>Cloudflare Pages:</strong> The web application is hosted on Cloudflare Pages,
                             which may collect standard web server logs.</li>
                         </ul>
-                        <p>
-                            The desktop application does not make any external network requests after installation.
-                        </p>
                     </section>
 
                     <section className="space-y-4">
                         <h2 className="text-xl font-semibold text-foreground">Analytics</h2>
                         <p>
-                            Toolbit uses PostHog to measure anonymous product usage, diagnose errors, and improve the
-                            application. We collect a randomly generated device identifier, pages and tools used,
-                            feature interactions, and technical error details. We do not send the text, files, tokens,
+                            Toolbit uses PostHog to measure pseudonymous product usage, diagnose errors, and improve the
+                            application. When enabled and configured, we collect a random device identifier, known route/tool identifiers, bounded counts, and error codes. You can disable analytics before collection using Privacy and storage; this also removes the stored device identity. We do not send the text, files, tokens,
                             snippets, or other content you process with Toolbit.
                         </p>
                     </section>

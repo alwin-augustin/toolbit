@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useDocumentField } from "@/v2/document-state"
+import { normalizeText } from "@/lib/tool-contract"
 import { Button, Tooltip } from "@/ds/components"
 import { CodeEditor } from "@/v2/CodeEditor"
 import { Panel, PanelHeader, CopyAction, EditorSplit } from "@/v2/EditorPanels"
@@ -6,47 +7,43 @@ import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 
 export default function StripWhitespace() {
-    const [input, setInput] = useState("")
-    const [output, setOutput] = useState("")
+    const [input, setInput] = useDocumentField<string>("input", "")
+    const [output, setOutput] = useDocumentField<string>("output", "")
     useUrlState(input, setInput)
     const { addEntry } = useToolHistory("strip-whitespace", "Strip Whitespace")
 
     const stripLeading = () => {
-        const result = input.split('\n').map(line => line.replace(/^\s+/, '')).join('\n')
+        const result = normalizeText(input, "strip-leading")
         setOutput(result)
         addEntry({ input, output: result, metadata: { action: "strip-leading" } })
     }
 
     const stripTrailing = () => {
-        const result = input.split('\n').map(line => line.replace(/\s+$/, '')).join('\n')
+        const result = normalizeText(input, "strip-trailing")
         setOutput(result)
         addEntry({ input, output: result, metadata: { action: "strip-trailing" } })
     }
 
     const stripLeadingAndTrailing = () => {
-        const result = input.split('\n').map(line => line.trim()).join('\n')
+        const result = normalizeText(input, "strip-both")
         setOutput(result)
         addEntry({ input, output: result, metadata: { action: "strip-both" } })
     }
 
     const stripAll = () => {
-        const result = input.replace(/\s+/g, ' ').trim()
+        const result = normalizeText(input, "strip-all")
         setOutput(result)
         addEntry({ input, output: result, metadata: { action: "strip-all" } })
     }
 
     const stripEmpty = () => {
-        const result = input.split('\n').filter(line => line.trim()).join('\n')
+        const result = normalizeText(input, "remove-empty")
         setOutput(result)
         addEntry({ input, output: result, metadata: { action: "remove-empty" } })
     }
 
     const normalizeSpacing = () => {
-        const result = input
-            .split('\n')
-            .map(line => line.replace(/\s+/g, ' ').trim())
-            .filter(line => line)
-            .join('\n')
+        const result = normalizeText(input, "normalize")
         setOutput(result)
         addEntry({ input, output: result, metadata: { action: "normalize" } })
     }
@@ -81,7 +78,7 @@ Trailing spaces
                     </Tooltip>
                 ))}
             </div>
-            <EditorSplit>
+            <EditorSplit toolId="strip-whitespace" output={output}>
                 <Panel>
                     <PanelHeader
                         title="Input text"

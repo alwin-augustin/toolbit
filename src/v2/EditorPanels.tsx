@@ -1,4 +1,7 @@
+import { useWorkspace } from "./workspace-store";
+import { track } from "@/lib/telemetry";
 import type { CSSProperties, ReactNode } from "react";
+import { copyText } from "@/lib/clipboard";
 import { useState } from "react";
 import { Copy, Check, Workflow, ArrowRight, Save, X } from "lucide-react";
 import { IconButton, Tooltip, Badge } from "@/ds/components";
@@ -56,14 +59,16 @@ export function Panel({ children }: { children: ReactNode }) {
 /** Copy-to-clipboard action for panel headers. */
 export function CopyAction({ text }: { text: string }) {
     const [copied, setCopied] = useState(false);
+    const [failed, setFailed] = useState(false);
     return (
-        <Tooltip label={copied ? "Copied" : "Copy output"} side="left">
+        <Tooltip label={failed ? "Copy denied — select the output and copy manually" : copied ? "Copied" : "Copy output"} side="left">
             <IconButton
                 size="sm"
                 title="Copy"
-                onClick={() => {
-                    navigator.clipboard.writeText(text);
-                    setCopied(true);
+                disabled={!text}
+                onClick={async () => {
+                    const success = await copyText(text);
+                    setCopied(success); setFailed(!success);
                     setTimeout(() => setCopied(false), 1500);
                 }}
             >
@@ -111,7 +116,8 @@ export function PipelineStrip({ toolId, output }: { toolId?: string; output?: st
     const { pipeline, setPipeData, addPipelineStep, clearPipeline, } = useToolPipe();
     const tool = toolId ? TOOLS.find((candidate) => candidate.id === toolId) : undefined;
     const [targetId, setTargetId] = useState("");
-    const chainTargets = tool ? getChainTargets(tool.id) : [];
+    const options=useWorkspace(s=>s.tabs.find(d=>d.id===s.activeTabId)?.options);
+    const chainTargets = tool ? getChainTargets(tool.id,options) : [];
 
     const pipeTo = (nextId: string) => {
         if (!tool || !output || !nextId) return;
@@ -120,6 +126,7 @@ export function PipelineStrip({ toolId, output }: { toolId?: string; output?: st
         addPipelineStep({ toolId: tool.id, toolName: tool.name, path: tool.path });
         addPipelineStep({ toolId: target.id, toolName: target.name, path: target.path });
         setPipeData(output, tool.id);
+        track("pipeline_step_added",{tool_id:target.id,step_count:pipeline.length+1});
         setTargetId("");
         setLocation(target.path);
     };

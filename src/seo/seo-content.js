@@ -13,13 +13,12 @@ export const SITE = {
     name: 'Toolbit',
     title: 'Toolbit | Local-First Developer Tools, JSON Formatter & API Utilities',
     description:
-        'Toolbit is a local-first developer workspace with 40+ offline tools including JSON formatter, JWT decoder, Base64 encoder, Regex tester, SQL formatter, UUID generator and more. No uploads. No tracking.',
+        'Toolbit is a local-first developer workspace with 40+ offline tools including JSON formatter, JWT decoder, Base64 encoder, Regex tester, SQL formatter, UUID generator and more. Local processing. Optional product analytics.',
     shortDescription:
-        'A local-first developer workspace with 40+ offline tools. No uploads. No tracking.',
+        'A local-first developer workspace with 40+ offline tools. Local processing. Optional product analytics.',
     ogImage: '/og-image.png',
     logo: '/pwa-512x512.png',
     github: 'https://github.com/alwin-augustin/toolbit',
-    downloads: 'https://github.com/alwin-augustin/toolbit/releases',
     locale: 'en_US',
 };
 
@@ -63,10 +62,10 @@ export const CATEGORY_GROUPS = [
 ];
 
 const privacyAnswer =
-    'No. Every Toolbit tool runs entirely in your browser using standard Web APIs. Your input is never uploaded, logged, or sent to a third party — you can open the network tab and watch it stay quiet.';
+    'Local transformations process input in your browser. HTTP and WebSocket tools send user-initiated requests. Optional product analytics excludes tool input and output, and can be disabled in Privacy and storage.';
 
 const offlineAnswer =
-    'Yes. Toolbit installs as a PWA and ships as a desktop app for macOS, Windows, and Linux, so the whole toolbox keeps working on a plane, behind a corporate firewall, or on an air-gapped machine.';
+    'Toolbit installs as a PWA in supported browsers. Cached local tools can work without a connection; network tools still require their endpoints.';
 
 /**
  * Per-tool landing page copy.
@@ -599,7 +598,7 @@ export const TOOL_PAGES = [
         description:
             'Send HTTP requests and inspect status, headers, timing, and body. A fast, local Postman alternative that runs in your browser.',
         h1: 'API Request Builder and HTTP Client',
-        lede: 'Fire a GET, POST, PUT, PATCH, or DELETE, set headers and a body, and read the response with formatting and timing. No account, no workspace sync, no telemetry.',
+        lede: 'Fire a GET, POST, PUT, PATCH, or DELETE, set headers and a body, and read the response with formatting and timing. No account, no workspace sync, optional minimized analytics.',
         bullets: [
             'All common HTTP verbs with custom headers and request bodies.',
             'Response viewer with status, headers, timing, and pretty-printed JSON.',
@@ -724,7 +723,7 @@ export const TOOL_PAGES = [
             'Read close codes and errors when the connection drops.',
         ],
         faq: [
-            { q: 'Can I connect to a ws:// endpoint from an https page?', a: 'Browsers block insecure WebSocket connections from secure pages. Use wss://, or run Toolbit\'s desktop app or a local build for plain ws:// testing.' },
+            { q: 'Can I connect to a ws:// endpoint from an https page?', a: 'Browsers block insecure WebSocket connections from secure pages. Use wss://, or run a local build for plain ws:// testing.' },
             { q: 'Are my messages logged anywhere?', a: 'No. The frame log lives in your tab and disappears when you close it.' },
             { q: 'Does it support custom headers?', a: 'The browser WebSocket API does not allow custom headers on the handshake; pass authentication via the URL or the first message instead.' },
         ],
@@ -1286,7 +1285,7 @@ export const SITE_FAQ = [
     },
     {
         q: 'Is there a desktop version?',
-        a: 'Yes. Toolbit ships as a native desktop app for macOS, Windows, and Linux, and installs as a PWA from the browser for offline use.',
+        a: 'Toolbit installs as a PWA from supported browsers on computers and mobile devices. Cached local tools are available offline.',
     },
 ];
 
@@ -1309,7 +1308,7 @@ export const COMPARISON_PAGES = [
             'How Toolbit and DevToys compare for offline developer utilities: platform support, tool coverage, privacy, and installation. Both keep your data local.',
         h1: 'Toolbit vs DevToys',
         competitor: 'DevToys',
-        lede: 'DevToys is a well-liked offline toolbox for Windows, later joined by a macOS and Linux build. Toolbit covers similar ground but runs anywhere a browser does, including as an installable desktop app. Both are built on the same principle: your data should not need to travel to a server to be reformatted.',
+        lede: 'DevToys is a well-liked offline toolbox for Windows, later joined by a macOS and Linux build. Toolbit covers similar ground but runs anywhere a browser does, including as an installable PWA. Both are built on the same principle: your data should not need to travel to a server to be reformatted.',
         sections: [
             {
                 h2: 'Where they overlap',
@@ -1330,7 +1329,7 @@ export const COMPARISON_PAGES = [
         ],
         faq: [
             { q: 'Is Toolbit a DevToys clone?', a: 'No. The two projects share a philosophy — local-first developer utilities — but Toolbit is browser-first with a workspace model, tool chaining, and networking tools that DevToys does not include.' },
-            { q: 'Do both work offline?', a: 'Yes. DevToys is a native app, and Toolbit installs as a PWA or a desktop app that works with no connection.' },
+            { q: 'Do both work offline?', a: 'Yes. DevToys is a native app, and Toolbit installs as a PWA whose cached local tools work without a connection.' },
             { q: 'Is either one free?', a: 'Both are free and open source.' },
         ],
     },
@@ -1370,7 +1369,7 @@ export const COMPARISON_PAGES = [
         slug: 'toolbit-vs-postman',
         title: 'Toolbit vs Postman — Lightweight API Testing | Toolbit',
         description:
-            'Compare Toolbit\'s built-in API request builder with Postman. No account, no cloud sync, no telemetry — plus 40+ other developer tools.',
+            'Compare Toolbit\'s built-in API request builder with Postman. No account, no cloud sync, optional minimized analytics — plus 40+ other developer tools.',
         h1: 'Toolbit vs Postman',
         competitor: 'Postman',
         lede: 'Postman is a full API development platform: collections, environments, mock servers, monitors, and team collaboration. Toolbit\'s API request builder covers the part most developers use most days — send a request, read the response — without an account or a cloud workspace.',
@@ -1416,7 +1415,7 @@ export const GUIDE_PAGES = [
             },
             {
                 h2: 'How Toolbit works without a connection',
-                body: 'Toolbit is a progressive web app. The first visit caches the application shell and every tool; after that the service worker serves them from disk. There is no API to call because every transformation — parsing, formatting, hashing, encoding — is implemented with standard browser APIs. A native desktop build for macOS, Windows, and Linux is available when you would rather have an icon in the dock.',
+                body: 'Toolbit is a progressive web app. The first visit caches the application shell and every tool; after that the service worker serves them from disk. There is no API to call because every transformation — parsing, formatting, hashing, encoding — is implemented with standard browser APIs. Install the PWA to launch Toolbit from your device.',
             },
             {
                 h2: 'What is in the offline toolbox',
@@ -1424,12 +1423,12 @@ export const GUIDE_PAGES = [
             },
             {
                 h2: 'Installing for offline use',
-                body: 'In a Chromium or Edge browser, use the install icon in the address bar. On iOS, use Share then Add to Home Screen. Or download the desktop build for your platform. In every case the tools are then available with no connection, and no data leaves the device.',
+                body: 'In a Chromium or Edge browser, use the install icon in the address bar. On iOS, use Share then Add to Home Screen. Cached local tools can then work without a connection. Network tools and analytics require a connection.',
             },
         ],
         faq: [
             { q: 'Do offline tools still get updates?', a: 'Yes. When you are next online the service worker fetches the new version in the background and applies it on the following load.' },
-            { q: 'Is an offline web app as private as a native one?', a: 'In this case yes — Toolbit makes no network requests of its own at all, so there is nothing to intercept whether you are online or not.' },
+            { q: 'Is an offline web app as private as a native one?', a: 'In this case yes — local transformations do not upload input. Network tools send requested traffic, and optional analytics sends minimized usage events.' },
             { q: 'Which tools need a connection?', a: 'Only the API request builder and the WebSocket tester, which by definition talk to a remote endpoint. Everything else is pure computation.' },
         ],
         toolHighlights: ['json-formatter', 'jwt-decoder', 'base64-encoder', 'regex-tester', 'hash-generator', 'uuid-generator'],
@@ -1541,7 +1540,7 @@ export const BLOG_POSTS = [
             {
                 h2: 'What to do instead',
                 paragraphs: [
-                    'Prefer tools that do the work in the browser and can prove it. Local-first tools make no network request at all, so the Network tab stays empty no matter what you paste. Toolbit is built this way on purpose: there is no backend to send anything to, and the source is open so the claim is auditable rather than a promise.',
+                    'Prefer tools that do the work in the browser and can prove it. Toolbit performs transformations locally. Network tools contact chosen endpoints and optional minimized analytics can be disabled. The source is open so this behavior can be reviewed.',
                     'Where you cannot verify a tool, use a throwaway token or redact the payload first. And if a token has already been through a service you do not control, treat it as compromised: revoke it, rotate the signing key if the token was signed with a shared secret, and move on. Rotation is cheap. Explaining an incident is not.',
                 ],
             },
@@ -1549,7 +1548,7 @@ export const BLOG_POSTS = [
         faq: [
             {
                 q: 'Is it safe to decode a JWT in Toolbit?',
-                a: 'Yes. The JWT decoder runs entirely in your browser and makes no network request — you can confirm it in the Network tab. It is still good practice to use a test token where one will do.',
+                a: 'Yes. The JWT decoder runs entirely in your browser and does not send your token over the network. Optional usage analytics can be disabled in settings. It is still good practice to use a test token where one will do.',
             },
             {
                 q: 'Does decoding a JWT reveal the signing key?',

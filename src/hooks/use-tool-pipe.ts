@@ -1,5 +1,6 @@
+import { safeStorage } from "@/lib/preferences";
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { persist, createJSONStorage } from "zustand/middleware"
 import { TOOLS } from "@/config/tools.config"
 
 export interface PipelineStep {
@@ -53,6 +54,7 @@ export const useToolPipe = create<ToolPipeState>()(persist((set, get) => ({
     clearPipeline: () => set({ pipeline: [], data: null, sourceToolId: null, updatedAt: null }),
 }), {
     name: "toolbit-pipeline",
+    storage: createJSONStorage(() => safeStorage),
     version: 2,
     migrate: () => ({ pipeline: [] }),
     partialize: (state) => ({ pipeline: state.pipeline }),

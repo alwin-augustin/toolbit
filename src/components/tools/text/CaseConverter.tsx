@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
 import { Sparkles } from "lucide-react"
 import { Button, Card, Input, Textarea } from "@/ds/components"
 import { CopyAction } from "@/v2/EditorPanels"
@@ -18,8 +19,8 @@ const CASE_LABELS: Record<string, string> = {
 }
 
 export default function CaseConverter() {
-    const [input, setInput] = useState("")
-    const [results, setResults] = useState({
+    const [input, setInput] = useDocumentField<string>("input", "")
+    const [results, setResults] = useSessionDocumentState("results", {
         upper: "",
         lower: "",
         title: "",

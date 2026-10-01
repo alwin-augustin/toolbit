@@ -1,3 +1,5 @@
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
 import { useEffect, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Button, Badge } from "@/ds/components";
@@ -293,8 +295,8 @@ function StatusBadge({ status }: { status: CertInfo["validityStatus"] }) {
 const formatDate = (d: Date) => d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
 
 export default function CertificateDecoder() {
-    const [input, setInput] = useState("")
-    const [certInfo, setCertInfo] = useState<CertInfo | null>(null)
+    const [input, setInput] = useDocumentField<string>("input", "")
+    const [certInfo, setCertInfo] = useSessionDocumentState<CertInfo | null>("certInfo", null)
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
     const setStatus = useEditorStatus((s) => s.setStatus);

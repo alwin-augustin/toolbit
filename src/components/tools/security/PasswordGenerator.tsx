@@ -1,3 +1,4 @@
+import { useSessionDocumentState } from "@/v2/document-state";
 import { useState, useCallback, useMemo } from "react"
 import { RefreshCw } from "lucide-react"
 import { Button, Alert, Card, Checkbox, Input } from "@/ds/components"
@@ -36,13 +37,13 @@ function calculateStrength(password: string): { score: number; label: string; co
 }
 
 export default function PasswordGenerator() {
-    const [length, setLength] = useState(16)
-    const [includeLowercase, setIncludeLowercase] = useState(true)
-    const [includeUppercase, setIncludeUppercase] = useState(true)
-    const [includeNumbers, setIncludeNumbers] = useState(true)
-    const [includeSymbols, setIncludeSymbols] = useState(true)
-    const [count, setCount] = useState(1)
-    const [passwords, setPasswords] = useState<string[]>([])
+    const [length, setLength] = useSessionDocumentState("length", 16)
+    const [includeLowercase, setIncludeLowercase] = useSessionDocumentState("includeLowercase", true)
+    const [includeUppercase, setIncludeUppercase] = useSessionDocumentState("includeUppercase", true)
+    const [includeNumbers, setIncludeNumbers] = useSessionDocumentState("includeNumbers", true)
+    const [includeSymbols, setIncludeSymbols] = useSessionDocumentState("includeSymbols", true)
+    const [count, setCount] = useSessionDocumentState("count", 1)
+    const [passwords, setPasswords] = useSessionDocumentState<string[]>("passwords", [])
     const [error, setError] = useState("")
     const shareState = useMemo(
         () => ({
@@ -93,7 +94,7 @@ export default function PasswordGenerator() {
             output: results.join("\n"),
             metadata: { action: "generate" },
         })
-    }, [length, includeLowercase, includeUppercase, includeNumbers, includeSymbols, count, addEntry])
+    }, [length, includeLowercase, includeUppercase, includeNumbers, includeSymbols, count, addEntry, setPasswords])
 
     return (
         <ToolPage maxWidth={720}>

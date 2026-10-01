@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-01",
+  "browser": "headless Chromium",
+  "method": "Paste JSON; wait for valid output plus 250 ms settle. LongTask observer includes editing/rendering/transform delivery.",
+  "before": [
+    {
+      "bytes": 102400,
+      "elapsedMs": 329,
+      "longTasksMs": []
+    },
+    {
+      "bytes": 1048576,
+      "elapsedMs": 469,
+      "longTasksMs": [
+        148
+      ]
+    },
+    {
+      "bytes": 10485760,
+      "elapsedMs": 2156,
+      "longTasksMs": [
+        109,
+        1448
+      ]
+    }
+  ],
+  "after": [
+    {
+      "bytes": 102400,
+      "elapsedMs": 303,
+      "longTasksMs": []
+    },
+    {
+      "bytes": 1048576,
+      "elapsedMs": 330,
+      "longTasksMs": []
+    },
+    {
+      "bytes": 10485760,
+      "elapsedMs": 540,
+      "longTasksMs": [
+        126
+      ]
+    }
+  ]
+}

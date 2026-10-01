@@ -1,4 +1,6 @@
-import { useState, useMemo } from "react"
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
+import { useMemo } from "react"
 import { Button, Card, Input } from "@/ds/components"
 import { ToolPage, SectionTitle, Field, Row, Grid2 } from "@/v2/restyle-kit"
 import { useUrlState } from "@/hooks/use-url-state"
@@ -15,10 +17,10 @@ const RESULT_LABELS = {
 } as const
 
 export default function DateCalculator() {
-    const [startDate, setStartDate] = useState("")
-    const [endDate, setEndDate] = useState("")
-    const [hasCalculated, setHasCalculated] = useState(false)
-    const [result, setResult] = useState({
+    const [startDate, setStartDate] = useDocumentField<string>("startDate", "")
+    const [endDate, setEndDate] = useDocumentField<string>("endDate", "")
+    const [hasCalculated, setHasCalculated] = useSessionDocumentState("hasCalculated", false)
+    const [result, setResult] = useSessionDocumentState("result", {
         days: 0,
         weeks: 0,
         months: 0,

@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo, useEffect } from "react"
+import { useDocumentField } from "@/v2/document-state";
+import { useCallback, useMemo, useEffect } from "react"
 import { parse, print } from "graphql"
 import { Minimize2, Maximize2, Sparkles, Trash2 } from "lucide-react"
 import { Button } from "@/ds/components"
@@ -56,7 +57,7 @@ mutation CreatePost($input: CreatePostInput!) {
 }`
 
 export default function GraphqlFormatter() {
-    const [input, setInput] = useState("")
+    const [input, setInput] = useDocumentField<string>("input", "")
     useUrlState(input, setInput)
     const { addEntry } = useToolHistory("graphql-formatter", "GraphQL Formatter")
     const consumeWorkspaceState = useWorkspace((state) => state.consumeState)
@@ -80,7 +81,7 @@ export default function GraphqlFormatter() {
                 setInput(workspaceState)
             }
         }
-    }, [input, consumeWorkspaceState])
+    }, [input, consumeWorkspaceState, setInput])
 
     const result = useMemo(() => {
         if (!input.trim()) return { output: "", error: "" }
@@ -118,7 +119,7 @@ export default function GraphqlFormatter() {
         } catch {
             // Invalid GraphQL — the error already shows in the output panel.
         }
-    }, [input, addEntry])
+    }, [input, addEntry, setInput])
 
     const format = useCallback(() => {
         if (!input.trim()) return
@@ -130,7 +131,7 @@ export default function GraphqlFormatter() {
         } catch {
             // Invalid GraphQL — the error already shows in the output panel.
         }
-    }, [input, addEntry])
+    }, [input, addEntry, setInput])
 
     return (
         <EditorSplit>

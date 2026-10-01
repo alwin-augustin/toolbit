@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react"
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
+import { useEffect } from "react"
 import { Trash2, Sparkles } from "lucide-react"
 import { Button } from "@/ds/components"
 import { CodeEditor } from "@/v2/CodeEditor"
@@ -98,8 +100,8 @@ function uppercaseKeywords(sql: string): string {
 }
 
 export default function SqlFormatter() {
-    const [input, setInput] = useState("")
-    const [output, setOutput] = useState("")
+    const [input, setInput] = useDocumentField<string>("input", "")
+    const [output, setOutput] = useSessionDocumentState("output", "")
     useUrlState(input, setInput)
     const { addEntry } = useToolHistory("sql-formatter", "SQL Formatter")
     const { consumePipeData } = useToolPipe()

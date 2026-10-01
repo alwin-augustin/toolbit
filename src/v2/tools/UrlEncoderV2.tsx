@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { useDocumentField, useDocumentOptions } from "../document-state";
+import { useEffect, useMemo } from "react";
 import { Button, Badge, Tabs, Checkbox } from "@/ds/components";
 import { CodeEditor } from "../CodeEditor";
 import { Panel, PanelHeader, CopyAction, ValidityBadge, EditorSplit } from "../EditorPanels";
@@ -11,23 +10,8 @@ import { useToolHistory } from "@/hooks/use-tool-history";
 
 type Mode = "encode" | "decode";
 
-interface UrlOptions {
-    mode: Mode;
-    /** true = encodeURIComponent (component), false = encodeURI (full URL) */
-    componentMode: boolean;
-    set: (patch: Partial<Omit<UrlOptions, "set">>) => void;
-}
+function useUrlOptions() { return useDocumentOptions({mode:"encode" as Mode, componentMode:true as boolean}); }
 
-const useUrlOptions = create<UrlOptions>()(
-    persist(
-        (set) => ({
-            mode: "encode" as Mode,
-            componentMode: true,
-            set: (patch) => set(patch),
-        }),
-        { name: "toolbit-v2-url-options" }
-    )
-);
 
 function UrlInspectorPanel() {
     const { mode, componentMode, set } = useUrlOptions();
@@ -60,7 +44,7 @@ const SAMPLE_ENCODE = "https://toolbit.app/search?q=local first&lang=en";
 const SAMPLE_DECODE = "https%3A%2F%2Ftoolbit.app%2Fsearch%3Fq%3Dlocal%20first%26lang%3Den";
 
 export default function UrlEncoderV2() {
-    const [input, setInput] = useState("");
+    const [input, setInput] = useDocumentField<string>("input", "");
     useSmartPasteInput(setInput);
     const { mode, componentMode } = useUrlOptions();
     const setStatus = useEditorStatus((s) => s.setStatus);

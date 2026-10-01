@@ -22,6 +22,7 @@ export function OfflineIndicator() {
         // Check for PWA updates
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.ready.then((registration) => {
+                if (registration.waiting) { setHasUpdate(true); setWaitingWorker(registration.waiting); }
                 registration.addEventListener('updatefound', () => {
                     const newWorker = registration.installing;
                     if (newWorker) {
@@ -44,8 +45,8 @@ export function OfflineIndicator() {
 
     const handleUpdate = () => {
         if (waitingWorker) {
+            navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload(),{once:true});
             waitingWorker.postMessage({ type: 'SKIP_WAITING' });
-            window.location.reload();
         }
     };
 
@@ -62,14 +63,14 @@ export function OfflineIndicator() {
         return (
             <div className="fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-lg bg-primary px-4 py-2 text-primary-foreground shadow-lg">
                 <Download className="h-4 w-4" />
-                <span className="text-sm font-medium">Update available</span>
+                <span className="text-sm font-medium">Update available. Save your work before reloading.</span>
                 <Button
                     onClick={handleUpdate}
                     variant="secondary"
                     size="sm"
                     className="h-7 text-xs"
                 >
-                    Update Now
+                    Reload to update
                 </Button>
             </div>
         );

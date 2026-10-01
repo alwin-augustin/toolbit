@@ -1,3 +1,5 @@
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
 import { useState, useCallback, useMemo, useEffect } from "react"
 import { FileCode, Minimize2, ArrowRightLeft, Search, Sparkles, ShieldCheck } from "lucide-react"
 import { Button, Input, Tabs } from "@/ds/components"
@@ -176,13 +178,13 @@ const SAMPLE_XML = `<?xml version="1.0" encoding="UTF-8"?>
 </bookstore>`
 
 export default function XmlFormatter() {
-    const [input, setInput] = useState("")
-    const [output, setOutput] = useState("")
+    const [input, setInput] = useDocumentField<string>("input", "")
+    const [output, setOutput] = useSessionDocumentState("output", "")
     const [error, setError] = useState("")
-    const [activeTab, setActiveTab] = useState<"format" | "convert" | "xpath">("format")
-    const [xpathQuery, setXpathQuery] = useState("")
-    const [xpathResults, setXpathResults] = useState<string[]>([])
-    const [validNotice, setValidNotice] = useState(false)
+    const [activeTab, setActiveTab] = useSessionDocumentState<"format" | "convert" | "xpath">("activeTab", "format")
+    const [xpathQuery, setXpathQuery] = useDocumentField<string>("xpathQuery", "")
+    const [xpathResults, setXpathResults] = useSessionDocumentState<string[]>("xpathResults", [])
+    const [validNotice, setValidNotice] = useSessionDocumentState("validNotice", false)
     const shareState = useMemo(
         () => ({ input, activeTab, xpathQuery }),
         [input, activeTab, xpathQuery],
@@ -248,7 +250,7 @@ export default function XmlFormatter() {
         const formatted = prettifyXml(input)
         setOutput(formatted)
         addEntry({ input, output: formatted, metadata: { action: "prettify" } })
-    }, [input, addEntry])
+    }, [input, addEntry, setOutput])
 
     const handleMinify = useCallback(() => {
         if (!input.trim()) return
@@ -262,7 +264,7 @@ export default function XmlFormatter() {
         const minified = minifyXml(input)
         setOutput(minified)
         addEntry({ input, output: minified, metadata: { action: "minify" } })
-    }, [input, addEntry])
+    }, [input, addEntry, setOutput])
 
     const handleToJson = useCallback(() => {
         if (!input.trim()) return
@@ -275,7 +277,7 @@ export default function XmlFormatter() {
             setError((e as Error).message)
             setOutput("")
         }
-    }, [input, addEntry])
+    }, [input, addEntry, setOutput])
 
     const handleXPath = useCallback(() => {
         if (!input.trim() || !xpathQuery.trim()) return
@@ -291,7 +293,7 @@ export default function XmlFormatter() {
             setError((e as Error).message)
             setXpathResults([])
         }
-    }, [input, xpathQuery, addEntry])
+    }, [input, xpathQuery, addEntry, setXpathResults])
 
     const handleValidate = useCallback(() => {
         if (!input.trim()) return
@@ -303,12 +305,12 @@ export default function XmlFormatter() {
             setValidNotice(false)
             setError(validation.error || "Invalid XML")
         }
-    }, [input])
+    }, [input, setValidNotice])
 
     const handleInputChange = useCallback((value: string) => {
         setInput(value)
         setValidNotice(false)
-    }, [])
+    }, [setInput, setValidNotice])
 
     const loadSample = () => {
         setInput(SAMPLE_XML)

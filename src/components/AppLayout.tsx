@@ -4,14 +4,13 @@ import { SidebarToggle } from "@/components/SidebarToggle";
 import { Footer } from "@/components/Footer";
 import { useSidebar } from "@/hooks/use-sidebar";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { Search, Home, Star, FolderOpen, MoreHorizontal, Moon, Sun, FileText, Minus, Square, X, ShieldCheck, WifiOff } from "lucide-react";
+import { Search, Home, Star, FolderOpen, MoreHorizontal, Moon, Sun, FileText, ShieldCheck, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch as Toggle } from "@/components/ui/switch";
 import { WorkspaceManager } from "@/components/WorkspaceManager";
 import { SnippetManager } from "@/components/SnippetManager";
 import { Link, useLocation } from "wouter";
 import { useTheme } from "@/hooks/use-theme";
-import { useElectron } from "@/hooks/use-electron";
 import { cn } from "@/lib/utils";
 
 interface AppLayoutProps {
@@ -24,9 +23,6 @@ export function AppLayout({ children }: AppLayoutProps) {
     const { theme, toggleTheme } = useTheme();
     const [utilitiesOpen, setUtilitiesOpen] = useState(false);
     const utilitiesRef = useRef<HTMLDivElement | null>(null);
-    const { isElectron, platform, appVersion, electronAPI } = useElectron();
-    const isMac = platform?.platform === "darwin";
-    const showWindowControls = isElectron && !isMac;
     const [networkOff, setNetworkOff] = useState(true);
 
     // Close sidebar on Escape key
@@ -74,23 +70,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <div className="flex-1 flex flex-col transition-all duration-150 ease-out">
                         <header
                             className={cn(
-                                "sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-background/95 px-6 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 shadow-sm",
-                                isElectron && "electron-titlebar",
-                                isElectron && isMac && "pl-16"
+                                "sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-background/95 px-6 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 shadow-sm"
                             )}
                         >
                             <div className="flex items-center gap-4">
                                 <SidebarToggle />
-                                {isElectron && (
-                                    <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
-                                        <span className="font-semibold text-foreground">Toolbit</span>
-                                        {appVersion && (
-                                            <span className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wide">
-                                                v{appVersion}
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
                             </div>
                             <div className="flex items-center gap-2 sm:gap-4">
                                 {/* Search button */}
@@ -194,31 +178,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                                         </div>
                                     )}
                                 </div>
-                                {showWindowControls && (
-                                    <div className="flex items-center gap-1 border-l border-border/70 pl-2 ml-1">
-                                        <button
-                                            className="h-7 w-7 rounded-md hover:bg-muted flex items-center justify-center"
-                                            onClick={() => electronAPI?.window?.minimize()}
-                                            title="Minimize"
-                                        >
-                                            <Minus className="h-3.5 w-3.5" />
-                                        </button>
-                                        <button
-                                            className="h-7 w-7 rounded-md hover:bg-muted flex items-center justify-center"
-                                            onClick={() => electronAPI?.window?.maximize()}
-                                            title="Maximize"
-                                        >
-                                            <Square className="h-3.5 w-3.5" />
-                                        </button>
-                                        <button
-                                            className="h-7 w-7 rounded-md hover:bg-destructive/10 hover:text-destructive flex items-center justify-center"
-                                            onClick={() => electronAPI?.window?.close()}
-                                            title="Close"
-                                        >
-                                            <X className="h-3.5 w-3.5" />
-                                        </button>
-                                    </div>
-                                )}
                             </div>
                         </header>
                         <main id="main-content" className="flex-1 overflow-auto p-6 md:p-8 pb-20 lg:pb-8" tabIndex={-1}>

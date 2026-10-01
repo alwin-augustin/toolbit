@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from "react"
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
+import { useEffect, useCallback } from "react"
 import { ArrowLeftRight, Loader2 } from "lucide-react"
 import * as yaml from "js-yaml"
 import { Button } from "@/ds/components"
@@ -23,10 +25,10 @@ function runMainThread(input: string, action: "format" | "yaml-to-json" | "json-
 }
 
 export default function YamlFormatter() {
-    const [input, setInput] = useState("")
-    const [output, setOutput] = useState("")
-    const [isValid, setIsValid] = useState(true)
-    const [isProcessing, setIsProcessing] = useState(false)
+    const [input, setInput] = useDocumentField<string>("input", "")
+    const [output, setOutput] = useSessionDocumentState("output", "")
+    const [isValid, setIsValid] = useSessionDocumentState("isValid", true)
+    const [isProcessing, setIsProcessing] = useSessionDocumentState("isProcessing", false)
     useUrlState(input, setInput)
     const { addEntry } = useToolHistory("yaml-formatter", "YAML Formatter")
     const { consumePipeData } = useToolPipe()
@@ -96,7 +98,7 @@ export default function YamlFormatter() {
             setIsValid(false)
         }
         setIsProcessing(false)
-    }, [input, addEntry, runWithWorker])
+    }, [input, addEntry, runWithWorker, setIsProcessing, setIsValid, setOutput])
 
     const formatYaml = () => processYaml("format")
     const yamlToJson = () => processYaml("yaml-to-json")

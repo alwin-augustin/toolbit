@@ -1,3 +1,4 @@
+import { useSessionDocumentState } from "@/v2/document-state";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,22 +57,22 @@ export default function JsonFormatter() {
     const { addEntry } = useToolHistory("json-formatter", "JSON Formatter");
     const { consumePipeData } = useToolPipe();
     const consumeWorkspaceState = useWorkspace((state) => state.consumeState);
-    const [outputView, setOutputView] = useState<OutputView>("text");
-    const [indentSize, setIndentSize] = useState(2);
-    const [advancedTab, setAdvancedTab] = useState<AdvancedTab>("none");
+    const [outputView, setOutputView] = useSessionDocumentState<OutputView>("outputView", "text");
+    const [indentSize, setIndentSize] = useSessionDocumentState("indentSize", 2);
+    const [advancedTab, setAdvancedTab] = useSessionDocumentState<AdvancedTab>("advancedTab", "none");
 
     // JSONPath state
-    const [jsonPathQuery, setJsonPathQuery] = useState("$.store.books[*].title");
-    const [jsonPathResult, setJsonPathResult] = useState("");
+    const [jsonPathQuery, setJsonPathQuery] = useSessionDocumentState("jsonPathQuery", "$.store.books[*].title");
+    const [jsonPathResult, setJsonPathResult] = useSessionDocumentState("jsonPathResult", "");
 
     // Schema state
-    const [schemaOutput, setSchemaOutput] = useState("");
+    const [schemaOutput, setSchemaOutput] = useSessionDocumentState("schemaOutput", "");
 
     // Types state
-    const [typeLang, setTypeLang] = useState<TypeLang>("typescript");
-    const [typeOutput, setTypeOutput] = useState("");
-    const [showExplain, setShowExplain] = useState(false);
-    const [advancedOpen, setAdvancedOpen] = useState(false);
+    const [typeLang, setTypeLang] = useSessionDocumentState<TypeLang>("typeLang", "typescript");
+    const [typeOutput, setTypeOutput] = useSessionDocumentState("typeOutput", "");
+    const [showExplain, setShowExplain] = useSessionDocumentState("showExplain", false);
+    const [advancedOpen, setAdvancedOpen] = useSessionDocumentState("advancedOpen", false);
     const [jsonGrammarReady, setJsonGrammarReady] = useState(false);
     const [typeGrammarReady, setTypeGrammarReady] = useState(false);
 
@@ -171,7 +172,7 @@ export default function JsonFormatter() {
         } catch (e) {
             setJsonPathResult(`Error: ${(e as Error).message}`);
         }
-    }, [input, jsonPathQuery]);
+    }, [input, jsonPathQuery, setJsonPathResult]);
 
     const handleGenerateSchema = useCallback(() => {
         if (!input.trim()) return;
@@ -182,7 +183,7 @@ export default function JsonFormatter() {
         } catch (e) {
             setSchemaOutput(`Error: ${(e as Error).message}`);
         }
-    }, [input]);
+    }, [input, setSchemaOutput]);
 
     const handleGenerateTypes = useCallback(() => {
         if (!input.trim()) return;
@@ -196,7 +197,7 @@ export default function JsonFormatter() {
         } catch (e) {
             setTypeOutput(`Error: ${(e as Error).message}`);
         }
-    }, [input, typeLang]);
+    }, [input, typeLang, setTypeOutput]);
 
     useKeyboardShortcuts({
         onPrimaryAction: handleFormat,

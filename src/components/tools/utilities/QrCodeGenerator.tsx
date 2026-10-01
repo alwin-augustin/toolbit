@@ -1,3 +1,6 @@
+import { useSessionDocumentState } from "@/v2/document-state";
+import { copyText } from "@/lib/clipboard";
+import { useDocumentField } from "@/v2/document-state";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react"
 import { Copy, Check, Download, QrCode } from "lucide-react"
 import QRCode from "qrcode"
@@ -17,16 +20,16 @@ function buildVCard(name: string, phone: string, email: string): string {
 }
 
 export default function QrCodeGenerator() {
-    const [mode, setMode] = useState<QrMode>("text")
-    const [text, setText] = useState("")
-    const [url, setUrl] = useState("")
-    const [wifiSsid, setWifiSsid] = useState("")
-    const [wifiPassword, setWifiPassword] = useState("")
-    const [wifiEncryption, setWifiEncryption] = useState("WPA")
-    const [vcardName, setVcardName] = useState("")
-    const [vcardPhone, setVcardPhone] = useState("")
-    const [vcardEmail, setVcardEmail] = useState("")
-    const [size, setSize] = useState(256)
+    const [mode, setMode] = useSessionDocumentState<QrMode>("mode", "text")
+    const [text, setText] = useDocumentField<string>("text", "")
+    const [url, setUrl] = useDocumentField<string>("url", "")
+    const [wifiSsid, setWifiSsid] = useDocumentField<string>("wifiSsid", "")
+    const [wifiPassword, setWifiPassword] = useDocumentField<string>("wifiPassword", "")
+    const [wifiEncryption, setWifiEncryption] = useDocumentField<string>("wifiEncryption", "WPA")
+    const [vcardName, setVcardName] = useDocumentField<string>("vcardName", "")
+    const [vcardPhone, setVcardPhone] = useDocumentField<string>("vcardPhone", "")
+    const [vcardEmail, setVcardEmail] = useDocumentField<string>("vcardEmail", "")
+    const [size, setSize] = useSessionDocumentState("size", 256)
     const [qrDataUrl, setQrDataUrl] = useState("")
     const [qrSvg, setQrSvg] = useState("")
     const [error, setError] = useState("")
@@ -125,9 +128,9 @@ export default function QrCodeGenerator() {
         URL.revokeObjectURL(url)
     }
 
-    const copyToClipboard = () => {
+    const copyToClipboard = async () => {
         const content = getContent()
-        navigator.clipboard.writeText(content)
+        if (!(await copyText(content))) return;
         setCopied(true)
         setTimeout(() => setCopied(false), 1500)
         addEntry({

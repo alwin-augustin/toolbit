@@ -1,3 +1,4 @@
+import { canShareTool } from "@/lib/tool-policy"
 import { useEffect, useCallback, useRef, useState } from "react"
 
 const DEFAULT_MAX_BYTES = 8 * 1024
@@ -57,9 +58,10 @@ async function compressToBase64(data: string): Promise<string | null> {
         const writer = stream.writable.getWriter()
         const bytes = encoder.encode(data)
         const copy = new Uint8Array(bytes)
+        const read = new Response(stream.readable).arrayBuffer()
         await writer.write(copy.buffer)
         await writer.close()
-        const buffer = await new Response(stream.readable).arrayBuffer()
+        const buffer = await read
         return bytesToBase64(new Uint8Array(buffer))
     } catch {
         return null
@@ -73,9 +75,10 @@ async function decompressFromBase64(base64: string): Promise<string | null> {
         const copy = new Uint8Array(bytes)
         const stream = new DecompressionStream("gzip")
         const writer = stream.writable.getWriter()
+        const read = new Response(stream.readable).arrayBuffer()
         await writer.write(copy.buffer)
         await writer.close()
-        const buffer = await new Response(stream.readable).arrayBuffer()
+        const buffer = await read
         return decoder.decode(buffer)
     } catch {
         return null
@@ -166,14 +169,14 @@ export function useUrlState<T extends Record<string, unknown> | string>(
     setValue: (val: T) => void,
     options: UrlStateOptions = {},
 ) {
-    const enabled = options.enabled ?? true
+    const enabled = (options.enabled ?? true) && canShareTool(window.location.pathname.split("/").filter(Boolean).at(-1) || "")
     const maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES
     const compress = options.compress ?? true
     const mode: "string" | "object" = typeof value === "string" ? "string" : "object"
 
     const initialized = useRef(false)
     const skipNextHashUpdate = useRef(false)
-    const [shareUrl, setShareUrl] = useState(() => window.location.href)
+    const [shareUrl, setShareUrl] = useState(() => `${window.location.origin}${window.location.pathname}`)
     const [shareWarning, setShareWarning] = useState<string | undefined>(undefined)
     const [isOversize, setIsOversize] = useState(false)
     const isHashRouter = () => window.location.hash.startsWith("#/")

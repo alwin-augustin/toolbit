@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useDocumentField, useDocumentOptions } from "../document-state";
+import { useEffect, useMemo } from "react";
 import type { CSSProperties } from "react";
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { Button, Badge, Checkbox } from "@/ds/components";
 import { CodeEditor } from "../CodeEditor";
 import { Panel, PanelHeader, CopyAction, ValidityBadge, EditorSplit } from "../EditorPanels";
@@ -13,22 +12,8 @@ import { useToolHistory } from "@/hooks/use-tool-history";
 const SAMPLE_JWT =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMiwiZXhwIjoxOTE2MjM5MDIyfQ.lBTQmKFHnpGmOe2PObMRCG9GMAKpSChav4woD3Y9YeA";
 
-interface JwtOptions {
-    expandClaims: boolean;
-    showRaw: boolean;
-    set: (patch: Partial<Omit<JwtOptions, "set">>) => void;
-}
+function useJwtOptions() { return useDocumentOptions({expandClaims:true as boolean,showRaw:false as boolean}); }
 
-const useJwtOptions = create<JwtOptions>()(
-    persist(
-        (set) => ({
-            expandClaims: true,
-            showRaw: false,
-            set: (patch) => set(patch),
-        }),
-        { name: "toolbit-v2-jwt-options" }
-    )
-);
 
 function base64UrlDecode(str: string): string {
     const padded = str + "=".repeat((4 - (str.length % 4)) % 4);
@@ -128,7 +113,7 @@ function ClaimsTable({ claims, expanded }: { claims: Record<string, unknown>; ex
 }
 
 export default function JwtDecoderV2() {
-    const [input, setInput] = useState("");
+    const [input, setInput] = useDocumentField<string>("input", "");
     useSmartPasteInput(setInput);
     const { expandClaims, showRaw } = useJwtOptions();
     const setStatus = useEditorStatus((s) => s.setStatus);

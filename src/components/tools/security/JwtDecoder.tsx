@@ -1,3 +1,6 @@
+import { useSessionDocumentState } from "@/v2/document-state";
+import { copyText } from "@/lib/clipboard";
+import { useDocumentField } from "@/v2/document-state";
 import { useState, useCallback, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -73,21 +76,21 @@ const SAMPLE_PAYLOAD = `{
 }`
 
 export default function JwtDecoder() {
-    const [activeTab, setActiveTab] = useState<Tab>("decode")
-    const [jwt, setJwt] = useState("")
-    const [secret, setSecret] = useState("")
-    const [header, setHeader] = useState("")
-    const [payload, setPayload] = useState("")
-    const [signature, setSignature] = useState("")
+    const [activeTab, setActiveTab] = useSessionDocumentState<Tab>("activeTab", "decode")
+    const [jwt, setJwt] = useSessionDocumentState("jwt", "")
+    const [secret, setSecret] = useDocumentField<string>("secret", "")
+    const [header, setHeader] = useSessionDocumentState("header", "")
+    const [payload, setPayload] = useSessionDocumentState("payload", "")
+    const [signature, setSignature] = useSessionDocumentState("signature", "")
     const [error, setError] = useState("")
-    const [sigStatus, setSigStatus] = useState<"valid" | "invalid" | "unchecked">("unchecked")
-    const [timeClaims, setTimeClaims] = useState<Record<string, ReturnType<typeof formatTimeClaim>>>({})
-    const [showExplain, setShowExplain] = useState(false)
+    const [sigStatus, setSigStatus] = useSessionDocumentState<"valid" | "invalid" | "unchecked">("sigStatus", "unchecked")
+    const [timeClaims, setTimeClaims] = useSessionDocumentState<Record<string, ReturnType<typeof formatTimeClaim>>>("timeClaims", {})
+    const [showExplain, setShowExplain] = useSessionDocumentState("showExplain", false)
 
     // Generate tab state
-    const [genPayload, setGenPayload] = useState(SAMPLE_PAYLOAD)
-    const [genSecret, setGenSecret] = useState("your-256-bit-secret")
-    const [genOutput, setGenOutput] = useState("")
+    const [genPayload, setGenPayload] = useSessionDocumentState("genPayload", SAMPLE_PAYLOAD)
+    const [genSecret, setGenSecret] = useSessionDocumentState("genSecret", "your-256-bit-secret")
+    const [genOutput, setGenOutput] = useSessionDocumentState("genOutput", "")
 
     const { toast } = useToast()
     const shareState = useMemo(
@@ -142,7 +145,7 @@ export default function JwtDecoder() {
             setJwt(payload.data)
             setActiveTab("decode")
         }
-    }, [consumePipeData, jwt, consumeWorkspaceState])
+    }, [consumePipeData, jwt, consumeWorkspaceState, setActiveTab, setJwt])
 
     const decodeJwt = useCallback(() => {
         setError("")
@@ -182,7 +185,7 @@ export default function JwtDecoder() {
             setSignature("")
             addEntry({ input: jwt, output: "error", metadata: { action: "decode" } })
         }
-    }, [jwt, addEntry])
+    }, [jwt, addEntry, setHeader, setPayload, setSigStatus, setSignature, setTimeClaims])
 
     const verifySignature = useCallback(async () => {
         if (!jwt.trim() || !secret.trim()) {
@@ -198,7 +201,7 @@ export default function JwtDecoder() {
         } catch {
             setSigStatus("invalid")
         }
-    }, [jwt, secret, toast])
+    }, [jwt, secret, toast, setSigStatus])
 
     const reEncode = useCallback(() => {
         try {
@@ -212,7 +215,7 @@ export default function JwtDecoder() {
         } catch {
             toast({ description: "Invalid JSON in payload", variant: "destructive" })
         }
-    }, [header, payload, toast])
+    }, [header, payload, toast, setJwt])
 
     const generateJwt = useCallback(async () => {
         try {
@@ -226,10 +229,10 @@ export default function JwtDecoder() {
         } catch (e) {
             toast({ description: `Error: ${(e as Error).message}`, variant: "destructive" })
         }
-    }, [genPayload, genSecret, toast, addEntry])
+    }, [genPayload, genSecret, toast, addEntry, setGenOutput])
 
-    const copy = (text: string, label: string) => {
-        navigator.clipboard.writeText(text)
+    const copy = async (text: string, label: string) => {
+        if (!(await copyText(text))) return;
         toast({ description: `${label} copied!` })
     }
 

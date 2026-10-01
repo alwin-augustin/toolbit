@@ -1,3 +1,5 @@
+import { DocumentContext } from "@/v2/document-state";
+import { useWorkspace } from "@/v2/workspace-store";
 import { Switch, Route } from "wouter";
 import { Suspense, lazy } from "react";
 import { ToolErrorBoundary } from "@/components/ToolErrorBoundary";
@@ -12,6 +14,7 @@ const AppHome = lazy(() => import("@/components/AppHome"));
  * Routes are automatically generated from tool metadata configuration
  */
 export function AppRouter() {
+    const active = useWorkspace(s=>s.activeTabId);
     return (
         <Switch>
             {/* App home dashboard */}
@@ -29,7 +32,7 @@ export function AppRouter() {
                     <Route key={id} path={path}>
                         <ToolErrorBoundary toolName={name}>
                             <Suspense fallback={<LoadingFallback />}>
-                                <Component />
+                                <DocumentContext.Provider value={active}><Component key={active || id} /></DocumentContext.Provider>
                             </Suspense>
                         </ToolErrorBoundary>
                     </Route>

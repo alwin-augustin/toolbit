@@ -1,3 +1,4 @@
+import { useSessionDocumentState } from "@/v2/document-state";
 import { useState, useCallback, useRef, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,14 +32,14 @@ function formatSize(bytes: number): string {
 }
 
 export default function ImageConverter() {
-    const [images, setImages] = useState<ImageInfo[]>([])
-    const [outputFormat, setOutputFormat] = useState<OutputFormat>("image/png")
-    const [quality, setQuality] = useState(85)
-    const [resizeWidth, setResizeWidth] = useState<number | "">("")
-    const [resizeHeight, setResizeHeight] = useState<number | "">("")
-    const [maintainAspect, setMaintainAspect] = useState(true)
-    const [convertedUrl, setConvertedUrl] = useState("")
-    const [convertedSize, setConvertedSize] = useState(0)
+    const [images, setImages] = useSessionDocumentState<ImageInfo[]>("images", [])
+    const [outputFormat, setOutputFormat] = useSessionDocumentState<OutputFormat>("outputFormat", "image/png")
+    const [quality, setQuality] = useSessionDocumentState("quality", 85)
+    const [resizeWidth, setResizeWidth] = useSessionDocumentState<number | "">("resizeWidth", "")
+    const [resizeHeight, setResizeHeight] = useSessionDocumentState<number | "">("resizeHeight", "")
+    const [maintainAspect, setMaintainAspect] = useSessionDocumentState("maintainAspect", true)
+    const [convertedUrl, setConvertedUrl] = useSessionDocumentState("convertedUrl", "")
+    const [convertedSize, setConvertedSize] = useSessionDocumentState("convertedSize", 0)
     const [processing, setProcessing] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const { toast } = useToast()
@@ -110,7 +111,7 @@ export default function ImageConverter() {
             setResizeHeight(loaded[0].height)
         }
         e.target.value = ""
-    }, [loadImage, toast])
+    }, [loadImage, toast, setConvertedUrl, setImages, setResizeHeight, setResizeWidth])
 
     const handleWidthChange = useCallback((w: number) => {
         setResizeWidth(w)
@@ -118,7 +119,7 @@ export default function ImageConverter() {
             const ratio = images[0].height / images[0].width
             setResizeHeight(Math.round(w * ratio))
         }
-    }, [maintainAspect, images])
+    }, [maintainAspect, images, setResizeHeight, setResizeWidth])
 
     const handleHeightChange = useCallback((h: number) => {
         setResizeHeight(h)
@@ -126,7 +127,7 @@ export default function ImageConverter() {
             const ratio = images[0].width / images[0].height
             setResizeWidth(Math.round(h * ratio))
         }
-    }, [maintainAspect, images])
+    }, [maintainAspect, images, setResizeHeight, setResizeWidth])
 
     const convert = useCallback(async () => {
         if (images.length === 0) return
@@ -174,7 +175,7 @@ export default function ImageConverter() {
         } finally {
             setProcessing(false)
         }
-    }, [images, outputFormat, quality, resizeWidth, resizeHeight, toast])
+    }, [images, outputFormat, quality, resizeWidth, resizeHeight, toast, setConvertedSize, setConvertedUrl])
 
     const download = useCallback(() => {
         if (!convertedUrl) return

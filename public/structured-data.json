@@ -47,6 +47,5 @@
   ],
   "browserRequirements": "Requires JavaScript. Modern browser recommended.",
   "softwareVersion": "1.0.0",
-  "screenshot": "https://toolbit.app/og-image.png",
-  "downloadUrl": "https://github.com/alwin-augustin/toolbit/releases"
+  "screenshot": "https://toolbit.app/og-image.png"
 }

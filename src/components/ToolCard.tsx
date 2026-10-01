@@ -1,3 +1,4 @@
+import { copyText } from "@/lib/clipboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Share2, ArrowRight, X, ChevronRight } from "lucide-react";
@@ -50,9 +51,9 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
   const [workflowPromptDismissed, setWorkflowPromptDismissed] = useState(false);
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const url = shareUrl || window.location.href;
-    navigator.clipboard.writeText(url);
+    if (!(await copyText(url))) return;
     if (isPostHogEnabled) {
       posthog.capture("tool_shared", { tool_id: toolId });
     }

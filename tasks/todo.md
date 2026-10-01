@@ -127,7 +127,7 @@ meaning and cost a level of URL depth on every page that matters for search.
       browser boots straight into the tool. One URL per tool, and the "landing
       page, then click through to the app" detour is gone.
 - [x] `public/_redirects` 301s `/app/*` and the short-lived `/tools/<slug>` to
-      the new URLs, and `App.tsx` keeps a client-side redirect for the desktop
+      the new URLs, and `App.tsx` keeps a client-side redirect for browser navigation
       build's hash router.
 - [x] The shell patcher throws if it cannot find a tag it expects to rewrite,
       so a change to `index.html` fails the build rather than silently shipping

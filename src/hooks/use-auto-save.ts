@@ -1,3 +1,5 @@
+import { canPersistTool } from "@/lib/tool-policy"
+import { safeStorage } from "@/lib/preferences"
 import { useEffect, useRef, useCallback, useState } from "react"
 
 const STORAGE_PREFIX = "toolbit:autosave:"
@@ -23,32 +25,33 @@ export function useAutoSave<T>(
 
     // Check for saved state on mount
     useEffect(() => {
-        if (restoredOnce) return
+        if (restoredOnce || !canPersistTool(toolId)) return
         try {
-            const saved = localStorage.getItem(key)
+            const saved = safeStorage.getItem(key)
             if (saved) {
                 const parsed = JSON.parse(saved) as { state: T; timestamp: number }
                 // Only offer restore if saved within last 24 hours
                 if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
                     setHasRestorable(true)
                 } else {
-                    localStorage.removeItem(key)
+                    safeStorage.removeItem(key)
                 }
             }
         } catch {
-            localStorage.removeItem(key)
+            safeStorage.removeItem(key)
         }
-    }, [key, restoredOnce])
+    }, [key, restoredOnce, toolId])
 
     // Debounced save
     useEffect(() => {
+        if (!canPersistTool(toolId)) return
         if (timerRef.current) clearTimeout(timerRef.current)
         timerRef.current = setTimeout(() => {
             try {
                 const serialized = JSON.stringify(state)
                 // Don't save empty/default states
                 if (serialized === "{}" || serialized === '""' || serialized === "null") return
-                localStorage.setItem(key, JSON.stringify({ state, timestamp: Date.now() }))
+                safeStorage.setItem(key, JSON.stringify({ state, timestamp: Date.now() }))
             } catch {
                 // localStorage full or state not serializable — skip
             }
@@ -57,11 +60,11 @@ export function useAutoSave<T>(
         return () => {
             if (timerRef.current) clearTimeout(timerRef.current)
         }
-    }, [state, key])
+    }, [state, key, toolId])
 
     const restore = useCallback(() => {
         try {
-            const saved = localStorage.getItem(key)
+            const saved = safeStorage.getItem(key)
             if (saved) {
                 const parsed = JSON.parse(saved) as { state: T }
                 onRestore(parsed.state)
@@ -79,7 +82,7 @@ export function useAutoSave<T>(
     }, [])
 
     const clear = useCallback(() => {
-        localStorage.removeItem(key)
+        safeStorage.removeItem(key)
         setHasRestorable(false)
     }, [key])
 

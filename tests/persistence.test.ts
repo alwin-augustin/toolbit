@@ -44,7 +44,7 @@ describe("persistence contracts", () => {
             expect.objectContaining({
                 id,
                 name: workspace.name,
-                tools: workspace.tools,
+                documents: expect.arrayContaining([expect.objectContaining({toolId:"json-formatter",payload:{input:workspace.tools[0].state}})]),
                 updatedAt: expect.any(Number),
             }),
         )

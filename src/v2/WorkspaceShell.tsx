@@ -1,3 +1,7 @@
+import { ClipboardNotice } from "./ClipboardNotice";
+import { track } from "@/lib/telemetry";
+import { RecipePanel } from "./RecipePanel";
+import { PreferencesPanel } from "./PreferencesPanel";
 import { useEffect, useState, type ReactNode } from "react";
 import { useLocation } from "wouter";
 import { TOOLS } from "@/config/tools.config";
@@ -51,6 +55,9 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
     } = useWorkspace();
     const { pipeline } = useToolPipe();
     const { setWorkspace: restoreWorkspace } = useLegacyWorkspace();
+    const [recipesOpen, setRecipesOpen] = useState(false);
+    useEffect(()=>{const open=()=>setRecipesOpen(true);window.addEventListener("open-recipes",open);return()=>window.removeEventListener("open-recipes",open);},[]);
+    const [settingsOpen, setSettingsOpen] = useState(false);
     const [paletteOpen, setPaletteOpen] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
     const [phasePanel, setPhasePanel] = useState<"workspaces" | "snippets" | "favorites" | null>(null);
@@ -65,14 +72,15 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
 
     // URL is the source of truth: visiting /:slug ensures a tab exists.
     useEffect(() => {
-        if (urlTool) openTool(urlTool.id);
+        if (urlTool) { openTool(urlTool.id); track("tool_opened",{tool_id:urlTool.id,route:urlTool.id}); }
     }, [urlTool?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Restore the active tab's URL when landing on the bare root with
     // persisted tabs.
     useEffect(() => {
         if (location.replace(/\/$/, "") === "" && activeTabId) {
-            setLocation(`/${activeTabId}`, { replace: true });
+            const toolId = tabs.find(t=>t.id===activeTabId)?.toolId;
+            if(toolId)setLocation(`/${toolId}`, { replace: true });
         }
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -112,10 +120,10 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
     };
 
     const loadWorkspace = (workspace: Parameters<typeof restoreWorkspace>[0]) => {
-        restoreWorkspace(workspace);
-        workspace.tools.forEach((tool) => openTool(tool.toolId));
-        const firstTool = workspace.tools[0]?.toolId;
-        if (firstTool) setLocation(`/${firstTool}`);
+        useWorkspace.getState().restore(workspace);
+        if(!workspace.schemaVersion) restoreWorkspace(workspace);
+        const doc = useWorkspace.getState().tabs.find(t=>t.id===useWorkspace.getState().activeTabId);
+        if(doc)setLocation(`/${doc.toolId}`);
         if (isPostHogEnabled) {
             posthog.capture("workspace_loaded", { tool_count: workspace.tools.length });
             posthogLogger.info("workspace loaded", { tool_count: workspace.tools.length });
@@ -160,6 +168,7 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
             const mod = e.metaKey || e.ctrlKey;
+            if(mod && e.shiftKey && e.key.toLowerCase()==="t"){e.preventDefault();const tool=useWorkspace.getState().reopen();if(tool)setLocation(`/${tool}`);return;}
             if (mod && e.key.toLowerCase() === "k") {
                 e.preventDefault();
                 setPaletteOpen((p) => !p);
@@ -177,7 +186,8 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
         return () => window.removeEventListener("keydown", onKey);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const activeTool = TOOLS.find((t) => t.id === activeTabId);
+    const activeDocument = tabs.find(t => t.id === activeTabId);
+    const activeTool = TOOLS.find((t) => t.id === activeDocument?.toolId);
     const normalizedLocation = location.replace(/\/$/, "");
     const isHome = view.kind === "tool" && !activeTabId && normalizedLocation === "";
     const crumb: [string, string] =
@@ -201,7 +211,7 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
             }}
         >
             <Sidebar
-                activeToolId={view.kind === "tool" ? activeTabId : null}
+                activeToolId={view.kind === "tool" ? activeDocument?.toolId || null : null}
                 activeCategory={view.kind === "catalog" ? view.category : null}
                 onTool={navigateToTool}
                 onCategory={(c) => showCatalog(c)}
@@ -215,6 +225,8 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
             />
             <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
                 <Topbar
+                    onSettings={() => setSettingsOpen(true)}
+                    onRecipes={() => window.dispatchEvent(new Event("open-recipes"))}
                     crumb={crumb}
                     density={density}
                     onDensity={setDensity}
@@ -235,11 +247,11 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
                                 <TabStrip
                                     tabs={tabs}
                                     activeTabId={activeTabId}
-                                    onTab={navigateToTool}
+                                    onTab={(id)=>{useWorkspace.getState().setActiveTab(id);const doc=tabs.find(t=>t.id===id);if(doc)setLocation(`/${doc.toolId}`);}}
                                     onClose={handleClose}
-                                    onAdd={() => setPaletteOpen(true)}
+                                    onAdd={() => {if(activeTool)openTool(activeTool.id,true);else setPaletteOpen(true);}}
                                 />
-                                <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflow: "auto" }}>
+                                <div id="tool-document-panel" role="tabpanel" aria-labelledby={activeTabId?`toolbit-tab-${activeTabId}`:undefined} style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflow: "auto" }}>
                                     {children}
                                 </div>
                             </>
@@ -248,11 +260,13 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
                 ) : (
                     <Catalog category={view.category} onTool={navigateToTool} />
                 )}
-                <Statusbar />
+                <ClipboardNotice /><Statusbar />
             </div>
-            {inspectorOpen && view.kind === "tool" && (
-                <Inspector toolId={activeTabId} onClose={toggleInspector} />
+            {inspectorOpen && !isHome && view.kind === "tool" && (
+                <Inspector toolId={activeDocument?.toolId || null} onClose={toggleInspector} />
             )}
+            {recipesOpen && <RecipePanel onClose={()=>setRecipesOpen(false)}/>}
+            {settingsOpen && <PreferencesPanel onClose={() => setSettingsOpen(false)} />}
             <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onSelect={navigateToTool} />
             <HistoryPanel open={historyOpen} onClose={() => setHistoryOpen(false)} onOpenTool={navigateToTool} />
             <PhaseTwoPanels

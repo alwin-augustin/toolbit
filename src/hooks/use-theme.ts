@@ -1,3 +1,4 @@
+import { safeStorage } from '@/lib/preferences'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
@@ -46,7 +47,7 @@ export const useTheme = create<ThemeState>()(
 
 // Initialize theme on first load
 if (typeof window !== 'undefined') {
-  const stored = localStorage.getItem('toolbit-theme')
+  const stored = safeStorage.getItem('toolbit-theme')
   if (stored) {
     try {
       const { state } = JSON.parse(stored)

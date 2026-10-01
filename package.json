@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
-  "main": "electron/main.js",
   "author": {
     "name": "Toolbit",
     "email": "alwinaugustin@gmail.com"
@@ -19,153 +18,16 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "web:dev": "vite",
-    "web:build": "vite build && npm run seo:generate",
+    "web:build": "vite build && npm run seo:generate && npm run pwa:generate",
     "web:build:preview": "VITE_DISABLE_PWA=true vite build && npm run seo:generate",
     "web:preview": "npm run web:build:preview && VITE_DISABLE_PWA=true vite preview",
     "seo:generate": "node scripts/generate-seo-pages.mjs",
     "seo:og-image": "node scripts/generate-og-image.mjs",
     "seo:screenshots": "node scripts/generate-screenshots.mjs",
-    "desktop:dev": "concurrently \"cross-env NODE_ENV=development vite\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
-    "desktop:build": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
-    "desktop:build:win": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win",
-    "desktop:build:mac": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac",
-    "desktop:build:mac:universal": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac --universal",
-    "desktop:build:linux": "cross-env ELECTRON=true vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --linux",
-    "desktop:clean": "rm -rf release dist"
-  },
-  "build": {
-    "appId": "com.toolbit.app",
-    "productName": "Toolbit",
-    "directories": {
-      "output": "release",
-      "buildResources": "build"
-    },
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "package.json",
-      "!node_modules",
-      "!**/*.{ts,tsx,map}",
-      "!**/*.md",
-      "!**/LICENSE",
-      "!**/.DS_Store"
-    ],
-    "extraMetadata": {
-      "main": "electron/main.js"
-    },
-    "asarUnpack": [
-      "**/*.node"
-    ],
-    "compression": "maximum",
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "icon": "build/icon.ico",
-      "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "verifyUpdateCodeSignature": false
-    },
-    "mac": {
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64",
-            "universal"
-          ]
-        },
-        {
-          "target": "pkg",
-          "arch": [
-            "x64",
-            "arm64",
-            "universal"
-          ]
-        }
-      ],
-      "icon": "build/icon.png",
-      "category": "public.app-category.developer-tools",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.inherit.plist",
-      "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "darkModeSupport": true,
-      "type": "distribution",
-      "minimumSystemVersion": "10.13.0"
-    },
-    "dmg": {
-      "background": "build/dmg-background.png",
-      "iconSize": 96,
-      "iconTextSize": 12,
-      "contents": [
-        {
-          "x": 130,
-          "y": 220
-        },
-        {
-          "x": 410,
-          "y": 220,
-          "type": "link",
-          "path": "/Applications"
-        }
-      ],
-      "window": {
-        "width": 540,
-        "height": 380
-      },
-      "title": "${productName} ${version}",
-      "internetEnabled": false,
-      "sign": false
-    },
-    "pkg": {
-      "allowAnywhere": true,
-      "allowCurrentUserHome": true,
-      "allowRootDirectory": true
-    },
-    "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
-        {
-          "target": "deb",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "icon": "build/icon.png",
-      "category": "Development",
-      "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "synopsis": "A comprehensive collection of developer utilities",
-      "description": "Toolbit provides a comprehensive set of utilities for developers including JSON formatters, encoders/decoders, and more."
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "allowElevation": true,
-      "perMachine": false,
-      "runAfterFinish": true,
-      "deleteAppDataOnUninstall": false
-    },
-    "afterSign": "scripts/notarize.cjs",
-    "buildDependenciesFromSource": false,
-    "nodeGypRebuild": false
+    "pwa:generate": "node scripts/generate-service-worker.mjs",
+    "test:e2e": "playwright test",
+    "test:run": "vitest run",
+    "benchmark": "vite-node --config vitest.config.ts scripts/benchmark-tools.ts"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.4",
@@ -206,7 +68,6 @@
     "papaparse": "^5.4.1",
     "pdf-lib": "^1.17.1",
     "pkijs": "^3.3.3",
-    "posthog-js": "^1.434.18",
     "prismjs": "^1.30.0",
     "protobufjs": "^8.7.1",
     "pvutils": "^1.1.5",
@@ -220,8 +81,10 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^9.36.0",
     "@noble/hashes": "^2.0.1",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/typography": "^0.5.19",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
@@ -247,10 +110,6 @@
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "concurrently": "^9.2.1",
-    "cross-env": "^10.1.0",
-    "electron": "^38.8.6",
-    "electron-builder": "^26.15.3",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "fake-indexeddb": "^6.2.5",
@@ -267,6 +126,9 @@
     "vite": "^6.4.3",
     "vite-plugin-pwa": "^1.0.3",
     "vitest": "^3.2.7",
-    "wait-on": "^9.0.1"
+    "workbox-build": "^7.4.1"
+  },
+  "engines": {
+    "node": ">=24.0.0 <25"
   }
 }

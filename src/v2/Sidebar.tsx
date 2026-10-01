@@ -122,7 +122,7 @@ export function Sidebar({ activeToolId, activeCategory, onTool, onCategory, onSe
             {/* Command trigger */}
             <div style={{ padding: "0 10px 10px" }}>
                 <button
-                    onClick={onSearch}
+                    aria-label="Search tools" title="Search tools" onClick={onSearch}
                     style={{
                         display: "flex",
                         alignItems: "center",
@@ -160,7 +160,7 @@ export function Sidebar({ activeToolId, activeCategory, onTool, onCategory, onSe
                     <div style={{ display: "grid", gap: 1 }}>
                         {favorites.map((f) => (
                             <SidebarItem
-                                key={f.id}
+                                key={f.id} aria-label={f.label} title={f.label}
                                 active={activeToolId === f.id}
                                 onClick={() => onTool(f.id)}
                                 icon={<Monogram id={f.id} />}
@@ -177,7 +177,7 @@ export function Sidebar({ activeToolId, activeCategory, onTool, onCategory, onSe
                     <div style={{ display: "grid", gap: 1 }}>
                         {WORKSPACES.map((w) => (
                             <SidebarItem
-                                key={w.id}
+                                key={w.id} aria-label={w.label} title={w.label}
                                 onClick={() => onWorkflow(w.workflowId)}
                                 icon={
                                     <span
@@ -202,7 +202,7 @@ export function Sidebar({ activeToolId, activeCategory, onTool, onCategory, onSe
                     <div style={{ display: "grid", gap: 1 }}>
                         {CATEGORIES.map((c) => (
                             <SidebarItem
-                                key={c.id}
+                                key={c.id} aria-label={c.label} title={c.label}
                                 active={activeCategory === c.id}
                                 onClick={() => onCategory(c.id)}
                                 icon={c.icon()}
@@ -234,16 +234,16 @@ export function Sidebar({ activeToolId, activeCategory, onTool, onCategory, onSe
                     gap: 1,
                 }}
             >
-                <SidebarItem icon={<FileCode size={15} />} onClick={onSnippets}>
+                <SidebarItem aria-label="Snippets" title="Snippets" icon={<FileCode size={15} />} onClick={onSnippets}>
                     Snippets
                 </SidebarItem>
-                <SidebarItem icon={<FolderOpen size={15} />} onClick={onWorkspaces}>
+                <SidebarItem aria-label="Workspaces" title="Workspaces" icon={<FolderOpen size={15} />} onClick={onWorkspaces}>
                     Workspaces
                 </SidebarItem>
-                <SidebarItem icon={<Shield size={15} />} onClick={onFavorites}>
+                <SidebarItem aria-label="Customize favorites" title="Customize favorites" icon={<Shield size={15} />} onClick={onFavorites}>
                     Customize favorites
                 </SidebarItem>
-                <SidebarItem icon={<Clock size={15} />} onClick={onHistory}>
+                <SidebarItem aria-label="History" title="History" icon={<Clock size={15} />} onClick={onHistory}>
                     History
                 </SidebarItem>
             </div>
@@ -260,7 +260,7 @@ export function Sidebar({ activeToolId, activeCategory, onTool, onCategory, onSe
                 <span style={{ color: "hsl(var(--success))", display: "inline-flex" }}>
                     <Shield size={13} />
                 </span>
-                <span style={{ fontSize: "var(--text-2xs)" }}>Your data never leaves this device</span>
+                <span style={{ fontSize: "var(--text-2xs)" }}>Local processing · optional analytics</span>
             </div>
         </aside>
     );

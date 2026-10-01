@@ -13,10 +13,9 @@ export default tseslint.config(
       'tailwind.config.ts',
       'postcss.config.js',
       'dist/**',
+      'test-results/**',
+      'playwright-report/**',
       'node_modules/**',
-      'electron/**',
-      'build/**',
-      'release/**',
       'scripts/**/*.cjs',  // Ignore CommonJS files in scripts
       'scripts/*.js',
       'design/**',  // Design system source-of-truth assets, not app code

@@ -48,7 +48,7 @@ function md5(input: string): string {
     bytes.push(0x80)
     while (bytes.length % 64 !== 56) bytes.push(0)
     // Append length as 64-bit little-endian
-    for (let i = 0; i < 8; i++) bytes.push((bitLen >>> (i * 8)) & 0xff)
+    for (let i = 0; i < 8; i++) bytes.push(Math.floor(bitLen / 2 ** (i * 8)) & 0xff)
 
     let a0 = 0x67452301 >>> 0
     let b0 = 0xefcdab89 >>> 0

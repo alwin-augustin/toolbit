@@ -1,3 +1,4 @@
+import { useSessionDocumentState } from "@/v2/document-state";
 import { useState, useCallback, useRef, useMemo } from "react"
 import { PDFDocument, degrees } from "pdf-lib"
 import { Alert, Button, Card, IconButton, Select, Input, Tabs } from "@/ds/components"
@@ -23,11 +24,11 @@ function formatSize(bytes: number): string {
 }
 
 export default function PdfTools() {
-    const [mode, setMode] = useState<Mode>("merge")
-    const [files, setFiles] = useState<PdfFile[]>([])
-    const [splitRange, setSplitRange] = useState("1-3")
-    const [rotateAngle, setRotateAngle] = useState(90)
-    const [rotatePages, setRotatePages] = useState("all")
+    const [mode, setMode] = useSessionDocumentState<Mode>("mode", "merge")
+    const [files, setFiles] = useSessionDocumentState<PdfFile[]>("files", [])
+    const [splitRange, setSplitRange] = useSessionDocumentState("splitRange", "1-3")
+    const [rotateAngle, setRotateAngle] = useSessionDocumentState("rotateAngle", 90)
+    const [rotatePages, setRotatePages] = useSessionDocumentState("rotatePages", "all")
     const [processing, setProcessing] = useState(false)
     const [status, setStatus] = useState<Status | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -63,7 +64,7 @@ export default function PdfTools() {
             }
         }
         setFiles(prev => [...prev, ...newFiles])
-    }, [])
+    }, [setFiles])
 
     const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) addFiles(e.target.files)
@@ -72,7 +73,7 @@ export default function PdfTools() {
 
     const removeFile = useCallback((index: number) => {
         setFiles(prev => prev.filter((_, i) => i !== index))
-    }, [])
+    }, [setFiles])
 
     const moveFile = useCallback((index: number, direction: -1 | 1) => {
         setFiles(prev => {
@@ -82,7 +83,7 @@ export default function PdfTools() {
             ;[next[index], next[target]] = [next[target], next[index]]
             return next
         })
-    }, [])
+    }, [setFiles])
 
     const downloadPdf = useCallback((data: Uint8Array, filename: string) => {
         const blob = new Blob([data.buffer as ArrayBuffer], { type: "application/pdf" })

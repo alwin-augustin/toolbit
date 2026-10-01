@@ -1,4 +1,5 @@
-"use client"
+"use client";
+import { safeStorage } from "@/lib/preferences";
 
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
@@ -72,7 +73,7 @@ function SidebarProvider({
     // We use openProp and setOpenProp for control from outside the component.
     const [_open, _setOpen] = React.useState(() => {
         if (typeof window === "undefined") return defaultOpen
-        const stored = window.localStorage.getItem(SIDEBAR_STORAGE_KEY)
+        const stored = safeStorage.getItem(SIDEBAR_STORAGE_KEY)
         if (stored === null) return defaultOpen
         return stored === "true"
     })
@@ -87,7 +88,7 @@ function SidebarProvider({
             }
 
             if (typeof window !== "undefined") {
-                window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(openState))
+                safeStorage.setItem(SIDEBAR_STORAGE_KEY, String(openState))
             }
         },
         [setOpenProp, open]

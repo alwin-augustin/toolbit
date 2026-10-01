@@ -36,7 +36,7 @@ export function Statusbar() {
     const { valid, bytes, ln, col, validityLabel } = useEditorStatus();
     const pipelineSteps = useToolPipe((state) => state.pipeline.length);
     return (
-        <footer
+        <footer className="tb-statusbar"
             style={{
                 display: "flex",
                 alignItems: "center",
@@ -48,7 +48,7 @@ export function Statusbar() {
             }}
         >
             <Item accent="var(--success)">
-                <Shield size={12} /> Local · no network
+                <Shield size={12} /> Processing is local
             </Item>
             <Divider />
             {valid !== null && (

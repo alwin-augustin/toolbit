@@ -4,6 +4,7 @@ type WorkerResponse<T> =
 
 interface WorkerOptions {
     timeoutMs?: number
+    signal?: AbortSignal
 }
 
 const DEFAULT_TIMEOUT_MS = 20_000
@@ -13,6 +14,7 @@ export async function runInWorker<T, A extends unknown[]>(
     args: A,
     options: WorkerOptions = {},
 ): Promise<T> {
+    if(options.signal?.aborted)throw new Error("Cancelled")
     const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS
     const fnSource = fn.toString()
 
@@ -35,7 +37,10 @@ self.onmessage = async (event) => {
     const worker = new Worker(url)
 
     return new Promise<T>((resolve, reject) => {
+        const abort = () => { window.clearTimeout(timeout); worker.terminate(); URL.revokeObjectURL(url); reject(new Error("Cancelled")); };
+        options.signal?.addEventListener("abort",abort,{once:true});
         const timeout = window.setTimeout(() => {
+            options.signal?.removeEventListener("abort",abort)
             worker.terminate()
             URL.revokeObjectURL(url)
             reject(new Error("Worker timed out"))
@@ -43,6 +48,7 @@ self.onmessage = async (event) => {
 
         worker.onmessage = (event: MessageEvent<WorkerResponse<T>>) => {
             window.clearTimeout(timeout)
+            options.signal?.removeEventListener("abort",abort)
             worker.terminate()
             URL.revokeObjectURL(url)
 
@@ -56,6 +62,7 @@ self.onmessage = async (event) => {
 
         worker.onerror = (event) => {
             window.clearTimeout(timeout)
+            options.signal?.removeEventListener("abort",abort)
             worker.terminate()
             URL.revokeObjectURL(url)
             reject(new Error(event.message || "Worker error"))

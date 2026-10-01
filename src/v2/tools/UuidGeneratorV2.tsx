@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { useDocumentField, useDocumentOptions } from "../document-state";
+import { useEffect } from "react";
 import { RefreshCw } from "lucide-react";
 import { Button, Badge, Select, Checkbox, Input } from "@/ds/components";
 import { CodeEditor } from "../CodeEditor";
@@ -11,24 +10,8 @@ import { useToolHistory } from "@/hooks/use-tool-history";
 
 type UuidVersion = "v4" | "v7";
 
-interface UuidOptions {
-    version: UuidVersion;
-    count: number;
-    uppercase: boolean;
-    set: (patch: Partial<Omit<UuidOptions, "set">>) => void;
-}
+function useUuidOptions() { return useDocumentOptions({version:"v4" as UuidVersion,count:1,uppercase:false as boolean}); }
 
-const useUuidOptions = create<UuidOptions>()(
-    persist(
-        (set) => ({
-            version: "v4" as UuidVersion,
-            count: 1,
-            uppercase: false,
-            set: (patch) => set(patch),
-        }),
-        { name: "toolbit-v2-uuid-options" }
-    )
-);
 
 function uuidV7(): string {
     // RFC 9562 UUIDv7: 48-bit unix-ms timestamp + version/variant bits + randomness.
@@ -80,7 +63,7 @@ registerInspectorPanel("uuid-generator", UuidInspectorPanel);
 
 export default function UuidGeneratorV2() {
     const { version, count, uppercase } = useUuidOptions();
-    const [uuids, setUuids] = useState<string[]>([]);
+    const [uuids, setUuids] = useDocumentField<string[]>("uuids", []);
     const setStatus = useEditorStatus((s) => s.setStatus);
     const { addEntry } = useToolHistory("uuid-generator", "UUID Generator");
 

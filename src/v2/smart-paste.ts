@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { detectContentType } from "@/lib/smart-detect";
 import { useToolPipe } from "@/hooks/use-tool-pipe";
 
-const STORAGE_KEY = "toolbit:smart-paste";
+let pendingPaste: string | null = null;
 
 /** True when the paste landed in an editable element and should be left alone. */
 export function isEditableTarget(target: EventTarget | null): boolean {
@@ -20,12 +20,12 @@ export function detectSmartPaste(text: string): { toolId: string; reason: string
 }
 
 export function stashSmartPaste(text: string) {
-    sessionStorage.setItem(STORAGE_KEY, text);
+    pendingPaste = text;
 }
 
 export function consumeSmartPaste(): string | null {
-    const value = sessionStorage.getItem(STORAGE_KEY);
-    if (value !== null) sessionStorage.removeItem(STORAGE_KEY);
+    const value = pendingPaste;
+    pendingPaste = null;
     return value;
 }
 

@@ -37,10 +37,10 @@ export function SidebarItem({ children, icon, active = false, onClick, badge, st
       {...rest}
     >
       {active && (
-        <span style={{ position: "absolute", left: "-8px", top: "50%", transform: "translateY(-50%)", width: "3px", height: "18px", borderRadius: "var(--radius-full)", background: "hsl(var(--primary))" }} />
+        <span className="tb-sidebar-marker" style={{ position: "absolute", left: "-8px", top: "50%", transform: "translateY(-50%)", width: "3px", height: "18px", borderRadius: "var(--radius-full)", background: "hsl(var(--primary))" }} />
       )}
       {icon && (
-        <span style={{ display: "inline-flex", color: active ? "hsl(var(--primary))" : "hsl(var(--text-muted))", flexShrink: 0 }}>
+        <span className="tb-sidebar-icon" style={{ display: "inline-flex", color: active ? "hsl(var(--primary))" : "hsl(var(--text-muted))", flexShrink: 0 }}>
           {icon}
         </span>
       )}

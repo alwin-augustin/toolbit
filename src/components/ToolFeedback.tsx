@@ -1,3 +1,4 @@
+import { safeStorage } from "@/lib/preferences";
 import { useState, useEffect } from "react"
 import { ThumbsUp, ThumbsDown } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -10,14 +11,14 @@ interface FeedbackData {
 
 function getFeedback(): FeedbackData {
     try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}")
+        return JSON.parse(safeStorage.getItem(STORAGE_KEY) || "{}")
     } catch {
         return {}
     }
 }
 
 function saveFeedback(data: FeedbackData) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    safeStorage.setItem(STORAGE_KEY, JSON.stringify(data))
 }
 
 interface ToolFeedbackProps {

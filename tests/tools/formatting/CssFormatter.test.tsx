@@ -22,8 +22,8 @@ describe('CssFormatter', () => {
     await user.paste('.test{color:red;}')
     await user.click(formatButton)
 
-    expect(output.value).toContain('.test')
-    expect(output.value).toContain('color')
+    expect((output as HTMLTextAreaElement).value).toContain('.test')
+    expect((output as HTMLTextAreaElement).value).toContain('color')
   })
 
   it('minifies CSS', async () => {
@@ -41,8 +41,8 @@ describe('CssFormatter', () => {
     await user.paste(cssInput)
     await user.click(minifyButton)
 
-    expect(output.value).toContain('.test')
-    expect(output.value).toContain('color')
+    expect((output as HTMLTextAreaElement).value).toContain('.test')
+    expect((output as HTMLTextAreaElement).value).toContain('color')
   })
 
   it('handles invalid CSS', async () => {
@@ -58,7 +58,7 @@ describe('CssFormatter', () => {
     await user.click(formatButton)
 
     // Should still process or show some output
-    expect(output.value).toBeTruthy()
+    expect((output as HTMLTextAreaElement).value).toBeTruthy()
   })
 
   it('formats multi-rule CSS', async () => {
@@ -73,7 +73,7 @@ describe('CssFormatter', () => {
     await user.paste('.a{color:red;}.b{color:blue;}')
     await user.click(formatButton)
 
-    expect(output.value).toContain('.a')
-    expect(output.value).toContain('.b')
+    expect((output as HTMLTextAreaElement).value).toContain('.a')
+    expect((output as HTMLTextAreaElement).value).toContain('.b')
   })
 })

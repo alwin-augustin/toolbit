@@ -1,20 +1,13 @@
+import { copyText } from "@/lib/clipboard"
 import { useToast } from "./use-toast"
 
 export function useCopyToClipboard() {
   const { toast } = useToast()
 
-  const copyToClipboard = (text: string, message = "Copied to clipboard!") => {
-    navigator.clipboard.writeText(text).then(
-      () => {
-        toast({ description: message })
-      },
-      () => {
-        toast({
-          description: "Failed to copy to clipboard",
-          variant: "destructive"
-        })
-      }
-    )
+  const copyToClipboard = async (text: string, message = "Copied to clipboard!") => {
+    const success = await copyText(text)
+    toast({ description: success ? message : "Copy denied. Select the output and copy manually.", variant: success ? "default" : "destructive" })
+    return success
   }
 
   return { copyToClipboard }

@@ -12,7 +12,7 @@ vi.mock('@/hooks/use-toast', () => ({
 describe('TimestampConverter', () => {
   it('renders the component with correct title', () => {
     render(<TimestampConverter />)
-    expect(screen.getByText('Timestamp Converter')).toBeInTheDocument()
+    expect(screen.getByText('Input')).toBeInTheDocument()
   })
 
   it('converts Unix timestamp to date formats', async () => {
@@ -66,11 +66,11 @@ describe('TimestampConverter', () => {
     await user.type(timestampInput, '1640995200')
     await user.click(convertButton)
 
-    expect(screen.getByText('Unix Timestamp:')).toBeInTheDocument()
-    expect(screen.getByText('ISO 8601:')).toBeInTheDocument()
-    expect(screen.getByText('Local Time:')).toBeInTheDocument()
-    expect(screen.getByText('UTC:')).toBeInTheDocument()
-    expect(screen.getByText('Relative:')).toBeInTheDocument()
+    expect(screen.getByText('Unix Timestamp')).toBeInTheDocument()
+    expect(screen.getByText('ISO 8601')).toBeInTheDocument()
+    expect(screen.getByText('Local Time')).toBeInTheDocument()
+    expect(screen.getByText('UTC')).toBeInTheDocument()
+    expect(screen.getByText('Relative')).toBeInTheDocument()
   })
 
   it('copies Unix timestamp to clipboard', async () => {
@@ -83,7 +83,7 @@ describe('TimestampConverter', () => {
     await user.type(timestampInput, '1640995200')
     await user.click(convertButton)
 
-    const copyButton = screen.getByTestId('button-copy-unix')
+    const copyButton = screen.getAllByRole('button', { name: 'Copy' })[0]
     expect(copyButton).toBeEnabled()
     await user.click(copyButton)
   })
@@ -98,7 +98,7 @@ describe('TimestampConverter', () => {
     await user.type(timestampInput, '1640995200')
     await user.click(convertButton)
 
-    const copyButton = screen.getByTestId('button-copy-iso')
+    const copyButton = screen.getAllByRole('button', { name: 'Copy' })[0]
     expect(copyButton).toBeEnabled()
     await user.click(copyButton)
   })

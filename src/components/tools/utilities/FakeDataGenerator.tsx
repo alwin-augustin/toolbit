@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from "react"
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useCallback, useMemo } from "react"
 import { RefreshCw } from "lucide-react"
 import { Button, Badge, Input, Checkbox, Tabs } from "@/ds/components"
 import { CodeEditor } from "@/v2/CodeEditor"
@@ -137,10 +138,10 @@ function formatRecords(records: FakeRecord[], format: OutputFormat, fields: Fiel
 }
 
 export default function FakeDataGenerator() {
-    const [count, setCount] = useState(10)
-    const [format, setFormat] = useState<OutputFormat>("json")
-    const [fields, setFields] = useState<FieldKey[]>(["firstName", "lastName", "email", "phone"])
-    const [output, setOutput] = useState("")
+    const [count, setCount] = useSessionDocumentState("count", 10)
+    const [format, setFormat] = useSessionDocumentState<OutputFormat>("format", "json")
+    const [fields, setFields] = useSessionDocumentState<FieldKey[]>("fields", ["firstName", "lastName", "email", "phone"])
+    const [output, setOutput] = useSessionDocumentState("output", "")
     const shareState = useMemo(
         () => ({ count, format, fields }),
         [count, format, fields],
@@ -160,7 +161,7 @@ export default function FakeDataGenerator() {
                 ? prev.filter(f => f !== field)
                 : [...prev, field]
         )
-    }, [])
+    }, [setFields])
 
     const generate = useCallback(() => {
         if (fields.length === 0) return
@@ -172,7 +173,7 @@ export default function FakeDataGenerator() {
             output,
             metadata: { action: "generate" },
         })
-    }, [count, format, fields, addEntry])
+    }, [count, format, fields, addEntry, setOutput])
 
     return (
         <EditorSplit>

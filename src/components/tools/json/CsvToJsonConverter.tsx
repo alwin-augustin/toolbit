@@ -1,3 +1,4 @@
+import { useDocumentField } from "@/v2/document-state";
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Papa, { ParseResult } from 'papaparse';
 import { Upload } from 'lucide-react';
@@ -68,7 +69,7 @@ function DropPanel({ onText, children }: { onText: (text: string) => void; child
 }
 
 const CsvToJsonConverter: React.FC = () => {
-  const [csv, setCsv] = useState('');
+  const [csv, setCsv] = useDocumentField<string>("csv", '');
   const [json, setJson] = useState('');
   const [parseErrors, setParseErrors] = useState<number | null>(null);
   const shareState = useMemo(() => ({ csv }), [csv]);
@@ -98,7 +99,7 @@ const CsvToJsonConverter: React.FC = () => {
         setCsv(workspaceState);
       }
     }
-  }, [csv, consumeWorkspaceState]);
+  }, [csv, consumeWorkspaceState, setCsv]);
 
   const handleConvert = () => {
     Papa.parse(csv, {

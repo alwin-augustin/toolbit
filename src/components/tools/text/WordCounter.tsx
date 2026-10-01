@@ -1,3 +1,4 @@
+import { useDocumentField } from "@/v2/document-state";
 import { useState, useEffect } from "react"
 import { Sparkles } from "lucide-react"
 import { Button, Badge } from "@/ds/components"
@@ -10,7 +11,7 @@ const SAMPLE_TEXT =
     "The quick brown fox jumps over the lazy dog. This is a sample paragraph for testing the word counter tool.\n\nIt contains multiple sentences and paragraphs. You can see the statistics update in real time as you type!"
 
 export default function WordCounter() {
-    const [text, setText] = useState("")
+    const [text, setText] = useDocumentField<string>("text", "")
     useUrlState(text, setText)
     const [stats, setStats] = useState({
         characters: 0,

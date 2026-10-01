@@ -107,11 +107,11 @@ export function Inspector({ toolId, onClose }: InspectorProps) {
                         <Shield size={14} />
                     </span>
                     <span style={{ fontSize: "var(--text-sm)", fontWeight: semibold, color: "hsl(var(--text-strong))" }}>
-                        Local only
+                        Local processing
                     </span>
                 </div>
                 <p style={{ fontSize: "var(--text-xs)", color: "hsl(var(--text-muted))", lineHeight: "var(--leading-snug)" }}>
-                    Tool content stays on this device. Anonymous product analytics never include inputs, outputs, or
+                    Tool content stays on this device. Optional minimized product analytics never include inputs, outputs, or
                     piped workflow content.
                 </p>
             </div>

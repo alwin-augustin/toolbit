@@ -12,7 +12,7 @@ vi.mock('@/hooks/use-toast', () => ({
 describe('CaseConverter', () => {
   it('renders the component with correct title', () => {
     render(<CaseConverter />)
-    expect(screen.getByText('Case Converter')).toBeInTheDocument()
+    expect(screen.getByText('Input text')).toBeInTheDocument()
   })
 
   it('converts to uppercase', async () => {
@@ -137,7 +137,7 @@ describe('CaseConverter', () => {
     await user.type(input, 'hello world')
     await user.click(convertButton)
 
-    const copyButton = screen.getByTestId('button-copy-upper')
+    const copyButton = screen.getAllByRole('button', { name: 'Copy' })[0]
     expect(copyButton).toBeEnabled()
     await user.click(copyButton)
   })
@@ -145,7 +145,7 @@ describe('CaseConverter', () => {
   it('disables copy buttons when output is empty', () => {
     render(<CaseConverter />)
 
-    const copyButton = screen.getByTestId('button-copy-upper')
+    const copyButton = screen.getAllByRole('button', { name: 'Copy' })[0]
     expect(copyButton).toBeDisabled()
   })
 })

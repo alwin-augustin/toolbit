@@ -1,3 +1,6 @@
+import { useSessionDocumentState } from "@/v2/document-state";
+import { copyText } from "@/lib/clipboard";
+import { useDocumentField } from "@/v2/document-state";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react"
 import type { ReactNode } from "react"
 import { Copy, Check, Plug, Unplug, Send, Trash2, ArrowDown, ArrowUp } from "lucide-react"
@@ -55,11 +58,11 @@ function MessageCopyButton({ onCopy }: { onCopy: () => void }) {
 }
 
 export default function WebSocketTester() {
-    const [url, setUrl] = useState("wss://echo.websocket.events")
+    const [url, setUrl] = useDocumentField<string>("url", "wss://echo.websocket.events")
     const [status, setStatus] = useState("disconnected")
-    const [messageInput, setMessageInput] = useState("")
-    const [messages, setMessages] = useState<Message[]>([])
-    const [autoReconnect, setAutoReconnect] = useState(false)
+    const [messageInput, setMessageInput] = useSessionDocumentState("messageInput", "")
+    const [messages, setMessages] = useSessionDocumentState<Message[]>("messages", [])
+    const [autoReconnect, setAutoReconnect] = useSessionDocumentState("autoReconnect", false)
     const wsRef = useRef<WebSocket | null>(null)
     const msgIdRef = useRef(0)
     const logRef = useRef<HTMLDivElement>(null)
@@ -73,7 +76,7 @@ export default function WebSocketTester() {
     const addMessage = useCallback((direction: Message["direction"], content: string) => {
         const msg: Message = { id: msgIdRef.current++, direction, content, timestamp: new Date() }
         setMessages(prev => [...prev, msg])
-    }, [])
+    }, [setMessages])
 
     const connect = useCallback(() => {
         if (wsRef.current) {
@@ -125,7 +128,7 @@ export default function WebSocketTester() {
         wsRef.current.send(messageInput)
         addMessage("sent", messageInput)
         setMessageInput("")
-    }, [messageInput, addMessage])
+    }, [messageInput, addMessage, setMessageInput])
 
     const formatContent = (content: string): string => {
         try {
@@ -135,8 +138,8 @@ export default function WebSocketTester() {
         }
     }
 
-    const copyMessage = useCallback((content: string) => {
-        navigator.clipboard.writeText(content)
+    const copyMessage = useCallback(async (content: string) => {
+        if (!(await copyText(content))) return;
         addEntry({ input: url, output: content, metadata: { action: "copy" } })
     }, [addEntry, url])
 

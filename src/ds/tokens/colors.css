@@ -50,7 +50,7 @@
   --text-strong:  228 8% 12%; /* @kind color */
   --text-body:    226 7% 24%; /* @kind color */
   --text-muted:   225 5% 42%; /* @kind color */
-  --text-faint:   225 5% 58%; /* @kind color */
+  --text-faint:   225 5% 42%; /* @kind color */
   --text-onbrand: 0 0% 100%; /* @kind color */
 
   --border:        223 9% 88%; /* @kind color */
@@ -107,15 +107,15 @@
 
   --text-strong:  220 14% 96%; /* @kind color */
   --text-body:    222 10% 86%; /* @kind color */
-  --text-muted:   224 6% 64%; /* @kind color */
-  --text-faint:   225 5% 48%; /* @kind color */
-  --text-onbrand: 0 0% 100%; /* @kind color */
+  --text-muted:   224 6% 72%; /* @kind color */
+  --text-faint:   225 5% 70%; /* @kind color */
+  --text-onbrand: 228 8% 12%; /* @kind color */
 
   --border:        222 6% 24%; /* @kind color */
   --border-strong: 223 6% 33%; /* @kind color */
   --border-faint:  224 6% 19%; /* @kind color */
 
-  --primary:        226 82% 65%; /* @kind color */
+  --primary:        226 82% 72%; /* @kind color */
   --primary-hover:  227 90% 72%; /* @kind color */
   --primary-soft:   226 40% 22%; /* @kind color */
   --ring:           226 82% 65%; /* @kind color */

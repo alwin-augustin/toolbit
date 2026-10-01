@@ -1,4 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
+import { useEffect, useMemo } from "react";
 import { Button, Tabs } from "@/ds/components";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
@@ -68,9 +70,9 @@ const previewStyles = `
 `;
 
 export default function MarkdownPreviewer() {
-    const [markdown, setMarkdown] = useState("");
-    const [html, setHtml] = useState("");
-    const [showPreview, setShowPreview] = useState(true);
+    const [markdown, setMarkdown] = useDocumentField<string>("markdown", "");
+    const [html, setHtml] = useDocumentField<string>("html", "");
+    const [showPreview, setShowPreview] = useSessionDocumentState("showPreview", true);
     const shareState = useMemo(() => ({ markdown, showPreview }), [markdown, showPreview]);
     useUrlState(shareState, (state) => {
         setMarkdown(typeof state.markdown === "string" ? state.markdown : "");
@@ -87,7 +89,7 @@ export default function MarkdownPreviewer() {
             }
         };
         renderMarkdown();
-    }, [markdown]);
+    }, [markdown, setHtml]);
 
     const loadSample = () => {
         setMarkdown(`# Sample Markdown
