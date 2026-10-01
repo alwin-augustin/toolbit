@@ -1,4 +1,6 @@
-import { useState, useMemo, useEffect } from "react";
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
+import { useMemo, useEffect } from "react";
 import { ShieldCheck } from "lucide-react";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
@@ -10,10 +12,10 @@ import { useUrlState } from "@/hooks/use-url-state";
 import { useToolHistory } from "@/hooks/use-tool-history";
 
 export default function JsonValidator() {
-    const [jsonData, setJsonData] = useState("");
-    const [schema, setSchema] = useState("");
-    const [result, setResult] = useState("");
-    const [isValid, setIsValid] = useState(true);
+    const [jsonData, setJsonData] = useDocumentField<string>("jsonData", "");
+    const [schema, setSchema] = useDocumentField<string>("schema", "");
+    const [result, setResult] = useSessionDocumentState("result", "");
+    const [isValid, setIsValid] = useSessionDocumentState("isValid", true);
     const shareState = useMemo(() => ({ jsonData, schema }), [jsonData, schema]);
     useUrlState(shareState, (state) => {
         setJsonData(typeof state.jsonData === "string" ? state.jsonData : "");

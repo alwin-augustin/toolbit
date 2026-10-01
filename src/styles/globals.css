@@ -219,20 +219,6 @@
   }
 }
 
-/* Electron titlebar drag region */
-.electron-titlebar {
-  -webkit-app-region: drag;
-}
-
-.electron-titlebar button,
-.electron-titlebar a,
-.electron-titlebar input,
-.electron-titlebar textarea,
-.electron-titlebar select,
-.electron-titlebar [role="button"] {
-  -webkit-app-region: no-drag;
-}
-
 @layer base {
   * {
     @apply border-border;

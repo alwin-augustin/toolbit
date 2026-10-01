@@ -57,6 +57,7 @@ interface CodeEditorProps {
     /** Report caret position + byte size into the status bar. */
     reportStatus?: boolean;
     showLineNumbers?: boolean;
+    label?: string;
 }
 
 export function CodeEditor({
@@ -67,9 +68,14 @@ export function CodeEditor({
     placeholder,
     reportStatus = false,
     showLineNumbers = true,
+    label,
 }: CodeEditorProps) {
+    const previewOnly=value.length>100*1024;
+    const displayValue=previewOnly?value.slice(0,100*1024):value;
+    const large=value.length>100*1024;
     const hostRef = useRef<HTMLDivElement>(null);
     const viewRef = useRef<EditorView | null>(null);
+    const synchronizing = useRef(false);
     const onChangeRef = useRef(onChange);
     onChangeRef.current = onChange;
     const setStatus = useEditorStatus((s) => s.setStatus);
@@ -78,20 +84,27 @@ export function CodeEditor({
         if (!hostRef.current) return;
 
         const extensions: Extension[] = [
+            EditorView.contentAttributes.of({ "aria-label": label || (readOnly ? "Output" : "Input"), role: "textbox", "aria-multiline": "true" }),
             history(),
             keymap.of([...defaultKeymap, ...historyKeymap]),
             bracketMatching(),
             syntaxHighlighting(toolbitHighlight),
             toolbitTheme,
-            EditorView.lineWrapping,
-            EditorState.readOnly.of(readOnly),
+            ...(large ? [] : [EditorView.lineWrapping]),
+            EditorState.readOnly.of(readOnly || previewOnly),
+            EditorView.domEventHandlers({paste(event) {
+                if(readOnly)return false;
+                const text=event.clipboardData?.getData('text/plain');
+                if(text!==undefined && (text.length>100*1024 || previewOnly)) {event.preventDefault();onChangeRef.current?.(text);return true;}
+                return false;
+            }}),
         ];
         if (showLineNumbers) extensions.push(lineNumbers());
-        if (language === "json") extensions.push(json());
+        if (language === "json" && !large) extensions.push(json());
         if (placeholder) extensions.push(cmPlaceholder(placeholder));
         extensions.push(
             EditorView.updateListener.of((update) => {
-                if (update.docChanged) {
+                if (update.docChanged && !synchronizing.current && !previewOnly && !readOnly) {
                     onChangeRef.current?.(update.state.doc.toString());
                 }
                 if (reportStatus && (update.docChanged || update.selectionSet)) {
@@ -107,26 +120,29 @@ export function CodeEditor({
         );
 
         const view = new EditorView({
-            state: EditorState.create({ doc: value, extensions }),
+            state: EditorState.create({ doc: displayValue, extensions }),
             parent: hostRef.current,
         });
+        view.scrollDOM.tabIndex=0;
+        view.scrollDOM.setAttribute("aria-label", `${label || (readOnly ? "Output" : "Input")} scroll area`);
         viewRef.current = view;
         return () => {
             view.destroy();
             viewRef.current = null;
         };
         // Recreate the editor only when structural options change.
-    }, [language, readOnly, placeholder, showLineNumbers, reportStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [language, readOnly, placeholder, showLineNumbers, reportStatus, label, large, previewOnly]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Sync external value changes into the editor.
     useEffect(() => {
         const view = viewRef.current;
         if (!view) return;
         const current = view.state.doc.toString();
-        if (current !== value) {
-            view.dispatch({ changes: { from: 0, to: current.length, insert: value } });
+        if (current !== displayValue) {
+            synchronizing.current=true;
+            try { view.dispatch({ changes: { from: 0, to: current.length, insert: displayValue } }); } finally { synchronizing.current=false; }
         }
-    }, [value]);
+    }, [displayValue]);
 
-    return <div ref={hostRef} style={{ flex: 1, minHeight: 0, overflow: "auto" }} />;
+    return <>{previewOnly && <p role="status" style={{padding:"0 12px"}}>Preview shows the first 100 KB. {readOnly ? 'Copy and pipe use the complete output.' : 'Processing uses the complete input. Paste to replace it, or clear to edit.'}{!readOnly && <button type="button" onClick={()=>onChangeRef.current?.('')}>Clear input</button>}</p>}<div ref={hostRef} style={{ flex: 1, minHeight: 0, overflow: "auto" }} /></>;
 }

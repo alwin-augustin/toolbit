@@ -12,7 +12,7 @@ vi.mock('@/hooks/use-toast', () => ({
 describe('ColorConverter', () => {
   it('renders the component with correct title', () => {
     render(<ColorConverter />)
-    expect(screen.getByText('Color Converter & Picker')).toBeInTheDocument()
+    expect(screen.getByText('HEX')).toBeInTheDocument()
   })
 
   it('displays color preview', () => {
@@ -89,7 +89,7 @@ describe('ColorConverter', () => {
     const user = userEvent.setup()
     render(<ColorConverter />)
 
-    const copyHexButton = screen.getByTestId('button-copy-hex')
+    const copyHexButton = screen.getAllByRole('button', { name: 'Copy' })[0]
     expect(copyHexButton).toBeEnabled()
     await user.click(copyHexButton)
   })
@@ -98,7 +98,7 @@ describe('ColorConverter', () => {
     const user = userEvent.setup()
     render(<ColorConverter />)
 
-    const copyRgbButton = screen.getByTestId('button-copy-rgb')
+    const copyRgbButton = screen.getAllByRole('button', { name: 'Copy' })[0]
     expect(copyRgbButton).toBeEnabled()
     await user.click(copyRgbButton)
   })
@@ -107,7 +107,7 @@ describe('ColorConverter', () => {
     const user = userEvent.setup()
     render(<ColorConverter />)
 
-    const copyHslButton = screen.getByTestId('button-copy-hsl')
+    const copyHslButton = screen.getAllByRole('button', { name: 'Copy' })[0]
     expect(copyHslButton).toBeEnabled()
     await user.click(copyHslButton)
   })

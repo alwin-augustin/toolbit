@@ -1,3 +1,4 @@
+import { useDocumentField } from "@/v2/document-state";
 import React, { useMemo, useState, useEffect } from 'react';
 import cssbeautify from 'cssbeautify';
 import { minify } from 'csso';
@@ -13,7 +14,7 @@ import { useWorkspace } from '@/hooks/use-workspace';
 const SAMPLE_CSS = '.container{display:flex;justify-content:center;align-items:center;gap:1rem;padding:2rem}.card{background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);padding:1.5rem}';
 
 const CssFormatter: React.FC = () => {
-  const [css, setCss] = useState('');
+  const [css, setCss] = useDocumentField<string>("css", '');
   const [formattedCss, setFormattedCss] = useState('');
   const [isValid, setIsValid] = useState<boolean | null>(null);
   const shareState = useMemo(() => ({ css }), [css]);
@@ -43,7 +44,7 @@ const CssFormatter: React.FC = () => {
         setCss(workspaceState);
       }
     }
-  }, [css, consumeWorkspaceState]);
+  }, [css, consumeWorkspaceState, setCss]);
 
   const handleFormat = () => {
     try {

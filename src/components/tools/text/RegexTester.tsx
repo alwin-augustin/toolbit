@@ -1,4 +1,9 @@
-import { useState, useMemo, useCallback } from "react"
+import { useSessionDocumentState } from "@/v2/document-state";
+import { copyText } from "@/lib/clipboard";
+import { useDocumentField } from "@/v2/document-state";
+import { evaluateRegex } from "@/workers/regex-evaluate"
+import { runInWorker } from "@/lib/worker-utils"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -45,13 +50,13 @@ const FLAG_OPTIONS = [
 ]
 
 export default function RegexTester() {
-    const [pattern, setPattern] = useState("")
-    const [flags, setFlags] = useState("g")
-    const [testString, setTestString] = useState("")
-    const [replacement, setReplacement] = useState("")
-    const [showReplace, setShowReplace] = useState(false)
-    const [showPatterns, setShowPatterns] = useState(false)
-    const [showExplain, setShowExplain] = useState(false)
+    const [pattern, setPattern] = useDocumentField<string>("pattern", "")
+    const [flags, setFlags] = useDocumentField<string>("flags", "g")
+    const [testString, setTestString] = useDocumentField<string>("testString", "")
+    const [replacement, setReplacement] = useDocumentField<string>("replacement", "")
+    const [showReplace, setShowReplace] = useSessionDocumentState("showReplace", false)
+    const [showPatterns, setShowPatterns] = useSessionDocumentState("showPatterns", false)
+    const [showExplain, setShowExplain] = useSessionDocumentState("showExplain", false)
     const { toast } = useToast()
     const shareState = useMemo(
         () => ({ pattern, flags, testString, replacement, showReplace }),
@@ -72,62 +77,20 @@ export default function RegexTester() {
                 ? prev.replace(flag, "")
                 : prev + flag
         )
-    }, [])
+    }, [setFlags])
 
-    const { matches, error, regex } = useMemo(() => {
-        if (!pattern || !testString) {
-            return { matches: [] as MatchResult[], error: null, regex: null }
-        }
-
-        try {
-            const re = new RegExp(pattern, flags)
-            const results: MatchResult[] = []
-
-            if (flags.includes("g")) {
-                let match: RegExpExecArray | null
-                let safety = 0
-                while ((match = re.exec(testString)) !== null && safety < 10000) {
-                    safety++
-                    results.push({
-                        fullMatch: match[0],
-                        index: match.index,
-                        groups: match.slice(1),
-                        namedGroups: match.groups ? { ...match.groups } : {},
-                    })
-                    if (match[0].length === 0) {
-                        re.lastIndex++
-                    }
-                }
-            } else {
-                const match = re.exec(testString)
-                if (match) {
-                    results.push({
-                        fullMatch: match[0],
-                        index: match.index,
-                        groups: match.slice(1),
-                        namedGroups: match.groups ? { ...match.groups } : {},
-                    })
-                }
-            }
-
-            return { matches: results, error: null, regex: re }
-        } catch (e) {
-            return {
-                matches: [] as MatchResult[],
-                error: (e as Error).message,
-                regex: null,
-            }
-        }
-    }, [pattern, flags, testString])
-
-    const replaceResult = useMemo(() => {
-        if (!regex || !showReplace) return ""
-        try {
-            return testString.replace(regex, replacement)
-        } catch {
-            return ""
-        }
-    }, [regex, testString, replacement, showReplace])
+    const [evaluation,setEvaluation]=useState<{matches:MatchResult[];error:string|null;replaceResult:string}>({matches:[],error:null,replaceResult:""})
+    const {matches,error,replaceResult}=evaluation
+    useEffect(()=>{
+        const controller=new AbortController();
+        if(!pattern || !testString){setEvaluation({matches:[],error:null,replaceResult:""});return;}
+        const timer=setTimeout(()=>{
+            runInWorker(evaluateRegex,[pattern,flags,testString,replacement,showReplace],{timeoutMs:1000,signal:controller.signal})
+            .then(result=>{if(!controller.signal.aborted)setEvaluation({...result,error:null});})
+            .catch(()=>{if(!controller.signal.aborted)setEvaluation({matches:[],error:"Invalid pattern, oversized input, or evaluation timed out. Simplify the pattern.",replaceResult:""});});
+        },150);
+        return()=>{clearTimeout(timer);controller.abort();};
+    },[pattern,flags,testString,replacement,showReplace])
 
     const highlightedText = useMemo(() => {
         if (!matches.length || !testString) return null
@@ -150,8 +113,8 @@ export default function RegexTester() {
         return parts
     }, [matches, testString])
 
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text)
+    const copyToClipboard = async (text: string) => {
+        if (!(await copyText(text))) return;
         toast({ description: "Copied to clipboard!" })
         addEntry({
             input: JSON.stringify({ pattern, flags, testString, replacement, showReplace }),

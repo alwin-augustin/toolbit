@@ -1,4 +1,6 @@
-import { useState, useMemo } from "react"
+import { useSessionDocumentState } from "@/v2/document-state";
+import { copyText } from "@/lib/clipboard";
+import { useMemo } from "react"
 import cronParser from "cron-parser"
 import cronstrue from "cronstrue"
 import { Button } from "@/components/ui/button"
@@ -41,7 +43,7 @@ const QUICK_OPTIONS = [
 ]
 
 export default function CrontabGenerator() {
-    const [fields, setFields] = useState<string[]>(["*", "*", "*", "*", "*"])
+    const [fields, setFields] = useSessionDocumentState<string[]>("fields", ["*", "*", "*", "*", "*"])
     const { toast } = useToast()
     const shareState = useMemo(() => ({ fields }), [fields])
     const { getShareUrl } = useUrlState(shareState, (state) => {
@@ -75,8 +77,8 @@ export default function CrontabGenerator() {
         }
     }, [expression])
 
-    const copyExpression = () => {
-        navigator.clipboard.writeText(expression)
+    const copyExpression = async () => {
+        if (!(await copyText(expression))) return;
         toast({ title: "Cron expression copied" })
         addEntry({ input: expression, output: expression, metadata: { action: "copy" } })
     }

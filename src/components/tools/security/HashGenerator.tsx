@@ -1,3 +1,5 @@
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Loader2, Sparkles } from "lucide-react"
 import { Button, Badge, Input, Alert } from "@/ds/components"
@@ -52,7 +54,7 @@ function md5(input: string): string {
     const bitLen = bytes.length * 8
     bytes.push(0x80)
     while (bytes.length % 64 !== 56) bytes.push(0)
-    for (let i = 0; i < 8; i++) bytes.push((bitLen >>> (i * 8)) & 0xff)
+    for (let i = 0; i < 8; i++) bytes.push(Math.floor(bitLen / 2 ** (i * 8)) & 0xff)
     let a0 = 0x67452301 >>> 0, b0 = 0xefcdab89 >>> 0, c0 = 0x98badcfe >>> 0, d0 = 0x10325476 >>> 0
     for (let offset = 0; offset < bytes.length; offset += 64) {
         const M = new Uint32Array(16)
@@ -89,8 +91,8 @@ const HASH_LABELS: { key: keyof HashResult; label: string }[] = [
 ]
 
 export default function HashGenerator() {
-    const [input, setInput] = useState("")
-    const [hashes, setHashes] = useState<HashResult>({ md5: "", sha1: "", sha256: "", sha512: "" })
+    const [input, setInput] = useDocumentField<string>("input", "")
+    const [hashes, setHashes] = useSessionDocumentState<HashResult>("hashes", { md5: "", sha1: "", sha256: "", sha512: "" })
     const [isComputing, setIsComputing] = useState(false)
     const [error, setError] = useState("")
     useUrlState(input, setInput)
@@ -161,7 +163,7 @@ export default function HashGenerator() {
             setError("Error generating hashes")
         }
         setIsComputing(false)
-    }, [addEntry, computeMainThread, computeWithWorker])
+    }, [addEntry, computeMainThread, computeWithWorker, setHashes])
 
     // Auto-compute with debounce
     useEffect(() => {

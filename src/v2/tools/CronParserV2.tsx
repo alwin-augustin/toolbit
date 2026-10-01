@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useDocumentField, useDocumentOptions } from "../document-state";
+import { useEffect, useMemo } from "react";
 import type { CSSProperties } from "react";
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import cronParser from "cron-parser";
 import cronstrue from "cronstrue";
 import { Button, Badge, Checkbox, Input, Tag } from "@/ds/components";
@@ -12,24 +11,8 @@ import { useEditorStatus } from "../workspace-store";
 import { useSmartPasteInput } from "../smart-paste";
 import { useToolHistory } from "@/hooks/use-tool-history";
 
-interface CronOptions {
-    showExplanation: boolean;
-    showNextRuns: boolean;
-    visualBuilder: boolean;
-    set: (patch: Partial<Omit<CronOptions, "set">>) => void;
-}
+function useCronOptions() { return useDocumentOptions({showExplanation:true as boolean,showNextRuns:true as boolean,visualBuilder:false as boolean}); }
 
-const useCronOptions = create<CronOptions>()(
-    persist(
-        (set) => ({
-            showExplanation: true,
-            showNextRuns: true,
-            visualBuilder: false,
-            set: (patch) => set(patch),
-        }),
-        { name: "toolbit-v2-cron-options" }
-    )
-);
 
 const PRESETS = [
     { label: "Every minute", value: "* * * * *" },
@@ -93,7 +76,7 @@ function ResultBlock({ title, children }: { title: string; children: React.React
 }
 
 export default function CronParserV2() {
-    const [expression, setExpression] = useState("");
+    const [expression, setExpression] = useDocumentField<string>("input", "");
     useSmartPasteInput(setExpression);
     const { showExplanation, showNextRuns, visualBuilder } = useCronOptions();
     const setStatus = useEditorStatus((s) => s.setStatus);

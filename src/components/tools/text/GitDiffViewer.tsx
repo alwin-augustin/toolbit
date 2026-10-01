@@ -1,3 +1,6 @@
+import { useSessionDocumentState } from "@/v2/document-state";
+import { copyText } from "@/lib/clipboard";
+import { useDocumentField } from "@/v2/document-state";
 import { useState, useMemo, useCallback } from "react"
 import type { CSSProperties } from "react"
 import { parsePatch, type StructuredPatch, type StructuredPatchHunk } from "diff"
@@ -86,8 +89,8 @@ function DiffLineRow({ line }: { line: string }) {
 }
 
 export default function GitDiffViewer() {
-    const [input, setInput] = useState("")
-    const [collapsedFiles, setCollapsedFiles] = useState<Set<number>>(new Set())
+    const [input, setInput] = useDocumentField<string>("input", "")
+    const [collapsedFiles, setCollapsedFiles] = useSessionDocumentState<Set<number>>("collapsedFiles", new Set())
     const [copied, setCopied] = useState(false)
     useUrlState(input, setInput)
     const { addEntry } = useToolHistory("diff-tool", "Git Diff Viewer")
@@ -140,18 +143,18 @@ export default function GitDiffViewer() {
             else next.add(index)
             return next
         })
-    }, [])
+    }, [setCollapsedFiles])
 
     const handleFileDrop = useCallback((content: string) => {
         setInput(content)
-    }, [])
+    }, [setInput])
 
     const loadSample = useCallback(() => {
         setInput(SAMPLE_DIFF)
-    }, [])
+    }, [setInput])
 
-    const copyDiff = useCallback(() => {
-        navigator.clipboard.writeText(normalizedInput)
+    const copyDiff = useCallback(async () => {
+        if (!(await copyText(normalizedInput))) return;
         setCopied(true)
         setTimeout(() => setCopied(false), 1500)
         addEntry({ input: normalizedInput, output: normalizedInput, metadata: { action: "copy" } })

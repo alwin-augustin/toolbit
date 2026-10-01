@@ -1,3 +1,4 @@
+import { formatJson as canonicalJson } from "@/lib/tool-contract";
 /**
  * JSON Service
  * Handles JSON formatting, validation, and minification operations
@@ -16,27 +17,8 @@ export interface ServiceResult<T = string> {
  * @returns Formatted result with success status
  */
 export const formatJson = (input: string, spaces: number = 2): ServiceResult => {
-    try {
-        if (!input.trim()) {
-            return {
-                success: false,
-                error: 'Input cannot be empty'
-            };
-        }
-
-        const parsed = JSON.parse(input);
-        const formatted = JSON.stringify(parsed, null, spaces);
-
-        return {
-            success: true,
-            data: formatted
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Invalid JSON'
-        };
-    }
+    const result=canonicalJson(input,spaces);
+    return result.ok ? {success:true,data:result.value} : {success:false,error:'Invalid JSON'};
 };
 
 /**

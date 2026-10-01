@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 
 const FOCUSABLE = [
     "button:not([disabled])",
@@ -15,10 +15,18 @@ export function useFocusTrap(
     onEscape: () => void,
     initialFocusRef?: RefObject<HTMLElement | null>,
 ) {
+    const escapeRef=useRef(onEscape);escapeRef.current=onEscape;
     useEffect(() => {
         if (!active) return;
 
         const previous = document.activeElement as HTMLElement | null;
+        const background:Array<{element:HTMLElement;inert:boolean}>=[];
+        let branch=containerRef.current;
+        while(branch?.parentElement){
+            for(const sibling of Array.from(branch.parentElement.children)){if(sibling!==branch && sibling instanceof HTMLElement){background.push({element:sibling,inert:sibling.inert});sibling.inert=true;}}
+            if(branch.parentElement===document.body)break;
+            branch=branch.parentElement;
+        }
         const focusInitial = () => {
             const initial = initialFocusRef?.current;
             const first = containerRef.current?.querySelector<HTMLElement>(FOCUSABLE);
@@ -29,7 +37,7 @@ export function useFocusTrap(
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
                 event.preventDefault();
-                onEscape();
+                escapeRef.current();
                 return;
             }
             if (event.key !== "Tab" || !containerRef.current) return;
@@ -54,7 +62,8 @@ export function useFocusTrap(
         return () => {
             window.clearTimeout(focusTimer);
             document.removeEventListener("keydown", handleKeyDown);
+            for(const {element,inert} of background)element.inert=inert;
             previous?.focus();
         };
-    }, [active, containerRef, initialFocusRef, onEscape]);
+    }, [active, containerRef, initialFocusRef]);
 }

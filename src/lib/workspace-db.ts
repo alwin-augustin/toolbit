@@ -1,3 +1,4 @@
+import { parseWorkspace, type ToolDocumentV1 } from "./workspace-schema"
 export interface WorkspaceToolState {
     toolId: string
     state: string
@@ -9,6 +10,11 @@ export interface Workspace {
     createdAt: number
     updatedAt?: number
     tools: WorkspaceToolState[]
+    schemaVersion?: 1
+    productVersion?: string
+    documents?: ToolDocumentV1[]
+    activeDocumentId?: string
+    layout?: { density: "compact" | "comfortable"; inspectorOpen: boolean }
 }
 
 const DB_NAME = "toolbit-workspaces"
@@ -87,14 +93,15 @@ export async function getWorkspace(id: string): Promise<Workspace | null> {
 }
 
 export async function saveWorkspace(workspace: Workspace): Promise<void> {
+    const validated = parseWorkspace(JSON.stringify(workspace))
     const db = await openDb()
     const tx = db.transaction(STORE_NAME, "readwrite")
     const store = tx.objectStore(STORE_NAME)
     await requestToPromise(store.put({
-        ...workspace,
+        ...validated,
         createdAt: workspace.createdAt || Date.now(),
         updatedAt: Date.now(),
-        tools: workspace.tools.map((tool) => ({ ...tool })),
+        tools: validated.tools.map((tool) => ({ ...tool })),
     }))
     await transactionDone(tx)
 }

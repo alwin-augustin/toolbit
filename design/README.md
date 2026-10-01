@@ -2,7 +2,7 @@
 
 A modern, developer-centric design system for **Toolbit** — a local-first collection of
 developer utilities (JSON, Base64, JWT, YAML, XML, SQL, and ~40 more) that runs entirely
-in the browser, installable as a PWA (a desktop build is planned, not shipped), with zero
+in the browser, installable as a PWA, with zero
 tracking and no server-side processing.
 
 v2 reframes Toolbit from "a website of tool pages" into an **IDE-like workspace**: sidebar

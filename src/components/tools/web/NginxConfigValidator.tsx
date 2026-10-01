@@ -1,4 +1,6 @@
-import { useState, useMemo, useCallback } from "react"
+import { copyText } from "@/lib/clipboard";
+import { useDocumentField } from "@/v2/document-state";
+import { useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ToolCard } from "@/components/ToolCard"
@@ -188,7 +190,7 @@ server {
 }`
 
 export default function NginxConfigValidator() {
-    const [input, setInput] = useState("")
+    const [input, setInput] = useDocumentField<string>("input", "")
     const { toast } = useToast()
     const { getShareUrl } = useUrlState(input, setInput)
     const { addEntry } = useToolHistory("nginx-config-validator", "Nginx Config Validator")
@@ -204,17 +206,17 @@ export default function NginxConfigValidator() {
         setInput(formatted)
         toast({ title: "Config formatted" })
         addEntry({ input, output: formatted, metadata: { action: "format" } })
-    }, [input, toast, addEntry])
+    }, [input, toast, addEntry, setInput])
 
-    const copyConfig = useCallback(() => {
-        navigator.clipboard.writeText(input)
+    const copyConfig = useCallback(async () => {
+        if (!(await copyText(input))) return;
         toast({ title: "Copied to clipboard" })
         addEntry({ input, output: input, metadata: { action: "copy" } })
     }, [input, toast, addEntry])
 
     const handleFileDrop = useCallback((content: string) => {
         setInput(content)
-    }, [])
+    }, [setInput])
 
     const errors = issues.filter(i => i.severity === "error")
     const warnings = issues.filter(i => i.severity === "warning")

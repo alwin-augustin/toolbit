@@ -1,3 +1,4 @@
+import { useDocumentField } from "@/v2/document-state";
 import React, { useState, useEffect } from 'react';
 import cronParser from 'cron-parser';
 import cronstrue from 'cronstrue';
@@ -23,7 +24,7 @@ const PRESETS = [
 const FIELD_LABELS = ["Minute", "Hour", "Day", "Month", "Weekday"];
 
 const CronParser: React.FC = () => {
-  const [expression, setExpression] = useState('');
+  const [expression, setExpression] = useDocumentField<string>("expression", '');
   const [description, setDescription] = useState('');
   const [nextDates, setNextDates] = useState<string[]>([]);
   const [error, setError] = useState('');
@@ -38,7 +39,7 @@ const CronParser: React.FC = () => {
       sessionStorage.removeItem("toolbit:smart-paste");
       setExpression(smartPaste.trim());
     }
-  }, []);
+  }, [setExpression]);
 
   // Auto-parse on expression change
   useEffect(() => {

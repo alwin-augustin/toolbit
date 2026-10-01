@@ -1,3 +1,5 @@
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
 import { useState, useMemo } from "react"
 import { Clock } from "lucide-react"
 import { Button, Card, Input } from "@/ds/components"
@@ -15,10 +17,10 @@ const RESULT_LABELS: Record<string, string> = {
 }
 
 export default function TimestampConverter() {
-    const [timestamp, setTimestamp] = useState("")
-    const [dateTime, setDateTime] = useState("")
+    const [timestamp, setTimestamp] = useDocumentField<string>("timestamp", "")
+    const [dateTime, setDateTime] = useDocumentField<string>("dateTime", "")
     const [error, setError] = useState("")
-    const [results, setResults] = useState({
+    const [results, setResults] = useSessionDocumentState("results", {
         unix: "",
         iso: "",
         local: "",

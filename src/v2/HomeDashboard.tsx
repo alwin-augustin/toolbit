@@ -1,3 +1,4 @@
+import { stashSmartPaste } from "./smart-paste";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useLocation } from "wouter";
 import { ArrowRight, Clipboard, Clock, Command, FileJson, FolderOpen, Play, Sparkles } from "lucide-react";
@@ -46,7 +47,7 @@ export function HomeDashboard({ onSearch, onHistory, onCategory }: HomeDashboard
 
     const openTool = (id: string) => {
         if (input.trim()) {
-            sessionStorage.setItem("toolbit:smart-paste", input);
+            stashSmartPaste(input);
             if (isPostHogEnabled) {
                 posthog.capture("smart_detection_used", {
                     destination_tool_id: id,

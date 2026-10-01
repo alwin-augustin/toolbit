@@ -1,3 +1,5 @@
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
 import { useState, useCallback, useMemo } from "react"
 import { FolderOpen, Plus, Save, Send, Trash2 } from "lucide-react"
 import { Button, Badge, IconButton, Input, Select, Textarea, Checkbox, Tabs } from "@/ds/components"
@@ -46,23 +48,23 @@ function loadSavedRequests(): SavedRequest[] {
 }
 
 function saveRequests(requests: SavedRequest[]) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(requests))
+    void requests // session-only; requests can contain credentials
 }
 
 export default function ApiRequestBuilder() {
-    const [method, setMethod] = useState<HttpMethod>("GET")
-    const [url, setUrl] = useState("")
-    const [headers, setHeaders] = useState<Header[]>([
+    const [method, setMethod] = useSessionDocumentState<HttpMethod>("method", "GET")
+    const [url, setUrl] = useDocumentField<string>("url", "")
+    const [headers, setHeaders] = useSessionDocumentState<Header[]>("headers", [
         { key: "Content-Type", value: "application/json", enabled: true },
     ])
-    const [body, setBody] = useState("")
-    const [bodyType, setBodyType] = useState<"json" | "text" | "form">("json")
-    const [response, setResponse] = useState("")
+    const [body, setBody] = useDocumentField<string>("body", "")
+    const [bodyType, setBodyType] = useSessionDocumentState<"json" | "text" | "form">("bodyType", "json")
+    const [response, setResponse] = useSessionDocumentState("response", "")
     const [responseStatus, setResponseStatus] = useState<number | null>(null)
     const [responseTime, setResponseTime] = useState<number | null>(null)
     const [loading, setLoading] = useState(false)
-    const [activeTab, setActiveTab] = useState<"headers" | "body" | "saved">("headers")
-    const [savedRequests, setSavedRequests] = useState<SavedRequest[]>(loadSavedRequests)
+    const [activeTab, setActiveTab] = useSessionDocumentState<"headers" | "body" | "saved">("activeTab", "headers")
+    const [savedRequests, setSavedRequests] = useSessionDocumentState<SavedRequest[]>("savedRequests", [])
     const shareState = useMemo(
         () => ({
             method,
@@ -173,7 +175,7 @@ export default function ApiRequestBuilder() {
         } finally {
             setLoading(false)
         }
-    }, [url, method, headers, body, bodyType, addEntry])
+    }, [url, method, headers, body, bodyType, addEntry, setResponse])
 
     const saveCurrentRequest = () => {
         const name = prompt("Save request as:")
@@ -220,6 +222,7 @@ export default function ApiRequestBuilder() {
     return (
         <EditorSplit>
             <Panel>
+                <div><p>Saved requests remain in this session only.</p><Button variant="secondary" onClick={()=>setSavedRequests(loadSavedRequests())}>Recover legacy saved requests</Button></div>
                 <PanelHeader
                     title="Request"
                     badge={<Badge tone={METHOD_TONES[method]}>{method}</Badge>}
@@ -261,7 +264,7 @@ export default function ApiRequestBuilder() {
                             items={[
                                 { value: "headers", label: "Headers" },
                                 { value: "body", label: "Body" },
-                                { value: "saved", label: `Saved (${savedRequests.length})`, icon: <FolderOpen size={13} /> },
+                                { value: "saved", label: `Session (${savedRequests.length})`, icon: <FolderOpen size={13} /> },
                             ]}
                             style={{ flex: 1 }}
                         />

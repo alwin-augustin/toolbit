@@ -1,3 +1,5 @@
+import { useSessionDocumentState } from "@/v2/document-state";
+import { copyText } from "@/lib/clipboard";
 import { useState, useEffect, useMemo } from "react"
 import { Copy, Check } from "lucide-react"
 import { Card, IconButton, Input, Tooltip } from "@/ds/components"
@@ -13,8 +15,8 @@ function CopyValue({ text, onCopy }: { text: string; onCopy: (text: string) => v
             <IconButton
                 size="sm"
                 title="Copy"
-                onClick={() => {
-                    navigator.clipboard.writeText(text)
+                onClick={async () => {
+                    if (!(await copyText(text))) return;
                     onCopy(text)
                     setCopied(true)
                     setTimeout(() => setCopied(false), 1500)
@@ -27,9 +29,9 @@ function CopyValue({ text, onCopy }: { text: string; onCopy: (text: string) => v
 }
 
 export default function ColorConverter() {
-    const [hex, setHex] = useState("#3b82f6")
-    const [rgb, setRgb] = useState({ r: 59, g: 130, b: 246 })
-    const [hsl, setHsl] = useState({ h: 217, s: 91, l: 60 })
+    const [hex, setHex] = useSessionDocumentState("hex", "#3b82f6")
+    const [rgb, setRgb] = useSessionDocumentState("rgb", { r: 59, g: 130, b: 246 })
+    const [hsl, setHsl] = useSessionDocumentState("hsl", { h: 217, s: 91, l: 60 })
     const shareState = useMemo(() => ({ hex }), [hex])
     useUrlState(shareState, (state) => {
         const nextHex = typeof state.hex === "string" ? state.hex : "#3b82f6"

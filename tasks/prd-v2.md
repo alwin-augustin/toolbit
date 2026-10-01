@@ -1,3 +1,5 @@
+> Scope revision (1 October 2026): support the web app and installed PWA on computers and mobile devices. Earlier desktop-only viewport constraints are superseded by the responsive acceptance criteria in `docs/IMPLEMENTATION_PLAN_2026-10-01.md`.
+
 # Toolbit v2 — Product Requirements Document
 
 ## Vision

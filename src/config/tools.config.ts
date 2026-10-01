@@ -4,10 +4,11 @@
  */
 
 import { lazy, ComponentType } from 'react';
+import { getToolPolicy, type ToolPolicy } from '@/lib/tool-policy';
 
 export type ToolCategory = 'format' | 'encode' | 'generate' | 'transform' | 'analyze' | 'build' | 'text';
 
-export interface ToolMetadata {
+export interface ToolMetadata extends ToolPolicy {
     id: string;
     name: string;
     description: string;
@@ -81,7 +82,7 @@ const UuidGenerator = lazy(() => import("@/components/tools/utilities/UuidGenera
 const HttpStatusCodeReference = lazy(() => import("@/components/tools/utilities/HttpStatusCodeReference"));
 
 // Tool metadata configuration
-export const TOOLS: ToolMetadata[] = [
+const TOOL_CATALOG: Omit<ToolMetadata, keyof ToolPolicy>[] = [
     // JSON Tools
     {
         id: 'json-formatter',
@@ -487,3 +488,5 @@ export const searchTools = (query: string) => {
         tool.keywords?.some(keyword => keyword.includes(lowerQuery))
     );
 };
+
+export const TOOLS: ToolMetadata[] = TOOL_CATALOG.map(tool => ({ ...tool, ...getToolPolicy(tool.id) }));

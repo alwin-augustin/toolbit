@@ -1,3 +1,4 @@
+import { base64Transform } from "@/lib/tool-contract";
 /**
  * Encoding Service
  * Handles Base64, URL encoding/decoding, and HTML entity operations
@@ -11,26 +12,9 @@ import { ServiceResult } from './json.service';
  * @returns Base64 encoded result
  */
 export const encodeBase64 = (input: string): ServiceResult => {
-    try {
-        if (!input) {
-            return {
-                success: false,
-                error: 'Input cannot be empty'
-            };
-        }
-
-        const encoded = btoa(unescape(encodeURIComponent(input)));
-
-        return {
-            success: true,
-            data: encoded
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to encode Base64'
-        };
-    }
+    if(!input)return {success:false,error:'Input cannot be empty'};
+    const result=base64Transform(input,'encode',false);
+    return result.ok ? {success:true,data:result.value} : {success:false,error:'Invalid Base64 input'};
 };
 
 /**
@@ -39,26 +23,9 @@ export const encodeBase64 = (input: string): ServiceResult => {
  * @returns Decoded plain text result
  */
 export const decodeBase64 = (input: string): ServiceResult => {
-    try {
-        if (!input) {
-            return {
-                success: false,
-                error: 'Input cannot be empty'
-            };
-        }
-
-        const decoded = decodeURIComponent(escape(atob(input)));
-
-        return {
-            success: true,
-            data: decoded
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Invalid Base64 string'
-        };
-    }
+    if(!input)return {success:false,error:'Input cannot be empty'};
+    const result=base64Transform(input,'decode',false);
+    return result.ok ? {success:true,data:result.value} : {success:false,error:'Invalid Base64 input'};
 };
 
 /**

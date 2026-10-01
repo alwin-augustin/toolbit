@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { PanelRight, Sun, Moon, Save } from "lucide-react";
+import { PanelRight, Sun, Moon, Save, Settings } from "lucide-react";
 import { Button, IconButton, Tabs, Tooltip } from "@/ds/components";
 import type { Density } from "./workspace-store";
 
@@ -12,9 +12,11 @@ interface TopbarProps {
     onToggleTheme: () => void;
     pipelineStepCount: number;
     onSavePipeline: () => void;
+    onSettings: () => void;
+    onRecipes: () => void;
 }
 
-export function Topbar({ crumb, density, onDensity, onToggleInspector, theme, onToggleTheme, pipelineStepCount, onSavePipeline }: TopbarProps) {
+export function Topbar({ crumb, density, onDensity, onToggleInspector, theme, onToggleTheme, pipelineStepCount, onSavePipeline, onSettings, onRecipes }: TopbarProps) {
     return (
         <header
             style={{
@@ -50,6 +52,8 @@ export function Topbar({ crumb, density, onDensity, onToggleInspector, theme, on
                 </span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <IconButton title="Privacy and storage" onClick={onSettings}><Settings size={16}/></IconButton>
+                <Button size="sm" onClick={onRecipes}>Recipes</Button>
                 <Tabs
                     variant="segment"
                     value={density}
@@ -70,7 +74,7 @@ export function Topbar({ crumb, density, onDensity, onToggleInspector, theme, on
                     </IconButton>
                 </Tooltip>
                 <Button size="sm" disabled={pipelineStepCount < 2} iconLeft={<Save size={13} />} onClick={onSavePipeline}>
-                    {pipelineStepCount >= 2 ? "Save pipeline" : "Pipeline"}
+                    {pipelineStepCount >= 2 ? "Save open tools" : "Open tools"}
                 </Button>
             </div>
         </header>

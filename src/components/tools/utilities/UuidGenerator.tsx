@@ -1,4 +1,6 @@
-import { useState, useMemo } from "react"
+import { useSessionDocumentState } from "@/v2/document-state";
+import { copyText } from "@/lib/clipboard";
+import { useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Copy, Key, RefreshCw } from "lucide-react"
@@ -8,8 +10,8 @@ import { useUrlState } from "@/hooks/use-url-state"
 import { useToolHistory } from "@/hooks/use-tool-history"
 
 export default function UuidGenerator() {
-    const [uuids, setUuids] = useState<string[]>([])
-    const [count, setCount] = useState(1)
+    const [uuids, setUuids] = useSessionDocumentState<string[]>("uuids", [])
+    const [count, setCount] = useSessionDocumentState("count", 1)
     const { toast } = useToast()
     const shareState = useMemo(() => ({ count }), [count])
     const { getShareUrl } = useUrlState(shareState, (state) => {
@@ -33,13 +35,13 @@ export default function UuidGenerator() {
         addEntry({ input: "1", output: newUuid, metadata: { action: "generate-single" } })
     }
 
-    const copyToClipboard = (uuid: string) => {
-        navigator.clipboard.writeText(uuid)
+    const copyToClipboard = async (uuid: string) => {
+        if (!(await copyText(uuid))) return;
         toast({ description: "UUID copied to clipboard!" })
     }
 
-    const copyAllToClipboard = () => {
-        navigator.clipboard.writeText(uuids.join('\n'))
+    const copyAllToClipboard = async () => {
+        if (!(await copyText(uuids.join('\n')))) return;
         toast({ description: `${uuids.length} UUIDs copied to clipboard!` })
     }
 

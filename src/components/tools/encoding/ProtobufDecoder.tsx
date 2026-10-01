@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
+import { useEffect, useMemo } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Button, Tabs } from "@/ds/components";
 import { CodeEditor } from "@/v2/CodeEditor";
@@ -187,8 +189,8 @@ const SAMPLE_HEX = "08 96 01 12 0b 48 65 6c 6c 6f 20 57 6f 72 6c 64 18 01 22 0a 
 type Format = "hex" | "base64";
 
 export default function ProtobufDecoder() {
-    const [input, setInput] = useState("")
-    const [format, setFormat] = useState<Format>("hex")
+    const [input, setInput] = useDocumentField<string>("input", "")
+    const [format, setFormat] = useSessionDocumentState<Format>("format", "hex")
     const setStatus = useEditorStatus((s) => s.setStatus);
     const shareState = useMemo(() => ({ input, format }), [input, format])
     useUrlState(shareState, (state) => {

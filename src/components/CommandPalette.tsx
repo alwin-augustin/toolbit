@@ -1,3 +1,4 @@
+import { safeStorage } from "@/lib/preferences";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Command } from "cmdk";
 import { useLocation } from "wouter";
@@ -166,8 +167,8 @@ export function CommandPalette() {
     // Load recent tools and favorites from localStorage when palette opens
     useEffect(() => {
         if (open) {
-            const recent = JSON.parse(localStorage.getItem("toolbit:recent") || "[]");
-            const favs = JSON.parse(localStorage.getItem("toolbit:favorites") || "[]");
+            const recent = JSON.parse(safeStorage.getItem("toolbit:recent") || "[]");
+            const favs = JSON.parse(safeStorage.getItem("toolbit:favorites") || "[]");
             setRecentTools(recent);
             setFavorites(favs);
             getRecentHistory(10).then(setRecentHistory).catch(() => setRecentHistory([]));
@@ -216,9 +217,9 @@ export function CommandPalette() {
 
     const handleSelect = useCallback((path: string, toolId: string) => {
         // Add to recent tools
-        const recent = JSON.parse(localStorage.getItem("toolbit:recent") || "[]");
+        const recent = JSON.parse(safeStorage.getItem("toolbit:recent") || "[]");
         const newRecent = [toolId, ...recent.filter((id: string) => id !== toolId)].slice(0, 10);
-        localStorage.setItem("toolbit:recent", JSON.stringify(newRecent));
+        safeStorage.setItem("toolbit:recent", JSON.stringify(newRecent));
 
         setOpen(false);
         setSearch("");
@@ -227,11 +228,11 @@ export function CommandPalette() {
 
     const toggleFavorite = useCallback((toolId: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        const favs = JSON.parse(localStorage.getItem("toolbit:favorites") || "[]");
+        const favs = JSON.parse(safeStorage.getItem("toolbit:favorites") || "[]");
         const newFavs = favs.includes(toolId)
             ? favs.filter((id: string) => id !== toolId)
             : [...favs, toolId];
-        localStorage.setItem("toolbit:favorites", JSON.stringify(newFavs));
+        safeStorage.setItem("toolbit:favorites", JSON.stringify(newFavs));
         setFavorites(newFavs);
     }, []);
 

@@ -1,3 +1,6 @@
+import { copyText } from "@/lib/clipboard";
+import { parseWorkspace, workspaceSnapshot } from "@/lib/workspace-schema";
+import { useWorkspace } from "./workspace-store";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Copy, Download, FileText, FolderOpen, Plus, Save, Trash2, Upload, X } from "lucide-react";
 import { Badge, Button, IconButton } from "@/ds/components";
@@ -9,7 +12,6 @@ import type { PipelineStep } from "@/hooks/use-tool-pipe";
 import type { WorkspaceTab } from "./workspace-store";
 import { useFocusTrap } from "./use-focus-trap";
 import { isPostHogEnabled, posthog } from "@/lib/posthog";
-import { posthogLogger } from "@/lib/posthog-logger";
 
 type PanelKind = "workspaces" | "snippets" | "favorites";
 
@@ -27,15 +29,6 @@ const fieldStyle = {
 function preview(text: string, max = 110) {
     const clean = text.replace(/\s+/g, " ").trim();
     return clean.length > max ? `${clean.slice(0, max)}…` : clean;
-}
-
-function makeWorkspace(name: string, toolIds: string[]): Workspace {
-    return {
-        id: crypto.randomUUID(),
-        name: name.trim() || "Workspace",
-        createdAt: Date.now(),
-        tools: Array.from(new Set(toolIds)).map((toolId) => ({ toolId, state: JSON.stringify({ input: "", output: "" }) })),
-    };
 }
 
 interface PhaseTwoPanelsProps {
@@ -58,7 +51,7 @@ export function PhaseTwoPanels({ panel, onClose, onLoadWorkspace, tabs, pipeline
             <aside ref={panelRef} className="tb-phase-panel" role="dialog" aria-modal="true" aria-labelledby="phase-panel-title" onClick={(event) => event.stopPropagation()}>
                 <header className="tb-phase-panel-header">
                     <div>
-                        <span className="tb-eyebrow">Phase 2</span>
+                        <span className="tb-eyebrow">Your library</span>
                         <h2 id="phase-panel-title">{title}</h2>
                     </div>
                     <IconButton title="Close" onClick={onClose}><X size={15} /></IconButton>
@@ -73,6 +66,8 @@ export function PhaseTwoPanels({ panel, onClose, onLoadWorkspace, tabs, pipeline
 
 function WorkspacePanel({ tabs, pipeline, onLoad }: { tabs: WorkspaceTab[]; pipeline: PipelineStep[]; onLoad: (workspace: Workspace) => void }) {
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+    const [includeData, setIncludeData] = useState(false);
+    const [message, setMessage] = useState("");
     const [name, setName] = useState("");
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editingName, setEditingName] = useState("");
@@ -82,19 +77,12 @@ function WorkspacePanel({ tabs, pipeline, onLoad }: { tabs: WorkspaceTab[]; pipe
     useEffect(() => { refresh(); }, []);
 
     const createWorkspace = async () => {
-        const ids = pipeline.length > 0 ? pipeline.map((step) => step.toolId) : tabs.map((tab) => tab.id);
-        if (!ids.length) return;
-        await saveWorkspace(makeWorkspace(name || (pipeline.length ? "Saved pipeline" : "Open tools"), ids));
-        if (isPostHogEnabled) {
-            posthog.capture("workspace_saved", {
-                source: pipeline.length ? "pipeline" : "open_tabs",
-                tool_count: ids.length,
-            });
-            posthogLogger.info("workspace saved", {
-                source: pipeline.length ? "pipeline" : "open_tabs",
-                tool_count: ids.length,
-            });
-        }
+        const state=useWorkspace.getState();
+        if (!state.tabs.length) return;
+        try {
+            await saveWorkspace(workspaceSnapshot(name,state.tabs,state.activeTabId,{density:state.density,inspectorOpen:state.inspectorOpen},includeData));
+            setMessage("Workspace saved locally.");
+        } catch { setMessage("Workspace could not be saved. Storage may be unavailable."); return; }
         setName("");
         refresh();
     };
@@ -102,7 +90,7 @@ function WorkspacePanel({ tabs, pipeline, onLoad }: { tabs: WorkspaceTab[]; pipe
     const rename = async (workspace: Workspace) => {
         const next = editingName.trim();
         if (!next) return;
-        await saveWorkspace({ ...workspace, name: next });
+        try { await saveWorkspace({ ...workspace, name: next }); } catch { setMessage("Workspace could not be renamed. Storage may be unavailable."); return; }
         setEditingId(null);
         refresh();
     };
@@ -118,21 +106,22 @@ function WorkspacePanel({ tabs, pipeline, onLoad }: { tabs: WorkspaceTab[]; pipe
 
     const importWorkspace = async (file: File) => {
         try {
-            const parsed = JSON.parse(await file.text()) as Workspace;
+            if(file.size>2*1024*1024)throw new Error("Workspace is too large (maximum 2 MB).");
+            const parsed = parseWorkspace(await file.text());
             await saveWorkspace({ ...parsed, id: crypto.randomUUID(), name: parsed.name || "Imported workspace", createdAt: Date.now() });
             refresh();
-        } catch {
-            // Ignore malformed local imports; the drawer remains usable.
-        }
+        } catch(error) { setMessage(error instanceof Error ? error.message : "Workspace import failed."); }
     };
 
     return (
         <div className="tb-phase-panel-body">
-            <p className="tb-phase-help">Save open tools and pipelines locally, then restore them together later.</p>
+            <p className="tb-phase-help">Save documents and settings locally. Data is excluded unless you explicitly include it; secret tool payloads are always excluded.</p>
             <div className="tb-phase-form">
-                <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Workspace name" style={fieldStyle} />
+                <input aria-label="Workspace name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Workspace name" style={fieldStyle} />
                 <Button size="sm" iconLeft={<Plus size={13} />} onClick={createWorkspace} disabled={!tabs.length && !pipeline.length}>Save current</Button>
             </div>
+            <label><input type="checkbox" checked={includeData} onChange={e=>setIncludeData(e.target.checked)}/> Include data in this workspace</label>
+            <p role="status">{message}</p>
             <div className="tb-phase-toolbar">
                 <span className="tb-muted-label">Saved workspaces</span>
                 <div>
@@ -150,10 +139,10 @@ function WorkspacePanel({ tabs, pipeline, onLoad }: { tabs: WorkspaceTab[]; pipe
                             <small>{workspace.tools.length} tools</small>
                         </div>
                         <div className="tb-phase-row-actions">
-                            <Button size="sm" variant="secondary" onClick={() => onLoad(workspace)}>Open</Button>
+                            <Button size="sm" variant="secondary" onClick={() => { try { onLoad(workspace); } catch(error) { setMessage(error instanceof Error ? error.message : "Workspace could not be opened."); } }}>Open</Button>
                             <IconButton size="sm" title="Rename workspace" onClick={() => { setEditingId(workspace.id); setEditingName(workspace.name); }}><FileText size={13} /></IconButton>
                             <IconButton size="sm" title="Export workspace" onClick={() => exportWorkspace(workspace)}><Download size={13} /></IconButton>
-                            <IconButton size="sm" title="Delete workspace" onClick={async () => { await deleteWorkspace(workspace.id); refresh(); }}><Trash2 size={13} /></IconButton>
+                            <IconButton size="sm" title="Delete workspace" onClick={async () => { try { await deleteWorkspace(workspace.id); refresh(); } catch { setMessage("Workspace could not be deleted. Storage may be unavailable."); } }}><Trash2 size={13} /></IconButton>
                         </div>
                     </div>
                 ))}
@@ -196,7 +185,7 @@ function SnippetPanel() {
                         <div className="tb-phase-card-title"><strong>{snippet.name}</strong><span>{new Date(snippet.createdAt).toLocaleDateString()}</span></div>
                         <p>{preview(snippet.content)}</p>
                         <div className="tb-phase-row-actions">
-                            <Button size="sm" variant="ghost" iconLeft={<Copy size={13} />} onClick={() => navigator.clipboard.writeText(snippet.content)}>Copy</Button>
+                            <Button size="sm" variant="ghost" iconLeft={<Copy size={13} />} onClick={() => copyText(snippet.content)}>Copy</Button>
                             <IconButton size="sm" title="Delete snippet" onClick={async () => { await deleteSnippet(snippet.id); refresh(); }}><Trash2 size={13} /></IconButton>
                         </div>
                     </div>

@@ -1,3 +1,5 @@
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
 import { useState, useCallback, useEffect, useRef } from "react"
 import { Key, Plus, Trash2 } from "lucide-react"
 import { Button, IconButton, Input, Select, Alert, Card } from "@/ds/components"
@@ -63,17 +65,17 @@ function loadAccounts(): Account[] {
 }
 
 function saveAccounts(accounts: Account[]) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts))
+    void accounts // session-only; never persist TOTP secrets
 }
 
 export default function TotpGenerator() {
-    const [secret, setSecret] = useState("")
-    const [digits, setDigits] = useState(6)
-    const [period, setPeriod] = useState(30)
+    const [secret, setSecret] = useDocumentField<string>("secret", "")
+    const [digits, setDigits] = useSessionDocumentState("digits", 6)
+    const [period, setPeriod] = useSessionDocumentState("period", 30)
     const [code, setCode] = useState("")
     const [timeLeft, setTimeLeft] = useState(30)
-    const [accounts, setAccounts] = useState<Account[]>(loadAccounts)
-    const [accountName, setAccountName] = useState("")
+    const [accounts, setAccounts] = useSessionDocumentState<Account[]>("accounts", [])
+    const [accountName, setAccountName] = useDocumentField<string>("accountName", "")
     const [error, setError] = useState("")
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -114,25 +116,27 @@ export default function TotpGenerator() {
         setAccounts(newAccounts)
         saveAccounts(newAccounts)
         setAccountName("")
-    }, [accountName, secret, digits, period, accounts])
+    }, [accountName, secret, digits, period, accounts, setAccountName, setAccounts])
 
     const removeAccount = useCallback((index: number) => {
         const newAccounts = accounts.filter((_, i) => i !== index)
         setAccounts(newAccounts)
         saveAccounts(newAccounts)
-    }, [accounts])
+    }, [accounts, setAccounts])
 
     const loadAccount = useCallback((account: Account) => {
         setSecret(account.secret)
         setDigits(account.digits)
         setPeriod(account.period)
-    }, [])
+    }, [setSecret, setDigits, setPeriod])
 
     const progressPercent = (timeLeft / period) * 100
     const expiring = timeLeft <= 5
 
     return (
         <ToolPage maxWidth={640}>
+            <p>Accounts are kept for this session only.</p>
+            <Button variant="secondary" onClick={()=>setAccounts(loadAccounts())}>Recover legacy saved accounts</Button>
             <Card>
                 <div style={{ display: "grid", gap: 16 }}>
                     <SectionTitle>Secret</SectionTitle>

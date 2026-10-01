@@ -36,6 +36,7 @@ export function HistoryPanel({ open, onClose, onOpenTool }: HistoryPanelProps) {
         setLoading(true);
         getRecentHistory(30)
             .then(setEntries)
+            .catch(() => setEntries([]))
             .finally(() => setLoading(false));
     }, [open]);
 

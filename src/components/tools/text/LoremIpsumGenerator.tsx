@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from "react"
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useCallback, useMemo } from "react"
 import { RefreshCw } from "lucide-react"
 import { Button, Badge, Input, Checkbox, Tabs } from "@/ds/components"
 import { CodeEditor } from "@/v2/CodeEditor"
@@ -56,11 +57,11 @@ function generateParagraph(minSentences = 3, maxSentences = 7): string {
 }
 
 export default function LoremIpsumGenerator() {
-    const [count, setCount] = useState(3)
-    const [mode, setMode] = useState<GenerateMode>("paragraphs")
-    const [startWithLorem, setStartWithLorem] = useState(true)
-    const [htmlOutput, setHtmlOutput] = useState(false)
-    const [output, setOutput] = useState("")
+    const [count, setCount] = useSessionDocumentState("count", 3)
+    const [mode, setMode] = useSessionDocumentState<GenerateMode>("mode", "paragraphs")
+    const [startWithLorem, setStartWithLorem] = useSessionDocumentState("startWithLorem", true)
+    const [htmlOutput, setHtmlOutput] = useSessionDocumentState("htmlOutput", false)
+    const [output, setOutput] = useSessionDocumentState("output", "")
     const shareState = useMemo(
         () => ({ count, mode, startWithLorem, htmlOutput }),
         [count, mode, startWithLorem, htmlOutput],
@@ -119,7 +120,7 @@ export default function LoremIpsumGenerator() {
             output: result,
             metadata: { action: "generate" },
         })
-    }, [count, mode, startWithLorem, htmlOutput, addEntry])
+    }, [count, mode, startWithLorem, htmlOutput, addEntry, setOutput])
 
     return (
         <EditorSplit>

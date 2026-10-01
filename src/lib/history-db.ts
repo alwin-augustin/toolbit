@@ -1,3 +1,5 @@
+import { canPersistTool } from "./tool-policy"
+import { usePreferences } from "./preferences"
 export interface ToolHistoryEntry {
     id?: number
     toolId: string
@@ -20,7 +22,7 @@ function openDb(): Promise<IDBDatabase> {
     if (dbPromise) return dbPromise
     dbPromise = new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION)
-        request.onerror = () => reject(request.error)
+        request.onerror = () => { dbPromise = null; reject(request.error) }
         request.onupgradeneeded = () => {
             const db = request.result
             if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -103,6 +105,7 @@ async function pruneTotal(db: IDBDatabase) {
 }
 
 export async function addHistoryEntry(entry: ToolHistoryEntry) {
+    if (!canPersistTool(entry.toolId) || !usePreferences.getState().history) return
     const db = await openDb()
     const tx = db.transaction(STORE_NAME, "readwrite")
     const store = tx.objectStore(STORE_NAME)
@@ -186,4 +189,19 @@ export async function clearHistoryByToolId(toolId: string) {
     })
 
     await transactionDone(tx)
+}
+
+export async function clearAllHistory() {
+    const db = await openDb(); const tx = db.transaction(STORE_NAME, 'readwrite');
+    await requestToPromise(tx.objectStore(STORE_NAME).clear()); await transactionDone(tx);
+}
+export async function pruneExpiredHistory() {
+    const db = await openDb(); const tx = db.transaction(STORE_NAME, 'readwrite');
+    const cutoff = Date.now() - usePreferences.getState().retentionDays * 86400000;
+    const store = tx.objectStore(STORE_NAME);
+    await new Promise<void>((resolve, reject) => {
+        const request = store.index('timestamp').openCursor(IDBKeyRange.upperBound(cutoff));
+        request.onsuccess = () => { const cursor = request.result; if (!cursor) return resolve(); cursor.delete(); cursor.continue(); };
+        request.onerror = () => reject(request.error);
+    }); await transactionDone(tx);
 }

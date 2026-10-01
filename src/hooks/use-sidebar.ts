@@ -1,5 +1,6 @@
+import { safeStorage } from "@/lib/preferences";
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 type SidebarMode = 'expanded' | 'collapsed'
 
@@ -26,6 +27,7 @@ export const useSidebar = create<SidebarState>()(
     }),
     {
       name: 'sidebar-state',
+      storage: createJSONStorage(() => safeStorage),
     }
   )
 )

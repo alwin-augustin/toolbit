@@ -19,7 +19,6 @@ export interface SiteConfig {
     ogImage: string;
     logo: string;
     github: string;
-    downloads: string;
     locale: string;
 }
 

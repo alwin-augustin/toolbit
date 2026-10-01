@@ -1,3 +1,4 @@
+import { copyText } from "@/lib/clipboard";
 import { useState, useCallback, useRef } from "react"
 import { ChevronRight, ChevronDown, Copy } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -52,9 +53,9 @@ function TreeNode({ keyName, value, path, depth, nodeCounter, nodeLimit }: TreeN
     // Count this node against the limit
     nodeCounter.current++
 
-    const copyPath = useCallback((e: React.MouseEvent) => {
+    const copyPath = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation()
-        navigator.clipboard.writeText(path)
+        if (!(await copyText(path))) return;
         toast({ description: `Copied: ${path}` })
     }, [path, toast])
 

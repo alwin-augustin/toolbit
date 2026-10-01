@@ -5,16 +5,16 @@
 [![Privacy](https://img.shields.io/badge/privacy-local--first-22c55e.svg)](https://toolbit.app/privacy)
 [![PWA](https://img.shields.io/badge/pwa-ready-6366f1.svg)](https://toolbit.app)
 
-Local‑first developer tools for JSON, Base64, JWT, YAML, XML, SQL, and more. Toolbit runs entirely in your browser or desktop app: processed content stays on your device and no server-side processing is required.
+Local‑first developer tools for JSON, Base64, JWT, YAML, XML, SQL, and more. Toolbit runs entirely in your browser or installed PWA: processed content stays on your device and no server-side processing is required.
 
 **Why Toolbit**
 - 100% local processing and offline‑friendly
-- Web + desktop builds from one codebase
+- Web app with installable PWA support
 - Fast, keyboard‑first UX for daily dev workflows
-- Privacy-focused: local processing and anonymous product analytics only
+- Privacy-focused: local processing and optional minimized product analytics
 
 ## Highlights
-- Smart paste: detect input type and jump to the right tool
+- Smart paste: deterministic detection of input type and jump to the right tool
 - Tool chaining: send output to the next tool and save workflows
 - History, snippets, and workspaces stored locally
 - PWA installable on desktop and mobile
@@ -30,7 +30,6 @@ Local‑first developer tools for JSON, Base64, JWT, YAML, XML, SQL, and more. T
 
 ## Demo
 - Web app: [toolbit.app](https://toolbit.app)
-- Desktop releases: [GitHub Releases](https://github.com/alwin-augustin/toolbit/releases)
 
 ## Screenshots
 ![Toolbit App Home](https://toolbit.app/screenshots/app-home.png)
@@ -39,7 +38,7 @@ Local‑first developer tools for JSON, Base64, JWT, YAML, XML, SQL, and more. T
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 24 LTS (see `.nvmrc`)
 - npm
 
 ### Install
@@ -60,19 +59,6 @@ npm run web:build
 npm run preview
 ```
 
-### Desktop (local dev)
-```bash
-npm run desktop:dev
-```
-
-### Desktop (build)
-```bash
-npm run desktop:build
-npm run desktop:build:mac
-npm run desktop:build:win
-npm run desktop:build:linux
-```
-
 ## Quality Checks
 ```bash
 npm run check
@@ -82,16 +68,15 @@ npm run test
 
 ## Privacy
 Toolbit is privacy‑first by design.
-- No data leaves your device
+- Local transforms do not upload payloads; HTTP and WebSocket tools contact endpoints when requested
 - No cookies
-- Anonymous product analytics; tool inputs and outputs are never collected
-- LocalStorage and IndexedDB are used only for local preferences and history
+- Optional minimized product analytics uses a pseudonymous device ID; tool inputs and outputs are excluded
+- LocalStorage and IndexedDB hold preferences, normal tool history and explicitly saved workspaces/snippets; secret tool history is disabled. Recipes contain settings only.
 
 See `/privacy` for the full policy.
 
 ## Architecture
 - React 19 + TypeScript + Vite
-- Electron for desktop packaging
 - Zustand for client state
 - PWA via `vite-plugin-pwa`
 

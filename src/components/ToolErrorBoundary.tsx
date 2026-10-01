@@ -4,6 +4,7 @@
  */
 
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { reportError } from '@/lib/telemetry';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 
@@ -37,7 +38,7 @@ export class ToolErrorBoundary extends Component<Props, State> {
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         // Log error for debugging
-        console.error('Tool Error Boundary caught an error:', error, errorInfo);
+        reportError(error, 'tool');
 
         this.setState({
             error,

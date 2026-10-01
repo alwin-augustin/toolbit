@@ -1,3 +1,5 @@
+import { useSessionDocumentState } from "@/v2/document-state";
+import { copyText } from "@/lib/clipboard";
 import { useState, useCallback, useMemo } from "react"
 import type { ReactNode } from "react"
 import { Copy, Check, Download, Plus, RotateCcw, Trash2, Zap } from "lucide-react"
@@ -133,17 +135,17 @@ function FormSection({ title, hint, action, children }: { title: string; hint?: 
 }
 
 export default function DockerCommandBuilder() {
-    const [image, setImage] = useState(DEFAULT_STATE.image)
-    const [containerName, setContainerName] = useState(DEFAULT_STATE.containerName)
-    const [ports, setPorts] = useState<PortMapping[]>(DEFAULT_STATE.ports)
-    const [volumes, setVolumes] = useState<VolumeMapping[]>(DEFAULT_STATE.volumes)
-    const [envVars, setEnvVars] = useState<EnvVar[]>(DEFAULT_STATE.envVars)
-    const [network, setNetwork] = useState(DEFAULT_STATE.network)
-    const [restartPolicy, setRestartPolicy] = useState(DEFAULT_STATE.restartPolicy)
-    const [flags, setFlags] = useState(DEFAULT_STATE.flags)
-    const [memory, setMemory] = useState(DEFAULT_STATE.memory)
-    const [cpus, setCpus] = useState(DEFAULT_STATE.cpus)
-    const [tab, setTab] = useState<"run" | "compose">(DEFAULT_STATE.tab)
+    const [image, setImage] = useSessionDocumentState("image", DEFAULT_STATE.image)
+    const [containerName, setContainerName] = useSessionDocumentState("containerName", DEFAULT_STATE.containerName)
+    const [ports, setPorts] = useSessionDocumentState<PortMapping[]>("ports", DEFAULT_STATE.ports)
+    const [volumes, setVolumes] = useSessionDocumentState<VolumeMapping[]>("volumes", DEFAULT_STATE.volumes)
+    const [envVars, setEnvVars] = useSessionDocumentState<EnvVar[]>("envVars", DEFAULT_STATE.envVars)
+    const [network, setNetwork] = useSessionDocumentState("network", DEFAULT_STATE.network)
+    const [restartPolicy, setRestartPolicy] = useSessionDocumentState("restartPolicy", DEFAULT_STATE.restartPolicy)
+    const [flags, setFlags] = useSessionDocumentState("flags", DEFAULT_STATE.flags)
+    const [memory, setMemory] = useSessionDocumentState("memory", DEFAULT_STATE.memory)
+    const [cpus, setCpus] = useSessionDocumentState("cpus", DEFAULT_STATE.cpus)
+    const [tab, setTab] = useSessionDocumentState<"run" | "compose">("tab", DEFAULT_STATE.tab)
     const [copied, setCopied] = useState(false)
     const shareState = useMemo(
         () => ({
@@ -183,7 +185,7 @@ export default function DockerCommandBuilder() {
         setVolumes(preset.volumes)
         setEnvVars(preset.envVars)
         setFlags((current) => ({ ...current, ...preset.flags }))
-    }, [])
+    }, [setContainerName, setEnvVars, setFlags, setImage, setPorts, setVolumes])
 
     const resetAll = useCallback(() => {
         setImage(DEFAULT_STATE.image)
@@ -197,7 +199,7 @@ export default function DockerCommandBuilder() {
         setMemory(DEFAULT_STATE.memory)
         setCpus(DEFAULT_STATE.cpus)
         setTab(DEFAULT_STATE.tab)
-    }, [])
+    }, [setContainerName, setCpus, setEnvVars, setFlags, setImage, setMemory, setNetwork, setPorts, setRestartPolicy, setTab, setVolumes])
 
     const dockerRunCommand = useMemo(() => {
         const parts = ["docker run"]
@@ -250,8 +252,8 @@ export default function DockerCommandBuilder() {
 
     const output = tab === "run" ? dockerRunCommand : dockerComposeYaml
 
-    const copyCommand = useCallback(() => {
-        navigator.clipboard.writeText(output)
+    const copyCommand = useCallback(async () => {
+        if (!(await copyText(output))) return;
         setCopied(true)
         setTimeout(() => setCopied(false), 1500)
         addEntry({

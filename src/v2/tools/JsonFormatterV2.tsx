@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { useCanonicalTransform } from "../use-canonical-transform";
+
+import { useDocumentField, useDocumentOptions } from "../document-state";
+import { safeStorage } from "@/lib/preferences";
+import { useEffect } from "react";
 import { Button, Badge, Select, Checkbox } from "@/ds/components";
 import { CodeEditor } from "../CodeEditor";
 import { Panel, PanelHeader, CopyAction, ValidityBadge, EditorSplit } from "../EditorPanels";
@@ -11,66 +13,22 @@ import { useToolHistory } from "@/hooks/use-tool-history";
 
 const SAMPLE = `{"workspace":"API Debug","tools":["JSON","JWT","Base64"],"density":"comfortable","localFirst":true,"tabs":3}`;
 
-interface JsonOptions {
-    indent: number;
-    sortKeys: boolean;
-    validateWhileTyping: boolean;
-    collapseArrays: boolean;
-    set: (patch: Partial<Omit<JsonOptions, "set">>) => void;
-}
-
-const useJsonOptions = create<JsonOptions>()(
-    persist(
-        (set) => ({
-            indent: 2,
-            sortKeys: false,
-            validateWhileTyping: true,
-            collapseArrays: false,
-            set: (patch) => set(patch),
-        }),
-        { name: "toolbit-v2-json-options" }
-    )
-);
-
-function sortDeep(v: unknown): unknown {
-    if (Array.isArray(v)) return v.map(sortDeep);
-    if (v && typeof v === "object") {
-        return Object.keys(v as Record<string, unknown>)
-            .sort()
-            .reduce((acc: Record<string, unknown>, k) => {
-                acc[k] = sortDeep((v as Record<string, unknown>)[k]);
-                return acc;
-            }, {});
-    }
-    return v;
-}
-
-const COLLAPSE_THRESHOLD = 20;
-
-function collapseLarge(v: unknown): unknown {
-    if (Array.isArray(v)) {
-        if (v.length > COLLAPSE_THRESHOLD) {
-            return [...v.slice(0, 5).map(collapseLarge), `… ${v.length - 5} more items (collapsed)`];
-        }
-        return v.map(collapseLarge);
-    }
-    if (v && typeof v === "object") {
-        const out: Record<string, unknown> = {};
-        for (const [k, val] of Object.entries(v as Record<string, unknown>)) out[k] = collapseLarge(val);
-        return out;
-    }
-    return v;
+function useJsonOptions() {
+    const defaults = {"indent": 2, "sortKeys": false, "validateWhileTyping": true};
+    let legacy = {};
+    try { legacy = JSON.parse(safeStorage.getItem("toolbit-v2-json-options") || "{}").state || {}; } catch { /* defaults */ }
+    return useDocumentOptions({...defaults,...legacy} as typeof defaults);
 }
 
 function JsonInspectorPanel() {
-    const { indent, sortKeys, validateWhileTyping, collapseArrays, set } = useJsonOptions();
+    const { indent, sortKeys, validateWhileTyping, set } = useJsonOptions();
     return (
         <>
             <div style={{ display: "grid", gap: 6 }}>
                 <label style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "hsl(var(--text-body))" }}>
                     Indent
                 </label>
-                <Select fullWidth value={String(indent)} onChange={(e) => set({ indent: Number(e.target.value) })}>
+                <Select aria-label="Indent" fullWidth value={String(indent)} onChange={(e) => set({ indent: Number(e.target.value) })}>
                     <option value="2">2 spaces</option>
                     <option value="4">4 spaces</option>
                     <option value="8">8 spaces</option>
@@ -83,11 +41,6 @@ function JsonInspectorPanel() {
                     onChange={(v) => set({ validateWhileTyping: v })}
                     label="Validate while typing"
                 />
-                <Checkbox
-                    checked={collapseArrays}
-                    onChange={(v) => set({ collapseArrays: v })}
-                    label="Collapse large arrays"
-                />
             </div>
         </>
     );
@@ -96,26 +49,19 @@ function JsonInspectorPanel() {
 registerInspectorPanel("json-formatter", JsonInspectorPanel);
 
 export default function JsonFormatterV2() {
-    const [input, setInput] = useState("");
+    const [input, setInput] = useDocumentField<string>("input", "");
     useSmartPasteInput(setInput);
-    const [committedInput, setCommittedInput] = useState("");
-    const { indent, sortKeys, validateWhileTyping, collapseArrays } = useJsonOptions();
+    const [committedInput, setCommittedInput] = useDocumentField<string>("committedInput", "");
+    const { indent, sortKeys, validateWhileTyping } = useJsonOptions();
     const setStatus = useEditorStatus((s) => s.setStatus);
     const { addEntry } = useToolHistory("json-formatter", "JSON Formatter");
 
+    const [lastValid, setLastValid] = useDocumentField<string>("lastValid", "");
     const source = validateWhileTyping ? input : committedInput;
 
-    const result = useMemo(() => {
-        if (!source.trim()) return { output: "", valid: null as boolean | null };
-        try {
-            let obj: unknown = JSON.parse(source);
-            if (sortKeys) obj = sortDeep(obj);
-            if (collapseArrays) obj = collapseLarge(obj);
-            return { output: JSON.stringify(obj, null, indent), valid: true as boolean | null };
-        } catch (e) {
-            return { output: e instanceof Error ? e.message : String(e), valid: false as boolean | null };
-        }
-    }, [source, indent, sortKeys, collapseArrays]);
+    const result = useCanonicalTransform("json-formatter", source, {indent,sortKeys,validateWhileTyping});
+
+    useEffect(() => { if(result.valid)setLastValid(result.output); },[result.valid,result.output,setLastValid]);
 
     useEffect(() => {
         setStatus({
@@ -158,6 +104,7 @@ export default function JsonFormatterV2() {
                         </div>
                     }
                 />
+                {result.busy && <p role="status">Processing… <button onClick={result.cancel}>Cancel processing</button></p>}
                 <CodeEditor
                     value={input}
                     onChange={setInput}
@@ -168,7 +115,7 @@ export default function JsonFormatterV2() {
             </Panel>
             <Panel>
                 <PanelHeader
-                    title="Output"
+                    title={result.busy ? "Output · processing…" : "Output"}
                     badge={<ValidityBadge valid={result.valid} validLabel="valid object" invalidLabel="parse error" />}
                     action={<CopyAction text={result.valid ? result.output : ""} />}
                 />
@@ -181,10 +128,11 @@ export default function JsonFormatterV2() {
                             color: "hsl(var(--danger))",
                         }}
                     >
-                        {result.output}
+                        <span role="alert">{result.output}</span>
+                        {lastValid && <CodeEditor value={lastValid} language="json" readOnly label="Previous valid output" />}
                     </div>
                 ) : (
-                    <CodeEditor value={result.output} language="json" readOnly />
+                    <><p role="status">{result.warning}</p><CodeEditor value={result.output} language="json" readOnly /></>
                 )}
             </Panel>
         </EditorSplit>

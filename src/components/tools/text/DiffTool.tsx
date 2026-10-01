@@ -1,3 +1,5 @@
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
 import { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import { List } from "react-window"
 import type { CSSProperties, ReactElement } from "react"
@@ -120,12 +122,12 @@ function prefixToneColor(type?: DiffLine["type"]): string {
 }
 
 export default function DiffTool() {
-    const [text1, setText1] = useState("")
-    const [text2, setText2] = useState("")
-    const [diffLines, setDiffLines] = useState<DiffLine[]>([])
-    const [viewMode, setViewMode] = useState<ViewMode>("unified")
-    const [ignoreWhitespace, setIgnoreWhitespace] = useState(false)
-    const [hasCompared, setHasCompared] = useState(false)
+    const [text1, setText1] = useDocumentField<string>("text1", "")
+    const [text2, setText2] = useDocumentField<string>("text2", "")
+    const [diffLines, setDiffLines] = useSessionDocumentState<DiffLine[]>("diffLines", [])
+    const [viewMode, setViewMode] = useSessionDocumentState<ViewMode>("viewMode", "unified")
+    const [ignoreWhitespace, setIgnoreWhitespace] = useSessionDocumentState("ignoreWhitespace", false)
+    const [hasCompared, setHasCompared] = useSessionDocumentState("hasCompared", false)
     const [isComputing, setIsComputing] = useState(false)
     const diffRef = useRef<HTMLDivElement>(null)
     const shareState = useMemo(
@@ -170,7 +172,7 @@ export default function DiffTool() {
         if (payload?.data) {
             setText1(payload.data)
         }
-    }, [consumePipeData, text1, text2, consumeWorkspaceState])
+    }, [consumePipeData, text1, text2, consumeWorkspaceState, setText1, setText2])
 
     const runWorkerDiff = useCallback((inputA: string, inputB: string, whitespace: boolean) => {
         const worker = new Worker(new URL("../../../workers/diff-worker.ts", import.meta.url), { type: "module" })
@@ -229,7 +231,7 @@ export default function DiffTool() {
             metadata: { action: "compare", viewMode, ignoreWhitespace, usedWorker: false },
         })
         setIsComputing(false)
-    }, [text1, text2, ignoreWhitespace, addEntry, viewMode, runWorkerDiff])
+    }, [text1, text2, ignoreWhitespace, addEntry, viewMode, runWorkerDiff, setDiffLines, setHasCompared])
 
     const loadSample = () => {
         setText1(SAMPLE_ORIGINAL)

@@ -1,14 +1,9 @@
 import { ExternalLink, Home } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { isElectronApp } from "@/hooks/use-electron";
 import { TOOLS } from "@/config/tools.config";
 
 export function Footer() {
     const [location] = useLocation();
-    const hideFooter = typeof window !== "undefined" && isElectronApp();
-    if (hideFooter) {
-        return null;
-    }
     // Tools live at the root, so "am I in a tool?" is a lookup rather than a
     // prefix check.
     const isAppRoute = TOOLS.some((tool) => tool.path === location.replace(/\/$/, ""));
@@ -54,7 +49,7 @@ export function Footer() {
                 </Link>
                 <span className="text-muted-foreground/40">•</span>
                 <span className="text-muted-foreground/70">
-                    Your data never leaves your device
+                    Local processing · optional analytics
                 </span>
             </div>
         </footer>

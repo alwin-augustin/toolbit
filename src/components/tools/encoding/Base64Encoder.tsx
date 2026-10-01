@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useMemo, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Copy, Code, Image, FileUp, Sparkles, ArrowRight } from "lucide-react";
@@ -22,10 +23,10 @@ type Mode = "single" | "batch";
 export default function Base64Encoder() {
     const { input, output, setInput, setOutput } = useToolIO();
     const { copyToClipboard } = useCopyToClipboard();
-    const [imageDataUri, setImageDataUri] = useState("");
-    const [mode, setMode] = useState<Mode>("single");
-    const [batchInput, setBatchInput] = useState("");
-    const [batchOutput, setBatchOutput] = useState("");
+    const [imageDataUri, setImageDataUri] = useSessionDocumentState("imageDataUri", "");
+    const [mode, setMode] = useSessionDocumentState<Mode>("mode", "single");
+    const [batchInput, setBatchInput] = useSessionDocumentState("batchInput", "");
+    const [batchOutput, setBatchOutput] = useSessionDocumentState("batchOutput", "");
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
     const shareState = useMemo(() => ({ input, mode, batchInput }), [input, mode, batchInput]);
@@ -122,7 +123,7 @@ export default function Base64Encoder() {
         reader.readAsDataURL(file);
         // Reset input so same file can be re-selected
         e.target.value = "";
-    }, [setInput, setOutput, toast]);
+    }, [setInput, setOutput, toast, setImageDataUri]);
 
     const handleGenerateDataUri = useCallback(() => {
         if (!input.trim()) return;
@@ -137,7 +138,7 @@ export default function Base64Encoder() {
             setOutput(dataUri);
             setImageDataUri("");
         }
-    }, [input, setOutput]);
+    }, [input, setOutput, setImageDataUri]);
 
     const handleBatchEncode = useCallback(() => {
         if (!batchInput.trim()) return;
@@ -153,7 +154,7 @@ export default function Base64Encoder() {
             output,
             metadata: { action: "batch-encode", mode },
         });
-    }, [batchInput, addEntry, input, mode]);
+    }, [batchInput, addEntry, input, mode, setBatchOutput]);
 
     const handleBatchDecode = useCallback(() => {
         if (!batchInput.trim()) return;
@@ -169,7 +170,7 @@ export default function Base64Encoder() {
             output,
             metadata: { action: "batch-decode", mode },
         });
-    }, [batchInput, addEntry, input, mode]);
+    }, [batchInput, addEntry, input, mode, setBatchOutput]);
 
     // Detect if output looks like an image when decoded
     const imagePreview = useMemo(() => {

@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useSessionDocumentState } from "@/v2/document-state";
+import { useDocumentField } from "@/v2/document-state";
+import { useEffect, useMemo } from "react";
 import { Button, Tabs } from "@/ds/components";
 import { CodeEditor } from "@/v2/CodeEditor";
 import { Panel, PanelHeader, CopyAction, ValidityBadge, EditorSplit } from "@/v2/EditorPanels";
@@ -37,8 +39,8 @@ const ENTITIES: [string, string][] = [
 ];
 
 export default function HtmlEscape() {
-    const [input, setInput] = useState("");
-    const [mode, setMode] = useState<Mode>("escape");
+    const [input, setInput] = useDocumentField<string>("input", "");
+    const [mode, setMode] = useSessionDocumentState<Mode>("mode", "escape");
     const setStatus = useEditorStatus((s) => s.setStatus);
     useUrlState(input, setInput);
     const { addEntry } = useToolHistory("html-escape", "HTML Escape");

@@ -1,3 +1,4 @@
+import { useDocumentField } from "@/v2/document-state";
 /**
  * Tool Input/Output Hook
  * Provides common state management for tool input and output
@@ -27,8 +28,8 @@ export const useToolIO = (
     defaultInput: string = '',
     defaultOutput: string = ''
 ): ToolIOState => {
-    const [input, setInputState] = useState<string>(defaultInput);
-    const [output, setOutputState] = useState<string>(defaultOutput);
+    const [input, setInputState] = useDocumentField<string>("input", defaultInput);
+    const [output, setOutputState] = useDocumentField<string>("output", defaultOutput);
     const [isValid, setIsValid] = useState<boolean>(true);
     const [error, setError] = useState<string | undefined>(undefined);
 
@@ -37,11 +38,11 @@ export const useToolIO = (
         // Reset validation when input changes
         setIsValid(true);
         setError(undefined);
-    }, []);
+    }, [setInputState]);
 
     const setOutput = useCallback((value: string) => {
         setOutputState(value);
-    }, []);
+    }, [setOutputState]);
 
     const setValidation = useCallback((valid: boolean, errorMessage?: string) => {
         setIsValid(valid);
@@ -53,13 +54,13 @@ export const useToolIO = (
         setOutputState('');
         setIsValid(true);
         setError(undefined);
-    }, []);
+    }, [setInputState, setOutputState]);
 
     const clearOutput = useCallback(() => {
         setOutputState('');
         setIsValid(true);
         setError(undefined);
-    }, []);
+    }, [setOutputState]);
 
     return {
         input,

@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { useCanonicalTransform } from "../use-canonical-transform";
+
+import { useDocumentField, useDocumentOptions } from "../document-state";
+import { safeStorage } from "@/lib/preferences";
+import { useEffect } from "react";
 import { Button, Badge, Checkbox, Tabs } from "@/ds/components";
 import { CodeEditor } from "../CodeEditor";
 import { Panel, PanelHeader, CopyAction, ValidityBadge, EditorSplit } from "../EditorPanels";
@@ -9,44 +11,12 @@ import { useEditorStatus } from "../workspace-store";
 import { useSmartPasteInput } from "../smart-paste";
 import { useToolHistory } from "@/hooks/use-tool-history";
 
-type Mode = "encode" | "decode";
 
-interface Base64Options {
-    mode: Mode;
-    urlSafe: boolean;
-    set: (patch: Partial<Omit<Base64Options, "set">>) => void;
-}
-
-const useBase64Options = create<Base64Options>()(
-    persist(
-        (set) => ({
-            mode: "encode" as Mode,
-            urlSafe: false,
-            set: (patch) => set(patch),
-        }),
-        { name: "toolbit-v2-base64-options" }
-    )
-);
-
-/** UTF-8 safe encode/decode (matches the legacy tool's behaviour). */
-function encodeBase64(text: string, urlSafe: boolean): string {
-    const bytes = new TextEncoder().encode(text);
-    let binary = "";
-    bytes.forEach((b) => (binary += String.fromCharCode(b)));
-    let out = btoa(binary);
-    if (urlSafe) out = out.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    return out;
-}
-
-function decodeBase64(text: string, urlSafe: boolean): string {
-    let normalized = text.trim();
-    if (urlSafe || /[-_]/.test(normalized)) {
-        normalized = normalized.replace(/-/g, "+").replace(/_/g, "/");
-    }
-    normalized += "=".repeat((4 - (normalized.length % 4)) % 4);
-    const binary = atob(normalized);
-    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-    return new TextDecoder().decode(bytes);
+function useBase64Options() {
+    const defaults = {"mode": "encode", "urlSafe": false};
+    let legacy = {};
+    try { legacy = JSON.parse(safeStorage.getItem("toolbit-v2-base64-options") || "{}").state || {}; } catch { /* defaults */ }
+    return useDocumentOptions({...defaults,...legacy} as typeof defaults);
 }
 
 function Base64InspectorPanel() {
@@ -58,7 +28,7 @@ function Base64InspectorPanel() {
                 <Tabs
                     variant="segment"
                     value={mode}
-                    onChange={(v) => set({ mode: v as Mode })}
+                    onChange={(v) => set({ mode: v })}
                     items={[
                         { value: "encode", label: "Encode" },
                         { value: "decode", label: "Decode" },
@@ -73,21 +43,13 @@ function Base64InspectorPanel() {
 registerInspectorPanel("base64-encoder", Base64InspectorPanel);
 
 export default function Base64EncoderV2() {
-    const [input, setInput] = useState("");
+    const [input, setInput] = useDocumentField<string>("input", "");
     useSmartPasteInput(setInput);
     const { mode, urlSafe } = useBase64Options();
     const setStatus = useEditorStatus((s) => s.setStatus);
     const { addEntry } = useToolHistory("base64-encoder", "Base64 Encoder");
 
-    const result = useMemo(() => {
-        if (!input.trim()) return { output: "", valid: null as boolean | null };
-        try {
-            const output = mode === "encode" ? encodeBase64(input, urlSafe) : decodeBase64(input, urlSafe);
-            return { output, valid: true as boolean | null };
-        } catch {
-            return { output: "Invalid Base64 input", valid: false as boolean | null };
-        }
-    }, [input, mode, urlSafe]);
+    const result = useCanonicalTransform("base64-encoder", input, {mode,urlSafe});
 
     useEffect(() => {
         setStatus({
@@ -119,6 +81,7 @@ export default function Base64EncoderV2() {
                         </Button>
                     }
                 />
+                {result.busy && <p role="status">Processing… <button onClick={result.cancel}>Cancel processing</button></p>}
                 <CodeEditor
                     value={input}
                     onChange={setInput}

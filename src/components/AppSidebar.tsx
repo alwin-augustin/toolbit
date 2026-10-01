@@ -1,3 +1,4 @@
+import { safeStorage } from "@/lib/preferences";
 import { useEffect, useMemo, useState, useRef } from "react"
 import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
@@ -201,8 +202,8 @@ export function AppSidebar() {
     const activeGroupTitle = toolGroups.find(g => g.items.some(i => i.url === location))?.title
 
     useEffect(() => {
-        const favs = JSON.parse(localStorage.getItem("toolbit:favorites") || "[]")
-        const recent = JSON.parse(localStorage.getItem("toolbit:recent") || "[]")
+        const favs = JSON.parse(safeStorage.getItem("toolbit:favorites") || "[]")
+        const recent = JSON.parse(safeStorage.getItem("toolbit:recent") || "[]")
         if (Array.isArray(favs)) setFavorites(favs)
         if (Array.isArray(recent)) setRecentTools(recent)
     }, [isOpen, location])

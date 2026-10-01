@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-01",
+  "node": "v24.19.0",
+  "scope": "Pure transform CPU baseline; not browser interaction or worker-transfer latency",
+  "rows": [
+    {
+      "tool": "json-formatter",
+      "bytes": 102400,
+      "medianMs": 0.66
+    },
+    {
+      "tool": "base64-encoder",
+      "bytes": 102400,
+      "medianMs": 1.66
+    },
+    {
+      "tool": "hash-generator",
+      "bytes": 102400,
+      "medianMs": 0.1
+    },
+    {
+      "tool": "json-formatter",
+      "bytes": 1048576,
+      "medianMs": 2.4
+    },
+    {
+      "tool": "base64-encoder",
+      "bytes": 1048576,
+      "medianMs": 15.81
+    },
+    {
+      "tool": "hash-generator",
+      "bytes": 1048576,
+      "medianMs": 0.57
+    },
+    {
+      "tool": "json-formatter",
+      "bytes": 10485760,
+      "medianMs": 24.36
+    },
+    {
+      "tool": "base64-encoder",
+      "bytes": 10485760,
+      "medianMs": 175.07
+    },
+    {
+      "tool": "hash-generator",
+      "bytes": 10485760,
+      "medianMs": 6.46
+    }
+  ]
+}
