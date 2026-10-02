@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+test.beforeEach(async({page})=>{if(process.env.TOOLBIT_BLOCK_ANALYTICS)await page.route(url=>url.hostname==='us.i.posthog.com',route=>route.abort());});
 test('home, smart paste, independent documents, settings and recipe',async({page})=>{
     const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto('/');await expect(page.getByRole('heading',{level:1})).toBeVisible();

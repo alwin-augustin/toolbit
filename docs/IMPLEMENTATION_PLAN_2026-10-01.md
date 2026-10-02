@@ -37,7 +37,9 @@ Current implementation checkpoint (not a declaration that all exit gates passed)
 - [x] Add clipboard denial handling, responsive/focus improvements, measured CPU baselines, worker execution/cancellation and regex interruption limits.
 - [x] Generate final SEO pages before service-worker precaching; verify offline direct tool navigation.
 - [x] Revise M9 to an owner pilot with candidate dispositions, as requested by the sole developer.
-- [ ] Complete live browser telemetry/preview verification, deployed service-worker update/cache testing and production promotion/rollback rehearsal.
+- [x] Verify configured preview telemetry and browser journeys; PR36 merged and production deployment d8b787e0-ab5f-4191-8784-58e376ece46f passed ten production browser checks on2 October2026.
+- [ ] Merge the explicit PostHog person-profile processing opt-out and strengthened transport tests prepared after PR36.
+- [ ] Complete deployed service-worker update/cache testing across two revisions and a production rollback rehearsal.
 - [ ] Complete platform-specific PWA installation/uninstallation and representative screen-reader acceptance.
 - [ ] Record owner observations and seven-day recipe reuse after actual use; do not invent elapsed evidence.
 
@@ -595,3 +597,7 @@ Suggested parallel work once M1/M2 are stable:
 - Track C: accessibility, performance and release-surface validation (M7–M8).
 
 Do not parallelize schema design independently across tracks. Shared types, privacy rules and migration ownership remain centralized.
+
+## Status check — 2 October 2026
+
+PR36 merged as67e12f07ba829fda8f3e311093e902ebc7847ee3. Main-branch lint/type/unit/browser and CodeQL workflows passed. Cloudflare production deployed that revision successfully, and ten direct toolbit.app browser journeys passed today with telemetry blocked to exclude test traffic from adoption metrics. The PostHog profile-processing flag and strengthened request-host/status tests were local follow-ups and were not included in PR36. See STATUS_2026-10-02.md for the outstanding acceptance gates. Do not treat the original merge as completion of all milestones.

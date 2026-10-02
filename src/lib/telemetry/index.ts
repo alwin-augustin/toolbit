@@ -48,7 +48,7 @@ export function track(name: EventName, properties: Props = {}) {
     pending.add(controller);
     const timer = setTimeout(() => controller.abort(), 5000);
     try {
-        const body = JSON.stringify({api_key:apiKey,event:name,properties:{...sanitizeProperties({route:routeName(window.location.pathname),...properties}),distinct_id:sessionIdentity}});
+        const body = JSON.stringify({api_key:apiKey,event:name,properties:{...sanitizeProperties({route:routeName(window.location.pathname),...properties}),distinct_id:sessionIdentity,'$process_person_profile':false}});
         void fetch(`${apiHost.replace(/\/$/,'')}/capture/`, {method:'POST',body,headers:{'Content-Type':'application/json'},credentials:'omit',referrerPolicy:'no-referrer',signal:controller.signal})
             .catch(()=>{/* analytics cannot affect tools */}).finally(()=>{clearTimeout(timer);pending.delete(controller);});
     } catch { clearTimeout(timer);pending.delete(controller); }
