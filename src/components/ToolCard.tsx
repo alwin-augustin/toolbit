@@ -1,21 +1,27 @@
-import { copyText } from "@/lib/clipboard";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Share2, ArrowRight, X, ChevronRight } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import React, { useEffect, useState } from "react";
-import { ToolHistory } from "@/components/ToolHistory";
-import { type ToolHistoryEntry } from "@/lib/history-db";
-import { Link, useLocation } from "wouter";
-import { TOOLS } from "@/config/tools.config";
-import { getChainTargets } from "@/config/tool-chains.config";
-import { useToolPipe } from "@/hooks/use-tool-pipe";
-import { cn } from "@/lib/utils";
-import { saveWorkspace } from "@/lib/workspace-db";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { AutoSaveRestore } from "@/components/AutoSaveRestore";
-import { isPostHogEnabled, posthog } from "@/lib/posthog";
+import { copyText } from '@/lib/clipboard';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Share2, ArrowRight, X, ChevronRight } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import React, { useEffect, useState } from 'react';
+import { ToolHistory } from '@/components/ToolHistory';
+import { type ToolHistoryEntry } from '@/lib/history-db';
+import { Link, useLocation } from 'wouter';
+import { TOOLS } from '@/config/tools.config';
+import { getChainTargets } from '@/config/tool-chains.config';
+import { useToolPipe } from '@/hooks/use-tool-pipe';
+import { cn } from '@/lib/utils';
+import { saveWorkspace } from '@/lib/workspace-db';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { AutoSaveRestore } from '@/components/AutoSaveRestore';
+import { isPostHogEnabled, posthog } from '@/lib/posthog';
 
 interface ToolCardProps {
   title: string;
@@ -40,13 +46,23 @@ interface ToolCardProps {
   };
 }
 
-export function ToolCard({ title, description, icon, children, shareUrl, history, pipeSource, autoSave, toolId }: ToolCardProps) {
+export function ToolCard({
+  title,
+  description,
+  icon,
+  children,
+  shareUrl,
+  history,
+  pipeSource,
+  autoSave,
+  toolId,
+}: ToolCardProps) {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { setPipeData, addPipelineStep, pipeline, clearPipeline } = useToolPipe();
   const [showPipeMenu, setShowPipeMenu] = useState(false);
   const [showSaveWorkflow, setShowSaveWorkflow] = useState(false);
-  const [workflowName, setWorkflowName] = useState("");
+  const [workflowName, setWorkflowName] = useState('');
   const [savingWorkflow, setSavingWorkflow] = useState(false);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
   const [workflowPromptDismissed, setWorkflowPromptDismissed] = useState(false);
@@ -55,26 +71,24 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
     const url = shareUrl || window.location.href;
     if (!(await copyText(url))) return;
     if (isPostHogEnabled) {
-      posthog.capture("tool_shared", { tool_id: toolId });
+      posthog.capture('tool_shared', { tool_id: toolId });
     }
-    toast({ description: "Link copied to clipboard!" });
+    toast({ description: 'Link copied to clipboard!' });
   };
 
   const chainTargets = pipeSource ? getChainTargets(pipeSource.toolId) : [];
-  const chainTools = chainTargets
-    .map((id) => TOOLS.find((t) => t.id === id))
-    .filter(Boolean);
+  const chainTools = chainTargets.map((id) => TOOLS.find((t) => t.id === id)).filter(Boolean);
 
-  const handlePipe = (targetTool: typeof TOOLS[0]) => {
+  const handlePipe = (targetTool: (typeof TOOLS)[0]) => {
     if (!pipeSource) return;
-    const sourceTool = TOOLS.find(t => t.id === pipeSource.toolId);
+    const sourceTool = TOOLS.find((t) => t.id === pipeSource.toolId);
     if (sourceTool) {
       addPipelineStep({ toolId: sourceTool.id, toolName: sourceTool.name, path: sourceTool.path });
     }
     addPipelineStep({ toolId: targetTool.id, toolName: targetTool.name, path: targetTool.path });
     setPipeData(pipeSource.output, pipeSource.toolId);
     if (isPostHogEnabled) {
-      posthog.capture("pipeline_tool_selected", {
+      posthog.capture('pipeline_tool_selected', {
         source_tool_id: pipeSource.toolId,
         target_tool_id: targetTool.id,
       });
@@ -87,7 +101,7 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const target = e.target as HTMLElement;
-    if (["INPUT", "TEXTAREA", "BUTTON", "SELECT"].includes(target.tagName)) return;
+    if (['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT'].includes(target.tagName)) return;
     const touch = e.touches[0];
     setTouchStart({ x: touch.clientX, y: touch.clientY });
   };
@@ -117,18 +131,18 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
         createdAt: Date.now(),
         tools: pipeline.map((step) => ({
           toolId: step.toolId,
-          state: JSON.stringify({ input: "", output: "" }),
+          state: JSON.stringify({ input: '', output: '' }),
         })),
       });
       if (isPostHogEnabled) {
-        posthog.capture("workflow_saved", { tool_count: pipeline.length });
+        posthog.capture('workflow_saved', { tool_count: pipeline.length });
       }
-      toast({ description: "Workflow saved to Workspaces." });
+      toast({ description: 'Workflow saved to Workspaces.' });
       setShowSaveWorkflow(false);
-      setWorkflowName("");
+      setWorkflowName('');
       setWorkflowPromptDismissed(true);
     } catch {
-      toast({ description: "Failed to save workflow." });
+      toast({ description: 'Failed to save workflow.' });
     } finally {
       setSavingWorkflow(false);
     }
@@ -160,10 +174,10 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
                   <Link
                     href={step.path}
                     className={cn(
-                      "text-xs px-2 py-1 rounded-md transition-colors",
+                      'text-xs px-2 py-1 rounded-md transition-colors',
                       isCurrent
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted',
                     )}
                   >
                     {step.toolName}
@@ -253,10 +267,7 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
 
             {showPipeMenu && (
               <>
-                <div
-                  className="fixed inset-0 z-40"
-                  onClick={() => setShowPipeMenu(false)}
-                />
+                <div className="fixed inset-0 z-40" onClick={() => setShowPipeMenu(false)} />
                 <div className="absolute bottom-full left-0 mb-2 z-50 w-64 bg-popover border border-border rounded-lg shadow-lg py-2 animate-in fade-in-0 zoom-in-95 duration-150">
                   <div className="px-3 pb-1.5 text-xs font-medium text-muted-foreground">
                     Send output to
@@ -297,7 +308,7 @@ export function ToolCard({ title, description, icon, children, shareUrl, history
                 Cancel
               </Button>
               <Button onClick={handleSaveWorkflow} disabled={savingWorkflow}>
-                {savingWorkflow ? "Saving..." : "Save"}
+                {savingWorkflow ? 'Saving...' : 'Save'}
               </Button>
             </div>
           </div>

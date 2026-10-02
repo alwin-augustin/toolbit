@@ -25,23 +25,24 @@
  *     node scripts/generate-seo-pages.mjs [--out dist]
  */
 
+import { parse, parseFragment, serialize } from 'parse5';
 import { mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-    SITE,
-    CATEGORY_GROUPS,
-    TOOL_PAGES,
-    SITE_FAQ,
-    WHY_TOOLBIT,
-    COMPARISON_PAGES,
-    GUIDE_PAGES,
-    BLOG_POSTS,
-    POPULAR_TOOL_SLUGS,
-    getToolPage,
-    getToolPagesByCategory,
-    absoluteUrl,
+  SITE,
+  CATEGORY_GROUPS,
+  TOOL_PAGES,
+  SITE_FAQ,
+  WHY_TOOLBIT,
+  COMPARISON_PAGES,
+  GUIDE_PAGES,
+  BLOG_POSTS,
+  POPULAR_TOOL_SLUGS,
+  getToolPage,
+  getToolPagesByCategory,
+  absoluteUrl,
 } from '../src/seo/seo-content.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -52,23 +53,23 @@ const buildDate = new Date().toISOString().slice(0, 10);
 /* ------------------------------------------------------------------ utils */
 
 const escapeHtml = (value) =>
-    String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 
 const jsonLd = (data) =>
-    `<script type="application/ld+json">${JSON.stringify(data, null, 2).replace(/</g, '\\u003c')}</script>`;
+  `<script type="application/ld+json">${JSON.stringify(data, null, 2).replace(/</g, '\\u003c')}</script>`;
 
 function writePage(pathname, html) {
-    const target =
-        pathname === '/'
-            ? path.join(outDir, 'index.html')
-            : path.join(outDir, pathname.replace(/^\//, ''), 'index.html');
-    mkdirSync(path.dirname(target), { recursive: true });
-    writeFileSync(target, html);
-    return target;
+  const target =
+    pathname === '/'
+      ? path.join(outDir, 'index.html')
+      : path.join(outDir, pathname.replace(/^\//, ''), 'index.html');
+  mkdirSync(path.dirname(target), { recursive: true });
+  writeFileSync(target, html);
+  return target;
 }
 
 /* --------------------------------------------------------------- template */
@@ -156,103 +157,101 @@ footer nav { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-bottom: 
 `.trim();
 
 const NAV_LINKS = [
-    ['/tools', 'All tools'],
-    ['/developer-toolbox', 'Developer toolbox'],
-    ['/offline-developer-tools', 'Offline tools'],
-    ['/compare/toolbit-vs-devtoys', 'Comparisons'],
-    ['/blog', 'Blog'],
-    ['/about', 'About'],
+  ['/tools', 'All tools'],
+  ['/developer-toolbox', 'Developer toolbox'],
+  ['/offline-developer-tools', 'Offline tools'],
+  ['/compare/toolbit-vs-devtoys', 'Comparisons'],
+  ['/blog', 'Blog'],
+  ['/about', 'About'],
 ];
 
 const FOOTER_LINKS = [
-    ['/', 'Toolbit workspace'],
-    ['/tools', 'All tools'],
-    ['/blog', 'Blog'],
-    ['/local-first-developer-tools', 'Local-first tools'],
-    ['/offline-developer-tools', 'Offline tools'],
-    ['/developer-toolbox', 'Developer toolbox'],
-    ['/compare/toolbit-vs-devtoys', 'vs DevToys'],
-    ['/compare/toolbit-vs-cyberchef', 'vs CyberChef'],
-    ['/compare/toolbit-vs-postman', 'vs Postman'],
-    ['/privacy', 'Privacy'],
-    ['/terms', 'Terms'],
+  ['/', 'Toolbit workspace'],
+  ['/tools', 'All tools'],
+  ['/blog', 'Blog'],
+  ['/local-first-developer-tools', 'Local-first tools'],
+  ['/offline-developer-tools', 'Offline tools'],
+  ['/developer-toolbox', 'Developer toolbox'],
+  ['/compare/toolbit-vs-devtoys', 'vs DevToys'],
+  ['/compare/toolbit-vs-cyberchef', 'vs CyberChef'],
+  ['/compare/toolbit-vs-postman', 'vs Postman'],
+  ['/privacy', 'Privacy'],
+  ['/terms', 'Terms'],
 ];
 
 /** Social card for a page: a generated per-page card, or the site card. */
 function ogImageFor(pathname) {
-    const slug = pathname.replace(/^\//, '').replace(/\//g, '-');
-    return existsSync(path.join(root, 'public/og', `${slug}.png`))
-        ? `/og/${slug}.png`
-        : SITE.ogImage;
+  const slug = pathname.replace(/^\//, '').replace(/\//g, '-');
+  return existsSync(path.join(root, 'public/og', `${slug}.png`)) ? `/og/${slug}.png` : SITE.ogImage;
 }
 
 function formatDate(iso) {
-    return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        timeZone: 'UTC',
-    });
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 }
 
 function breadcrumbHtml(trail) {
-    const parts = trail.map((crumb, index) =>
-        index === trail.length - 1
-            ? `<span aria-current="page">${escapeHtml(crumb.name)}</span>`
-            : `<a href="${crumb.url}">${escapeHtml(crumb.name)}</a>`,
-    );
-    return `<nav class="crumbs" aria-label="Breadcrumb">${parts.join('<span>/</span>')}</nav>`;
+  const parts = trail.map((crumb, index) =>
+    index === trail.length - 1
+      ? `<span aria-current="page">${escapeHtml(crumb.name)}</span>`
+      : `<a href="${crumb.url}">${escapeHtml(crumb.name)}</a>`,
+  );
+  return `<nav class="crumbs" aria-label="Breadcrumb">${parts.join('<span>/</span>')}</nav>`;
 }
 
 function breadcrumbSchema(trail) {
-    return {
-        '@type': 'BreadcrumbList',
-        itemListElement: trail.map((crumb, index) => ({
-            '@type': 'ListItem',
-            position: index + 1,
-            name: crumb.name,
-            item: absoluteUrl(crumb.url),
-        })),
-    };
+  return {
+    '@type': 'BreadcrumbList',
+    itemListElement: trail.map((crumb, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: crumb.name,
+      item: absoluteUrl(crumb.url),
+    })),
+  };
 }
 
 function faqSchema(faq) {
-    return {
-        '@type': 'FAQPage',
-        mainEntity: faq.map((entry) => ({
-            '@type': 'Question',
-            name: entry.q,
-            acceptedAnswer: { '@type': 'Answer', text: entry.a },
-        })),
-    };
+  return {
+    '@type': 'FAQPage',
+    mainEntity: faq.map((entry) => ({
+      '@type': 'Question',
+      name: entry.q,
+      acceptedAnswer: { '@type': 'Answer', text: entry.a },
+    })),
+  };
 }
 
 function faqHtml(faq) {
-    return `<dl class="faq">${faq
-        .map((entry) => `<dt>${escapeHtml(entry.q)}</dt><dd>${escapeHtml(entry.a)}</dd>`)
-        .join('')}</dl>`;
+  return `<dl class="faq">${faq
+    .map((entry) => `<dt>${escapeHtml(entry.q)}</dt><dd>${escapeHtml(entry.a)}</dd>`)
+    .join('')}</dl>`;
 }
 
 /** Trims to a word boundary — splitting on '.' mangles ".proto" and "X.509". */
 function cardSummary(text) {
-    const clean = text.replace(/\s+/g, ' ').trim();
-    if (clean.length <= 118) return clean;
-    const cut = clean.slice(0, 118);
-    return `${cut.slice(0, cut.lastIndexOf(' '))}…`;
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (clean.length <= 118) return clean;
+  const cut = clean.slice(0, 118);
+  return `${cut.slice(0, cut.lastIndexOf(' '))}…`;
 }
 
 function toolCardsHtml(slugs) {
-    const items = slugs
-        .map((slug) => getToolPage(slug))
-        .filter(Boolean)
-        .map(
-            (tool) => `<li><a href="/${tool.slug}">
+  const items = slugs
+    .map((slug) => getToolPage(slug))
+    .filter(Boolean)
+    .map(
+      (tool) => `<li><a href="/${tool.slug}">
         <span class="name">${escapeHtml(tool.name)}</span>
         <span class="desc">${escapeHtml(cardSummary(tool.description))}</span>
       </a></li>`,
-        )
-        .join('\n      ');
-    return `<ul class="cards">\n      ${items}\n    </ul>`;
+    )
+    .join('\n      ');
+  return `<ul class="cards">\n      ${items}\n    </ul>`;
 }
 
 /**
@@ -265,10 +264,10 @@ function toolCardsHtml(slugs) {
  * @param {string} [page.keywords]
  */
 function renderPage(page) {
-    const canonical = absoluteUrl(page.pathname);
-    const graph = page.schema ?? [];
-    const ogImage = absoluteUrl(ogImageFor(page.pathname));
-    return `<!doctype html>
+  const canonical = absoluteUrl(page.pathname);
+  const graph = page.schema ?? [];
+  const ogImage = absoluteUrl(ogImageFor(page.pathname));
+  return `<!doctype html>
 <html lang="en" class="dark" data-density="comfortable">
 <head>
   <meta charset="UTF-8" />
@@ -337,26 +336,47 @@ ${page.body}
  * JavaScript reads that description; a browser boots the workspace over it,
  * exactly as it does on the homepage.
  */
-function replaceOnce(html, pattern, replacement, label) {
-    if (!pattern.test(html)) {
-        throw new Error(
-            `SEO: could not find ${label} in the built index.html — the shell template and this script have drifted.`,
-        );
-    }
-    return html.replace(pattern, replacement);
+function findElement(node, tag, attribute, value) {
+  if (
+    node.tagName === tag &&
+    (!attribute || node.attrs?.some((attr) => attr.name === attribute && attr.value === value))
+  )
+    return node;
+  for (const child of node.childNodes || []) {
+    const found = findElement(child, tag, attribute, value);
+    if (found) return found;
+  }
+  return null;
+}
+function requiredElement(document, tag, attribute, value) {
+  const element = findElement(document, tag, attribute, value);
+  if (!element)
+    throw new Error(
+      `SEO: required ${tag}[${attribute || ''}=${value || ''}] is missing from the shell.`,
+    );
+  return element;
+}
+function setAttribute(element, name, value) {
+  const attribute = element.attrs.find((attr) => attr.name === name);
+  if (attribute) attribute.value = value;
+  else element.attrs.push({ name, value });
+}
+function appendMarkup(parent, markup) {
+  const nodes = parseFragment(markup).childNodes;
+  for (const node of nodes) {
+    node.parentNode = parent;
+    parent.childNodes.push(node);
+  }
 }
 
-const metaPattern = (attr, key) =>
-    new RegExp(`(<meta ${attr}="${key.replace(/[:]/g, '[:]')}" content=")[^"]*(")`);
-
 function toolFallbackMarkup(tool) {
-    const related = tool.related
-        .map((slug) => getToolPage(slug))
-        .filter(Boolean)
-        .map((item) => `<li><a href="/${item.slug}">${escapeHtml(item.name)}</a></li>`)
-        .join('');
+  const related = tool.related
+    .map((slug) => getToolPage(slug))
+    .filter(Boolean)
+    .map((item) => `<li><a href="/${item.slug}">${escapeHtml(item.name)}</a></li>`)
+    .join('');
 
-    return `<div class="tb-boot">
+  return `<div class="tb-boot">
     <div class="tb-boot-brand"><img src="/icon.svg" alt="" width="28" height="28" />Toolbit</div>
     <h1>${escapeHtml(tool.h1)}</h1>
     <p class="tb-boot-lede">${escapeHtml(tool.lede)}</p>
@@ -379,8 +399,8 @@ function toolFallbackMarkup(tool) {
     <section>
       <h2>Frequently asked questions</h2>
       <dl class="tb-boot-faq">${tool.faq
-          .map((entry) => `<dt>${escapeHtml(entry.q)}</dt><dd>${escapeHtml(entry.a)}</dd>`)
-          .join('')}</dl>
+        .map((entry) => `<dt>${escapeHtml(entry.q)}</dt><dd>${escapeHtml(entry.a)}</dd>`)
+        .join('')}</dl>
     </section>
 
     <section>
@@ -390,163 +410,143 @@ function toolFallbackMarkup(tool) {
 
     <div class="tb-boot-footer">
       <nav><a href="/tools">All ${TOOL_PAGES.length} tools</a>${FOOTER_LINKS.map(
-          ([href, label]) => `<a href="${href}">${label}</a>`,
+        ([href, label]) => `<a href="${href}">${label}</a>`,
       ).join('')}</nav>
     </div>
   </div>`;
 }
 
 function renderToolShell(tool, shell) {
-    const pathname = `/${tool.slug}`;
-    const canonical = absoluteUrl(pathname);
-    const ogImage = absoluteUrl(ogImageFor(pathname));
-    let html = shell;
+  const pathname = `/${tool.slug}`;
+  const canonical = absoluteUrl(pathname);
+  const ogImage = absoluteUrl(ogImageFor(pathname));
+  const document = parse(shell);
+  const title = requiredElement(document, 'title');
+  title.childNodes = [{ nodeName: '#text', value: tool.title, parentNode: title }];
+  for (const [attribute, key, value] of [
+    ['name', 'title', tool.title],
+    ['name', 'description', tool.description],
+    ['name', 'keywords', tool.keywords.join(', ')],
+    ['property', 'og:url', canonical],
+    ['property', 'og:title', tool.title],
+    ['property', 'og:description', tool.description],
+    ['property', 'og:image', ogImage],
+    ['property', 'og:image:alt', `${tool.name} — Toolbit`],
+    ['name', 'twitter:url', canonical],
+    ['name', 'twitter:title', tool.title],
+    ['name', 'twitter:description', tool.description],
+    ['name', 'twitter:image', ogImage],
+    ['name', 'twitter:image:alt', `${tool.name} — Toolbit`],
+  ])
+    setAttribute(requiredElement(document, 'meta', attribute, key), 'content', value);
+  setAttribute(requiredElement(document, 'link', 'rel', 'canonical'), 'href', canonical);
 
-    html = replaceOnce(html, /<title>[^<]*<\/title>/, `<title>${escapeHtml(tool.title)}</title>`, '<title>');
-    html = replaceOnce(html, metaPattern('name', 'title'), `$1${escapeHtml(tool.title)}$2`, 'meta[name=title]');
-    html = replaceOnce(
-        html,
-        metaPattern('name', 'description'),
-        `$1${escapeHtml(tool.description)}$2`,
-        'meta[name=description]',
-    );
-    html = replaceOnce(
-        html,
-        metaPattern('name', 'keywords'),
-        `$1${escapeHtml(tool.keywords.join(', '))}$2`,
-        'meta[name=keywords]',
-    );
-    html = replaceOnce(
-        html,
-        /(<link rel="canonical" href=")[^"]*(")/,
-        `$1${canonical}$2`,
-        'link[rel=canonical]',
-    );
+  const trail = [
+    { name: 'Home', url: '/' },
+    { name: 'Tools', url: '/tools' },
+    { name: tool.name, url: pathname },
+  ];
 
-    for (const [attr, key, value] of [
-        ['property', 'og:url', canonical],
-        ['property', 'og:title', tool.title],
-        ['property', 'og:description', tool.description],
-        ['property', 'og:image', ogImage],
-        ['property', 'og:image:alt', `${tool.name} — Toolbit`],
-        ['name', 'twitter:url', canonical],
-        ['name', 'twitter:title', tool.title],
-        ['name', 'twitter:description', tool.description],
-        ['name', 'twitter:image', ogImage],
-        ['name', 'twitter:image:alt', `${tool.name} — Toolbit`],
-    ]) {
-        html = replaceOnce(html, metaPattern(attr, key), `$1${escapeHtml(value)}$2`, `meta[${attr}=${key}]`);
-    }
+  const schema = jsonLd({
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebApplication',
+        '@id': `${canonical}#app`,
+        name: `${tool.name} — Toolbit`,
+        url: canonical,
+        description: tool.description,
+        applicationCategory: 'DeveloperApplication',
+        operatingSystem: 'Any operating system with a supported browser',
+        browserRequirements: 'Requires JavaScript. Modern browser recommended.',
+        isAccessibleForFree: true,
+        image: ogImage,
+        featureList: tool.bullets,
+        isPartOf: { '@id': `${SITE.url}/#website` },
+        publisher: { '@id': `${SITE.url}/#organization` },
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      },
+      breadcrumbSchema(trail),
+      faqSchema(tool.faq),
+    ],
+  });
 
-    const trail = [
-        { name: 'Home', url: '/' },
-        { name: 'Tools', url: '/tools' },
-        { name: tool.name, url: pathname },
-    ];
-
-    const schema = jsonLd({
-        '@context': 'https://schema.org',
-        '@graph': [
-            {
-                '@type': 'WebApplication',
-                '@id': `${canonical}#app`,
-                name: `${tool.name} — Toolbit`,
-                url: canonical,
-                description: tool.description,
-                applicationCategory: 'DeveloperApplication',
-                operatingSystem: 'Any operating system with a supported browser',
-                browserRequirements: 'Requires JavaScript. Modern browser recommended.',
-                isAccessibleForFree: true,
-                image: ogImage,
-                featureList: tool.bullets,
-                isPartOf: { '@id': `${SITE.url}/#website` },
-                publisher: { '@id': `${SITE.url}/#organization` },
-                offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-            },
-            breadcrumbSchema(trail),
-            faqSchema(tool.faq),
-        ],
-    });
-
-    html = replaceOnce(html, /<\/head>/, `${schema}\n</head>`, '</head>');
-    html = replaceOnce(
-        html,
-        /<div id="root">\s*<\/div>/,
-        `<div id="root">${toolFallbackMarkup(tool)}</div>`,
-        'empty #root',
-    );
-
-    return html;
+  appendMarkup(requiredElement(document, 'head'), schema);
+  const root = requiredElement(document, 'div', 'id', 'root');
+  root.childNodes = [];
+  appendMarkup(root, toolFallbackMarkup(tool));
+  return serialize(document);
 }
 
 /* -------------------------------------------------------- tool directory */
 
 function renderToolDirectory() {
-    const trail = [
-        { name: 'Home', url: '/' },
-        { name: 'Tools', url: '/tools' },
-    ];
+  const trail = [
+    { name: 'Home', url: '/' },
+    { name: 'Tools', url: '/tools' },
+  ];
 
-    const groups = CATEGORY_GROUPS.map((group) => {
-        const tools = getToolPagesByCategory(group.id);
-        if (!tools.length) return '';
-        return `      <h2 id="${group.id}">${escapeHtml(group.heading)}</h2>
+  const groups = CATEGORY_GROUPS.map((group) => {
+    const tools = getToolPagesByCategory(group.id);
+    if (!tools.length) return '';
+    return `      <h2 id="${group.id}">${escapeHtml(group.heading)}</h2>
       <p>${escapeHtml(group.blurb)}</p>
       ${toolCardsHtml(tools.map((tool) => tool.slug))}`;
-    })
-        .filter(Boolean)
-        .join('\n\n');
+  })
+    .filter(Boolean)
+    .join('\n\n');
 
-    const body = `      ${breadcrumbHtml(trail)}
+  const body = `      ${breadcrumbHtml(trail)}
       <h1>All ${TOOL_PAGES.length} Toolbit developer tools</h1>
       <p class="lede">Every Toolbit utility, grouped by what it does. Each one runs entirely in your browser: nothing is uploaded, nothing is tracked, and everything keeps working offline once the app is installed.</p>
       <ul class="chips">${POPULAR_TOOL_SLUGS.map((slug) => {
-          const tool = getToolPage(slug);
-          return tool ? `<li><a href="/${tool.slug}">${escapeHtml(tool.name)}</a></li>` : '';
+        const tool = getToolPage(slug);
+        return tool ? `<li><a href="/${tool.slug}">${escapeHtml(tool.name)}</a></li>` : '';
       }).join('')}</ul>
 
 ${groups}
 `;
 
-    return renderPage({
-        pathname: '/tools',
-        title: `All Developer Tools — ${TOOL_PAGES.length} Offline Utilities | Toolbit`,
-        description: `Browse all ${TOOL_PAGES.length} Toolbit developer tools: JSON, YAML and XML formatters, JWT and Base64 decoders, regex tester, hash and UUID generators, API client and more. All offline, all local.`,
-        keywords: 'developer tools, online developer tools, offline developer tools, json formatter, jwt decoder, regex tester, hash generator',
-        body,
-        schema: [
-            breadcrumbSchema(trail),
-            {
-                '@type': 'CollectionPage',
-                '@id': `${absoluteUrl('/tools')}#collection`,
-                name: 'Toolbit developer tools',
-                url: absoluteUrl('/tools'),
-                isPartOf: { '@id': `${SITE.url}/#website` },
-                mainEntity: {
-                    '@type': 'ItemList',
-                    numberOfItems: TOOL_PAGES.length,
-                    itemListElement: TOOL_PAGES.map((tool, index) => ({
-                        '@type': 'ListItem',
-                        position: index + 1,
-                        name: tool.name,
-                        url: absoluteUrl(`/${tool.slug}`),
-                    })),
-                },
-            },
-        ],
-    });
+  return renderPage({
+    pathname: '/tools',
+    title: `All Developer Tools — ${TOOL_PAGES.length} Offline Utilities | Toolbit`,
+    description: `Browse all ${TOOL_PAGES.length} Toolbit developer tools: JSON, YAML and XML formatters, JWT and Base64 decoders, regex tester, hash and UUID generators, API client and more. All offline, all local.`,
+    keywords:
+      'developer tools, online developer tools, offline developer tools, json formatter, jwt decoder, regex tester, hash generator',
+    body,
+    schema: [
+      breadcrumbSchema(trail),
+      {
+        '@type': 'CollectionPage',
+        '@id': `${absoluteUrl('/tools')}#collection`,
+        name: 'Toolbit developer tools',
+        url: absoluteUrl('/tools'),
+        isPartOf: { '@id': `${SITE.url}/#website` },
+        mainEntity: {
+          '@type': 'ItemList',
+          numberOfItems: TOOL_PAGES.length,
+          itemListElement: TOOL_PAGES.map((tool, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            name: tool.name,
+            url: absoluteUrl(`/${tool.slug}`),
+          })),
+        },
+      },
+    ],
+  });
 }
 
 /* --------------------------------------------------- comparison + guides */
 
 function renderComparisonPage(page) {
-    const trail = [
-        { name: 'Home', url: '/' },
-        { name: 'Comparisons', url: '/tools' },
-        { name: `Toolbit vs ${page.competitor}`, url: `/compare/${page.slug}` },
-    ];
+  const trail = [
+    { name: 'Home', url: '/' },
+    { name: 'Comparisons', url: '/tools' },
+    { name: `Toolbit vs ${page.competitor}`, url: `/compare/${page.slug}` },
+  ];
 
-    const body = `      ${breadcrumbHtml(trail)}
+  const body = `      ${breadcrumbHtml(trail)}
       <h1>${escapeHtml(page.h1)}</h1>
       <p class="lede">${escapeHtml(page.lede)}</p>
       <div class="cta">
@@ -555,8 +555,11 @@ function renderComparisonPage(page) {
       </div>
 
 ${page.sections
-    .map((section) => `      <h2>${escapeHtml(section.h2)}</h2>\n      <p>${escapeHtml(section.body)}</p>`)
-    .join('\n\n')}
+  .map(
+    (section) =>
+      `      <h2>${escapeHtml(section.h2)}</h2>\n      <p>${escapeHtml(section.body)}</p>`,
+  )
+  .join('\n\n')}
 
       <h2>Frequently asked questions</h2>
       ${faqHtml(page.faq)}
@@ -565,23 +568,23 @@ ${page.sections
       ${toolCardsHtml(POPULAR_TOOL_SLUGS.slice(0, 6))}
 `;
 
-    return renderPage({
-        pathname: `/compare/${page.slug}`,
-        title: page.title,
-        description: page.description,
-        keywords: `toolbit vs ${page.competitor.toLowerCase()}, ${page.competitor.toLowerCase()} alternative, offline developer tools, local-first developer tools`,
-        body,
-        schema: [breadcrumbSchema(trail), faqSchema(page.faq)],
-    });
+  return renderPage({
+    pathname: `/compare/${page.slug}`,
+    title: page.title,
+    description: page.description,
+    keywords: `toolbit vs ${page.competitor.toLowerCase()}, ${page.competitor.toLowerCase()} alternative, offline developer tools, local-first developer tools`,
+    body,
+    schema: [breadcrumbSchema(trail), faqSchema(page.faq)],
+  });
 }
 
 function renderGuidePage(page) {
-    const trail = [
-        { name: 'Home', url: '/' },
-        { name: page.h1, url: `/${page.slug}` },
-    ];
+  const trail = [
+    { name: 'Home', url: '/' },
+    { name: page.h1, url: `/${page.slug}` },
+  ];
 
-    const body = `      ${breadcrumbHtml(trail)}
+  const body = `      ${breadcrumbHtml(trail)}
       <h1>${escapeHtml(page.h1)}</h1>
       <p class="lede">${escapeHtml(page.lede)}</p>
       <div class="cta">
@@ -590,8 +593,11 @@ function renderGuidePage(page) {
       </div>
 
 ${page.sections
-    .map((section) => `      <h2>${escapeHtml(section.h2)}</h2>\n      <p>${escapeHtml(section.body)}</p>`)
-    .join('\n\n')}
+  .map(
+    (section) =>
+      `      <h2>${escapeHtml(section.h2)}</h2>\n      <p>${escapeHtml(section.body)}</p>`,
+  )
+  .join('\n\n')}
 
       <h2>Start with these tools</h2>
       ${toolCardsHtml(page.toolHighlights)}
@@ -600,47 +606,47 @@ ${page.sections
       ${faqHtml(page.faq)}
 `;
 
-    return renderPage({
-        pathname: `/${page.slug}`,
-        title: page.title,
+  return renderPage({
+    pathname: `/${page.slug}`,
+    title: page.title,
+    description: page.description,
+    keywords: `${page.slug.replace(/-/g, ' ')}, offline developer tools, local-first developer tools, browser developer tools`,
+    body,
+    schema: [
+      breadcrumbSchema(trail),
+      faqSchema(page.faq),
+      {
+        '@type': 'Article',
+        headline: page.h1,
         description: page.description,
-        keywords: `${page.slug.replace(/-/g, ' ')}, offline developer tools, local-first developer tools, browser developer tools`,
-        body,
-        schema: [
-            breadcrumbSchema(trail),
-            faqSchema(page.faq),
-            {
-                '@type': 'Article',
-                headline: page.h1,
-                description: page.description,
-                url: absoluteUrl(`/${page.slug}`),
-                image: absoluteUrl(SITE.ogImage),
-                inLanguage: 'en',
-                isPartOf: { '@id': `${SITE.url}/#website` },
-                publisher: { '@id': `${SITE.url}/#organization` },
-                author: { '@id': `${SITE.url}/#organization` },
-            },
-        ],
-    });
+        url: absoluteUrl(`/${page.slug}`),
+        image: absoluteUrl(SITE.ogImage),
+        inLanguage: 'en',
+        isPartOf: { '@id': `${SITE.url}/#website` },
+        publisher: { '@id': `${SITE.url}/#organization` },
+        author: { '@id': `${SITE.url}/#organization` },
+      },
+    ],
+  });
 }
 
 /* -------------------------------------------------------------- blog */
 
 function renderBlogIndex() {
-    const trail = [
-        { name: 'Home', url: '/' },
-        { name: 'Blog', url: '/blog' },
-    ];
+  const trail = [
+    { name: 'Home', url: '/' },
+    { name: 'Blog', url: '/blog' },
+  ];
 
-    const posts = BLOG_POSTS.map(
-        (post) => `<li><a href="/blog/${post.slug}">
+  const posts = BLOG_POSTS.map(
+    (post) => `<li><a href="/blog/${post.slug}">
         <span class="name">${escapeHtml(post.h1)}</span>
         <span class="desc">${escapeHtml(post.description)}</span>
         <span class="desc" style="margin-top:.4rem"><time datetime="${post.date}">${formatDate(post.date)}</time> · ${escapeHtml(post.readingTime)}</span>
       </a></li>`,
-    ).join('\n      ');
+  ).join('\n      ');
 
-    const body = `      ${breadcrumbHtml(trail)}
+  const body = `      ${breadcrumbHtml(trail)}
       <h1>The Toolbit blog</h1>
       <p class="lede">Notes on the things that surround everyday development work: handling secrets safely, the formats we all half-remember, and why running tools locally changes what you can safely paste into them.</p>
 
@@ -650,54 +656,55 @@ function renderBlogIndex() {
       </ul>
 `;
 
-    return renderPage({
-        pathname: '/blog',
-        title: 'Blog — Local-First Development Notes | Toolbit',
-        description:
-            'Practical notes on developer tooling, secret handling, and data formats — from the team behind the local-first Toolbit workspace.',
-        keywords: 'developer blog, local-first development, jwt security, cron expressions, base64 encoding',
-        body,
-        schema: [
-            breadcrumbSchema(trail),
-            {
-                '@type': 'Blog',
-                '@id': `${absoluteUrl('/blog')}#blog`,
-                name: 'The Toolbit blog',
-                url: absoluteUrl('/blog'),
-                isPartOf: { '@id': `${SITE.url}/#website` },
-                publisher: { '@id': `${SITE.url}/#organization` },
-                blogPost: BLOG_POSTS.map((post) => ({
-                    '@type': 'BlogPosting',
-                    headline: post.h1,
-                    url: absoluteUrl(`/blog/${post.slug}`),
-                    datePublished: post.date,
-                    description: post.description,
-                })),
-            },
-        ],
-    });
+  return renderPage({
+    pathname: '/blog',
+    title: 'Blog — Local-First Development Notes | Toolbit',
+    description:
+      'Practical notes on developer tooling, secret handling, and data formats — from the team behind the local-first Toolbit workspace.',
+    keywords:
+      'developer blog, local-first development, jwt security, cron expressions, base64 encoding',
+    body,
+    schema: [
+      breadcrumbSchema(trail),
+      {
+        '@type': 'Blog',
+        '@id': `${absoluteUrl('/blog')}#blog`,
+        name: 'The Toolbit blog',
+        url: absoluteUrl('/blog'),
+        isPartOf: { '@id': `${SITE.url}/#website` },
+        publisher: { '@id': `${SITE.url}/#organization` },
+        blogPost: BLOG_POSTS.map((post) => ({
+          '@type': 'BlogPosting',
+          headline: post.h1,
+          url: absoluteUrl(`/blog/${post.slug}`),
+          datePublished: post.date,
+          description: post.description,
+        })),
+      },
+    ],
+  });
 }
 
 function renderBlogPost(post) {
-    const trail = [
-        { name: 'Home', url: '/' },
-        { name: 'Blog', url: '/blog' },
-        { name: post.h1, url: `/blog/${post.slug}` },
-    ];
+  const trail = [
+    { name: 'Home', url: '/' },
+    { name: 'Blog', url: '/blog' },
+    { name: post.h1, url: `/blog/${post.slug}` },
+  ];
 
-    const body = `      ${breadcrumbHtml(trail)}
+  const body = `      ${breadcrumbHtml(trail)}
       <h1>${escapeHtml(post.h1)}</h1>
       <p class="note"><time datetime="${post.date}">${formatDate(post.date)}</time> · ${escapeHtml(post.readingTime)}</p>
       <p class="lede">${escapeHtml(post.lede)}</p>
 
 ${post.sections
-    .map(
-        (section) =>
-            `      <h2>${escapeHtml(section.h2)}</h2>\n${section.paragraphs
-                .map((paragraph) => `      <p>${escapeHtml(paragraph)}</p>`)
-                .join('\n')}`,
-    )
-    .join('\n\n')}
+  .map(
+    (section) =>
+      `      <h2>${escapeHtml(section.h2)}</h2>\n${section.paragraphs
+        .map((paragraph) => `      <p>${escapeHtml(paragraph)}</p>`)
+        .join('\n')}`,
+  )
+  .join('\n\n')}
 
       <h2>Frequently asked questions</h2>
       ${faqHtml(post.faq)}
@@ -706,50 +713,50 @@ ${post.sections
       ${toolCardsHtml(post.tools)}
 `;
 
-    return renderPage({
-        pathname: `/blog/${post.slug}`,
-        title: post.title,
+  return renderPage({
+    pathname: `/blog/${post.slug}`,
+    title: post.title,
+    description: post.description,
+    body,
+    schema: [
+      breadcrumbSchema(trail),
+      faqSchema(post.faq),
+      {
+        '@type': 'BlogPosting',
+        headline: post.h1,
         description: post.description,
-        body,
-        schema: [
-            breadcrumbSchema(trail),
-            faqSchema(post.faq),
-            {
-                '@type': 'BlogPosting',
-                headline: post.h1,
-                description: post.description,
-                url: absoluteUrl(`/blog/${post.slug}`),
-                datePublished: post.date,
-                dateModified: post.date,
-                image: absoluteUrl(ogImageFor(`/blog/${post.slug}`)),
-                inLanguage: 'en',
-                isPartOf: { '@id': `${absoluteUrl('/blog')}#blog` },
-                publisher: { '@id': `${SITE.url}/#organization` },
-                author: { '@id': `${SITE.url}/#organization` },
-                mainEntityOfPage: absoluteUrl(`/blog/${post.slug}`),
-            },
-        ],
-    });
+        url: absoluteUrl(`/blog/${post.slug}`),
+        datePublished: post.date,
+        dateModified: post.date,
+        image: absoluteUrl(ogImageFor(`/blog/${post.slug}`)),
+        inLanguage: 'en',
+        isPartOf: { '@id': `${absoluteUrl('/blog')}#blog` },
+        publisher: { '@id': `${SITE.url}/#organization` },
+        author: { '@id': `${SITE.url}/#organization` },
+        mainEntityOfPage: absoluteUrl(`/blog/${post.slug}`),
+      },
+    ],
+  });
 }
 
 /* ----------------------------------------------- homepage prerender inject */
 
 function homeFallbackMarkup() {
-    const categorySections = CATEGORY_GROUPS.map((group) => {
-        const tools = getToolPagesByCategory(group.id);
-        if (!tools.length) return '';
-        return `<section>
+  const categorySections = CATEGORY_GROUPS.map((group) => {
+    const tools = getToolPagesByCategory(group.id);
+    if (!tools.length) return '';
+    return `<section>
       <h2>${escapeHtml(group.heading)}</h2>
       <p>${escapeHtml(group.blurb)}</p>
       <ul class="tb-boot-links">${tools
-          .map((tool) => `<li><a href="/${tool.slug}">${escapeHtml(tool.name)}</a></li>`)
-          .join('')}</ul>
+        .map((tool) => `<li><a href="/${tool.slug}">${escapeHtml(tool.name)}</a></li>`)
+        .join('')}</ul>
     </section>`;
-    })
-        .filter(Boolean)
-        .join('\n    ');
+  })
+    .filter(Boolean)
+    .join('\n    ');
 
-    return `<div class="tb-boot">
+  return `<div class="tb-boot">
     <div class="tb-boot-brand"><img src="/icon.svg" alt="" width="28" height="28" />Toolbit</div>
     <h1>Developer Workspace for JSON, JWT, API and Data Tools</h1>
     <p class="tb-boot-lede">Toolbit is a local-first developer workspace with ${TOOL_PAGES.length} offline tools — JSON formatter, JWT decoder, Base64 encoder, regex tester, SQL formatter, YAML formatter, UUID generator, hash generator, cron parser, CSV to JSON converter and more. Everything runs in your browser: no uploads, no tracking, no sign-up.</p>
@@ -757,8 +764,8 @@ function homeFallbackMarkup() {
     <section>
       <h2>Popular tools</h2>
       <ul class="tb-boot-links">${POPULAR_TOOL_SLUGS.map((slug) => {
-          const tool = getToolPage(slug);
-          return tool ? `<li><a href="/${tool.slug}">${escapeHtml(tool.name)}</a></li>` : '';
+        const tool = getToolPage(slug);
+        return tool ? `<li><a href="/${tool.slug}">${escapeHtml(tool.name)}</a></li>` : '';
       }).join('')}</ul>
     </section>
 
@@ -767,21 +774,21 @@ function homeFallbackMarkup() {
     <section>
       <h2>Why Toolbit?</h2>
       <div class="tb-boot-grid">${WHY_TOOLBIT.map(
-          (item) => `<div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.body)}</p></div>`,
+        (item) => `<div><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.body)}</p></div>`,
       ).join('')}</div>
     </section>
 
     <section>
       <h2>Frequently asked questions</h2>
       <dl class="tb-boot-faq">${SITE_FAQ.map(
-          (entry) => `<dt>${escapeHtml(entry.q)}</dt><dd>${escapeHtml(entry.a)}</dd>`,
+        (entry) => `<dt>${escapeHtml(entry.q)}</dt><dd>${escapeHtml(entry.a)}</dd>`,
       ).join('')}</dl>
     </section>
 
     <section>
       <h2>From the blog</h2>
       <ul class="tb-boot-links">${BLOG_POSTS.map(
-          (post) => `<li><a href="/blog/${post.slug}">${escapeHtml(post.h1)}</a></li>`,
+        (post) => `<li><a href="/blog/${post.slug}">${escapeHtml(post.h1)}</a></li>`,
       ).join('')}</ul>
     </section>
 
@@ -801,98 +808,106 @@ function homeFallbackMarkup() {
  * bundle exists rather than in the source HTML.
  */
 function injectFontPreload() {
-    const fontsDir = path.join(outDir, 'assets/fonts');
-    if (!existsSync(fontsDir)) return 0;
+  const fontsDir = path.join(outDir, 'assets');
+  if (!existsSync(fontsDir)) return 0;
 
-    const geist = readdirSync(fontsDir).find((file) => /^Geist.*\.woff2$/.test(file));
-    if (!geist) return 0;
+  const geist = readdirSync(fontsDir).find((file) => /^Geist.*\.woff2$/.test(file));
+  if (!geist) return 0;
 
-    const tag = `<link rel="preload" href="/assets/fonts/${geist}" as="font" type="font/woff2" crossorigin />`;
-    let patched = 0;
+  const tag = `<link rel="preload" href="/assets/${geist}" as="font" type="font/woff2" crossorigin />`;
+  let patched = 0;
 
-    for (const entry of ['index.html', 'about.html']) {
-        const target = path.join(outDir, entry);
-        if (!existsSync(target)) continue;
+  for (const entry of ['index.html', 'about.html']) {
+    const target = path.join(outDir, entry);
+    if (!existsSync(target)) continue;
 
-        let html = readFileSync(target, 'utf8');
-        if (html.includes(tag)) continue;
+    let html = readFileSync(target, 'utf8');
+    if (html.includes(tag)) continue;
 
-        html = html.replace('</head>', `  ${tag}\n</head>`);
-        writeFileSync(target, html);
-        patched += 1;
-    }
+    html = html.replace('</head>', `  ${tag}\n</head>`);
+    writeFileSync(target, html);
+    patched += 1;
+  }
 
-    return patched;
+  return patched;
 }
 
 function injectHomeFallback() {
-    const target = path.join(outDir, 'index.html');
-    if (!existsSync(target)) {
-        console.warn(`  ! ${path.relative(root, target)} not found — skipping homepage prerender`);
-        return false;
-    }
+  const target = path.join(outDir, 'index.html');
+  if (!existsSync(target)) {
+    console.warn(`  ! ${path.relative(root, target)} not found — skipping homepage prerender`);
+    return false;
+  }
 
-    let html = readFileSync(target, 'utf8');
+  let html = readFileSync(target, 'utf8');
 
-    if (!/<div id="root">\s*<\/div>/.test(html)) {
-        console.warn('  ! #root is not empty in the built index.html — skipping homepage prerender');
-        return false;
-    }
+  if (!/<div id="root">\s*<\/div>/.test(html)) {
+    console.warn('  ! #root is not empty in the built index.html — skipping homepage prerender');
+    return false;
+  }
 
-    html = html.replace(/<div id="root">\s*<\/div>/, `<div id="root">${homeFallbackMarkup()}</div>`);
+  html = html.replace(/<div id="root">\s*<\/div>/, `<div id="root">${homeFallbackMarkup()}</div>`);
 
-    const homeFaq = jsonLd({ '@context': 'https://schema.org', ...faqSchema(SITE_FAQ) });
-    html = html.replace('</head>', `${homeFaq}\n</head>`);
+  const homeFaq = jsonLd({ '@context': 'https://schema.org', ...faqSchema(SITE_FAQ) });
+  html = html.replace('</head>', `${homeFaq}\n</head>`);
 
-    writeFileSync(target, html);
-    return true;
+  writeFileSync(target, html);
+  return true;
 }
 
 /* ------------------------------------------------------- sitemap + robots */
 
 function writeSitemap() {
-    const urls = [
-        { loc: '/', priority: '1.0', changefreq: 'weekly' },
-        { loc: '/tools', priority: '0.9', changefreq: 'weekly' },
-        ...GUIDE_PAGES.map((page) => ({ loc: `/${page.slug}`, priority: '0.8', changefreq: 'monthly' })),
-        ...COMPARISON_PAGES.map((page) => ({ loc: `/compare/${page.slug}`, priority: '0.7', changefreq: 'monthly' })),
-        ...TOOL_PAGES.map((tool) => ({ loc: `/${tool.slug}`, priority: '0.9', changefreq: 'monthly' })),
-        { loc: '/blog', priority: '0.7', changefreq: 'weekly' },
-        ...BLOG_POSTS.map((post) => ({
-            loc: `/blog/${post.slug}`,
-            priority: '0.6',
-            changefreq: 'yearly',
-            lastmod: post.date,
-        })),
-        { loc: '/about', priority: '0.6', changefreq: 'monthly' },
-        { loc: '/privacy', priority: '0.3', changefreq: 'yearly' },
-        { loc: '/terms', priority: '0.3', changefreq: 'yearly' },
-    ];
+  const urls = [
+    { loc: '/', priority: '1.0', changefreq: 'weekly' },
+    { loc: '/tools', priority: '0.9', changefreq: 'weekly' },
+    ...GUIDE_PAGES.map((page) => ({
+      loc: `/${page.slug}`,
+      priority: '0.8',
+      changefreq: 'monthly',
+    })),
+    ...COMPARISON_PAGES.map((page) => ({
+      loc: `/compare/${page.slug}`,
+      priority: '0.7',
+      changefreq: 'monthly',
+    })),
+    ...TOOL_PAGES.map((tool) => ({ loc: `/${tool.slug}`, priority: '0.9', changefreq: 'monthly' })),
+    { loc: '/blog', priority: '0.7', changefreq: 'weekly' },
+    ...BLOG_POSTS.map((post) => ({
+      loc: `/blog/${post.slug}`,
+      priority: '0.6',
+      changefreq: 'yearly',
+      lastmod: post.date,
+    })),
+    { loc: '/about', priority: '0.6', changefreq: 'monthly' },
+    { loc: '/privacy', priority: '0.3', changefreq: 'yearly' },
+    { loc: '/terms', priority: '0.3', changefreq: 'yearly' },
+  ];
 
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls
-    .map(
-        (url) =>
-            `  <url><loc>${absoluteUrl(url.loc)}</loc><lastmod>${url.lastmod ?? buildDate}</lastmod><changefreq>${url.changefreq}</changefreq><priority>${url.priority}</priority></url>`,
-    )
-    .join('\n')}
+  .map(
+    (url) =>
+      `  <url><loc>${absoluteUrl(url.loc)}</loc><lastmod>${url.lastmod ?? buildDate}</lastmod><changefreq>${url.changefreq}</changefreq><priority>${url.priority}</priority></url>`,
+  )
+  .join('\n')}
 </urlset>
 `;
 
-    mkdirSync(outDir, { recursive: true });
-    writeFileSync(path.join(outDir, 'sitemap.xml'), xml);
-    return urls.length;
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(path.join(outDir, 'sitemap.xml'), xml);
+  return urls.length;
 }
 
 function writeRobots() {
-    const robots = `User-agent: *
+  const robots = `User-agent: *
 Allow: /
 
 Sitemap: ${absoluteUrl('/sitemap.xml')}
 `;
-    mkdirSync(outDir, { recursive: true });
-    writeFileSync(path.join(outDir, 'robots.txt'), robots);
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(path.join(outDir, 'robots.txt'), robots);
 }
 
 /* -------------------------------------------------------------- generate */
@@ -910,31 +925,31 @@ count += 1;
 
 let toolShells = 0;
 if (shell) {
-    for (const tool of TOOL_PAGES) {
-        writePage(`/${tool.slug}`, renderToolShell(tool, shell));
-        toolShells += 1;
-        count += 1;
-    }
+  for (const tool of TOOL_PAGES) {
+    writePage(`/${tool.slug}`, renderToolShell(tool, shell));
+    toolShells += 1;
+    count += 1;
+  }
 } else {
-    console.warn('  ! dist/index.html not found — skipping per-tool app shells');
+  console.warn('  ! dist/index.html not found — skipping per-tool app shells');
 }
 
 for (const page of COMPARISON_PAGES) {
-    writePage(`/compare/${page.slug}`, renderComparisonPage(page));
-    count += 1;
+  writePage(`/compare/${page.slug}`, renderComparisonPage(page));
+  count += 1;
 }
 
 for (const page of GUIDE_PAGES) {
-    writePage(`/${page.slug}`, renderGuidePage(page));
-    count += 1;
+  writePage(`/${page.slug}`, renderGuidePage(page));
+  count += 1;
 }
 
 writePage('/blog', renderBlogIndex());
 count += 1;
 
 for (const post of BLOG_POSTS) {
-    writePage(`/blog/${post.slug}`, renderBlogPost(post));
-    count += 1;
+  writePage(`/blog/${post.slug}`, renderBlogPost(post));
+  count += 1;
 }
 
 const urlCount = writeSitemap();
@@ -943,8 +958,10 @@ const prerendered = injectHomeFallback();
 const preloaded = injectFontPreload();
 
 console.log(
-    `SEO: wrote ${count} pages to ${path.relative(root, outDir) || '.'}/ (${toolShells} of them prerendered app shells)`,
+  `SEO: wrote ${count} pages to ${path.relative(root, outDir) || '.'}/ (${toolShells} of them prerendered app shells)`,
 );
-console.log(`SEO: sitemap.xml lists ${urlCount} URLs, robots.txt points at ${absoluteUrl('/sitemap.xml')}`);
+console.log(
+  `SEO: sitemap.xml lists ${urlCount} URLs, robots.txt points at ${absoluteUrl('/sitemap.xml')}`,
+);
 console.log(`SEO: homepage prerender ${prerendered ? 'injected into index.html' : 'skipped'}`);
 console.log(`SEO: font preload added to ${preloaded} entry point(s)`);

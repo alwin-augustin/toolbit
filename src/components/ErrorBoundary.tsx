@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { reportError } from '@/lib/telemetry';
 
 interface Props {
@@ -40,7 +40,6 @@ export class ErrorBoundary extends Component<Props, State> {
       error,
       errorInfo,
     });
-
   }
 
   handleReset = () => {
@@ -78,14 +77,11 @@ export class ErrorBoundary extends Component<Props, State> {
                   />
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-foreground">
-                Something went wrong
-              </h2>
+              <h2 className="text-xl font-semibold text-foreground">Something went wrong</h2>
             </div>
 
             <p className="text-muted-foreground mb-4">
-              We're sorry, but something unexpected happened. Please try
-              refreshing the page.
+              We're sorry, but something unexpected happened. Please try refreshing the page.
             </p>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (

@@ -1,14 +1,10 @@
-import { formatJson as canonicalJson } from "@/lib/tool-contract";
+import { formatJson as canonicalJson } from '@/lib/tool-contract';
 /**
  * JSON Service
  * Handles JSON formatting, validation, and minification operations
  */
 
-export interface ServiceResult<T = string> {
-    success: boolean;
-    data?: T;
-    error?: string;
-}
+import type { ServiceResult } from './result';
 
 /**
  * Format JSON with specified indentation
@@ -17,8 +13,10 @@ export interface ServiceResult<T = string> {
  * @returns Formatted result with success status
  */
 export const formatJson = (input: string, spaces: number = 2): ServiceResult => {
-    const result=canonicalJson(input,spaces);
-    return result.ok ? {success:true,data:result.value} : {success:false,error:'Invalid JSON'};
+  const result = canonicalJson(input, spaces);
+  return result.ok
+    ? { success: true, data: result.value }
+    : { success: false, error: 'Invalid JSON' };
 };
 
 /**
@@ -27,27 +25,27 @@ export const formatJson = (input: string, spaces: number = 2): ServiceResult => 
  * @returns Minified result with success status
  */
 export const minifyJson = (input: string): ServiceResult => {
-    try {
-        if (!input.trim()) {
-            return {
-                success: false,
-                error: 'Input cannot be empty'
-            };
-        }
-
-        const parsed = JSON.parse(input);
-        const minified = JSON.stringify(parsed);
-
-        return {
-            success: true,
-            data: minified
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Invalid JSON'
-        };
+  try {
+    if (!input.trim()) {
+      return {
+        success: false,
+        error: 'Input cannot be empty',
+      };
     }
+
+    const parsed = JSON.parse(input);
+    const minified = JSON.stringify(parsed);
+
+    return {
+      success: true,
+      data: minified,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Invalid JSON',
+    };
+  }
 };
 
 /**
@@ -56,27 +54,27 @@ export const minifyJson = (input: string): ServiceResult => {
  * @returns Validation result
  */
 export const validateJson = (input: string): ServiceResult<boolean> => {
-    try {
-        if (!input.trim()) {
-            return {
-                success: false,
-                error: 'Input cannot be empty'
-            };
-        }
-
-        JSON.parse(input);
-
-        return {
-            success: true,
-            data: true
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Invalid JSON',
-            data: false
-        };
+  try {
+    if (!input.trim()) {
+      return {
+        success: false,
+        error: 'Input cannot be empty',
+      };
     }
+
+    JSON.parse(input);
+
+    return {
+      success: true,
+      data: true,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Invalid JSON',
+      data: false,
+    };
+  }
 };
 
 /**
@@ -87,44 +85,44 @@ export const validateJson = (input: string): ServiceResult<boolean> => {
  * @returns JSON array result
  */
 export const csvToJson = (csv: string, delimiter: string = ','): ServiceResult => {
-    try {
-        if (!csv.trim()) {
-            return {
-                success: false,
-                error: 'CSV input cannot be empty'
-            };
-        }
-
-        const lines = csv.trim().split('\n');
-        if (lines.length < 2) {
-            return {
-                success: false,
-                error: 'CSV must have at least a header and one data row'
-            };
-        }
-
-        const headers = lines[0].split(delimiter).map(h => h.trim());
-        const result = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(delimiter).map(v => v.trim());
-            const obj: Record<string, string> = {};
-
-            headers.forEach((header, index) => {
-                obj[header] = values[index] || '';
-            });
-
-            result.push(obj);
-        }
-
-        return {
-            success: true,
-            data: JSON.stringify(result, null, 2)
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to convert CSV to JSON'
-        };
+  try {
+    if (!csv.trim()) {
+      return {
+        success: false,
+        error: 'CSV input cannot be empty',
+      };
     }
+
+    const lines = csv.trim().split('\n');
+    if (lines.length < 2) {
+      return {
+        success: false,
+        error: 'CSV must have at least a header and one data row',
+      };
+    }
+
+    const headers = lines[0].split(delimiter).map((h) => h.trim());
+    const result = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(delimiter).map((v) => v.trim());
+      const obj: Record<string, string> = {};
+
+      headers.forEach((header, index) => {
+        obj[header] = values[index] || '';
+      });
+
+      result.push(obj);
+    }
+
+    return {
+      success: true,
+      data: JSON.stringify(result, null, 2),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to convert CSV to JSON',
+    };
+  }
 };

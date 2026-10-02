@@ -1,4 +1,4 @@
-import { useDocumentField } from "@/v2/document-state";
+import { useDocumentField } from '@/v2/document-state';
 import React, { useState, useEffect } from 'react';
 import cronParser from 'cron-parser';
 import cronstrue from 'cronstrue';
@@ -10,21 +10,21 @@ import { useUrlState } from '@/hooks/use-url-state';
 import { useToolHistory } from '@/hooks/use-tool-history';
 
 const PRESETS = [
-  { label: "Every minute", value: "* * * * *", desc: "Runs every single minute" },
-  { label: "Every 5 min", value: "*/5 * * * *", desc: "Runs every 5 minutes" },
-  { label: "Hourly", value: "0 * * * *", desc: "At minute 0 of every hour" },
-  { label: "Daily midnight", value: "0 0 * * *", desc: "Once a day at 00:00" },
-  { label: "Weekly Mon 9am", value: "0 9 * * 1", desc: "Every Monday at 9:00 AM" },
-  { label: "Monthly 1st", value: "0 0 1 * *", desc: "First day of every month" },
-  { label: "Weekdays 8am", value: "0 8 * * 1-5", desc: "Mon-Fri at 8:00 AM" },
-  { label: "Every 15 min", value: "*/15 * * * *", desc: "Every quarter hour" },
-  { label: "Twice daily", value: "0 9,18 * * *", desc: "At 9:00 AM and 6:00 PM" },
+  { label: 'Every minute', value: '* * * * *', desc: 'Runs every single minute' },
+  { label: 'Every 5 min', value: '*/5 * * * *', desc: 'Runs every 5 minutes' },
+  { label: 'Hourly', value: '0 * * * *', desc: 'At minute 0 of every hour' },
+  { label: 'Daily midnight', value: '0 0 * * *', desc: 'Once a day at 00:00' },
+  { label: 'Weekly Mon 9am', value: '0 9 * * 1', desc: 'Every Monday at 9:00 AM' },
+  { label: 'Monthly 1st', value: '0 0 1 * *', desc: 'First day of every month' },
+  { label: 'Weekdays 8am', value: '0 8 * * 1-5', desc: 'Mon-Fri at 8:00 AM' },
+  { label: 'Every 15 min', value: '*/15 * * * *', desc: 'Every quarter hour' },
+  { label: 'Twice daily', value: '0 9,18 * * *', desc: 'At 9:00 AM and 6:00 PM' },
 ] as const;
 
-const FIELD_LABELS = ["Minute", "Hour", "Day", "Month", "Weekday"];
+const FIELD_LABELS = ['Minute', 'Hour', 'Day', 'Month', 'Weekday'];
 
 const CronParser: React.FC = () => {
-  const [expression, setExpression] = useDocumentField<string>("expression", '');
+  const [expression, setExpression] = useDocumentField<string>('expression', '');
   const [description, setDescription] = useState('');
   const [nextDates, setNextDates] = useState<string[]>([]);
   const [error, setError] = useState('');
@@ -34,9 +34,9 @@ const CronParser: React.FC = () => {
 
   // Consume smart-paste data from AppHome
   useEffect(() => {
-    const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+    const smartPaste = sessionStorage.getItem('toolbit:smart-paste');
     if (smartPaste) {
-      sessionStorage.removeItem("toolbit:smart-paste");
+      sessionStorage.removeItem('toolbit:smart-paste');
       setExpression(smartPaste.trim());
     }
   }, [setExpression]);
@@ -54,7 +54,7 @@ const CronParser: React.FC = () => {
       const humanReadable = cronstrue.toString(expression);
       setDescription(humanReadable);
 
-      const interval = cronParser.parseExpression(expression);
+      const interval = cronParser.parse(expression);
       const dates = [];
       for (let i = 0; i < 5; i++) {
         dates.push(interval.next().toDate().toLocaleString());
@@ -102,7 +102,7 @@ const CronParser: React.FC = () => {
           />
           <div className="mt-2 flex items-center gap-2">
             <Button
-              variant={showExplain ? "default" : "outline"}
+              variant={showExplain ? 'default' : 'outline'}
               size="sm"
               onClick={() => setShowExplain(!showExplain)}
             >
@@ -115,9 +115,14 @@ const CronParser: React.FC = () => {
         {fields.length >= 5 && !error && expression.trim() && (
           <div className="flex gap-2 flex-wrap">
             {fields.slice(0, 5).map((field, i) => (
-              <div key={i} className="flex flex-col items-center gap-1 px-3 py-2 rounded-md bg-muted/60 border border-border min-w-[72px]">
+              <div
+                key={i}
+                className="flex flex-col items-center gap-1 px-3 py-2 rounded-md bg-muted/60 border border-border min-w-[72px]"
+              >
                 <span className="font-mono text-sm font-semibold">{field}</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{FIELD_LABELS[i]}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                  {FIELD_LABELS[i]}
+                </span>
               </div>
             ))}
           </div>
@@ -130,9 +135,16 @@ const CronParser: React.FC = () => {
               Standard cron uses five fields: minute, hour, day of month, month, and day of week.
             </div>
             <ul className="text-xs text-muted-foreground list-disc pl-4">
-              <li><span className="font-mono">* *</span> runs every minute.</li>
-              <li>Use <span className="font-mono">*/5</span> for every 5 minutes.</li>
-              <li>Ranges like <span className="font-mono">1-5</span> and lists like <span className="font-mono">1,3,5</span> are supported.</li>
+              <li>
+                <span className="font-mono">* *</span> runs every minute.
+              </li>
+              <li>
+                Use <span className="font-mono">*/5</span> for every 5 minutes.
+              </li>
+              <li>
+                Ranges like <span className="font-mono">1-5</span> and lists like{' '}
+                <span className="font-mono">1,3,5</span> are supported.
+              </li>
             </ul>
           </div>
         )}
@@ -140,7 +152,9 @@ const CronParser: React.FC = () => {
         {/* Description */}
         {description && (
           <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
-            <p className="text-base font-medium text-foreground" data-testid="cron-description">{description}</p>
+            <p className="text-base font-medium text-foreground" data-testid="cron-description">
+              {description}
+            </p>
           </div>
         )}
 
@@ -157,7 +171,10 @@ const CronParser: React.FC = () => {
             <h3 className="text-sm font-medium">Next 5 executions</h3>
             <div className="space-y-1">
               {nextDates.map((date, i) => (
-                <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-md bg-card border border-border text-sm font-mono">
+                <div
+                  key={i}
+                  className="flex items-center gap-3 px-3 py-2 rounded-md bg-card border border-border text-sm font-mono"
+                >
                   <span className="text-xs text-muted-foreground w-4">{i + 1}.</span>
                   <span>{date}</span>
                 </div>
@@ -168,15 +185,19 @@ const CronParser: React.FC = () => {
 
         {/* Preset patterns — shown prominently when no input */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium">{expression.trim() ? 'Common patterns' : 'Start with a pattern'}</h3>
+          <h3 className="text-sm font-medium">
+            {expression.trim() ? 'Common patterns' : 'Start with a pattern'}
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {PRESETS.map(preset => (
+            {PRESETS.map((preset) => (
               <button
                 key={preset.value}
                 className="text-left p-3 rounded-lg border border-border bg-card hover:bg-accent hover:border-primary/30 transition-all group"
                 onClick={() => setExpression(preset.value)}
               >
-                <div className="font-mono text-sm text-primary group-hover:text-primary">{preset.value}</div>
+                <div className="font-mono text-sm text-primary group-hover:text-primary">
+                  {preset.value}
+                </div>
                 <div className="text-xs font-medium mt-0.5">{preset.label}</div>
                 <div className="text-[11px] text-muted-foreground">{preset.desc}</div>
               </button>

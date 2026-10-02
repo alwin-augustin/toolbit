@@ -1,6 +1,6 @@
-import { useDocumentField } from "@/v2/document-state";
+import { useDocumentField } from '@/v2/document-state';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import Papa, { ParseResult } from 'papaparse';
+import Papa, { type ParseResult } from 'papaparse';
 import { Upload } from 'lucide-react';
 import { Button } from '@/ds/components';
 import { CodeEditor } from '@/v2/CodeEditor';
@@ -11,7 +11,13 @@ import { useToolHistory } from '@/hooks/use-tool-history';
 import { useWorkspace } from '@/hooks/use-workspace';
 
 /** Self-contained drop target: reads a dropped file as text. */
-function DropPanel({ onText, children }: { onText: (text: string) => void; children: React.ReactNode }) {
+function DropPanel({
+  onText,
+  children,
+}: {
+  onText: (text: string) => void;
+  children: React.ReactNode;
+}) {
   const [dragging, setDragging] = useState(false);
   const counter = useRef(0);
   return (
@@ -69,7 +75,7 @@ function DropPanel({ onText, children }: { onText: (text: string) => void; child
 }
 
 const CsvToJsonConverter: React.FC = () => {
-  const [csv, setCsv] = useDocumentField<string>("csv", '');
+  const [csv, setCsv] = useDocumentField<string>('csv', '');
   const [json, setJson] = useState('');
   const [parseErrors, setParseErrors] = useState<number | null>(null);
   const shareState = useMemo(() => ({ csv }), [csv]);
@@ -118,7 +124,12 @@ const CsvToJsonConverter: React.FC = () => {
   useEffect(() => {
     setStatus({
       valid,
-      validityLabel: valid === null ? '' : valid ? 'Converted' : `${parseErrors} parse warning${parseErrors === 1 ? '' : 's'}`,
+      validityLabel:
+        valid === null
+          ? ''
+          : valid
+            ? 'Converted'
+            : `${parseErrors} parse warning${parseErrors === 1 ? '' : 's'}`,
     });
   }, [valid, parseErrors, setStatus]);
 
@@ -133,7 +144,9 @@ const CsvToJsonConverter: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setCsv('name,role,active\nAlice,Engineer,true\nBob,Designer,false')}
+                  onClick={() =>
+                    setCsv('name,role,active\nAlice,Engineer,true\nBob,Designer,false')
+                  }
                 >
                   Load sample
                 </Button>
@@ -154,7 +167,9 @@ const CsvToJsonConverter: React.FC = () => {
       <Panel>
         <PanelHeader
           title="JSON"
-          badge={<ValidityBadge valid={valid} validLabel="converted" invalidLabel="parse warnings" />}
+          badge={
+            <ValidityBadge valid={valid} validLabel="converted" invalidLabel="parse warnings" />
+          }
           action={<CopyAction text={json} />}
         />
         <CodeEditor value={json} language="json" readOnly placeholder="JSON output" />

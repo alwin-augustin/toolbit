@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import convert, { Measure, Unit, System } from 'convert-units';
+import convert, { type Measure, type Unit, type System } from 'convert-units';
 import { Button, Card, Input, Select } from '@/ds/components';
 import { CopyAction } from '@/v2/EditorPanels';
 import { ToolPage, Field, Row, SectionTitle, Stat } from '@/v2/restyle-kit';
@@ -27,13 +27,19 @@ const UnitConverter: React.FC = () => {
     [measure, fromUnit, toUnit, value],
   );
   useUrlState(shareState, (state) => {
-    const nextMeasure = typeof state.measure === 'string' ? (state.measure as Measure) : measures[0];
+    const nextMeasure =
+      typeof state.measure === 'string' ? (state.measure as Measure) : measures[0];
     setMeasure(nextMeasure);
     const units = convert().list(nextMeasure);
     const fallbackFrom = units[0]?.abbr;
     const fallbackTo = units[1]?.abbr || units[0]?.abbr;
-    setFromUnit((typeof state.fromUnit === 'string' ? (state.fromUnit as Unit) : fallbackFrom) || fallbackFrom);
-    setToUnit((typeof state.toUnit === 'string' ? (state.toUnit as Unit) : fallbackTo) || fallbackTo);
+    setFromUnit(
+      (typeof state.fromUnit === 'string' ? (state.fromUnit as Unit) : fallbackFrom) ||
+        fallbackFrom,
+    );
+    setToUnit(
+      (typeof state.toUnit === 'string' ? (state.toUnit as Unit) : fallbackTo) || fallbackTo,
+    );
     setValue(typeof state.value === 'number' ? state.value : 1);
   });
   const { addEntry } = useToolHistory('unit-converter', 'Unit Converter');
@@ -68,7 +74,9 @@ const UnitConverter: React.FC = () => {
                 onChange={(e) => handleMeasureChange(e.target.value as Measure)}
               >
                 {measures.map((m: Measure) => (
-                  <option key={m} value={m}>{m}</option>
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
                 ))}
               </Select>
             </Field>
@@ -78,20 +86,24 @@ const UnitConverter: React.FC = () => {
                 value={fromUnit}
                 onChange={(e) => setFromUnit(e.target.value as Unit)}
               >
-                {convert().list(measure).map((u: UnitInfo) => (
-                  <option key={u.abbr} value={u.abbr}>{u.singular} ({u.abbr})</option>
-                ))}
+                {convert()
+                  .list(measure)
+                  .map((u: UnitInfo) => (
+                    <option key={u.abbr} value={u.abbr}>
+                      {u.singular} ({u.abbr})
+                    </option>
+                  ))}
               </Select>
             </Field>
             <Field label="To">
-              <Select
-                fullWidth
-                value={toUnit}
-                onChange={(e) => setToUnit(e.target.value as Unit)}
-              >
-                {convert().list(measure).map((u: UnitInfo) => (
-                  <option key={u.abbr} value={u.abbr}>{u.singular} ({u.abbr})</option>
-                ))}
+              <Select fullWidth value={toUnit} onChange={(e) => setToUnit(e.target.value as Unit)}>
+                {convert()
+                  .list(measure)
+                  .map((u: UnitInfo) => (
+                    <option key={u.abbr} value={u.abbr}>
+                      {u.singular} ({u.abbr})
+                    </option>
+                  ))}
               </Select>
             </Field>
           </div>

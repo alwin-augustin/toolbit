@@ -10,7 +10,13 @@ import { useToolHistory } from '@/hooks/use-tool-history';
 import { useWorkspace } from '@/hooks/use-workspace';
 
 /** Self-contained drop target: reads a dropped file as text. */
-function DropPanel({ onText, children }: { onText: (text: string) => void; children: React.ReactNode }) {
+function DropPanel({
+  onText,
+  children,
+}: {
+  onText: (text: string) => void;
+  children: React.ReactNode;
+}) {
   const [dragging, setDragging] = useState(false);
   const counter = useRef(0);
   return (
@@ -82,11 +88,11 @@ const JsJsonMinifier: React.FC = () => {
   useEffect(() => {
     if (code) return;
     // Check for smart-paste data from AppHome
-    const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+    const smartPaste = sessionStorage.getItem('toolbit:smart-paste');
     if (smartPaste) {
-        sessionStorage.removeItem("toolbit:smart-paste");
-        setCode(smartPaste.trim());
-        return;
+      sessionStorage.removeItem('toolbit:smart-paste');
+      setCode(smartPaste.trim());
+      return;
     }
     const workspaceState = consumeWorkspaceState('js-json-minifier');
     if (workspaceState) {
@@ -130,7 +136,11 @@ const JsJsonMinifier: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setCode('function greet(name) {\n  const message = "Hello, " + name + "!";\n  return message;\n}\n')}
+                  onClick={() =>
+                    setCode(
+                      'function greet(name) {\n  const message = "Hello, " + name + "!";\n  return message;\n}\n',
+                    )
+                  }
                 >
                   Load sample
                 </Button>
@@ -155,7 +165,14 @@ const JsJsonMinifier: React.FC = () => {
           action={<CopyAction text={valid ? minifiedCode : ''} />}
         />
         {valid === false ? (
-          <div style={{ padding: '10px 12px', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'hsl(var(--danger))' }}>
+          <div
+            style={{
+              padding: '10px 12px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--text-sm)',
+              color: 'hsl(var(--danger))',
+            }}
+          >
             {minifiedCode}
           </div>
         ) : (

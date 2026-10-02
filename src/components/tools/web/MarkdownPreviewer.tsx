@@ -1,13 +1,13 @@
-import { useSessionDocumentState } from "@/v2/document-state";
-import { useDocumentField } from "@/v2/document-state";
-import { useEffect, useMemo } from "react";
-import { Button, Tabs } from "@/ds/components";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
-import { FileDropZone } from "@/components/FileDropZone";
-import { CodeEditor } from "@/v2/CodeEditor";
-import { Panel, PanelHeader, CopyAction, EditorSplit } from "@/v2/EditorPanels";
-import { useUrlState } from "@/hooks/use-url-state";
+import { useSessionDocumentState } from '@/v2/document-state';
+import { useDocumentField } from '@/v2/document-state';
+import { useEffect, useMemo } from 'react';
+import { Button, Tabs } from '@/ds/components';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+import { FileDropZone } from '@/components/FileDropZone';
+import { CodeEditor } from '@/v2/CodeEditor';
+import { Panel, PanelHeader, CopyAction, EditorSplit } from '@/v2/EditorPanels';
+import { useUrlState } from '@/hooks/use-url-state';
 
 /** Scoped typography for the rendered preview (replaces @tailwindcss/typography). */
 const previewStyles = `
@@ -70,29 +70,31 @@ const previewStyles = `
 `;
 
 export default function MarkdownPreviewer() {
-    const [markdown, setMarkdown] = useDocumentField<string>("markdown", "");
-    const [html, setHtml] = useDocumentField<string>("html", "");
-    const [showPreview, setShowPreview] = useSessionDocumentState("showPreview", true);
-    const shareState = useMemo(() => ({ markdown, showPreview }), [markdown, showPreview]);
-    useUrlState(shareState, (state) => {
-        setMarkdown(typeof state.markdown === "string" ? state.markdown : "");
-        setShowPreview(state.showPreview !== false);
-    });
+  const [markdown, setMarkdown] = useDocumentField<string>('markdown', '');
+  const [html, setHtml] = useDocumentField<string>('html', '');
+  const [showPreview, setShowPreview] = useSessionDocumentState('showPreview', true);
+  const shareState = useMemo(() => ({ markdown, showPreview }), [markdown, showPreview]);
+  useUrlState(shareState, (state) => {
+    setMarkdown(typeof state.markdown === 'string' ? state.markdown : '');
+    setShowPreview(state.showPreview !== false);
+  });
 
-    useEffect(() => {
-        const renderMarkdown = async () => {
-            try {
-                const renderedHtml = await marked(markdown);
-                setHtml(DOMPurify.sanitize(renderedHtml));
-            } catch (error) {
-                setHtml(`<p style="color:hsl(var(--danger))">Error rendering markdown: ${error instanceof Error ? error.message : 'Unknown error'}</p>`);
-            }
-        };
-        renderMarkdown();
-    }, [markdown, setHtml]);
+  useEffect(() => {
+    const renderMarkdown = async () => {
+      try {
+        const renderedHtml = await marked(markdown);
+        setHtml(DOMPurify.sanitize(renderedHtml));
+      } catch (error) {
+        setHtml(
+          `<p style="color:hsl(var(--danger))">Error rendering markdown: ${error instanceof Error ? error.message : 'Unknown error'}</p>`,
+        );
+      }
+    };
+    renderMarkdown();
+  }, [markdown, setHtml]);
 
-    const loadSample = () => {
-        setMarkdown(`# Sample Markdown
+  const loadSample = () => {
+    setMarkdown(`# Sample Markdown
 
 ## Heading 2
 
@@ -126,57 +128,57 @@ function hello() {
 
 > This is a blockquote
 > It can span multiple lines`);
-    };
+  };
 
-    return (
-        <>
-            <style>{previewStyles}</style>
-            <EditorSplit>
-                <Panel>
-                    <PanelHeader
-                        title="Markdown"
-                        action={
-                            <Button variant="ghost" size="sm" onClick={loadSample}>
-                                Load sample
-                            </Button>
-                        }
-                    />
-                    <FileDropZone
-                        onFileContent={setMarkdown}
-                        accept={[".md", ".markdown", ".txt", "text/markdown"]}
-                        className="md-dropzone"
-                    >
-                        <CodeEditor
-                            value={markdown}
-                            onChange={setMarkdown}
-                            reportStatus
-                            placeholder="# Your markdown here…"
-                        />
-                    </FileDropZone>
-                </Panel>
-                <Panel>
-                    <PanelHeader
-                        title={showPreview ? "Rendered preview" : "Raw HTML"}
-                        badge={
-                            <Tabs
-                                variant="segment"
-                                value={showPreview ? "preview" : "html"}
-                                onChange={(v) => setShowPreview(v === "preview")}
-                                items={[
-                                    { value: "preview", label: "Preview" },
-                                    { value: "html", label: "HTML" },
-                                ]}
-                            />
-                        }
-                        action={<CopyAction text={html} />}
-                    />
-                    {showPreview ? (
-                        <div className="md-preview" dangerouslySetInnerHTML={{ __html: html }} />
-                    ) : (
-                        <CodeEditor value={html} readOnly placeholder="Rendered HTML will appear here…" />
-                    )}
-                </Panel>
-            </EditorSplit>
-        </>
-    );
+  return (
+    <>
+      <style>{previewStyles}</style>
+      <EditorSplit>
+        <Panel>
+          <PanelHeader
+            title="Markdown"
+            action={
+              <Button variant="ghost" size="sm" onClick={loadSample}>
+                Load sample
+              </Button>
+            }
+          />
+          <FileDropZone
+            onFileContent={setMarkdown}
+            accept={['.md', '.markdown', '.txt', 'text/markdown']}
+            className="md-dropzone"
+          >
+            <CodeEditor
+              value={markdown}
+              onChange={setMarkdown}
+              reportStatus
+              placeholder="# Your markdown here…"
+            />
+          </FileDropZone>
+        </Panel>
+        <Panel>
+          <PanelHeader
+            title={showPreview ? 'Rendered preview' : 'Raw HTML'}
+            badge={
+              <Tabs
+                variant="segment"
+                value={showPreview ? 'preview' : 'html'}
+                onChange={(v) => setShowPreview(v === 'preview')}
+                items={[
+                  { value: 'preview', label: 'Preview' },
+                  { value: 'html', label: 'HTML' },
+                ]}
+              />
+            }
+            action={<CopyAction text={html} />}
+          />
+          {showPreview ? (
+            <div className="md-preview" dangerouslySetInnerHTML={{ __html: html }} />
+          ) : (
+            <CodeEditor value={html} readOnly placeholder="Rendered HTML will appear here…" />
+          )}
+        </Panel>
+      </EditorSplit>
+    </>
+  );
 }

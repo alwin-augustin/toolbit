@@ -1,4 +1,4 @@
-declare module "prismjs/components/*" {
-    const component: unknown;
-    export default component;
+declare module 'prismjs/components/*' {
+  const component: unknown;
+  export default component;
 }

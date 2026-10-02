@@ -4,11 +4,11 @@
    ============================================================ */
 
 :root {
-  --radius-xs: 3px;    /* kbd, tiny tags */
-  --radius-sm: 4px;    /* badges, segmented items */
-  --radius-md: 6px;    /* buttons, inputs, rows */
-  --radius-lg: 8px;    /* cards, panels */
-  --radius-xl: 12px;   /* dialogs, command palette */
-  --radius-2xl: 16px;  /* large feature cards (marketing) */
-  --radius-full: 999px;/* pills, dots */
+  --radius-xs: 3px; /* kbd, tiny tags */
+  --radius-sm: 4px; /* badges, segmented items */
+  --radius-md: 6px; /* buttons, inputs, rows */
+  --radius-lg: 8px; /* cards, panels */
+  --radius-xl: 12px; /* dialogs, command palette */
+  --radius-2xl: 16px; /* large feature cards (marketing) */
+  --radius-full: 999px; /* pills, dots */
 }

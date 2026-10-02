@@ -3,7 +3,7 @@
  * Handles generation of various hash algorithms (MD5, SHA-1, SHA-256, SHA-512)
  */
 
-import { ServiceResult } from './json.service';
+import { type ServiceResult } from './result';
 
 /**
  * Generate hash using specified algorithm
@@ -12,56 +12,56 @@ import { ServiceResult } from './json.service';
  * @returns Hash result
  */
 export const generateHash = async (
-    input: string,
-    algorithm: 'MD5' | 'SHA-1' | 'SHA-256' | 'SHA-512'
+  input: string,
+  algorithm: 'MD5' | 'SHA-1' | 'SHA-256' | 'SHA-512',
 ): Promise<ServiceResult> => {
-    try {
-        if (!input) {
-            return {
-                success: false,
-                error: 'Input cannot be empty'
-            };
-        }
-
-        // Convert algorithm name to SubtleCrypto format
-        const algoMap: Record<string, string> = {
-            'MD5': 'MD5', // Note: MD5 is not supported by SubtleCrypto, needs fallback
-            'SHA-1': 'SHA-1',
-            'SHA-256': 'SHA-256',
-            'SHA-512': 'SHA-512'
-        };
-
-        const cryptoAlgo = algoMap[algorithm];
-
-        // MD5 is not supported by Web Crypto API, we'll need a library for that
-        if (algorithm === 'MD5') {
-            return {
-                success: false,
-                error: 'MD5 requires external library implementation'
-            };
-        }
-
-        // Encode the input string
-        const encoder = new TextEncoder();
-        const data = encoder.encode(input);
-
-        // Generate hash
-        const hashBuffer = await crypto.subtle.digest(cryptoAlgo, data);
-
-        // Convert buffer to hex string
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-        return {
-            success: true,
-            data: hashHex
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : `Failed to generate ${algorithm} hash`
-        };
+  try {
+    if (!input) {
+      return {
+        success: false,
+        error: 'Input cannot be empty',
+      };
     }
+
+    // Convert algorithm name to SubtleCrypto format
+    const algoMap: Record<string, string> = {
+      MD5: 'MD5', // Note: MD5 is not supported by SubtleCrypto, needs fallback
+      'SHA-1': 'SHA-1',
+      'SHA-256': 'SHA-256',
+      'SHA-512': 'SHA-512',
+    };
+
+    const cryptoAlgo = algoMap[algorithm];
+
+    // MD5 is not supported by Web Crypto API, we'll need a library for that
+    if (algorithm === 'MD5') {
+      return {
+        success: false,
+        error: 'MD5 requires external library implementation',
+      };
+    }
+
+    // Encode the input string
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+
+    // Generate hash
+    const hashBuffer = await crypto.subtle.digest(cryptoAlgo, data);
+
+    // Convert buffer to hex string
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+
+    return {
+      success: true,
+      data: hashHex,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : `Failed to generate ${algorithm} hash`,
+    };
+  }
 };
 
 /**
@@ -70,7 +70,7 @@ export const generateHash = async (
  * @returns SHA-1 hash result
  */
 export const generateSHA1 = async (input: string): Promise<ServiceResult> => {
-    return generateHash(input, 'SHA-1');
+  return generateHash(input, 'SHA-1');
 };
 
 /**
@@ -79,7 +79,7 @@ export const generateSHA1 = async (input: string): Promise<ServiceResult> => {
  * @returns SHA-256 hash result
  */
 export const generateSHA256 = async (input: string): Promise<ServiceResult> => {
-    return generateHash(input, 'SHA-256');
+  return generateHash(input, 'SHA-256');
 };
 
 /**
@@ -88,7 +88,7 @@ export const generateSHA256 = async (input: string): Promise<ServiceResult> => {
  * @returns SHA-512 hash result
  */
 export const generateSHA512 = async (input: string): Promise<ServiceResult> => {
-    return generateHash(input, 'SHA-512');
+  return generateHash(input, 'SHA-512');
 };
 
 /**
@@ -98,14 +98,14 @@ export const generateSHA512 = async (input: string): Promise<ServiceResult> => {
  * @returns Object with all hash results
  */
 export const generateMultipleHashes = async (
-    input: string,
-    algorithms: Array<'SHA-1' | 'SHA-256' | 'SHA-512'>
+  input: string,
+  algorithms: Array<'SHA-1' | 'SHA-256' | 'SHA-512'>,
 ): Promise<Record<string, ServiceResult>> => {
-    const results: Record<string, ServiceResult> = {};
+  const results: Record<string, ServiceResult> = {};
 
-    for (const algo of algorithms) {
-        results[algo] = await generateHash(input, algo);
-    }
+  for (const algo of algorithms) {
+    results[algo] = await generateHash(input, algo);
+  }
 
-    return results;
+  return results;
 };

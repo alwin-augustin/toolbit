@@ -12,20 +12,20 @@
 /* ── Dark theme (custom, scoped to .dark) ────────────────────────────────── */
 
 /* Reset the solarized light background that leaks into dark mode */
-.dark code[class*="language-"],
-.dark pre[class*="language-"] {
+.dark code[class*='language-'],
+.dark pre[class*='language-'] {
   color: #d4d4d4;
   background: none;
   text-shadow: none;
   font-family: var(--font-mono), 'JetBrains Mono', Consolas, Monaco, 'Courier New', monospace;
 }
 
-.dark pre[class*="language-"] {
+.dark pre[class*='language-'] {
   background: transparent;
 }
 
-.dark :not(pre) > code[class*="language-"],
-.dark pre[class*="language-"] {
+.dark :not(pre) > code[class*='language-'],
+.dark pre[class*='language-'] {
   background: transparent;
 }
 

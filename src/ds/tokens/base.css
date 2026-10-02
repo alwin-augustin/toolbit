@@ -12,7 +12,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  font-feature-settings: "cv11", "ss01";
+  font-feature-settings: 'cv11', 'ss01';
 }
 
 body {
@@ -29,7 +29,12 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin: 0;
   color: hsl(var(--text-strong));
   font-weight: var(--weight-semibold);
@@ -37,11 +42,16 @@ h1, h2, h3, h4, h5, h6 {
   line-height: var(--leading-tight);
 }
 
-p { margin: 0; }
+p {
+  margin: 0;
+}
 
-code, kbd, pre, samp {
+code,
+kbd,
+pre,
+samp {
   font-family: var(--font-mono);
-  font-feature-settings: "zero", "ss01";
+  font-feature-settings: 'zero', 'ss01';
 }
 
 a {
@@ -58,14 +68,19 @@ a {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--border-strong)) transparent;
 }
-*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
 *::-webkit-scrollbar-thumb {
   background: hsl(var(--border-strong));
   border-radius: var(--radius-full);
   border: 2px solid transparent;
   background-clip: content-box;
 }
-*::-webkit-scrollbar-thumb:hover { background: hsl(var(--text-faint)); }
+*::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--text-faint));
+}
 
 /* Focus-visible ring helper */
 :where(button, a, input, textarea, select, [tabindex]):focus-visible {

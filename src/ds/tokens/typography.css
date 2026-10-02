@@ -7,8 +7,8 @@
 
 :root {
   /* font families */
-  --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-sans: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* weights */
   --weight-regular: 400;
@@ -18,12 +18,12 @@
 
   /* type scale — dense developer UI */
   --text-2xs: 0.6875rem; /* @kind other */
-  --text-xs:  0.75rem; /* @kind other */
-  --text-sm:  0.8125rem; /* @kind other */
+  --text-xs: 0.75rem; /* @kind other */
+  --text-sm: 0.8125rem; /* @kind other */
   --text-base: 0.875rem; /* @kind other */
-  --text-md:  1rem; /* @kind other */
-  --text-lg:  1.125rem; /* @kind other */
-  --text-xl:  1.375rem; /* @kind other */
+  --text-md: 1rem; /* @kind other */
+  --text-lg: 1.125rem; /* @kind other */
+  --text-xl: 1.375rem; /* @kind other */
   --text-2xl: 1.75rem; /* @kind other */
   --text-3xl: 2.25rem; /* @kind other */
   --text-4xl: 3rem; /* @kind other */
