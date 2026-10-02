@@ -8,9 +8,7 @@
   "operatingSystem": "All",
   "url": "https://toolbit.app/",
   "image": "https://toolbit.app/og-image.png",
-  "sameAs": [
-    "https://github.com/alwin-augustin/toolbit"
-  ],
+  "sameAs": ["https://github.com/alwin-augustin/toolbit"],
   "offers": {
     "@type": "Offer",
     "price": "0",

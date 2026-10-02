@@ -1,4 +1,3 @@
-/* global document, localStorage */
 // Initialize theme before app loads
 (function () {
   try {

@@ -1,16 +1,16 @@
-import { safeStorage } from "@/lib/preferences";
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { safeStorage } from '@/lib/preferences';
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
-type SidebarMode = 'expanded' | 'collapsed'
+type SidebarMode = 'expanded' | 'collapsed';
 
 interface SidebarState {
-  isOpen: boolean
-  mode: SidebarMode
-  toggle: () => void
-  close: () => void
-  setMode: (mode: SidebarMode) => void
-  toggleMode: () => void
+  isOpen: boolean;
+  mode: SidebarMode;
+  toggle: () => void;
+  close: () => void;
+  setMode: (mode: SidebarMode) => void;
+  toggleMode: () => void;
 }
 
 export const useSidebar = create<SidebarState>()(
@@ -21,13 +21,14 @@ export const useSidebar = create<SidebarState>()(
       toggle: () => set((state) => ({ isOpen: !state.isOpen })),
       close: () => set({ isOpen: false }),
       setMode: (mode: SidebarMode) => set({ mode }),
-      toggleMode: () => set((state) => ({
-        mode: state.mode === 'expanded' ? 'collapsed' : 'expanded',
-      })),
+      toggleMode: () =>
+        set((state) => ({
+          mode: state.mode === 'expanded' ? 'collapsed' : 'expanded',
+        })),
     }),
     {
       name: 'sidebar-state',
       storage: createJSONStorage(() => safeStorage),
-    }
-  )
-)
+    },
+  ),
+);

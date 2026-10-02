@@ -3,7 +3,7 @@
  * Handles timestamp, color, and unit conversions
  */
 
-import { ServiceResult } from './json.service';
+import { type ServiceResult } from './result';
 import { format, parse } from 'date-fns';
 
 /**
@@ -13,40 +13,40 @@ import { format, parse } from 'date-fns';
  * @returns Formatted date result
  */
 export const timestampToDate = (
-    timestamp: number,
-    formatString: string = 'yyyy-MM-dd HH:mm:ss'
+  timestamp: number,
+  formatString: string = 'yyyy-MM-dd HH:mm:ss',
 ): ServiceResult => {
-    try {
-        if (!timestamp) {
-            return {
-                success: false,
-                error: 'Timestamp cannot be empty'
-            };
-        }
-
-        // Auto-detect if timestamp is in seconds or milliseconds
-        const timestampMs = timestamp < 10000000000 ? timestamp * 1000 : timestamp;
-        const date = new Date(timestampMs);
-
-        if (isNaN(date.getTime())) {
-            return {
-                success: false,
-                error: 'Invalid timestamp'
-            };
-        }
-
-        const formatted = format(date, formatString);
-
-        return {
-            success: true,
-            data: formatted
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to convert timestamp'
-        };
+  try {
+    if (!timestamp) {
+      return {
+        success: false,
+        error: 'Timestamp cannot be empty',
+      };
     }
+
+    // Auto-detect if timestamp is in seconds or milliseconds
+    const timestampMs = timestamp < 10000000000 ? timestamp * 1000 : timestamp;
+    const date = new Date(timestampMs);
+
+    if (isNaN(date.getTime())) {
+      return {
+        success: false,
+        error: 'Invalid timestamp',
+      };
+    }
+
+    const formatted = format(date, formatString);
+
+    return {
+      success: true,
+      data: formatted,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to convert timestamp',
+    };
+  }
 };
 
 /**
@@ -56,38 +56,38 @@ export const timestampToDate = (
  * @returns Unix timestamp result
  */
 export const dateToTimestamp = (
-    dateString: string,
-    inputFormat: string = 'yyyy-MM-dd HH:mm:ss'
+  dateString: string,
+  inputFormat: string = 'yyyy-MM-dd HH:mm:ss',
 ): ServiceResult<number> => {
-    try {
-        if (!dateString) {
-            return {
-                success: false,
-                error: 'Date string cannot be empty'
-            };
-        }
-
-        const date = parse(dateString, inputFormat, new Date());
-
-        if (isNaN(date.getTime())) {
-            return {
-                success: false,
-                error: 'Invalid date string'
-            };
-        }
-
-        const timestamp = Math.floor(date.getTime() / 1000);
-
-        return {
-            success: true,
-            data: timestamp
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to convert date'
-        };
+  try {
+    if (!dateString) {
+      return {
+        success: false,
+        error: 'Date string cannot be empty',
+      };
     }
+
+    const date = parse(dateString, inputFormat, new Date());
+
+    if (isNaN(date.getTime())) {
+      return {
+        success: false,
+        error: 'Invalid date string',
+      };
+    }
+
+    const timestamp = Math.floor(date.getTime() / 1000);
+
+    return {
+      success: true,
+      data: timestamp,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to convert date',
+    };
+  }
 };
 
 /**
@@ -99,9 +99,9 @@ export type ColorFormat = 'hex' | 'rgb' | 'hsl';
  * Color value interface
  */
 export interface ColorValue {
-    hex: string;
-    rgb: { r: number; g: number; b: number };
-    hsl: { h: number; s: number; l: number };
+  hex: string;
+  rgb: { r: number; g: number; b: number };
+  hsl: { h: number; s: number; l: number };
 }
 
 /**
@@ -110,17 +110,17 @@ export interface ColorValue {
  * @returns RGB values
  */
 const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
-    const sanitized = hex.replace('#', '');
+  const sanitized = hex.replace('#', '');
 
-    if (sanitized.length !== 6) {
-        return null;
-    }
+  if (sanitized.length !== 6) {
+    return null;
+  }
 
-    const r = parseInt(sanitized.substring(0, 2), 16);
-    const g = parseInt(sanitized.substring(2, 4), 16);
-    const b = parseInt(sanitized.substring(4, 6), 16);
+  const r = parseInt(sanitized.substring(0, 2), 16);
+  const g = parseInt(sanitized.substring(2, 4), 16);
+  const b = parseInt(sanitized.substring(4, 6), 16);
 
-    return { r, g, b };
+  return { r, g, b };
 };
 
 /**
@@ -131,12 +131,12 @@ const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
  * @returns HEX color string
  */
 const rgbToHex = (r: number, g: number, b: number): string => {
-    const toHex = (n: number) => {
-        const hex = Math.round(n).toString(16);
-        return hex.length === 1 ? '0' + hex : hex;
-    };
+  const toHex = (n: number) => {
+    const hex = Math.round(n).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  };
 
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
 };
 
 /**
@@ -147,38 +147,38 @@ const rgbToHex = (r: number, g: number, b: number): string => {
  * @returns HSL values
  */
 const rgbToHsl = (r: number, g: number, b: number): { h: number; s: number; l: number } => {
-    r /= 255;
-    g /= 255;
-    b /= 255;
+  r /= 255;
+  g /= 255;
+  b /= 255;
 
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h = 0;
-    let s = 0;
-    const l = (max + min) / 2;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
 
-    if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
 
-        switch (max) {
-            case r:
-                h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
-                break;
-            case g:
-                h = ((b - r) / d + 2) / 6;
-                break;
-            case b:
-                h = ((r - g) / d + 4) / 6;
-                break;
-        }
+    switch (max) {
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+        break;
+      case g:
+        h = ((b - r) / d + 2) / 6;
+        break;
+      case b:
+        h = ((r - g) / d + 4) / 6;
+        break;
     }
+  }
 
-    return {
-        h: Math.round(h * 360),
-        s: Math.round(s * 100),
-        l: Math.round(l * 100)
-    };
+  return {
+    h: Math.round(h * 360),
+    s: Math.round(s * 100),
+    l: Math.round(l * 100),
+  };
 };
 
 /**
@@ -189,37 +189,37 @@ const rgbToHsl = (r: number, g: number, b: number): { h: number; s: number; l: n
  * @returns RGB values
  */
 const hslToRgb = (h: number, s: number, l: number): { r: number; g: number; b: number } => {
-    h /= 360;
-    s /= 100;
-    l /= 100;
+  h /= 360;
+  s /= 100;
+  l /= 100;
 
-    let r: number, g: number, b: number;
+  let r: number, g: number, b: number;
 
-    if (s === 0) {
-        r = g = b = l;
-    } else {
-        const hue2rgb = (p: number, q: number, t: number) => {
-            if (t < 0) t += 1;
-            if (t > 1) t -= 1;
-            if (t < 1 / 6) return p + (q - p) * 6 * t;
-            if (t < 1 / 2) return q;
-            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-            return p;
-        };
-
-        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        const p = 2 * l - q;
-
-        r = hue2rgb(p, q, h + 1 / 3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1 / 3);
-    }
-
-    return {
-        r: Math.round(r * 255),
-        g: Math.round(g * 255),
-        b: Math.round(b * 255)
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const hue2rgb = (p: number, q: number, t: number) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
     };
+
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+
+    r = hue2rgb(p, q, h + 1 / 3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1 / 3);
+  }
+
+  return {
+    r: Math.round(r * 255),
+    g: Math.round(g * 255),
+    b: Math.round(b * 255),
+  };
 };
 
 /**
@@ -229,74 +229,74 @@ const hslToRgb = (h: number, s: number, l: number): { r: number; g: number; b: n
  * @returns Color in all formats
  */
 export const convertColor = (input: string, fromFormat: ColorFormat): ServiceResult<ColorValue> => {
-    try {
-        if (!input) {
-            return {
-                success: false,
-                error: 'Input cannot be empty'
-            };
-        }
-
-        let rgb: { r: number; g: number; b: number } | null = null;
-
-        // Parse input based on format
-        if (fromFormat === 'hex') {
-            rgb = hexToRgb(input);
-            if (!rgb) {
-                return {
-                    success: false,
-                    error: 'Invalid HEX color format'
-                };
-            }
-        } else if (fromFormat === 'rgb') {
-            const match = input.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-            if (!match) {
-                return {
-                    success: false,
-                    error: 'Invalid RGB color format. Use: rgb(r, g, b)'
-                };
-            }
-            rgb = {
-                r: parseInt(match[1]),
-                g: parseInt(match[2]),
-                b: parseInt(match[3])
-            };
-        } else if (fromFormat === 'hsl') {
-            const match = input.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
-            if (!match) {
-                return {
-                    success: false,
-                    error: 'Invalid HSL color format. Use: hsl(h, s%, l%)'
-                };
-            }
-            rgb = hslToRgb(parseInt(match[1]), parseInt(match[2]), parseInt(match[3]));
-        }
-
-        if (!rgb) {
-            return {
-                success: false,
-                error: 'Failed to parse color'
-            };
-        }
-
-        // Convert to all formats
-        const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
-        const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-
-        return {
-            success: true,
-            data: {
-                hex,
-                rgb,
-                hsl
-            }
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to convert color'
-        };
+  try {
+    if (!input) {
+      return {
+        success: false,
+        error: 'Input cannot be empty',
+      };
     }
+
+    let rgb: { r: number; g: number; b: number } | null = null;
+
+    // Parse input based on format
+    if (fromFormat === 'hex') {
+      rgb = hexToRgb(input);
+      if (!rgb) {
+        return {
+          success: false,
+          error: 'Invalid HEX color format',
+        };
+      }
+    } else if (fromFormat === 'rgb') {
+      const match = input.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+      if (!match) {
+        return {
+          success: false,
+          error: 'Invalid RGB color format. Use: rgb(r, g, b)',
+        };
+      }
+      rgb = {
+        r: parseInt(match[1]),
+        g: parseInt(match[2]),
+        b: parseInt(match[3]),
+      };
+    } else if (fromFormat === 'hsl') {
+      const match = input.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+      if (!match) {
+        return {
+          success: false,
+          error: 'Invalid HSL color format. Use: hsl(h, s%, l%)',
+        };
+      }
+      rgb = hslToRgb(parseInt(match[1]), parseInt(match[2]), parseInt(match[3]));
+    }
+
+    if (!rgb) {
+      return {
+        success: false,
+        error: 'Failed to parse color',
+      };
+    }
+
+    // Convert to all formats
+    const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+    return {
+      success: true,
+      data: {
+        hex,
+        rgb,
+        hsl,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to convert color',
+    };
+  }
 };
 
 /**
@@ -304,17 +304,17 @@ export const convertColor = (input: string, fromFormat: ColorFormat): ServiceRes
  * @returns UUID string
  */
 export const generateUUID = (): ServiceResult => {
-    try {
-        const uuid = crypto.randomUUID();
+  try {
+    const uuid = crypto.randomUUID();
 
-        return {
-            success: true,
-            data: uuid
-        };
-    } catch (error) {
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to generate UUID'
-        };
-    }
+    return {
+      success: true,
+      data: uuid,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to generate UUID',
+    };
+  }
 };

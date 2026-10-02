@@ -9,24 +9,24 @@
    ============================================================ */
 
 @font-face {
-  font-family: "Geist";
-  src: url("../assets/fonts/Geist[wght].woff2") format("woff2");
+  font-family: 'Geist';
+  src: url('../assets/fonts/Geist[wght].woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "JetBrains Mono";
-  src: url("../assets/fonts/JetBrainsMono[wght].woff2") format("woff2");
+  font-family: 'JetBrains Mono';
+  src: url('../assets/fonts/JetBrainsMono[wght].woff2') format('woff2');
   font-weight: 100 800;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "JetBrains Mono";
-  src: url("../assets/fonts/JetBrainsMono-Italic[wght].woff2") format("woff2");
+  font-family: 'JetBrains Mono';
+  src: url('../assets/fonts/JetBrainsMono-Italic[wght].woff2') format('woff2');
   font-weight: 100 800;
   font-style: italic;
   font-display: swap;

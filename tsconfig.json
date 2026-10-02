@@ -1,6 +1,6 @@
 {
-  "include": ["src/**/*", "shared/**/*", "server/**/*"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
+  "include": ["src/**/*", "tests/**/*", "scripts/*.ts", "*.config.ts"],
+  "exclude": ["node_modules", "dist"],
   "compilerOptions": {
     "incremental": true,
     "target": "ES2022",
@@ -9,17 +9,15 @@
     "module": "ESNext",
     "strict": true,
     "lib": ["esnext", "dom", "dom.iterable"],
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "moduleResolution": "bundler",
-    "baseUrl": ".",
     "types": ["node", "vite/client"],
     "paths": {
-      "@/*": ["./src/*"],
-      "@shared/*": ["./shared/*"],
-      "@assets/*": ["./attached_assets/*"]
-    }
+      "@/*": ["./src/*"]
+    },
+    "verbatimModuleSyntax": true
   }
 }

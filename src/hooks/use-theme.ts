@@ -1,36 +1,36 @@
-import { safeStorage } from '@/lib/preferences'
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { safeStorage } from '@/lib/preferences';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-type Theme = 'light' | 'dark'
+type Theme = 'light' | 'dark';
 
 interface ThemeState {
-  theme: Theme
-  setTheme: (theme: Theme) => void
-  toggleTheme: () => void
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
 }
 
 const applyTheme = (theme: Theme) => {
-  const root = document.documentElement
+  const root = document.documentElement;
   if (theme === 'dark') {
-    root.classList.add('dark')
+    root.classList.add('dark');
   } else {
-    root.classList.remove('dark')
+    root.classList.remove('dark');
   }
-}
+};
 
 export const useTheme = create<ThemeState>()(
   persist(
     (set, get) => ({
       theme: 'dark',
       setTheme: (theme: Theme) => {
-        applyTheme(theme)
-        set({ theme })
+        applyTheme(theme);
+        set({ theme });
       },
       toggleTheme: () => {
-        const newTheme = get().theme === 'light' ? 'dark' : 'light'
-        applyTheme(newTheme)
-        set({ theme: newTheme })
+        const newTheme = get().theme === 'light' ? 'dark' : 'light';
+        applyTheme(newTheme);
+        set({ theme: newTheme });
       },
     }),
     {
@@ -38,26 +38,26 @@ export const useTheme = create<ThemeState>()(
       onRehydrateStorage: () => (state) => {
         // Apply theme immediately on rehydration
         if (state) {
-          applyTheme(state.theme)
+          applyTheme(state.theme);
         }
       },
-    }
-  )
-)
+    },
+  ),
+);
 
 // Initialize theme on first load
 if (typeof window !== 'undefined') {
-  const stored = safeStorage.getItem('toolbit-theme')
+  const stored = safeStorage.getItem('toolbit-theme');
   if (stored) {
     try {
-      const { state } = JSON.parse(stored)
+      const { state } = JSON.parse(stored);
       if (state?.theme) {
-        applyTheme(state.theme)
+        applyTheme(state.theme);
       }
     } catch {
-      applyTheme('dark')
+      applyTheme('dark');
     }
   } else {
-    applyTheme('dark')
+    applyTheme('dark');
   }
 }

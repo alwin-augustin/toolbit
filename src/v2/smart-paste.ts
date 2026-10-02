@@ -1,45 +1,47 @@
-import { useEffect } from "react";
-import { detectContentType } from "@/lib/smart-detect";
-import { useToolPipe } from "@/hooks/use-tool-pipe";
+import { useEffect } from 'react';
+import { detectContentType } from '@/lib/smart-detect';
+import { useToolPipe } from '@/hooks/use-tool-pipe';
 
 let pendingPaste: string | null = null;
 
 /** True when the paste landed in an editable element and should be left alone. */
 export function isEditableTarget(target: EventTarget | null): boolean {
-    if (!(target instanceof HTMLElement)) return false;
-    if (target.isContentEditable) return true;
-    const tag = target.tagName;
-    return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || !!target.closest(".cm-editor");
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  const tag = target.tagName;
+  return (
+    tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || !!target.closest('.cm-editor')
+  );
 }
 
 /** Detects the pasted content type and returns the tool to route to. */
 export function detectSmartPaste(text: string): { toolId: string; reason: string } | null {
-    const suggestions = detectContentType(text);
-    if (!suggestions.length) return null;
-    return { toolId: suggestions[0].toolId, reason: suggestions[0].reason };
+  const suggestions = detectContentType(text);
+  const detected = suggestions.find((suggestion) => suggestion.reason.startsWith('Detected '));
+  return detected ? { toolId: detected.toolId, reason: detected.reason } : null;
 }
 
 export function stashSmartPaste(text: string) {
-    pendingPaste = text;
+  pendingPaste = text;
 }
 
 export function consumeSmartPaste(): string | null {
-    const value = pendingPaste;
-    pendingPaste = null;
-    return value;
+  const value = pendingPaste;
+  pendingPaste = null;
+  return value;
 }
 
 /** Tools call this on mount to pick up content routed to them by smart paste. */
 export function useSmartPasteInput(onInput: (text: string) => void) {
-    const consumePipeData = useToolPipe((state) => state.consumePipeData);
-    useEffect(() => {
-        const value = consumeSmartPaste();
-        if (value !== null) {
-            onInput(value);
-            return;
-        }
-        const piped = consumePipeData();
-        if (piped) onInput(piped.data);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+  const consumePipeData = useToolPipe((state) => state.consumePipeData);
+  useEffect(() => {
+    const value = consumeSmartPaste();
+    if (value !== null) {
+      onInput(value);
+      return;
+    }
+    const piped = consumePipeData();
+    if (piped) onInput(piped.data);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }

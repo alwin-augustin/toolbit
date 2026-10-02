@@ -1,93 +1,93 @@
 /** Type declarations for the plain-ESM SEO content module. */
 
 export interface FaqEntry {
-    q: string;
-    a: string;
+  q: string;
+  a: string;
 }
 
 export interface ContentSection {
-    h2: string;
-    body: string;
+  h2: string;
+  body: string;
 }
 
 export interface SiteConfig {
-    url: string;
-    name: string;
-    title: string;
-    description: string;
-    shortDescription: string;
-    ogImage: string;
-    logo: string;
-    github: string;
-    locale: string;
+  url: string;
+  name: string;
+  title: string;
+  description: string;
+  shortDescription: string;
+  ogImage: string;
+  logo: string;
+  github: string;
+  locale: string;
 }
 
 export interface CategoryGroup {
-    id: string;
-    heading: string;
-    blurb: string;
+  id: string;
+  heading: string;
+  blurb: string;
 }
 
 export interface ToolPage {
-    slug: string;
-    name: string;
-    category: string;
-    title: string;
-    description: string;
-    h1: string;
-    lede: string;
-    bullets: string[];
-    howTo: string[];
-    faq: FaqEntry[];
-    keywords: string[];
-    related: string[];
+  slug: string;
+  name: string;
+  category: string;
+  title: string;
+  description: string;
+  h1: string;
+  lede: string;
+  bullets: string[];
+  howTo: string[];
+  faq: FaqEntry[];
+  keywords: string[];
+  related: string[];
 }
 
 export interface ComparisonPage {
-    slug: string;
-    title: string;
-    description: string;
-    h1: string;
-    competitor: string;
-    lede: string;
-    sections: ContentSection[];
-    faq: FaqEntry[];
+  slug: string;
+  title: string;
+  description: string;
+  h1: string;
+  competitor: string;
+  lede: string;
+  sections: ContentSection[];
+  faq: FaqEntry[];
 }
 
 export interface GuidePage {
-    slug: string;
-    title: string;
-    description: string;
-    h1: string;
-    lede: string;
-    sections: ContentSection[];
-    faq: FaqEntry[];
-    toolHighlights: string[];
+  slug: string;
+  title: string;
+  description: string;
+  h1: string;
+  lede: string;
+  sections: ContentSection[];
+  faq: FaqEntry[];
+  toolHighlights: string[];
 }
 
 export interface WhyEntry {
-    title: string;
-    body: string;
+  title: string;
+  body: string;
 }
 
 export interface BlogSection {
-    h2: string;
-    paragraphs: string[];
+  h2: string;
+  paragraphs: string[];
 }
 
 export interface BlogPost {
-    slug: string;
-    title: string;
-    description: string;
-    h1: string;
-    /** ISO date, YYYY-MM-DD. */
-    date: string;
-    readingTime: string;
-    lede: string;
-    sections: BlogSection[];
-    faq: FaqEntry[];
-    /** Tool slugs the post links out to. */
-    tools: string[];
+  slug: string;
+  title: string;
+  description: string;
+  h1: string;
+  /** ISO date, YYYY-MM-DD. */
+  date: string;
+  readingTime: string;
+  lede: string;
+  sections: BlogSection[];
+  faq: FaqEntry[];
+  /** Tool slugs the post links out to. */
+  tools: string[];
 }
 
 export declare const SITE: SiteConfig;

@@ -12,8 +12,8 @@
 
 :root {
   /* ---- Graphite neutral scale (near-hueless, ~225°/6%) ---- */
-  --gray-0:   0 0% 100%; /* @kind color */
-  --gray-50:  220 20% 98%; /* @kind color */
+  --gray-0: 0 0% 100%; /* @kind color */
+  --gray-50: 220 20% 98%; /* @kind color */
   --gray-100: 222 14% 96%; /* @kind color */
   --gray-200: 223 10% 92%; /* @kind color */
   --gray-300: 222 9% 86%; /* @kind color */
@@ -40,44 +40,44 @@
   /* =========================================================
      SEMANTIC ROLES — LIGHT THEME (secondary)
      ========================================================= */
-  --surface-0: var(--gray-0);      /* app background */
-  --surface-1: var(--gray-50);     /* raised panel */
-  --surface-2: var(--gray-100);    /* card / component rest */
-  --surface-3: var(--gray-200);    /* inset / hover */
-  --sidebar:   var(--gray-50);
-  --overlay:   228 8% 10%; /* @kind color */
+  --surface-0: var(--gray-0); /* app background */
+  --surface-1: var(--gray-50); /* raised panel */
+  --surface-2: var(--gray-100); /* card / component rest */
+  --surface-3: var(--gray-200); /* inset / hover */
+  --sidebar: var(--gray-50);
+  --overlay: 228 8% 10%; /* @kind color */
 
-  --text-strong:  228 8% 12%; /* @kind color */
-  --text-body:    226 7% 24%; /* @kind color */
-  --text-muted:   225 5% 42%; /* @kind color */
-  --text-faint:   225 5% 42%; /* @kind color */
+  --text-strong: 228 8% 12%; /* @kind color */
+  --text-body: 226 7% 24%; /* @kind color */
+  --text-muted: 225 5% 42%; /* @kind color */
+  --text-faint: 225 5% 42%; /* @kind color */
   --text-onbrand: 0 0% 100%; /* @kind color */
 
-  --border:        223 9% 88%; /* @kind color */
+  --border: 223 9% 88%; /* @kind color */
   --border-strong: 223 8% 78%; /* @kind color */
-  --border-faint:  222 10% 93%; /* @kind color */
+  --border-faint: 222 10% 93%; /* @kind color */
 
-  --primary:        var(--indigo-600);
-  --primary-hover:  var(--indigo-700);
-  --primary-soft:   226 100% 96%; /* @kind color */
-  --ring:           var(--indigo-500);
+  --primary: var(--indigo-600);
+  --primary-hover: var(--indigo-700);
+  --primary-soft: 226 100% 96%; /* @kind color */
+  --ring: var(--indigo-500);
 
   --success: 145 60% 32%; /* @kind color */
   --warning: 38 92% 42%; /* @kind color */
-  --danger:  358 68% 48%; /* @kind color */
-  --info:    var(--indigo-600);
+  --danger: 358 68% 48%; /* @kind color */
+  --info: var(--indigo-600);
 
   --success-soft: 142 45% 93%; /* @kind color */
   --warning-soft: 42 90% 92%; /* @kind color */
-  --danger-soft:  0 75% 95%; /* @kind color */
-  --info-soft:    226 100% 95%; /* @kind color */
+  --danger-soft: 0 75% 95%; /* @kind color */
+  --info-soft: 226 100% 95%; /* @kind color */
 
   /* syntax palette (JetBrains-inspired, not GitHub's) */
-  --code-key:     226 62% 46%; /* @kind color */
-  --code-string:  125 65% 27%; /* @kind color */
-  --code-number:  190 80% 30%; /* @kind color */
+  --code-key: 226 62% 46%; /* @kind color */
+  --code-string: 125 65% 27%; /* @kind color */
+  --code-number: 190 80% 30%; /* @kind color */
   --code-keyword: 20 60% 42%; /* @kind color */
-  --code-punc:    225 5% 45%; /* @kind color */
+  --code-punc: 225 5% 45%; /* @kind color */
 
   /* categorical / chart */
   --chart-1: 226 70% 55%; /* @kind color */
@@ -97,44 +97,44 @@
    SEMANTIC ROLES — DARK THEME (brand default)
    ========================================================= */
 .dark,
-[data-theme="dark"] {
-  --surface-0: var(--gray-900);    /* app background #1E1F22 */
-  --surface-1: var(--gray-850);    /* raised panel / sidebar */
-  --surface-2: var(--gray-800);    /* card / component rest  */
-  --surface-3: var(--gray-750);    /* inset / hover          */
-  --sidebar:   var(--gray-850);
-  --overlay:   230 10% 6%; /* @kind color */
+[data-theme='dark'] {
+  --surface-0: var(--gray-900); /* app background #1E1F22 */
+  --surface-1: var(--gray-850); /* raised panel / sidebar */
+  --surface-2: var(--gray-800); /* card / component rest  */
+  --surface-3: var(--gray-750); /* inset / hover          */
+  --sidebar: var(--gray-850);
+  --overlay: 230 10% 6%; /* @kind color */
 
-  --text-strong:  220 14% 96%; /* @kind color */
-  --text-body:    222 10% 86%; /* @kind color */
-  --text-muted:   224 6% 72%; /* @kind color */
-  --text-faint:   225 5% 70%; /* @kind color */
+  --text-strong: 220 14% 96%; /* @kind color */
+  --text-body: 222 10% 86%; /* @kind color */
+  --text-muted: 224 6% 72%; /* @kind color */
+  --text-faint: 225 5% 70%; /* @kind color */
   --text-onbrand: 228 8% 12%; /* @kind color */
 
-  --border:        222 6% 24%; /* @kind color */
+  --border: 222 6% 24%; /* @kind color */
   --border-strong: 223 6% 33%; /* @kind color */
-  --border-faint:  224 6% 19%; /* @kind color */
+  --border-faint: 224 6% 19%; /* @kind color */
 
-  --primary:        226 82% 72%; /* @kind color */
-  --primary-hover:  227 90% 72%; /* @kind color */
-  --primary-soft:   226 40% 22%; /* @kind color */
-  --ring:           226 82% 65%; /* @kind color */
+  --primary: 226 82% 72%; /* @kind color */
+  --primary-hover: 227 90% 72%; /* @kind color */
+  --primary-soft: 226 40% 22%; /* @kind color */
+  --ring: 226 82% 65%; /* @kind color */
 
   --success: 130 35% 56%; /* @kind color */
   --warning: 40 74% 60%; /* @kind color */
-  --danger:  2 90% 69%; /* @kind color */
-  --info:    226 82% 65%; /* @kind color */
+  --danger: 2 90% 69%; /* @kind color */
+  --info: 226 82% 65%; /* @kind color */
 
   --success-soft: 140 30% 16%; /* @kind color */
   --warning-soft: 40 45% 15%; /* @kind color */
-  --danger-soft:  0 40% 17%; /* @kind color */
-  --info-soft:    226 40% 20%; /* @kind color */
+  --danger-soft: 0 40% 17%; /* @kind color */
+  --info-soft: 226 40% 20%; /* @kind color */
 
-  --code-key:     227 100% 76%; /* @kind color */
-  --code-string:  130 32% 54%; /* @kind color */
-  --code-number:  187 63% 48%; /* @kind color */
+  --code-key: 227 100% 76%; /* @kind color */
+  --code-string: 130 32% 54%; /* @kind color */
+  --code-number: 187 63% 48%; /* @kind color */
   --code-keyword: 22 50% 64%; /* @kind color */
-  --code-punc:    224 6% 62%; /* @kind color */
+  --code-punc: 224 6% 62%; /* @kind color */
 
   --chart-1: 227 100% 76%; /* @kind color */
   --chart-2: 130 35% 58%; /* @kind color */
@@ -143,7 +143,7 @@
   --chart-5: 187 60% 55%; /* @kind color */
 
   --elevate-1: 0 0% 100% / 0.05; /* @kind color */
-  --elevate-2: 0 0% 100% / 0.10; /* @kind color */
+  --elevate-2: 0 0% 100% / 0.1; /* @kind color */
 
   color-scheme: dark;
 }

@@ -1,4 +1,4 @@
-import { useDocumentField } from "@/v2/document-state";
+import { useDocumentField } from '@/v2/document-state';
 import React, { useMemo, useState, useEffect } from 'react';
 import cssbeautify from 'cssbeautify';
 import { minify } from 'csso';
@@ -11,10 +11,11 @@ import { useUrlState } from '@/hooks/use-url-state';
 import { useToolHistory } from '@/hooks/use-tool-history';
 import { useWorkspace } from '@/hooks/use-workspace';
 
-const SAMPLE_CSS = '.container{display:flex;justify-content:center;align-items:center;gap:1rem;padding:2rem}.card{background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);padding:1.5rem}';
+const SAMPLE_CSS =
+  '.container{display:flex;justify-content:center;align-items:center;gap:1rem;padding:2rem}.card{background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);padding:1.5rem}';
 
 const CssFormatter: React.FC = () => {
-  const [css, setCss] = useDocumentField<string>("css", '');
+  const [css, setCss] = useDocumentField<string>('css', '');
   const [formattedCss, setFormattedCss] = useState('');
   const [isValid, setIsValid] = useState<boolean | null>(null);
   const shareState = useMemo(() => ({ css }), [css]);
@@ -28,11 +29,11 @@ const CssFormatter: React.FC = () => {
   useEffect(() => {
     if (css) return;
     // Check for smart-paste data from AppHome
-    const smartPaste = sessionStorage.getItem("toolbit:smart-paste");
+    const smartPaste = sessionStorage.getItem('toolbit:smart-paste');
     if (smartPaste) {
-        sessionStorage.removeItem("toolbit:smart-paste");
-        setCss(smartPaste.trim());
-        return;
+      sessionStorage.removeItem('toolbit:smart-paste');
+      setCss(smartPaste.trim());
+      return;
     }
     const workspaceState = consumeWorkspaceState('css-formatter');
     if (workspaceState) {
@@ -115,7 +116,9 @@ const CssFormatter: React.FC = () => {
       <Panel>
         <PanelHeader
           title="Output"
-          badge={<ValidityBadge valid={isValid} validLabel="valid CSS" invalidLabel="invalid CSS" />}
+          badge={
+            <ValidityBadge valid={isValid} validLabel="valid CSS" invalidLabel="invalid CSS" />
+          }
           action={<CopyAction text={isValid ? formattedCss : ''} />}
         />
         {isValid === false ? (
