@@ -68,28 +68,28 @@
       "name": "JSON Formatter",
       "short_name": "JSON",
       "description": "Format, validate, and beautify JSON",
-      "url": "/app/json-formatter",
+      "url": "/json-formatter",
       "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "JWT Decoder",
       "short_name": "JWT",
       "description": "Decode and inspect JSON Web Tokens",
-      "url": "/app/jwt-decoder",
+      "url": "/jwt-decoder",
       "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Base64 Encoder",
       "short_name": "Base64",
       "description": "Encode and decode Base64",
-      "url": "/app/base64-encoder",
+      "url": "/base64-encoder",
       "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Regex Tester",
       "short_name": "Regex",
       "description": "Test regular expressions with live matches",
-      "url": "/app/regex-tester",
+      "url": "/regex-tester",
       "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]

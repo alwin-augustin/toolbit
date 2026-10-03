@@ -1,9 +1,10 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
-import { reportError } from '@/lib/telemetry';
+import { reportError } from '@/core/telemetry';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  resetKey?: string;
 }
 
 interface State {
@@ -40,6 +41,12 @@ export class ErrorBoundary extends Component<Props, State> {
       error,
       errorInfo,
     });
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
+      this.setState({ hasError: false, error: null, errorInfo: null });
+    }
   }
 
   handleReset = () => {
@@ -84,7 +91,7 @@ export class ErrorBoundary extends Component<Props, State> {
               We're sorry, but something unexpected happened. Please try refreshing the page.
             </p>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <details className="mb-4 p-3 bg-muted rounded-md text-sm">
                 <summary className="cursor-pointer font-medium text-foreground mb-2">
                   Error Details (Development Only)

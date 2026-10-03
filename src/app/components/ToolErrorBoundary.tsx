@@ -4,9 +4,14 @@
  */
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { reportError } from '@/lib/telemetry';
-import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCw, Home } from 'lucide-react';
+import { Link } from 'wouter';
+import { reportError } from '@/core/telemetry';
+import { Button } from '@/shared/ds/components';
+import {
+  IconAlertCircle as AlertCircle,
+  IconRefresh as RefreshCw,
+  IconHome as Home,
+} from '@tabler/icons-react';
 
 interface Props {
   children: ReactNode;
@@ -46,16 +51,18 @@ export class ToolErrorBoundary extends Component<Props, State> {
     });
   }
 
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.children !== this.props.children && this.state.hasError) {
+      this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    }
+  }
+
   handleReset = () => {
     this.setState({
       hasError: false,
       error: undefined,
       errorInfo: undefined,
     });
-  };
-
-  handleGoHome = () => {
-    window.location.href = '/';
   };
 
   render() {
@@ -83,8 +90,8 @@ export class ToolErrorBoundary extends Component<Props, State> {
               </p>
             </div>
 
-            {/* Error Details */}
-            {error && (
+            {/* Error Details (dev only to avoid leaking internals) */}
+            {import.meta.env.DEV && error && (
               <div className="bg-muted rounded-lg p-4 text-left">
                 <p className="text-sm font-mono text-destructive break-words">{error.toString()}</p>
               </div>
@@ -96,10 +103,12 @@ export class ToolErrorBoundary extends Component<Props, State> {
                 <RefreshCw className="h-4 w-4" />
                 Try Again
               </Button>
-              <Button onClick={this.handleGoHome} variant="outline" className="gap-2">
-                <Home className="h-4 w-4" />
-                Go Home
-              </Button>
+              <Link href="/">
+                <Button variant="outline" className="gap-2">
+                  <Home className="h-4 w-4" />
+                  Go Home
+                </Button>
+              </Link>
             </div>
 
             {/* Help Text */}

@@ -1,26 +1,26 @@
-import { InstallApp } from './InstallApp';
+import { InstallApp } from '@/app/components/InstallApp';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
-import { detectContentType } from '@/lib/smart-detect';
+import { detectContentType } from '@/core/smart-detect';
 import {
-  FileJson,
-  Download,
-  Lock,
-  Zap,
-  Palette,
-  ArrowRight,
-  GitFork as Github,
-  ExternalLink,
-  Wand2,
-  ArrowRightLeft,
-  Microscope,
-  Hammer,
-  FileText,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import appLogoUrl from '@/ds/assets/logo-mark.svg';
-import { applySeo } from '@/seo/use-seo';
-import { TOOL_PAGES } from '@/seo/seo-content.js';
+  IconJson as FileJson,
+  IconDownload as Download,
+  IconLock as Lock,
+  IconBolt as Zap,
+  IconPalette as Palette,
+  IconArrowRight as ArrowRight,
+  IconBrandGithub as Github,
+  IconExternalLink as ExternalLink,
+  IconWand as Wand2,
+  IconArrowsLeftRight as ArrowRightLeft,
+  IconMicroscope as Microscope,
+  IconHammer as Hammer,
+  IconFileText as FileText,
+} from '@tabler/icons-react';
+import { Button } from '@/shared/ds/components';
+import appLogoUrl from '@/shared/ds/assets/logo-mark.svg';
+import { applySeo } from '@/content/seo/use-seo';
+import { TOOL_PAGES } from '@/content/seo/seo-content.js';
 
 const toolCategories = [
   {
@@ -90,7 +90,7 @@ const features = [
   },
   {
     icon: Zap,
-    title: 'Works Offline',
+    title: 'Offline-capable',
     description:
       'Install the PWA to use cached local tools offline. Network tools still need a connection.',
   },
@@ -174,7 +174,7 @@ export function LandingPage() {
                   <InstallApp />
                 </div>
                 <div className="mt-6 text-sm text-muted-foreground">
-                  No signup. Your processed data stays local. Works offline. Open source.
+                  No signup. Your processed data stays local. Offline-capable. Open source.
                 </div>
 
                 {/* Quick Access */}
@@ -195,15 +195,20 @@ export function LandingPage() {
               {/* Interactive Demo */}
               <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm shadow-xl p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <label
+                    htmlFor="landing-demo-input"
+                    className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                  >
                     Paste anything
-                  </div>
-                  <span className="text-[10px] text-muted-foreground/70">Local-only</span>
+                  </label>
+                  <span className="text-xs text-muted-foreground/70">Local-only</span>
                 </div>
                 <textarea
+                  id="landing-demo-input"
                   value={demoInput}
                   onChange={(e) => setDemoInput(e.target.value)}
                   placeholder="Paste JSON, JWT, Base64, cron, SQL, URLs..."
+                  aria-label="Paste data to find a tool"
                   className="w-full h-32 rounded-lg border border-border bg-background p-3 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary placeholder:text-muted-foreground/60"
                 />
 
