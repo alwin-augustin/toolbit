@@ -21,6 +21,7 @@ coverage/
 .vercel
 .env
 .env*
+!.env.example
 
 # Browser test outputs
 playwright-report/

@@ -1,4 +1,4 @@
-name: Validate Web and PWA
+name: Validate, Test, and Deploy
 
 on:
   push:
@@ -10,16 +10,26 @@ on:
       - main
       - master
 
-jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
 
+# A new push supersedes the previous run on the same branch — except on the
+# default branch, where an in-flight production deploy must never be cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' }}
+
+jobs:
+  validate:
+    name: Lint, typecheck, and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -27,35 +37,118 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
       - name: Run linter
         run: npm run lint
 
       - name: Run type check
         run: npm run check
 
-      - name: Run unit and component tests
-        run: npm run test:run
+      - name: Run unit and component tests with coverage gate
+        run: npm run test:coverage -- --run
 
-      - name: Install browser test runtime
-        run: npx playwright install --with-deps chromium
+  e2e:
+    name: Browser tests (${{ matrix.browser }})
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      # One failing browser must not hide the results of the others.
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright browsers with system deps
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install ${{ matrix.browser }} --with-deps
+
+      - name: Install Playwright system deps
+        # Binaries restore from cache, but system libraries live outside it.
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps ${{ matrix.browser }}
 
       - name: Build web app
-        run: npm run web:build
+        run: npm run build
 
       - name: Run production browser smoke and accessibility checks
-        run: npm run test:e2e
+        run: npx playwright test --project=${{ matrix.browser }}
+        env:
+          TOOLBIT_BLOCK_ANALYTICS: '1'
 
       - name: Upload browser failure artifacts
-        if: failure()
-        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
         with:
-          name: browser-failures
+          name: browser-failures-${{ matrix.browser }}
           path: test-results/
           retention-days: 7
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+  deploy:
+    name: Deploy to Cloudflare Pages
+    needs: e2e
+    # Production on the default branch, preview aliases on PRs. Skipped
+    # silently on forks or before CLOUDFLARE_* secrets are configured.
+    # NOTE: if the Pages project's Git integration auto-builds, disable
+    # "Automatic deployments" in the Cloudflare dashboard first — otherwise
+    # every push deploys twice (once here, once there).
+    if: >-
+      ${{ (github.event_name == 'push' || github.event_name == 'pull_request') &&
+          secrets.CLOUDFLARE_API_TOKEN != '' &&
+          secrets.CLOUDFLARE_ACCOUNT_ID != '' &&
+          vars.CLOUDFLARE_PAGES_PROJECT != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      deployments: write
+    environment:
+      name: ${{ (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && 'production' || 'preview' }}
+      url: ${{ steps.pages.outputs.deployment-url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
         with:
-          name: web-build
-          path: dist/
-          retention-days: 7
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Deploy dist/ to Cloudflare Pages
+        id: pages
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

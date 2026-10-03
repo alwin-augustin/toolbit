@@ -1,125 +1,39 @@
 # Toolbit
 
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
-[![Local‑First](https://img.shields.io/badge/local--first-yes-0ea5e9.svg)](https://toolbit.app)
-[![Privacy](https://img.shields.io/badge/privacy-local--first-22c55e.svg)](https://toolbit.app/privacy)
-[![PWA](https://img.shields.io/badge/pwa-ready-6366f1.svg)](https://toolbit.app)
+Local developer utilities in a browser workbench. [Open Toolbit](https://toolbit.app) or install it as a PWA.
 
-Local‑first developer tools for JSON, Base64, JWT, YAML, XML, SQL, and more. Toolbit runs entirely in your browser or installed PWA: processed content stays on your device and no server-side processing is required.
+JSON, Base64, JWT, YAML, SQL, hashes, text and other transforms run locally. HTTP and WebSocket tools contact the endpoints you explicitly choose. Preferences, normal history and saved workspaces stay in browser storage. Sensitive tools do not save history.
 
-**Why Toolbit**
-- 100% local processing and offline‑friendly
-- Web app with installable PWA support
-- Fast, keyboard‑first UX for daily dev workflows
-- Privacy-focused: local processing and optional minimized product analytics
+## Development
 
-## Highlights
-- Smart paste: deterministic detection of input type and jump to the right tool
-- Tool chaining: send output to the next tool and save workflows
-- History, snippets, and workspaces stored locally
-- PWA installable on desktop and mobile
+Use Node 24 LTS from `.nvmrc`, then:
 
-## Tool Categories
-- Format & Validate: JSON, YAML, XML, SQL, GraphQL, JSON Schema
-- Encode & Decode: Base64, URL, HTML, JWT, Certificates, Protobuf
-- Generate: UUID, Passwords, Hashes, Fake Data, QR Codes
-- Transform: CSV↔JSON, Case Converter, Timestamp, Color, Unit
-- Analyze: Regex, Diff, Git Diff, Cron, HTTP Status Codes
-- Build: API Request Builder, WebSocket Tester, Docker Builder
-- Text & Docs: Markdown, PDF tools, Whitespace, Word Counter
-
-## Demo
-- Web app: [toolbit.app](https://toolbit.app)
-
-## Screenshots
-![Toolbit App Home](https://toolbit.app/screenshots/app-home.png)
-![Toolbit Tool View](https://toolbit.app/screenshots/tool-view.png)
-
-## Getting Started
-
-### Prerequisites
-- Node.js 24 LTS (see `.nvmrc`)
-- npm
-
-### Install
-```bash
-git clone https://github.com/alwin-augustin/toolbit.git
-cd toolbit
-npm install
+```sh
+npm ci
+npm run dev
 ```
 
-### Web (local dev)
-```bash
-npm run web:dev
-```
-
-### Web (production build)
-```bash
-npm run web:build
-npm run preview
-```
-
-## Quality Checks
-```bash
+```sh
 npm run check
 npm run lint
-npm run test
+npm run format:check
+npm run test:run
+npm run build
+npx playwright install chromium firefox webkit
+npm run test:e2e
 ```
 
-## Privacy
-Toolbit is privacy‑first by design.
-- Local transforms do not upload payloads; HTTP and WebSocket tools contact endpoints when requested
-- No cookies
-- Optional minimized product analytics uses a pseudonymous device ID; tool inputs and outputs are excluded
-- LocalStorage and IndexedDB hold preferences, normal tool history and explicitly saved workspaces/snippets; secret tool history is disabled. Recipes contain settings only.
-
-See `/privacy` for the full policy.
+Production builds generate static search pages before creating the final offline cache. Cloudflare Pages hosts `dist/`; no backend is needed for local transforms.
 
 ## Architecture
-- React 19 + TypeScript + Vite
-- Zustand for client state
-- PWA via `vite-plugin-pwa`
 
-## SEO and prerendering
-The app is client‑rendered, so `npm run web:build` runs `vite build` and then
-`scripts/generate-seo-pages.mjs`, which prerenders the crawlable surface into
-`dist/`:
+- `src/app/` — router, workbench shell, screens, dialogs.
+- `src/features/tools/` — one folder per tool: spec, chrome wiring, tests.
+- `src/shared/` — design primitives, code editor, document state, stores.
+- `src/core/` — canonical tool contracts, policy, workers, persistence, telemetry, detection.
+- `src/content/` — tool catalog config, SEO content.
+- `src/platform/` — PWA, analytics, clipboard, storage helpers.
 
-- the app shell for every tool at `/<slug>`, with that tool described in `#root`
-- `/tools`, the tool directory
-- comparison pages under `/compare/` and long‑form guides
-- `sitemap.xml` and `robots.txt`
-- real HTML injected into `dist/index.html`'s `#root`, replaced by React on mount
+Rules: local-first transforms through the canonical contract (`core/tool-contract`) so UI, workers and recipes share semantics; settings-only recipes; explicit include-data saves; no payload in URLs, telemetry, or analytics.
 
-All of that copy lives in `src/seo/seo-content.js`, which the app imports too —
-`src/seo/use-seo.ts` uses it to set per‑route title, description, and canonical.
-Editing a tool's marketing copy means editing that one file.
-
-Tools are served from the root — `/json-formatter`, not `/app/json-formatter`.
-Each one is a real HTML file containing the full app shell, so the URL both
-reads as a page to a crawler and boots straight into the tool in a browser.
-`public/_redirects` keeps the old `/app/*` URLs alive with a 301.
-
-```bash
-npm run seo:generate     # regenerate static pages into dist/
-npm run seo:og-image     # re-render the Open Graph cards (needs Chromium)
-npm run seo:screenshots  # recapture app screenshots (needs a build first)
-```
-
-`seo:og-image` renders one 1200x630 card per page into `public/og/`, and
-`seo:screenshots` captures the images used by the PWA install prompt and this
-README. Both are committed, so a normal build never runs them — re-run when the
-branding changes or the UI moves. Both shell out to Chromium and use Pillow
-(`pip install pillow`) to palette-quantise the output if it is available.
-
-## Contributing
-Pull requests are welcome.
-- Run `npm run check` and `npm run lint`
-- Add or update tests where appropriate
-- Keep changes scoped and documented
-
-## Security
-Please report security issues via GitHub issues or email: alwinaugustin@gmail.com
-
-## License
-MIT — see `LICENSE`.
+MIT. See [LICENSE](LICENSE). Report security concerns to alwinaugustin@gmail.com.

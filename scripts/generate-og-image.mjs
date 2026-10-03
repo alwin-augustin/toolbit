@@ -15,13 +15,26 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, copyFileSync, rmSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+  copyFileSync,
+  rmSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { globSync } from 'node:fs';
 
-import { TOOL_PAGES, COMPARISON_PAGES, GUIDE_PAGES, BLOG_POSTS } from '../src/seo/seo-content.js';
+import {
+  TOOL_PAGES,
+  COMPARISON_PAGES,
+  GUIDE_PAGES,
+  BLOG_POSTS,
+} from '../src/content/seo/seo-content.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const siteOnly = process.argv.includes('--site');
@@ -33,43 +46,53 @@ const siteOnly = process.argv.includes('--site');
  * we asked for.
  */
 function findChromium() {
-    const shells = [];
-    const browsers = [];
+  const shells = [];
+  const browsers = [];
 
-    if (process.env.CHROME_PATH) browsers.unshift(process.env.CHROME_PATH);
-    if (process.env.PLAYWRIGHT_BROWSERS_PATH) {
-        const pw = process.env.PLAYWRIGHT_BROWSERS_PATH;
-        shells.push(...globSync(path.join(pw, 'chromium_headless_shell-*/chrome-linux/headless_shell')));
-        browsers.push(
-            ...globSync(path.join(pw, 'chromium-*/chrome-linux/chrome')),
-            ...globSync(path.join(pw, 'chromium-*/chrome-mac/Chromium.app/Contents/MacOS/Chromium')),
-        );
-    }
-    shells.push('/usr/bin/chrome-headless-shell');
+  if (process.env.CHROME_PATH) browsers.unshift(process.env.CHROME_PATH);
+  if (process.env.PLAYWRIGHT_BROWSERS_PATH) {
+    const pw = process.env.PLAYWRIGHT_BROWSERS_PATH;
+    shells.push(
+      ...globSync(path.join(pw, 'chromium_headless_shell-*/chrome-linux/headless_shell')),
+    );
     browsers.push(
-        '/usr/bin/chromium',
-        '/usr/bin/chromium-browser',
-        '/usr/bin/google-chrome',
-        '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+      ...globSync(path.join(pw, 'chromium-*/chrome-linux/chrome')),
+      ...globSync(path.join(pw, 'chromium-*/chrome-mac/Chromium.app/Contents/MacOS/Chromium')),
     );
+  }
+  shells.push('/usr/bin/chrome-headless-shell');
+  browsers.push(
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/google-chrome',
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  );
 
-    const shell = shells.find((candidate) => existsSync(candidate));
-    if (shell) return { binary: shell, isShell: true };
+  const shell = shells.find((candidate) => existsSync(candidate));
+  if (shell) return { binary: shell, isShell: true };
 
-    const browser = browsers.find((candidate) => candidate && existsSync(candidate));
-    if (browser) return { binary: browser, isShell: false };
+  const browser = browsers.find((candidate) => candidate && existsSync(candidate));
+  if (browser) return { binary: browser, isShell: false };
 
-    throw new Error(
-        'Could not find a Chromium binary. Set CHROME_PATH to a Chrome, Chromium, or chrome-headless-shell executable and re-run.',
-    );
+  throw new Error(
+    'Could not find a Chromium binary. Set CHROME_PATH to a Chrome, Chromium, or chrome-headless-shell executable and re-run.',
+  );
 }
 
-const fontData = readFileSync(path.join(root, 'src/ds/assets/fonts/Geist[wght].woff2')).toString('base64');
-const monoData = readFileSync(path.join(root, 'src/ds/assets/fonts/JetBrainsMono[wght].woff2')).toString('base64');
+const fontData = readFileSync(
+  path.join(root, 'src/shared/ds/assets/fonts/Geist[wght].woff2'),
+).toString('base64');
+const monoData = readFileSync(
+  path.join(root, 'src/shared/ds/assets/fonts/JetBrainsMono[wght].woff2'),
+).toString('base64');
 const logo = readFileSync(path.join(root, 'public/icon.svg')).toString('base64');
 
 const escapeHtml = (value) =>
-    String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 
 const CARD_CSS = `
   @font-face {
@@ -170,7 +193,7 @@ const CARD_CSS = `
 `;
 
 function cardHtml(bodyHtml) {
-    return `<!doctype html>
+  return `<!doctype html>
 <html><head><meta charset="utf-8"><style>${CARD_CSS}</style></head>
 <body>
   <div class="grid"></div>
@@ -197,20 +220,23 @@ ${bodyHtml}
  * survive intact.
  */
 function subtitle(text, limit = 118) {
-    const clean = text.replace(/\s+/g, ' ').replace(/\s*\|\s*Toolbit$/, '').trim();
-    if (clean.length <= limit) return clean;
+  const clean = text
+    .replace(/\s+/g, ' ')
+    .replace(/\s*\|\s*Toolbit$/, '')
+    .trim();
+  if (clean.length <= limit) return clean;
 
-    const sentences = clean.split(/(?<=\.)\s+(?=[A-Z])/);
-    let kept = '';
-    for (const sentence of sentences) {
-        const next = kept ? `${kept} ${sentence}` : sentence;
-        if (next.length > limit) break;
-        kept = next;
-    }
-    if (kept) return kept;
+  const sentences = clean.split(/(?<=\.)\s+(?=[A-Z])/);
+  let kept = '';
+  for (const sentence of sentences) {
+    const next = kept ? `${kept} ${sentence}` : sentence;
+    if (next.length > limit) break;
+    kept = next;
+  }
+  if (kept) return kept;
 
-    const cut = clean.slice(0, limit);
-    return `${cut.slice(0, cut.lastIndexOf(' '))}…`;
+  const cut = clean.slice(0, limit);
+  return `${cut.slice(0, cut.lastIndexOf(' '))}…`;
 }
 
 /**
@@ -220,144 +246,156 @@ function subtitle(text, limit = 118) {
  * Pillow is not installed, since the uncompressed card is still correct.
  */
 function quantise(file) {
-    try {
-        execFileSync(
-            'python3',
-            [
-                '-c',
-                [
-                    'import sys',
-                    'from PIL import Image',
-                    'p = sys.argv[1]',
-                    'im = Image.open(p).convert("RGB")',
-                    'q = im.quantize(colors=128, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG)',
-                    'q.save(p, optimize=True)',
-                ].join('\n'),
-                file,
-            ],
-            { stdio: 'pipe' },
-        );
-        return true;
-    } catch {
-        return false;
-    }
+  try {
+    execFileSync(
+      'python3',
+      [
+        '-c',
+        [
+          'import sys',
+          'from PIL import Image',
+          'p = sys.argv[1]',
+          'im = Image.open(p).convert("RGB")',
+          'q = im.quantize(colors=128, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG)',
+          'q.save(p, optimize=True)',
+        ].join('\n'),
+        file,
+      ],
+      { stdio: 'pipe' },
+    );
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-const siteCard = cardHtml(`    <h1 style="margin-top:38px">40+ developer tools<br><span class="accent">that never upload your data</span></h1>
+const siteCard =
+  cardHtml(`    <h1 style="margin-top:38px">40+ developer tools<br><span class="accent">that never upload your data</span></h1>
     <div class="chips">
-      ${['JSON Formatter', 'JWT Decoder', 'Base64 Encoder', 'Regex Tester', 'UUID Generator', 'SQL Formatter']
-          .map((tool) => `<span class="chip">${tool}</span>`)
-          .join('\n      ')}
+      ${[
+        'JSON Formatter',
+        'JWT Decoder',
+        'Base64 Encoder',
+        'Regex Tester',
+        'UUID Generator',
+        'SQL Formatter',
+      ]
+        .map((tool) => `<span class="chip">${tool}</span>`)
+        .join('\n      ')}
     </div>`);
 
 function contentCard({ eyebrow, heading, sub, chips = [] }) {
-    return cardHtml(`    <div class="eyebrow">${escapeHtml(eyebrow)}</div>
+  return cardHtml(`    <div class="eyebrow">${escapeHtml(eyebrow)}</div>
     <h1 class="${heading.length > 26 ? 'small' : ''}" style="margin-top:14px">${escapeHtml(heading)}</h1>
     <div class="sub">${escapeHtml(sub)}</div>${
-        chips.length
-            ? `\n    <div class="chips">${chips.map((chip) => `<span class="chip">${escapeHtml(chip)}</span>`).join('')}</div>`
-            : ''
+      chips.length
+        ? `\n    <div class="chips">${chips.map((chip) => `<span class="chip">${escapeHtml(chip)}</span>`).join('')}</div>`
+        : ''
     }`);
 }
 
 /* ------------------------------------------------------------- render loop */
 
-const cards = [{ target: path.join(root, 'public/og-image.png'), html: siteCard, label: 'og-image.png' }];
+const cards = [
+  { target: path.join(root, 'public/og-image.png'), html: siteCard, label: 'og-image.png' },
+];
 
 if (!siteOnly) {
-    const ogDir = path.join(root, 'public/og');
-    mkdirSync(ogDir, { recursive: true });
+  const ogDir = path.join(root, 'public/og');
+  mkdirSync(ogDir, { recursive: true });
 
-    for (const tool of TOOL_PAGES) {
-        cards.push({
-            target: path.join(ogDir, `${tool.slug}.png`),
-            label: `og/${tool.slug}.png`,
-            html: contentCard({
-                eyebrow: 'Developer tool',
-                heading: tool.name,
-                sub: subtitle(tool.description),
-                chips: ['Runs in your browser', 'No uploads', 'Free'],
-            }),
-        });
-    }
+  for (const tool of TOOL_PAGES) {
+    cards.push({
+      target: path.join(ogDir, `${tool.slug}.png`),
+      label: `og/${tool.slug}.png`,
+      html: contentCard({
+        eyebrow: 'Developer tool',
+        heading: tool.name,
+        sub: subtitle(tool.description),
+        chips: ['Runs in your browser', 'No uploads', 'Free'],
+      }),
+    });
+  }
 
-    for (const page of COMPARISON_PAGES) {
-        cards.push({
-            target: path.join(ogDir, `compare-${page.slug}.png`),
-            label: `og/compare-${page.slug}.png`,
-            html: contentCard({
-                eyebrow: 'Comparison',
-                heading: `Toolbit vs ${page.competitor}`,
-                sub: subtitle(page.description),
-            }),
-        });
-    }
+  for (const page of COMPARISON_PAGES) {
+    cards.push({
+      target: path.join(ogDir, `compare-${page.slug}.png`),
+      label: `og/compare-${page.slug}.png`,
+      html: contentCard({
+        eyebrow: 'Comparison',
+        heading: `Toolbit vs ${page.competitor}`,
+        sub: subtitle(page.description),
+      }),
+    });
+  }
 
-    for (const page of GUIDE_PAGES) {
-        cards.push({
-            target: path.join(ogDir, `${page.slug}.png`),
-            label: `og/${page.slug}.png`,
-            html: contentCard({
-                eyebrow: 'Guide',
-                heading: page.h1,
-                sub: subtitle(page.description),
-            }),
-        });
-    }
+  for (const page of GUIDE_PAGES) {
+    cards.push({
+      target: path.join(ogDir, `${page.slug}.png`),
+      label: `og/${page.slug}.png`,
+      html: contentCard({
+        eyebrow: 'Guide',
+        heading: page.h1,
+        sub: subtitle(page.description),
+      }),
+    });
+  }
 
-    for (const post of BLOG_POSTS) {
-        cards.push({
-            target: path.join(ogDir, `blog-${post.slug}.png`),
-            label: `og/blog-${post.slug}.png`,
-            html: contentCard({
-                eyebrow: 'Blog',
-                heading: post.h1,
-                sub: subtitle(post.description),
-            }),
-        });
-    }
+  for (const post of BLOG_POSTS) {
+    cards.push({
+      target: path.join(ogDir, `blog-${post.slug}.png`),
+      label: `og/blog-${post.slug}.png`,
+      html: contentCard({
+        eyebrow: 'Blog',
+        heading: post.h1,
+        sub: subtitle(post.description),
+      }),
+    });
+  }
 }
 
 const { binary, isShell } = findChromium();
 const work = mkdtempSync(path.join(tmpdir(), 'toolbit-og-'));
 
 try {
-    let bytes = 0;
-    let quantised = 0;
+  let bytes = 0;
+  let quantised = 0;
 
-    for (const card of cards) {
-        const page = path.join(work, 'card.html');
-        const shot = path.join(work, 'card.png');
-        writeFileSync(page, card.html);
-        rmSync(shot, { force: true });
+  for (const card of cards) {
+    const page = path.join(work, 'card.html');
+    const shot = path.join(work, 'card.png');
+    writeFileSync(page, card.html);
+    rmSync(shot, { force: true });
 
-        execFileSync(
-            binary,
-            [
-                ...(isShell ? [] : ['--headless=new']),
-                '--no-sandbox',
-                '--disable-gpu',
-                '--hide-scrollbars',
-                '--force-device-scale-factor=1',
-                '--window-size=1200,630',
-                `--screenshot=${shot}`,
-                `file://${page}`,
-            ],
-            { stdio: 'pipe' },
-        );
+    execFileSync(
+      binary,
+      [
+        ...(isShell ? [] : ['--headless=new']),
+        '--no-sandbox',
+        '--disable-gpu',
+        '--hide-scrollbars',
+        '--force-device-scale-factor=1',
+        '--window-size=1200,630',
+        `--screenshot=${shot}`,
+        `file://${page}`,
+      ],
+      { stdio: 'pipe' },
+    );
 
-        mkdirSync(path.dirname(card.target), { recursive: true });
-        copyFileSync(shot, card.target);
-        if (quantise(card.target)) quantised += 1;
-        bytes += readFileSync(card.target).length;
-    }
+    mkdirSync(path.dirname(card.target), { recursive: true });
+    copyFileSync(shot, card.target);
+    if (quantise(card.target)) quantised += 1;
+    bytes += readFileSync(card.target).length;
+  }
 
-    console.log(`Wrote ${cards.length} Open Graph card(s), ${(bytes / 1024 / 1024).toFixed(2)} MB total`);
-    if (quantised < cards.length) {
-        console.warn(
-            `  ! ${cards.length - quantised} card(s) left at full colour — install Pillow (pip install pillow) to shrink them`,
-        );
-    }
+  console.log(
+    `Wrote ${cards.length} Open Graph card(s), ${(bytes / 1024 / 1024).toFixed(2)} MB total`,
+  );
+  if (quantised < cards.length) {
+    console.warn(
+      `  ! ${cards.length - quantised} card(s) left at full colour — install Pillow (pip install pillow) to shrink them`,
+    );
+  }
 } finally {
-    rmSync(work, { recursive: true, force: true });
+  rmSync(work, { recursive: true, force: true });
 }

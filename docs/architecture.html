@@ -1,0 +1,1154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Toolbit Architecture — System Documentation</title>
+    <meta
+      name="description"
+      content="Architecture documentation for the Toolbit local-first developer workbench: layers, modules, data flows, decisions and conventions."
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0f1116;
+        --panel: #15181e;
+        --panel2: #1b1e25;
+        --border: #2b3039;
+        --ink: #f0f1f6;
+        --muted: #a6adbd;
+        --accent: #6285ff;
+        --accent-deep: #4168ff;
+        --green: #66d38c;
+        --amber: #ffc260;
+        --red: #ff8f9d;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Inter, system-ui, sans-serif;
+      }
+      .mono {
+        font-family: 'JetBrains Mono', monospace;
+      }
+      .eyebrow {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+      }
+      .diagram {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow-x: auto;
+      }
+      .diagram svg {
+        max-width: 100%;
+        height: auto;
+      }
+      .diagram pre {
+        margin: 0;
+      }
+      .vocab dt {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        color: var(--green);
+      }
+      .modtable td,
+      .modtable th {
+        border-bottom: 1px solid var(--border);
+      }
+      a {
+        color: var(--accent);
+      }
+      ::selection {
+        background: #304875;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+      @media print {
+        aside {
+          display: none;
+        }
+        body {
+          background: #fff;
+          color: #111;
+        }
+        .card,
+        .diagram {
+          border-color: #ccc;
+          background: #fff;
+        }
+      }
+    </style>
+  </head>
+  <body class="antialiased">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 py-10 flex gap-10">
+      <!-- ============ SIDE NAV ============ -->
+      <aside class="hidden lg:block w-60 shrink-0">
+        <nav class="sticky top-8 space-y-1 text-sm" aria-label="Document sections">
+          <p class="eyebrow mb-3">Contents</p>
+          <a
+            href="#at-a-glance"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="at-a-glance"
+            >At a glance</a
+          >
+          <a
+            href="#principles"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="principles"
+            >Principles</a
+          >
+          <a
+            href="#layers"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="layers"
+            >Layer map</a
+          >
+          <a
+            href="#layer-app"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="layer-app"
+            >01 · app</a
+          >
+          <a
+            href="#layer-features"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="layer-features"
+            >02 · features/tools</a
+          >
+          <a
+            href="#layer-shared"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="layer-shared"
+            >03 · shared</a
+          >
+          <a
+            href="#layer-core"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="layer-core"
+            >04 · core</a
+          >
+          <a
+            href="#layer-content-platform"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="layer-content-platform"
+            >05–06 · content &amp; platform</a
+          >
+          <a
+            href="#flows"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="flows"
+            >Data flows</a
+          >
+          <a
+            href="#routing"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="routing"
+            >Routing</a
+          >
+          <a
+            href="#pipeline"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="pipeline"
+            >Build &amp; release</a
+          >
+          <a
+            href="#glossary"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="glossary"
+            >Glossary</a
+          >
+          <a
+            href="#decisions"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="decisions"
+            >Decisions</a
+          >
+          <a
+            href="#conventions"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="conventions"
+            >Conventions</a
+          >
+          <a
+            href="#appendix"
+            class="block px-3 py-1.5 rounded-md text-[var(--muted)] hover:text-white hover:bg-white/5"
+            data-spy="appendix"
+            >Appendix</a
+          >
+        </nav>
+      </aside>
+
+      <!-- ============ MAIN ============ -->
+      <main class="min-w-0 flex-1">
+        <header class="mb-10">
+          <p class="eyebrow mb-3">Toolbit · System documentation</p>
+          <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight">
+            One codebase, one version.<br /><span class="text-[var(--muted)]"
+              >How 42 tools share a single shell.</span
+            >
+          </h1>
+          <p class="mt-4 text-[var(--muted)] max-w-2xl leading-relaxed">
+            Architecture documentation for the Toolbit local-first developer workbench: what each
+            layer owns, where the seams are, how data moves, and which decisions are load-bearing.
+            Written for maintainers and contributors.
+          </p>
+          <dl class="mt-6 flex flex-wrap gap-x-8 gap-y-2 text-sm mono">
+            <div>
+              <dt class="inline text-[var(--muted)]">version</dt>
+              <dd class="inline">2.0.0</dd>
+            </div>
+            <div>
+              <dt class="inline text-[var(--muted)]">date</dt>
+              <dd class="inline">2026-10-02</dd>
+            </div>
+            <div>
+              <dt class="inline text-[var(--muted)]">status</dt>
+              <dd class="inline text-[var(--green)]">● current</dd>
+            </div>
+            <div>
+              <dt class="inline text-[var(--muted)]">audience</dt>
+              <dd class="inline">maintainers, contributors</dd>
+            </div>
+          </dl>
+          <p class="mt-4 text-sm text-[var(--muted)] max-w-2xl">
+            <span class="text-white font-medium">How to read:</span> start with the layer map —
+            every diagram node links to its section. Module cards use one vocabulary throughout:
+            <span class="mono text-[13px]">Module</span> (a thing with an interface),
+            <span class="mono text-[13px]">Interface</span> (everything a caller must know),
+            <span class="mono text-[13px]">Seam</span> (where the interface lives),
+            <span class="mono text-[13px]">Depth</span> (behaviour per unit of interface).
+          </p>
+          <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="card p-4">
+              <p class="text-3xl font-bold mono">42</p>
+              <p class="text-sm text-[var(--muted)] mt-1">tools, one shell</p>
+            </div>
+            <div class="card p-4">
+              <p class="text-3xl font-bold mono">
+                12<span class="text-[var(--muted)] text-xl">+30</span>
+              </p>
+              <p class="text-sm text-[var(--muted)] mt-1">spec-driven + bespoke screens</p>
+            </div>
+            <div class="card p-4">
+              <p class="text-3xl font-bold mono">14</p>
+              <p class="text-sm text-[var(--muted)] mt-1">canonical transform contracts</p>
+            </div>
+            <div class="card p-4">
+              <p class="text-3xl font-bold mono">06</p>
+              <p class="text-sm text-[var(--muted)] mt-1">layers, inward dependencies</p>
+            </div>
+          </div>
+        </header>
+
+        <!-- ============ 1 AT A GLANCE ============ -->
+        <section id="at-a-glance" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Section 01 · Context</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">At a glance</h2>
+          <p class="text-[var(--muted)] leading-relaxed max-w-3xl mb-5">
+            Toolbit is a static browser workbench: no backend, no accounts. A React single-page app
+            serves 42 developer utilities inside one document workspace. Everything that can run
+            locally does; the only network traffic a tool may cause is the request the user
+            explicitly sends, plus sanitized product telemetry.
+          </p>
+          <div class="diagram p-4">
+            <pre class="mermaid text-sm">
+flowchart LR
+    Dev([Developer]) --> SPA["Toolbit SPA\nstatic · installable PWA"]
+    SPA --> Local["Local transforms\n14 canonical contracts"]
+    SPA --> Store[("Browser storage\ntabs · prefs · offline cache")]
+    SPA --> Net["Chosen endpoints\nAPI / WebSocket tools"]
+    SPA --> Tel["PostHog\nsanitized events only"]
+    click SPA "#layer-app" "Application shell"
+    click Local "#layer-core" "Canonical contracts"
+    click Store "#flows" "Persistence &amp; privacy"
+    click Net "#layer-features" "Network tools"
+    click Tel "#layer-content-platform" "Telemetry"
+</pre>
+          </div>
+          <p class="mt-3 text-sm text-[var(--muted)]">
+            Figure 1 — System context. Nodes link to their sections. The SPA never sends tool
+            content anywhere except the endpoint the user chooses.
+          </p>
+        </section>
+
+        <!-- ============ 2 PRINCIPLES ============ -->
+        <section id="principles" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Section 02 · Rules of the game</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">Principles</h2>
+          <div class="grid md:grid-cols-2 gap-3">
+            <div class="card p-5">
+              <h3 class="font-semibold mb-1">Local-first, honestly labelled</h3>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                Transforms run on the device. Network tools say so next to Send/Connect — no
+                unconditional “local-only” badge where traffic happens.
+              </p>
+            </div>
+            <div class="card p-5">
+              <h3 class="font-semibold mb-1">One canonical semantic per tool</h3>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                UI, workers and recipes share the same pure functions in
+                <span class="mono text-[13px]">core/tool-contract</span>. Same name and options,
+                same result everywhere.
+              </p>
+            </div>
+            <div class="card p-5">
+              <h3 class="font-semibold mb-1">Session-only payloads</h3>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                Tab content lives in memory. Persistence strips payloads; saves and history entries
+                are explicit, guarded acts — never side effects of typing.
+              </p>
+            </div>
+            <div class="card p-5">
+              <h3 class="font-semibold mb-1">Depth over duplication</h3>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                Behaviour concentrates behind small interfaces (one editor, one store, one contract
+                module). Callers get leverage; fixes land once, everywhere.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 3 LAYER MAP ============ -->
+        <section id="layers" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Section 03 · Containers</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">Layer map</h2>
+          <p class="text-[var(--muted)] leading-relaxed max-w-3xl mb-5">
+            Six layers under <span class="mono text-[13px]">src/</span>. The dependency rule is
+            simple: a layer may only depend on layers below it. Nothing in
+            <span class="mono text-[13px]">core/</span> imports from
+            <span class="mono text-[13px]">app/</span> or
+            <span class="mono text-[13px]">features/</span> — which is what keeps the contracts
+            reusable by workers, recipes and tests alike. Select any node to jump to its section.
+          </p>
+          <div class="diagram p-4">
+            <pre class="mermaid text-sm">flowchart LR
+    APP["01 · app<br/>shell · screens · router"] --> FEAT["02 · features/tools<br/>12 specs + 30 screens"]
+    FEAT --> SHARED["03 · shared<br/>editor · stores · design system"]
+    SHARED --> CORE["04 · core<br/>contracts · workers · telemetry"]
+    APP --> CONTENT["05 · content<br/>tool catalog · SEO"]
+    APP --> PLATFORM["06 · platform<br/>PWA · analytics bootstrap"]
+    CORE -. shares workers with .-> PLATFORM
+    click APP "#layer-app" "Layer 01"
+    click FEAT "#layer-features" "Layer 02"
+    click SHARED "#layer-shared" "Layer 03"
+    click CORE "#layer-core" "Layer 04"
+    click CONTENT "#layer-content-platform" "Layers 05–06"
+    click PLATFORM "#layer-content-platform" "Layers 05–06"
+</pre>
+          </div>
+          <p class="mt-3 text-sm text-[var(--muted)]">
+            Figure 2 — Layer containers and allowed dependencies. Dotted edge: workers execute
+            contract code off the main thread.
+          </p>
+        </section>
+        <!-- ============ 4 LAYER 01 APP ============ -->
+        <section id="layer-app" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Layer 01 · app/</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">Application shell</h2>
+          <p class="text-[var(--muted)] leading-relaxed max-w-3xl mb-5">
+            Owns composition and navigation, never transform logic.
+            <span class="mono text-[13px]">WorkspaceShell</span> renders the grid (sidebar, topbar
+            with search and document tabs, screen outlet, dialogs, toast).
+            <span class="mono text-[13px]">router.tsx</span> maps URLs to screens and guarantees
+            every tool route has a backing document; unknown slugs fall through to Start.
+          </p>
+          <div class="overflow-x-auto card mb-3">
+            <table class="modtable w-full text-sm">
+              <thead>
+                <tr class="text-left text-[var(--muted)]">
+                  <th class="p-3 font-medium">Module</th>
+                  <th class="p-3 font-medium">Interface (what callers learn)</th>
+                  <th class="p-3 font-medium">Seam / notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="p-3 mono text-[13px]">app/router.tsx</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Tool routes render a workspace; <span class="mono text-[13px]">/</span>,
+                    <span class="mono text-[13px]">/library</span>,
+                    <span class="mono text-[13px]">/saved</span>,
+                    <span class="mono text-[13px]">/history</span>,
+                    <span class="mono text-[13px]">/settings</span> render screens
+                  </td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Deep: one <span class="mono text-[13px]">ToolRoute</span> covers migrated,
+                    bespoke and routed tools
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3 mono text-[13px]">app/shell/</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Sidebar nav, ⌘K search dialog, document tabs, save dialog, toast — all keyboard
+                    reachable
+                  </td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Global keys live in the shell; screens stay dumb about chrome
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3 mono text-[13px]">app/screens/</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Start (smart paste + pins + sessions), Tools catalog, Saved, History (opt-in),
+                    Settings
+                  </td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Screens read stores; they never own documents
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3 mono text-[13px]">app/components/, app/pages/</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Error boundaries, install prompt, offline indicator, legal/marketing pages
+                  </td>
+                  <td class="p-3 text-[var(--muted)]">Kept out of the workbench render path</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ============ 5 LAYER 02 FEATURES ============ -->
+        <section id="layer-features" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Layer 02 · features/tools/</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">The 42 tools, in two shapes</h2>
+          <p class="text-[var(--muted)] leading-relaxed max-w-3xl mb-5">
+            Tools come in exactly two shapes. <strong class="text-white">Spec-driven</strong> tools
+            (12) declare actions, options and a <span class="mono text-[13px]">run()</span> over
+            canonical contracts and render in the generic
+            <span class="mono text-[13px]">WorkspaceScreen</span> — input/output panes, toolbar,
+            error banner, copy/download, “use result in…”, save.
+            <strong class="text-white">Bespoke</strong> tools (30) own a screen for layouts a
+            rectangle cannot express: multi-field results, live previews, builders, network
+            consoles.
+          </p>
+          <div class="grid md:grid-cols-2 gap-3 mb-5">
+            <div class="card p-5">
+              <p class="mono text-[13px] text-[var(--green)] mb-2">specs.ts — 12 tools</p>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                json · base64 · timestamp · url · yaml · csv→json · sql · css · graphql · js-minify
+                · html-escape · strip-whitespace. Each spec: actions, option schema (inline selects
+                vs Options popover), defaults,
+                <span class="mono text-[13px]">run(input, params, mode)</span>, accuracy notes.
+              </p>
+            </div>
+            <div class="card p-5">
+              <p class="mono text-[13px] text-[var(--green)] mb-2">custom-screens.tsx — 30 tools</p>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                A registry mapping tool id → screen (cron registers twice: parser + generator).
+                Screens reuse shell styles, <span class="mono text-[13px]">CodeEditor</span> and
+                document hooks — bespoke layout, shared seams.
+              </p>
+            </div>
+          </div>
+          <div class="card p-5 text-sm text-[var(--muted)] leading-relaxed">
+            <span class="text-white font-medium">Adding a tool?</span> If it fits input → action →
+            output, add a spec (no new screen). If it needs its own layout, add a folder
+            <span class="mono text-[13px]">features/tools/&lt;tool-id&gt;/</span> with the screen
+            plus pure helpers, register it, and cover the helpers with unit tests. Both paths reuse
+            the contract layer — never implement a transform twice.
+          </div>
+        </section>
+
+        <!-- ============ 6 LAYER 03 SHARED ============ -->
+        <section id="layer-shared" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Layer 03 · shared/</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">Shared seams</h2>
+          <p class="text-[var(--muted)] leading-relaxed max-w-3xl mb-5">
+            The small interfaces everything else stands on. Each of these passes the deletion test:
+            remove it and complexity reappears across dozens of callers.
+          </p>
+          <div class="overflow-x-auto card">
+            <table class="modtable w-full text-sm">
+              <thead>
+                <tr class="text-left text-[var(--muted)]">
+                  <th class="p-3 font-medium">Module</th>
+                  <th class="p-3 font-medium">Depth (interface → behaviour)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="p-3 mono text-[13px]">shared/CodeEditor.tsx</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    One editor behind
+                    <span class="mono text-[13px]"
+                      >value · onChange · language · wrap · readOnly · label</span
+                    >: CodeMirror 6, JSON highlighting, 100&nbsp;KB bounded previews with
+                    full-output copy, undo history, status reporting.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3 mono text-[13px]">shared/workspace-store.ts</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Zustand tabs:
+                    <span class="mono text-[13px]"
+                      >openDocument · patchDocument · closeTab · reopen</span
+                    >. The persist seam strips payloads, so tab chrome survives refresh while
+                    content stays session-only.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3 mono text-[13px]">shared/document-state.tsx</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    <span class="mono text-[13px]"
+                      >useDocumentField · useDocumentOptions · useSessionDocumentState</span
+                    >
+                    — per-document state scoped by
+                    <span class="mono text-[13px]">DocumentContext</span>, serializable-only,
+                    garbage-collected with tabs.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3 mono text-[13px]">shared/workbench{,-memory,-actions}.ts</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Doc-state helpers, ephemeral saved/runs/settings/toast, and shared open/restore
+                    navigation used by every screen.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3 mono text-[13px]">shared/ds/</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Typed design primitives + self-hosted Geist/JetBrains Mono + CSS-first tokens.
+                    The single visual language; no second component library.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ============ 7 LAYER 04 CORE ============ -->
+        <section id="layer-core" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Layer 04 · core/</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">The engine room</h2>
+          <p class="text-[var(--muted)] leading-relaxed max-w-3xl mb-5">
+            Pure, UI-free, and therefore reusable from screens, workers, recipes and tests.
+            <span class="mono text-[13px]">core/</span> imports nothing above it — that one-way seam
+            is what makes “same name, same semantics” enforceable rather than aspirational.
+          </p>
+          <div class="overflow-x-auto card mb-5">
+            <table class="modtable w-full text-sm">
+              <thead>
+                <tr class="text-left text-[var(--muted)]">
+                  <th class="p-3 font-medium">Module</th>
+                  <th class="p-3 font-medium">Depth (interface → behaviour)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="p-3 mono text-[13px]">core/tool-contract.ts</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    14 versioned <span class="mono text-[13px]">DEFINITIONS</span> (parse ·
+                    size-guard · abort-aware transform · option serialization) plus pure transforms;
+                    10&nbsp;MB input limit; unsafe-integer warnings;
+                    <span class="mono text-[13px]">compatible()</span> gates handoffs.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3 mono text-[13px]">core/execute-tool.ts + tool-worker.ts</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    One dispatcher: small inputs run inline, large inputs move to a disposable
+                    worker with timeout + abort. Callers never choose threads.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3 mono text-[13px]">core/tool-policy.ts</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    <span class="mono text-[13px]"
+                      >getToolPolicy · canPersistTool · canShareTool</span
+                    >
+                    — sensitivity (normal/personal/secret), network posture, history defaults.
+                    Central guard, not per-screen folklore.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3 mono text-[13px]">core/telemetry/</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Fail-closed allowlists: event names, enum-bounded properties, sanitized values.
+                    15 events (open, transform, copy, restore, rerun…). No payloads, tokens, URLs or
+                    content-derived identifiers — ever.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3 mono text-[13px]">core/smart-detect.ts</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Deterministic content detection returning <em>actions</em> (“Format JSON”), not
+                    destinations — with reasons, never silent rerouting.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3 mono text-[13px]">
+                    core/recipes.ts · workspace-db · history-db · workspace-schema · preferences
+                  </td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Settings-only recipes (validated, deterministic, cancellable); guarded history;
+                    explicit include-data saves; schema-migrated workspace restore.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ============ 8 LAYERS 05-06 ============ -->
+        <section id="layer-content-platform" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Layers 05–06 · content/ · platform/</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">Catalog, content and platform</h2>
+          <div class="grid md:grid-cols-2 gap-3">
+            <div class="card p-5">
+              <p class="mono text-[13px] text-[var(--green)] mb-2">content/tools.config.ts</p>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                The 42-entry catalog: id, name, description, category, path, keywords. Single source
+                for routes, search, pins and the SEO generator. No components, no logic.
+              </p>
+            </div>
+            <div class="card p-5">
+              <p class="mono text-[13px] text-[var(--green)] mb-2">content/seo/</p>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                Shared metadata + per-route descriptors feeding prerendered marketing/tool pages and
+                the sitemap.
+              </p>
+            </div>
+            <div class="card p-5">
+              <p class="mono text-[13px] text-[var(--green)] mb-2">platform/service-worker.ts</p>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                Registration side of the Workbox offline cache: app shell, tool routes and generated
+                pages work without network after first visit.
+              </p>
+            </div>
+            <div class="card p-5">
+              <p class="mono text-[13px] text-[var(--green)] mb-2">platform/posthog.ts</p>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                Analytics bootstrap only — all event rules live in
+                <span class="mono text-[13px]">core/telemetry</span>. No SDK magic, explicit
+                transport, no retry queue.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 9 FLOWS ============ -->
+        <section id="flows" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Section 04 · Dynamics</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">Data flows</h2>
+
+          <h3 class="font-semibold mt-6 mb-2">A transform, end to end</h3>
+          <div class="diagram p-4">
+            <pre class="mermaid text-sm">sequenceDiagram
+    actor User
+    participant Screen as WorkspaceScreen
+    participant Spec as Tool spec
+    participant Contract as tool-contract
+    participant Tele as telemetry
+    User->>Screen: edit input · run action
+    Screen->>Spec: run(input, params, mode)
+    Spec->>Contract: pure transform (worker if large)
+    Contract-->>Screen: output or typed error
+    alt success
+        Screen->>Tele: transform_succeeded
+    else failure
+        Screen->>Tele: transform_failed
+        Note over Screen: prior output retained<br/>copy disabled
+    end
+    User->>Screen: copy result
+    Screen->>Tele: output_copied
+</pre>
+          </div>
+          <p class="mt-3 text-sm text-[var(--muted)]">
+            Figure 3 — The only path from keystroke to result. Errors retain the previous output and
+            disable copying stale results.
+          </p>
+
+          <h3 class="font-semibold mt-8 mb-2">Document lifecycle</h3>
+          <div class="diagram p-4">
+            <pre class="mermaid text-sm">
+stateDiagram-v2
+    [*] --> Empty: open tool
+    Empty --> Dirty: edit input
+    Dirty --> Valid: run succeeds
+    Dirty --> Error: run fails
+    Error --> Dirty: edit clears error
+    Error --> Valid: run succeeds
+    Valid --> Dirty: edit marks stale
+    Valid --> Saved: save session / snippet
+    Valid --> HandedOff: use result in…
+    HandedOff --> Dirty: new document seeded
+    Saved --> [*]
+</pre>
+          </div>
+          <p class="mt-3 text-sm text-[var(--muted)]">
+            Figure 4 — Documents are ephemeral by default; only explicit saves and opt-in history
+            outlive the session.
+          </p>
+
+          <h3 class="font-semibold mt-8 mb-2">Recipes and persistence</h3>
+          <div class="diagram p-4">
+            <pre class="mermaid text-sm">flowchart LR
+    subgraph Recipe["Example recipe · decode webhook payload"]
+        R1["base64 decode"] --> R2["json format"]
+    end
+    R2 --> OUT["Formatted JSON<br/>in a new document"]
+    subgraph Persist["What survives refresh"]
+        TABS["tab chrome<br/>payloads stripped"]
+        PREF["preferences"]
+        CACHE["service-worker cache"]
+    end
+    OUT -.-> TABS
+</pre>
+          </div>
+          <p class="mt-3 text-sm text-[var(--muted)]">
+            Figure 5 — Recipes store settings, never payloads; each run executes the shared
+            contracts against fresh input. Refresh keeps tab chrome and preferences — never document
+            content.
+          </p>
+        </section>
+        <!-- ============ 10 ROUTING ============ -->
+        <section id="routing" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Section 05 · URLs</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">Routing</h2>
+          <p class="text-[var(--muted)] leading-relaxed max-w-3xl mb-5">
+            Tool URLs are stable, shareable entry points (<span class="mono text-[13px]"
+              >/json-formatter</span
+            >, not <span class="mono text-[13px]">/app/…</span>). Opening a tool route guarantees a
+            backing document: the router reuses the most recent tab or creates one. Payloads are
+            never encoded into URLs — sharing is an explicit act, not a side effect of typing.
+          </p>
+          <div class="overflow-x-auto card">
+            <table class="modtable w-full text-sm">
+              <thead>
+                <tr class="text-left text-[var(--muted)]">
+                  <th class="p-3 font-medium">Route</th>
+                  <th class="p-3 font-medium">Renders</th>
+                </tr>
+              </thead>
+              <tbody class="mono text-[13px]">
+                <tr>
+                  <td class="p-3">/</td>
+                  <td class="p-3 text-[var(--muted)]">Start — smart paste, pins, sessions</td>
+                </tr>
+                <tr>
+                  <td class="p-3">/library · /saved · /history · /settings</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Catalog · sessions/recipes/snippets · opt-in runs · preferences
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3">/&lt;tool-id&gt; × 42</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Spec workspace or bespoke screen for that tool
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3">/about · /privacy · /terms</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Marketing and legal pages (outside the shell)
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3">/app/*</td>
+                  <td class="p-3 text-[var(--muted)]">301 to the equivalent root URL</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ============ 11 PIPELINE ============ -->
+        <section id="pipeline" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Section 06 · Delivery</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">Build, test &amp; release</h2>
+          <div class="diagram p-4 mb-5">
+            <pre class="mermaid text-sm">flowchart LR
+    SRC["src/"] --> VITE["vite build<br/>dist/"]
+    VITE --> SEO["seo:generate<br/>static pages + sitemap"]
+    SEO --> PWA["pwa:generate<br/>service worker"]
+    PWA --> CF["Cloudflare Pages<br/>main branch"]
+    GATES["check · lint · format<br/>unit · audit · e2e"] -. must pass .-> VITE
+</pre>
+          </div>
+          <p class="mt-3 text-sm text-[var(--muted)] mb-5">
+            Figure 6 — Every release runs the same pipeline: type-check, lint, format, unit tests,
+            dependency audit, production build, then Chromium/Firefox/WebKit end-to-end (install,
+            offline, a11y, storage-denied, zoom). PWA update and rollback follow a rehearsed
+            procedure, never deleting browser data.
+          </p>
+          <div class="overflow-x-auto card">
+            <table class="modtable w-full text-sm mono">
+              <tbody>
+                <tr>
+                  <td class="p-3">npm run dev</td>
+                  <td class="p-3 text-[var(--muted)]">Vite dev server (Node 24 LTS per .nvmrc)</td>
+                </tr>
+                <tr>
+                  <td class="p-3">npm run check · lint · format:check</td>
+                  <td class="p-3 text-[var(--muted)]">Types · ESLint (zero warnings) · Prettier</td>
+                </tr>
+                <tr>
+                  <td class="p-3">npm run test:run</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Vitest: contract vectors, shell journeys, router wiring
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3">npm run build</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Bundles → SEO pages → offline cache, in that order
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3">npm run test:e2e</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Playwright matrix: install, offline, axe, denial, zoom
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-3">npm run benchmark</td>
+                  <td class="p-3 text-[var(--muted)]">
+                    Service measurements (same-machine comparison only)
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="mt-3 text-sm text-[var(--muted)]">
+            Stack: React 19 · TypeScript · Vite 8 · Tailwind CSS 4 · Zustand 5 · CodeMirror 6 ·
+            Workbox · wouter · Tabler icons. All dependencies current; no second UI library, no
+            server runtime.
+          </p>
+        </section>
+
+        <!-- ============ 12 GLOSSARY ============ -->
+        <section id="glossary" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Section 07 · Language</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">Glossary</h2>
+          <p class="text-[var(--muted)] leading-relaxed max-w-3xl mb-5">
+            One word, one meaning. These definitions describe the product language only —
+            deliberately free of implementation details.
+          </p>
+          <dl class="vocab grid md:grid-cols-2 gap-3">
+            <div class="card p-5">
+              <dt class="mb-1">Document</dt>
+              <dd class="text-sm text-[var(--muted)] leading-relaxed">
+                One working instance of a tool, with its own input, options and result. Several
+                documents may use the same tool.
+              </dd>
+            </div>
+            <div class="card p-5">
+              <dt class="mb-1">Session</dt>
+              <dd class="text-sm text-[var(--muted)] leading-relaxed">
+                A named collection of open documents, saved deliberately. Sessions never capture
+                data implicitly.
+              </dd>
+            </div>
+            <div class="card p-5">
+              <dt class="mb-1">Recipe</dt>
+              <dd class="text-sm text-[var(--muted)] leading-relaxed">
+                An ordered, executable transformation with fixed options. Each run supplies fresh
+                input; the recipe itself stores none.
+              </dd>
+            </div>
+            <div class="card p-5">
+              <dt class="mb-1">Snippet</dt>
+              <dd class="text-sm text-[var(--muted)] leading-relaxed">
+                A reusable piece of non-secret text, saved explicitly for reuse in future tasks.
+              </dd>
+            </div>
+            <div class="card p-5">
+              <dt class="mb-1">History run</dt>
+              <dd class="text-sm text-[var(--muted)] leading-relaxed">
+                A past execution with its original input and result. Recording is opt-in; restoring
+                opens a new document.
+              </dd>
+            </div>
+            <div class="card p-5">
+              <dt class="mb-1">Handoff (“use result in…”)</dt>
+              <dd class="text-sm text-[var(--muted)] leading-relaxed">
+                Carrying one tool’s result into another tool as new input. A one-off transfer, not a
+                saved pipeline.
+              </dd>
+            </div>
+            <div class="card p-5">
+              <dt class="mb-1">Smart paste</dt>
+              <dd class="text-sm text-[var(--muted)] leading-relaxed">
+                Deterministic detection that suggests actions (“Format JSON”) with reasons — never
+                silent rerouting, never overwriting.
+              </dd>
+            </div>
+            <div class="card p-5">
+              <dt class="mb-1">Session-only</dt>
+              <dd class="text-sm text-[var(--muted)] leading-relaxed">
+                Held in memory for the current visit. Refreshing the page ends it; nothing is
+                written to disk.
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- ============ 13 DECISIONS ============ -->
+        <section id="decisions" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Section 08 · Load-bearing choices</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">Decisions</h2>
+          <p class="text-[var(--muted)] leading-relaxed max-w-3xl mb-5">
+            Only decisions that are hard to reverse, surprising without context, and the result of a
+            real trade-off are recorded here.
+          </p>
+          <div class="space-y-3">
+            <div class="card p-5">
+              <p class="font-semibold mb-1">
+                Canonical contracts shared by UI, workers and recipes
+                <span
+                  class="mono text-[11px] px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--green)] ml-2"
+                  >keeps semantics single</span
+                >
+              </p>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                Alternative: each surface implements its own transforms (faster to write, drifts
+                immediately — e.g. a validator that formats instead of validating). Cost of
+                reversal: every recipe and worker call-site. Hence pure, versioned definitions with
+                size guards and abort support.
+              </p>
+            </div>
+            <div class="card p-5">
+              <p class="font-semibold mb-1">
+                Payloads stripped on persist; saves explicit
+                <span
+                  class="mono text-[11px] px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--green)] ml-2"
+                  >trust boundary</span
+                >
+              </p>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                Alternative: persist everything for convenience (leaks secrets into disk, history
+                and exports by default). Tab chrome restores; content never does unless the user
+                says so, per tool-policy sensitivity.
+              </p>
+            </div>
+            <div class="card p-5">
+              <p class="font-semibold mb-1">
+                No payload in URLs
+                <span
+                  class="mono text-[11px] px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--green)] ml-2"
+                  >trust boundary</span
+                >
+              </p>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                Alternative: encode state into shareable links (fragments persist in history, get
+                copied, and read as encryption to non-experts). Sharing is an explicit action with a
+                preview of what leaves the device.
+              </p>
+            </div>
+            <div class="card p-5">
+              <p class="font-semibold mb-1">
+                Terser lazy-loaded with a <span class="mono text-[13px]">global</span> shim
+                <span
+                  class="mono text-[11px] px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--amber)] ml-2"
+                  >surprising</span
+                >
+              </p>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                The JS minifier is a Node-oriented package whose dependency tree references Node’s
+                <span class="mono text-[13px]">global</span>, which crashed app boot in production.
+                It loads on demand (out of the main chunk) with
+                <span class="mono text-[13px]">global → globalThis</span> defined at build time.
+              </p>
+            </div>
+            <div class="card p-5">
+              <p class="font-semibold mb-1">
+                System-following theme with explicit override
+                <span
+                  class="mono text-[11px] px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--green)] ml-2"
+                  >preference</span
+                >
+              </p>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                Theme resolves from one seam both sides share: a plain
+                <span class="mono text-[13px]">localStorage</span> key read pre-paint by
+                <span class="mono text-[13px]">theme-init.js</span> and owned afterwards by
+                <span class="mono text-[13px]">shared/theme.ts</span>. Unset means follow the OS;
+                Settings (Light/Dark/System) and the Topbar toggle write explicit choices. Shell
+                colors resolve through <span class="mono text-[13px]">--wb-*</span> tokens with
+                light overrides — no literal colors in rules.
+              </p>
+            </div>
+            <div class="card p-5">
+              <p class="font-semibold mb-1">
+                IndexedDB for history and saved work
+                <span
+                  class="mono text-[11px] px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--green)] ml-2"
+                  >scale + guards</span
+                >
+              </p>
+              <p class="text-sm text-[var(--muted)] leading-relaxed">
+                Alternative: localStorage JSON blobs (simpler, but unbounded and unindexed).
+                IndexedDB gives bounded stores (200 entries / 20 per tool), retention pruning, and
+                central sensitivity guards at the write seam.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 14 CONVENTIONS ============ -->
+        <section id="conventions" class="mb-14 scroll-mt-8">
+          <p class="eyebrow mb-2">Section 09 · Working agreement</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">Conventions</h2>
+          <div class="grid md:grid-cols-2 gap-3 text-sm">
+            <div class="card p-5">
+              <h3 class="font-semibold mb-2">Code</h3>
+              <ul class="text-[var(--muted)] leading-relaxed space-y-1.5 list-disc pl-5">
+                <li>
+                  TypeScript strict, <span class="mono text-[13px]">import type</span> where
+                  required; Prettier 100 cols, single quotes; ESLint zero warnings.
+                </li>
+                <li>
+                  Absolute imports via <span class="mono text-[13px]">@/</span>; no relative imports
+                  leaving a folder.
+                </li>
+                <li>Pure helpers exported beside screens for unit tests; screens stay thin.</li>
+                <li>
+                  Icons: Tabler only. Styles: existing shell/design-system classes; no new CSS
+                  without a token.
+                </li>
+              </ul>
+            </div>
+            <div class="card p-5">
+              <h3 class="font-semibold mb-2">Tests</h3>
+              <ul class="text-[var(--muted)] leading-relaxed space-y-1.5 list-disc pl-5">
+                <li>
+                  Contract vectors (<span class="mono text-[13px]">workbench-tools</span>), per-tool
+                  helper suites (<span class="mono text-[13px]">workbench-custom-*</span>), shell
+                  journeys, router wiring.
+                </li>
+                <li>
+                  E2E matrix covers install, offline, axe, storage/clipboard denial, zoom, handoff.
+                </li>
+                <li>Never assert engine-specific error text (e.g. V8 vs WebKit JSON messages).</li>
+                <li>
+                  Knip before removing files; confirm reachability for runtime-loaded workers.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 15 APPENDIX ============ -->
+        <section id="appendix" class="mb-10 scroll-mt-8">
+          <p class="eyebrow mb-2">Appendix</p>
+          <h2 class="text-2xl font-bold tracking-tight mb-3">Repository map</h2>
+          <details class="card p-5 mb-3">
+            <summary class="cursor-pointer font-medium">src/ — 118 files across 6 layers</summary>
+            <pre class="mono text-[12px] leading-relaxed mt-3 text-[var(--muted)] overflow-x-auto">
+src/
+├── app/            router · shell · screens · pages · components · styles
+├── features/tools/ specs.ts · custom-screens.tsx · &lt;tool-id&gt;/ (42 tools)
+├── shared/         CodeEditor · stores · document-state · ds/ · workbench*
+├── core/           tool-contract · tool-policy · workers · telemetry · db · recipes
+├── content/        tools.config.ts (42 entries) · seo/
+├── platform/       posthog · service-worker
+├── assets/         app logo
+└── index.css       import manifest (styles → ds → shell)</pre>
+          </details>
+          <details class="card p-5 mb-3">
+            <summary class="cursor-pointer font-medium">tests/ — mirrored coverage</summary>
+            <pre class="mono text-[12px] leading-relaxed mt-3 text-[var(--muted)] overflow-x-auto">
+tests/
+├── workbench-tools.test.ts      contract vectors (design-QA cases)
+├── workbench-custom-{a..g}.test.ts  per-tool helper suites
+├── workbench-shell.test.tsx     workspace journeys (error UX, handoff)
+├── workbench-router.test.tsx    route → screen wiring
+├── contracts|persistence|seo-content|telemetry-boundary|sidebar|accessibility
+└── e2e/  workspace · install · telemetry (Chromium/Firefox/WebKit)</pre>
+          </details>
+          <div class="card p-5 text-sm text-[var(--muted)] leading-relaxed">
+            <span class="text-white font-medium">Keeping this current:</span> update this file with
+            any layer, seam, route or decision change in the same pull request. Diagrams are Mermaid
+            source in this file — edit the text, reload, done. Verify with a screenshot before
+            merging.
+          </div>
+        </section>
+
+        <footer
+          class="border-t border-[var(--border)] pt-6 pb-10 text-sm text-[var(--muted)] flex flex-wrap gap-x-8 gap-y-2 mono"
+        >
+          <span>toolbit architecture · v2.0.0 · 2026-10-02</span>
+          <span>diagrams: mermaid · style: tailwind</span>
+          <a href="#at-a-glance">back to top ↑</a>
+        </footer>
+
+        <script>
+          document.addEventListener('DOMContentLoaded', function () {
+            if (window.mermaid) {
+              mermaid.initialize({
+                startOnLoad: true,
+                theme: 'dark',
+                themeVariables: {
+                  background: '#15181e',
+                  primaryColor: '#22315c',
+                  primaryTextColor: '#ecf0ff',
+                  primaryBorderColor: '#7894ff',
+                  lineColor: '#4a5261',
+                  textColor: '#a6adbd',
+                  mainBkg: '#1b1e25',
+                  nodeBorder: '#454c5d',
+                  edgeLabelBackground: '#15181e',
+                },
+                flowchart: { curve: 'basis', htmlLabels: true },
+                sequence: { actorFontFamily: 'Inter', messageFontFamily: 'Inter' },
+              });
+            }
+            var links = Array.prototype.slice.call(document.querySelectorAll('nav [data-spy]'));
+            var map = {};
+            links.forEach(function (a) {
+              map[a.getAttribute('data-spy')] = a;
+            });
+            if ('IntersectionObserver' in window) {
+              var obs = new IntersectionObserver(
+                function (entries) {
+                  entries.forEach(function (e) {
+                    if (e.isIntersecting) {
+                      links.forEach(function (a) {
+                        a.classList.remove('bg-white/10', 'text-white');
+                      });
+                      var a = map[e.target.id];
+                      if (a) a.classList.add('bg-white/10', 'text-white');
+                    }
+                  });
+                },
+                { rootMargin: '-30% 0px -60% 0px' },
+              );
+              Object.keys(map).forEach(function (id) {
+                var s = document.getElementById(id);
+                if (s) obs.observe(s);
+              });
+            }
+          });
+        </script>
+      </main>
+    </div>
+  </body>
+</html>

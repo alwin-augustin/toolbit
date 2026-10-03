@@ -1,32 +1,23 @@
-import { describe, expect, it, vi } from "vitest"
-import { render, screen, waitFor } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
-import { CommandPalette } from "@/v2/CommandPalette"
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { SearchDialog } from '@/app/shell/SearchDialog';
+import { useWorkspace } from '@/shared/workspace-store';
 
-describe("overlay accessibility", () => {
-    it("focuses the command palette, traps tab, and restores focus on close", async () => {
-        const user = userEvent.setup()
-        const trigger = document.createElement("button")
-        trigger.textContent = "Open"
-        document.body.appendChild(trigger)
-        trigger.focus()
-        const onClose = vi.fn()
+describe('search dialog accessibility', () => {
+  it('focuses search on open and opens the first matching tool on Enter', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    render(<SearchDialog onClose={onClose} />);
 
-        const { rerender } = render(
-            <CommandPalette open onClose={onClose} onSelect={vi.fn()} />,
-        )
-        const input = await screen.findByRole("textbox", { name: "Search tools" })
-        await waitFor(() => expect(input).toHaveFocus())
+    const input = screen.getByRole('textbox', { name: 'Search tools and saved work' });
+    await waitFor(() => expect(input).toHaveFocus());
 
-        await user.tab({ shift: true })
-        expect(screen.getByText("ESC")).toBeInTheDocument()
-        expect(document.activeElement).not.toBe(input)
+    await user.type(input, 'timestamp');
+    expect(screen.getByRole('button', { name: /Timestamp Converter/ })).toBeInTheDocument();
 
-        await user.keyboard("{Escape}")
-        expect(onClose).toHaveBeenCalledTimes(1)
-        rerender(<CommandPalette open={false} onClose={onClose} onSelect={vi.fn()} />)
-        expect(trigger).toHaveFocus()
-
-        trigger.remove()
-    })
-})
+    await user.keyboard('{Enter}');
+    expect(onClose).toHaveBeenCalled();
+    expect(useWorkspace.getState().tabs.some((t) => t.toolId === 'timestamp-converter')).toBe(true);
+  });
+});
