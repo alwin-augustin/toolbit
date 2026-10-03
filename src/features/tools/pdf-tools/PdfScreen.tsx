@@ -105,7 +105,10 @@ export function PdfScreen() {
         continue;
       }
       if (incomingBytes + file.size > MAX_PDF_TOTAL_BYTES) {
-        setStatus({ tone: 'danger', message: 'Total PDF size exceeds 100 MB. Remove a file first.' });
+        setStatus({
+          tone: 'danger',
+          message: 'Total PDF size exceeds 100 MB. Remove a file first.',
+        });
         break;
       }
       try {
@@ -114,7 +117,10 @@ export function PdfScreen() {
         incoming.push({ name: file.name, data, pageCount: pdf.getPageCount(), size: file.size });
         incomingBytes += file.size;
       } catch {
-        setStatus({ tone: 'danger', message: `Failed to load ${file.name}. It may be encrypted or corrupt.` });
+        setStatus({
+          tone: 'danger',
+          message: `Failed to load ${file.name}. It may be encrypted or corrupt.`,
+        });
       }
     }
     if (incoming.length > 0) {

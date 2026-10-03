@@ -17,8 +17,7 @@ export function Topbar({ onSearch, onMenu }: { onSearch: () => void; onMenu: () 
     path !== '/' && !['/library', '/saved', '/history', '/settings'].includes(path);
 
   const toolMeta = useMemo(() => new Map(TOOLS.map((t) => [t.id, t])), []);
-  const tabTitle = (toolId: string) =>
-    specTitle(toolId, toolMeta.get(toolId)?.name ?? toolId);
+  const tabTitle = (toolId: string) => specTitle(toolId, toolMeta.get(toolId)?.name ?? toolId);
 
   const closeDoc = (id: string) => {
     const remaining = useWorkspace.getState().tabs.filter((t) => t.id !== id);
@@ -47,7 +46,10 @@ export function Topbar({ onSearch, onMenu }: { onSearch: () => void; onMenu: () 
         <button type="button" className="wb-search-trigger" onClick={onSearch}>
           <IconSearch size={25} stroke={1.7} aria-hidden="true" />
           <span>Search tools or actions...</span>
-          <kbd>{typeof navigator !== 'undefined' && navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'} K</kbd>
+          <kbd>
+            {typeof navigator !== 'undefined' && navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}{' '}
+            K
+          </kbd>
         </button>
         <button
           type="button"

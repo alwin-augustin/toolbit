@@ -140,7 +140,7 @@ const DETECTORS: Detector[] = [
       // Require delimiters with content and valid flags; reject paths and empty patterns.
       const m = /^\/(.+)\/([gimsuy]*)$/.exec(t);
       if (!m || m[1].length === 0 || t === '//') return null;
-      if (t.startsWith('/path/') || /^\/[a-z]+\//.test(t) && !/[.*+?^${}()|[\]\\]/.test(m[1]))
+      if (t.startsWith('/path/') || (/^\/[a-z]+\//.test(t) && !/[.*+?^${}()|[\]\\]/.test(m[1])))
         return null;
       try {
         new RegExp(m[1], m[2]);
@@ -280,7 +280,10 @@ export function detectContentType(text: string): SmartSuggestion[] {
   const combined = precise.length > 0 ? [...precise, ...generic.slice(0, 1)] : generic;
 
   // Enrich JWT with Base64 companion without duplicating JSON noise.
-  if (combined.some((s) => s.toolId === 'jwt-decoder') && !combined.some((s) => s.toolId === 'base64-encoder')) {
+  if (
+    combined.some((s) => s.toolId === 'jwt-decoder') &&
+    !combined.some((s) => s.toolId === 'base64-encoder')
+  ) {
     combined.push({
       toolId: 'base64-encoder',
       toolName: 'Base64 Decoder',
@@ -289,7 +292,10 @@ export function detectContentType(text: string): SmartSuggestion[] {
       priority: 50,
     });
   }
-  if (combined.some((s) => s.toolId === 'json-formatter') && !combined.some((s) => s.toolId === 'json-validator')) {
+  if (
+    combined.some((s) => s.toolId === 'json-formatter') &&
+    !combined.some((s) => s.toolId === 'json-validator')
+  ) {
     combined.push({
       toolId: 'json-validator',
       toolName: 'JSON Schema Validator',

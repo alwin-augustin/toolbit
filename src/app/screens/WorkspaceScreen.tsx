@@ -24,12 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  getSpec,
-  patchWorkbenchDoc,
-  readDoc,
-  specParams,
-} from '@/features/tools/specs';
+import { getSpec, patchWorkbenchDoc, readDoc, specParams } from '@/features/tools/specs';
 import type { WorkbenchDocState } from '@/shared/workbench';
 import type { WorkspaceTab } from '@/shared/workspace-store';
 

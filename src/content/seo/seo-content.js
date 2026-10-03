@@ -2346,8 +2346,7 @@ export const LEGAL_PAGES = [
       'Toolbit processes your content locally in your browser and uses optional pseudonymous analytics to improve the app. No account required. Read the full privacy policy.',
     updated: '2026-10-01',
     h1: 'Privacy Policy',
-    lede:
-      'The short version: Toolbit processes transformations locally in your browser. Network tools send requests only when you choose to run them. Optional product analytics collects minimized usage events; tool input and output are excluded.',
+    lede: 'The short version: Toolbit processes transformations locally in your browser. Network tools send requests only when you choose to run them. Optional product analytics collects minimized usage events; tool input and output are excluded.',
     contactEmail: 'alwinaugustin@gmail.com',
     sections: [
       {
@@ -2412,9 +2411,7 @@ export const LEGAL_PAGES = [
       },
       {
         h2: 'Contact Us',
-        paragraphs: [
-          'If you have any questions about this Privacy Policy, please contact us at:',
-        ],
+        paragraphs: ['If you have any questions about this Privacy Policy, please contact us at:'],
       },
     ],
   },
@@ -2425,8 +2422,7 @@ export const LEGAL_PAGES = [
       "The terms that apply when you use Toolbit's local-first developer tools. Free to use, no account required, provided as-is under the MIT licence.",
     updated: '2026-10-01',
     h1: 'Terms of Service',
-    lede:
-      'The short version: Toolbit is free for personal and commercial use, processes everything locally in your browser, and is provided as-is under the MIT licence.',
+    lede: 'The short version: Toolbit is free for personal and commercial use, processes everything locally in your browser, and is provided as-is under the MIT licence.',
     contactEmail: 'alwinaugustin@gmail.com',
     sections: [
       {

@@ -33,11 +33,19 @@ export const QR_SAMPLE_TEXT = 'https://example.com';
 export const MAX_QR_CONTENT = 2000;
 
 function escapeWifiField(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/:/g, '\\:');
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/:/g, '\\:');
 }
 
 function escapeVCardField(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/;/g, '\\;').replace(/,/g, '\\,');
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/\n/g, '\\n')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,');
 }
 
 export function buildWifiString(ssid: string, password: string, encryption: string): string {

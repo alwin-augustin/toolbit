@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { sanitizeMarkdownError, renderMarkdownToHtml } from '@/features/tools/markdown-previewer/MarkdownScreen';
+import {
+  sanitizeMarkdownError,
+  renderMarkdownToHtml,
+} from '@/features/tools/markdown-previewer/MarkdownScreen';
 import { buildWifiString, buildVCard } from '@/features/tools/qr-code-generator/QrScreen';
 import { base64UrlDecode, decodeJwt } from '@/features/tools/jwt-decoder/JwtScreen';
 import { findRegexMatches } from '@/features/tools/regex-tester/RegexScreen';
@@ -18,15 +21,23 @@ describe('hardening guarantees', () => {
   });
 
   it('escapes wifi and vcard delimiters', () => {
-    expect(buildWifiString('a;b:c,d\\e', 'p;ss', 'WPA')).toBe('WIFI:T:WPA;S:a\\;b\\:c\\,d\\\\e;P:p\\;ss;;');
+    expect(buildWifiString('a;b:c,d\\e', 'p;ss', 'WPA')).toBe(
+      'WIFI:T:WPA;S:a\\;b\\:c\\,d\\\\e;P:p\\;ss;;',
+    );
     expect(buildVCard('A\nB', '1;2', 'a,b')).toContain('FN:A\\nB');
   });
 
   it('decodes UTF-8 JWT claims and rejects non-objects', () => {
-    const header = btoa(JSON.stringify({ alg: 'none' })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const header = btoa(JSON.stringify({ alg: 'none' }))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
     const payloadObj = { name: 'Ada 😀' };
-    const payload = btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(payloadObj))))
-      .replace(/\+/g, '-').replace(/\//g, '_');
+    const payload = btoa(
+      String.fromCharCode(...new TextEncoder().encode(JSON.stringify(payloadObj))),
+    )
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
     // base64UrlDecode handles UTF-8 via TextDecoder.
     expect(() => base64UrlDecode('!!!')).toThrow();
     const decoded = decodeJwt(`${header}.${payload}.sig`);

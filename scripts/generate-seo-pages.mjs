@@ -405,7 +405,10 @@ function heroHtml(eyebrow, title, lede, stats) {
           ${
             stats?.length
               ? `<ul class="stats">${stats
-                  .map(([value, label]) => `<li><strong>${escapeHtml(value)}</strong>${escapeHtml(label)}</li>`)
+                  .map(
+                    ([value, label]) =>
+                      `<li><strong>${escapeHtml(value)}</strong>${escapeHtml(label)}</li>`,
+                  )
                   .join('')}</ul>`
               : ''
           }
@@ -836,8 +839,12 @@ function renderCompareHub() {
     title: 'Toolbit vs Alternatives — DevToys, CyberChef, Postman | Toolbit',
     description:
       'How Toolbit compares with DevToys, CyberChef, and Postman: offline coverage, tool breadth, privacy, and platform support. Local-first developer tools in the browser.',
-    keywords: 'toolbit vs devtoys, toolbit vs cyberchef, toolbit vs postman, offline developer tools comparison',
-    hero: { eyebrow: 'Comparisons', stats: [[`${COMPARISON_PAGES.length}`, 'in-depth comparisons']] },
+    keywords:
+      'toolbit vs devtoys, toolbit vs cyberchef, toolbit vs postman, offline developer tools comparison',
+    hero: {
+      eyebrow: 'Comparisons',
+      stats: [[`${COMPARISON_PAGES.length}`, 'in-depth comparisons']],
+    },
     heroTitle: 'Toolbit compared with the tools it replaces',
     heroLede:
       'Honest, specific comparisons against the desktop toolboxes, web utilities, and API clients developers already use — what overlaps, what differs, and which to reach for.',

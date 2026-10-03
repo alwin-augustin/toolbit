@@ -225,7 +225,9 @@ export function CronScreen() {
                     onChange={(e) => updateField(field.key, e.target.value)}
                   >
                     {!field.options.includes(fields[field.key]) && (
-                      <NativeSelectOption value={fields[field.key]}>{fields[field.key]}</NativeSelectOption>
+                      <NativeSelectOption value={fields[field.key]}>
+                        {fields[field.key]}
+                      </NativeSelectOption>
                     )}
                     {field.options.map((option) => (
                       <NativeSelectOption key={option} value={option}>

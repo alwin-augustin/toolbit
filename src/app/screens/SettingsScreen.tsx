@@ -54,7 +54,11 @@ export function SettingsScreen() {
           <strong>Theme</strong>
           <small>Follows your system appearance until you pick one. Saved on this device.</small>
         </span>
-        <ToggleGroup value={[theme]} onValueChange={(v) => setTheme((v[0] ?? "system") as Theme)} variant="outline">
+        <ToggleGroup
+          value={[theme]}
+          onValueChange={(v) => setTheme((v[0] ?? 'system') as Theme)}
+          variant="outline"
+        >
           {THEMES.map((option) => (
             <ToggleGroupItem key={option.id} value={option.id}>
               {option.label}

@@ -16,7 +16,11 @@ export interface UnifiedToolEntry {
 /** Single view over catalog, workbench specs, custom screens, and contract definitions. */
 export function getUnifiedRegistry(): UnifiedToolEntry[] {
   return TOOLS.map((t) => {
-    const kind = isWorkbenchToolId(t.id) ? 'workbench' : isCustomToolId(t.id) ? 'custom' : 'catalog';
+    const kind = isWorkbenchToolId(t.id)
+      ? 'workbench'
+      : isCustomToolId(t.id)
+        ? 'custom'
+        : 'catalog';
     return {
       id: t.id,
       name: t.name,
@@ -33,7 +37,8 @@ export function validateToolRegistry(): string[] {
   const errors: string[] = [];
   for (const entry of getUnifiedRegistry()) {
     if (entry.kind === 'workbench') continue;
-    if (!entry.component) errors.push(`Tool ${entry.id} has no component (workbench/custom/catalog).`);
+    if (!entry.component)
+      errors.push(`Tool ${entry.id} has no component (workbench/custom/catalog).`);
   }
   // Contract coverage is optional during migration but must not diverge when present.
   return errors;

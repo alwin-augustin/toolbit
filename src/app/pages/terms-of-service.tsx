@@ -50,10 +50,7 @@ export default function TermsOfService() {
               )}
               {section.h2 === 'Contact Us' && page.contactEmail && (
                 <p>
-                  <a
-                    href={`mailto:${page.contactEmail}`}
-                    className="text-primary hover:underline"
-                  >
+                  <a href={`mailto:${page.contactEmail}`} className="text-primary hover:underline">
                     {page.contactEmail}
                   </a>
                 </p>

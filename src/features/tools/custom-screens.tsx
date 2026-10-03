@@ -26,10 +26,22 @@ import { LoremScreen } from '@/features/tools/lorem-ipsum-generator/LoremScreen'
 import { ColorScreen } from '@/features/tools/color-converter/ColorScreen';
 import { UnitScreen } from '@/features/tools/unit-converter/UnitScreen';
 
-const ImageScreenLazy = lazy(() => import('@/features/tools/image-converter/ImageScreen').then((m) => ({ default: m.ImageScreen })));
-const PdfScreenLazy = lazy(() => import('@/features/tools/pdf-tools/PdfScreen').then((m) => ({ default: m.PdfScreen })));
-const ProtobufScreenLazy = lazy(() => import('@/features/tools/protobuf-decoder/ProtobufScreen').then((m) => ({ default: m.ProtobufScreen })));
-const MarkdownScreenLazy = lazy(() => import('@/features/tools/markdown-previewer/MarkdownScreen').then((m) => ({ default: m.MarkdownScreen })));
+const ImageScreenLazy = lazy(() =>
+  import('@/features/tools/image-converter/ImageScreen').then((m) => ({ default: m.ImageScreen })),
+);
+const PdfScreenLazy = lazy(() =>
+  import('@/features/tools/pdf-tools/PdfScreen').then((m) => ({ default: m.PdfScreen })),
+);
+const ProtobufScreenLazy = lazy(() =>
+  import('@/features/tools/protobuf-decoder/ProtobufScreen').then((m) => ({
+    default: m.ProtobufScreen,
+  })),
+);
+const MarkdownScreenLazy = lazy(() =>
+  import('@/features/tools/markdown-previewer/MarkdownScreen').then((m) => ({
+    default: m.MarkdownScreen,
+  })),
+);
 
 /**
  * Bespoke workbench screens for tools that don't fit the generic

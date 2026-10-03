@@ -303,7 +303,9 @@ export function XmlScreen() {
       <div className="wb-toolbar">
         <ToggleGroup
           value={[mode]}
-          onValueChange={(v) => setMode((v[0] ?? MODES[0].value) as (typeof MODES)[number]['value'])}
+          onValueChange={(v) =>
+            setMode((v[0] ?? MODES[0].value) as (typeof MODES)[number]['value'])
+          }
           variant="outline"
         >
           {MODES.map((m) => (

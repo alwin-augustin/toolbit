@@ -182,7 +182,11 @@ export function ImageScreen() {
         typeof resizeWidth === 'number' && resizeWidth > 0 ? resizeWidth : img.naturalWidth;
       const targetH =
         typeof resizeHeight === 'number' && resizeHeight > 0 ? resizeHeight : img.naturalHeight;
-      if (targetW > MAX_DIMENSION || targetH > MAX_DIMENSION || targetW * targetH > MAX_OUTPUT_PIXELS) {
+      if (
+        targetW > MAX_DIMENSION ||
+        targetH > MAX_DIMENSION ||
+        targetW * targetH > MAX_OUTPUT_PIXELS
+      ) {
         setError(
           `Output too large (max ${MAX_DIMENSION}px per side, 16M pixels). Reduce resize dimensions.`,
         );

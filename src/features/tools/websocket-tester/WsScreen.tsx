@@ -77,7 +77,9 @@ export function WsScreen() {
 
   const addMessage = (direction: WsDirection, content: string) => {
     const truncated =
-      content.length > MAX_WS_CONTENT ? `${content.slice(0, MAX_WS_CONTENT)}… (truncated)` : content;
+      content.length > MAX_WS_CONTENT
+        ? `${content.slice(0, MAX_WS_CONTENT)}… (truncated)`
+        : content;
     const message: WsMessage = {
       id: idRef.current++,
       direction,

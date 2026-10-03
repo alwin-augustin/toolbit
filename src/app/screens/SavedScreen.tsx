@@ -50,11 +50,7 @@ export function SavedScreen() {
           <span>
             <strong>{item.name}</strong>
             <small>
-              {tab === 'Examples'
-                ? item.name
-                : item.example
-                  ? 'Example'
-                  : 'Saved in this session'}
+              {tab === 'Examples' ? item.name : item.example ? 'Example' : 'Saved in this session'}
             </small>
           </span>
           <span className="wb-row-action">

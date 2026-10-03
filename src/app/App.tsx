@@ -40,83 +40,83 @@ function AppShell() {
   return (
     <ErrorBoundary resetKey={location}>
       <Switch>
-          {/* The application is the primary experience. */}
-          <Route path="/">
-            <WorkspaceShell>
-              <AppRouter />
-            </WorkspaceShell>
-          </Route>
+        {/* The application is the primary experience. */}
+        <Route path="/">
+          <WorkspaceShell>
+            <AppRouter />
+          </WorkspaceShell>
+        </Route>
 
-          {/* Workbench screens share the shell. */}
-          <Route path="/library">
-            <WorkspaceShell>
-              <AppRouter />
-            </WorkspaceShell>
-          </Route>
-          <Route path="/saved">
-            <WorkspaceShell>
-              <AppRouter />
-            </WorkspaceShell>
-          </Route>
-          <Route path="/history">
-            <WorkspaceShell>
-              <AppRouter />
-            </WorkspaceShell>
-          </Route>
-          <Route path="/settings">
-            <WorkspaceShell>
-              <AppRouter />
-            </WorkspaceShell>
-          </Route>
+        {/* Workbench screens share the shell. */}
+        <Route path="/library">
+          <WorkspaceShell>
+            <AppRouter />
+          </WorkspaceShell>
+        </Route>
+        <Route path="/saved">
+          <WorkspaceShell>
+            <AppRouter />
+          </WorkspaceShell>
+        </Route>
+        <Route path="/history">
+          <WorkspaceShell>
+            <AppRouter />
+          </WorkspaceShell>
+        </Route>
+        <Route path="/settings">
+          <WorkspaceShell>
+            <AppRouter />
+          </WorkspaceShell>
+        </Route>
 
-          {/* SEO and product context page */}
-          <Route path="/about">
-            <Suspense fallback={<LoadingFallback />}>
-              <LandingPage />
-            </Suspense>
-          </Route>
-          <Route path="/about.html">
-            <Suspense fallback={<LoadingFallback />}>
-              <LandingPage />
-            </Suspense>
-          </Route>
+        {/* SEO and product context page */}
+        <Route path="/about">
+          <Suspense fallback={<LoadingFallback />}>
+            <LandingPage />
+          </Suspense>
+        </Route>
+        <Route path="/about.html">
+          <Suspense fallback={<LoadingFallback />}>
+            <LandingPage />
+          </Suspense>
+        </Route>
 
-          {/* Legal pages */}
-          <Route path="/privacy">
-            <Suspense fallback={<LoadingFallback />}>
-              <PrivacyPolicy />
-            </Suspense>
-          </Route>
-          <Route path="/terms">
-            <Suspense fallback={<LoadingFallback />}>
-              <TermsOfService />
-            </Suspense>
-          </Route>
+        {/* Legal pages */}
+        <Route path="/privacy">
+          <Suspense fallback={<LoadingFallback />}>
+            <PrivacyPolicy />
+          </Suspense>
+        </Route>
+        <Route path="/terms">
+          <Suspense fallback={<LoadingFallback />}>
+            <TermsOfService />
+          </Suspense>
+        </Route>
 
-          {/* Tools, at the root of the site */}
-          <Route path={TOOL_PATH_PATTERN}>
-            <WorkspaceShell>
-              <AppRouter />
-            </WorkspaceShell>
-          </Route>
+        {/* Tools, at the root of the site */}
+        <Route path={TOOL_PATH_PATTERN}>
+          <WorkspaceShell>
+            <AppRouter />
+          </WorkspaceShell>
+        </Route>
 
-          {/* Legacy /app URLs. Cloudflare 301s these before the
+        {/* Legacy /app URLs. Cloudflare 301s these before the
                             SPA ever sees them; this also covers in-page navigation. */}
-          <Route path="/app">{() => <Redirect to="/" replace />}</Route>
-          <Route path="/app/:rest*">
-            {(params) => <Redirect to={`/${params['rest*'] ?? ''}`} replace />}
-          </Route>
+        <Route path="/app">{() => <Redirect to="/" replace />}</Route>
+        <Route path="/app/:rest*">
+          {(params) => <Redirect to={`/${params['rest*'] ?? ''}`} replace />}
+        </Route>
 
-          {/* Prerendered marketing pages (/tools, /compare, /blog,
+        {/* Prerendered marketing pages (/tools, /compare, /blog,
                             guides) are served as static files, so anything
                             reaching the SPA here is genuinely unknown. */}
-          <Route>
-            <Suspense fallback={<LoadingFallback />}>
-              <NotFound />
-            </Suspense>
-          </Route>
-        </Switch>
-        <OfflineIndicator />
+        <Route>
+          <Suspense fallback={<LoadingFallback />}>
+            <NotFound />
+          </Suspense>
+        </Route>
+      </Switch>
+      <OfflineIndicator />
     </ErrorBoundary>
   );
 }
