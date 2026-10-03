@@ -108,14 +108,13 @@ jobs:
   deploy:
     name: Deploy to Cloudflare Pages
     needs: e2e
-    # Production on the default branch, preview aliases on PRs. Skipped
-    # silently on forks or before CLOUDFLARE_API_TOKEN is configured.
+    # Production on the default branch, preview aliases on PRs. The
+    # CLOUDFLARE_API_TOKEN guard lives at the step level (the `secrets`
+    # context is not available in a job-level `if`).
     # NOTE: if the Pages project's Git integration auto-builds, disable
     # "Automatic deployments" in the Cloudflare dashboard first — otherwise
     # every push deploys twice (once here, once there).
-    if: >-
-      ${{ (github.event_name == 'push' || github.event_name == 'pull_request') &&
-          secrets.CLOUDFLARE_API_TOKEN != '' }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -145,6 +144,7 @@ jobs:
 
       - name: Deploy dist/ to Cloudflare Pages
         id: pages
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
