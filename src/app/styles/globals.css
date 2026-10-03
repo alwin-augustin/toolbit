@@ -413,3 +413,65 @@
     inset: -1px;
   }
 }
+
+/* ============================================================
+   Code editor tokens (consolidated from the retired DS system).
+   CodeMirror syntax palette + mono font + dense type scale.
+   ============================================================ */
+@font-face {
+  font-family: 'Geist';
+  src: url('../../shared/ds/assets/fonts/Geist[wght].woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('../../shared/ds/assets/fonts/JetBrainsMono[wght].woff2') format('woff2');
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('../../shared/ds/assets/fonts/JetBrainsMono-Italic[wght].woff2') format('woff2');
+  font-weight: 100 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 3rem;
+  --text-5xl: 3.75rem;
+  --text-strong: 228 8% 12%;
+  --text-body: 226 7% 24%;
+  --text-muted: 225 5% 42%;
+  --text-faint: 225 5% 42%;
+  --code-key: 226 62% 46%;
+  --code-string: 125 65% 27%;
+  --code-number: 190 80% 30%;
+  --code-keyword: 20 60% 42%;
+  --code-punc: 225 5% 45%;
+}
+
+.dark {
+  --text-strong: 220 14% 96%;
+  --text-body: 222 10% 86%;
+  --text-muted: 224 6% 72%;
+  --text-faint: 225 5% 70%;
+  --code-key: 227 100% 76%;
+  --code-string: 130 32% 54%;
+  --code-number: 187 63% 48%;
+  --code-keyword: 22 50% 64%;
+  --code-punc: 224 6% 62%;
+}

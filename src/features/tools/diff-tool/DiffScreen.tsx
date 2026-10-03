@@ -4,6 +4,8 @@ import * as Diff from 'diff';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export type DiffLineType = 'added' | 'removed' | 'unchanged';
 
@@ -225,14 +227,14 @@ export function DiffScreen() {
         </button>
         <label className="wb-indent-label">
           Mode:
-          <select
+          <NativeSelect
             aria-label="Diff mode"
             value={viewMode}
             onChange={(e) => setViewMode(e.target.value as DiffViewMode)}
           >
-            <option value="unified">Unified</option>
-            <option value="side-by-side">Side-by-side</option>
-          </select>
+            <NativeSelectOption value="unified">Unified</NativeSelectOption>
+            <NativeSelectOption value="side-by-side">Side-by-side</NativeSelectOption>
+          </NativeSelect>
         </label>
       </div>
 
@@ -241,11 +243,10 @@ export function DiffScreen() {
           <strong>Ignore whitespace</strong>
           <small>Collapse runs of spaces and tabs before comparing.</small>
         </span>
-        <input
-          type="checkbox"
+        <Checkbox
           aria-label="Ignore whitespace"
           checked={ignoreWhitespace}
-          onChange={(e) => setIgnoreWhitespace(e.target.checked)}
+          onCheckedChange={(checked) => setIgnoreWhitespace(Boolean(checked))}
         />
       </div>
       {oversized ? (

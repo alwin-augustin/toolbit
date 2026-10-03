@@ -5,8 +5,8 @@ describe('live analytics boundary', () => {
     vi.stubEnv('VITE_POSTHOG_HOST', 'https://example.invalid');
     const sender = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal('fetch', sender);
-    const { track, EVENT_NAMES, posthog } = await import('@/lib/telemetry');
-    const { usePreferences } = await import('@/lib/preferences');
+    const { track, EVENT_NAMES, posthog } = await import('@/core/telemetry');
+    const { usePreferences } = await import('@/core/preferences');
     const secret = 'CANARY_DO_NOT_TRANSMIT';
     for (const event of EVENT_NAMES)
       posthog.capture(event, {

@@ -11,6 +11,8 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -338,17 +340,17 @@ export function ApiScreen() {
           <strong>Method</strong>
           <small>HTTP verb sent to the endpoint</small>
         </span>
-        <select
+        <NativeSelect
           aria-label="HTTP method"
           value={method}
           onChange={(e) => setMethod(e.target.value as HttpMethod)}
         >
           {API_METHODS.map((entry) => (
-            <option key={entry} value={entry}>
+            <NativeSelectOption key={entry} value={entry}>
               {entry}
-            </option>
+            </NativeSelectOption>
           ))}
-        </select>
+        </NativeSelect>
       </div>
       <div className="wb-setting-row">
         <span>
@@ -411,11 +413,10 @@ export function ApiScreen() {
       </div>
       {headers.map((header, index) => (
         <div className="wb-list-row" key={`header-${index}`}>
-          <input
-            type="checkbox"
+          <Checkbox
             aria-label={`Enable header ${index + 1}`}
             checked={header.enabled}
-            onChange={(e) => toggleHeader(index, e.target.checked)}
+            onCheckedChange={(checked) => toggleHeader(index, Boolean(checked))}
           />
           <span>
             <strong>Header {index + 1}</strong>

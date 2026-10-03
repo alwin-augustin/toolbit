@@ -1,17 +1,16 @@
 import { useEffect } from 'react';
 import { Link } from 'wouter';
-import { ArrowLeft, Shield } from 'lucide-react';
+import { IconArrowLeft as ArrowLeft, IconShield as Shield } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
-import { applySeo } from '@/seo/use-seo';
+import { applySeo } from '@/content/seo/use-seo';
+import { getLegalPage } from '@/content/seo/seo-content.js';
+import { formatLegalDate, renderInlineLinks } from '@/app/pages/legal-document';
+
+const page = getLegalPage('privacy')!;
 
 export default function PrivacyPolicy() {
   useEffect(() => {
-    applySeo({
-      title: 'Privacy Policy — Toolbit',
-      description:
-        'Toolbit processes your content locally in your browser and uses optional pseudonymous analytics to improve the app. No account required. Read the full privacy policy.',
-      canonicalPath: '/privacy',
-    });
+    applySeo({ title: page.title, description: page.description, canonicalPath: '/privacy' });
   }, []);
 
   return (
@@ -26,126 +25,41 @@ export default function PrivacyPolicy() {
 
         <div className="flex items-center gap-3 mb-8">
           <Shield className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Privacy Policy</h1>
+          <h1 className="text-3xl font-bold">{page.h1}</h1>
         </div>
 
         <div className="prose dark:prose-invert max-w-none space-y-6 text-muted-foreground">
-          <p className="text-sm">Last updated: October 1, 2026</p>
+          <p className="text-sm">Last updated: {formatLegalDate(page.updated)}</p>
 
-          <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Overview</h2>
-            <p>
-              Toolbit ("we", "our", or "us") is committed to protecting your privacy. This Privacy
-              Policy explains how we handle information when you use our developer utilities
-              application.
-            </p>
-            <p className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-foreground">
-              <strong>The short version:</strong> Toolbit processes transformations locally in your
-              browser. Network tools send requests only when you choose to run them. Optional
-              product analytics collects minimized usage events; tool input and output are excluded.
-            </p>
-          </section>
+          <p className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-foreground">
+            <strong>The short version:</strong> {page.lede.replace(/^The short version:\s*/, '')}
+          </p>
 
-          <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Data Processing</h2>
-            <p>
-              All tools in Toolbit (JSON formatter, Base64 encoder, hash generator, etc.) process
-              data entirely within your browser using JavaScript. This means:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>
-                Local transformations do not upload input. HTTP and WebSocket tools contact the
-                endpoints you select.
-              </li>
-              <li>Toolbit has no accounts or cloud workspace storage.</li>
-              <li>Processing happens instantly on your device</li>
-              <li>Cached local tools work offline. Network tools require connectivity.</li>
-            </ul>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Local Storage</h2>
-            <p>
-              Toolbit uses your browser's local storage and IndexedDB to save preferences and
-              convenience data:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>
-                <strong>Theme preference:</strong> Whether you prefer light or dark mode
-              </li>
-              <li>
-                <strong>Sidebar state:</strong> Whether the sidebar is open or closed
-              </li>
-              <li>
-                <strong>Favorites and recents:</strong> Your pinned tools and recent activity
-              </li>
-              <li>
-                <strong>History, workspaces, snippets:</strong> Normal tool history and explicitly
-                saved documents; secret tools are excluded by default.
-              </li>
-            </ul>
-            <p>
-              This data is stored only on your device and is never transmitted anywhere. You can
-              clear this data through the Privacy and storage settings or browser settings. History
-              retention defaults to 30 days; applying retention removes expired entries only when
-              you request it. Workspace payloads require an explicit Include data choice. Recipe
-              files contain settings only.
-            </p>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Cookies</h2>
-            <p>Toolbit does not use cookies.</p>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Third-Party Services</h2>
-            <p>Toolbit uses the following external resources:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>
-                <strong>Cloudflare Pages:</strong> The web application is hosted on Cloudflare
-                Pages, which may collect standard web server logs.
-              </li>
-            </ul>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Analytics</h2>
-            <p>
-              Toolbit uses PostHog to measure pseudonymous product usage, diagnose errors, and
-              improve the application. When enabled and configured, we collect a random device
-              identifier, known route/tool identifiers, bounded counts, and error codes. You can
-              disable analytics before collection using Privacy and storage; this also removes the
-              stored device identity. We do not send the text, files, tokens, snippets, or other
-              content you process with Toolbit.
-            </p>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Children's Privacy</h2>
-            <p>
-              Toolbit is a general-purpose developer tool and does not knowingly collect any
-              personal information from anyone, including children under 13 years of age.
-            </p>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Changes to This Policy</h2>
-            <p>
-              We may update this Privacy Policy from time to time. We will notify you of any changes
-              by posting the new Privacy Policy on this page and updating the "Last updated" date.
-            </p>
-          </section>
-
-          <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground">Contact Us</h2>
-            <p>
-              If you have any questions about this Privacy Policy, please contact us at:{' '}
-              <a href="mailto:alwinaugustin@gmail.com" className="text-primary hover:underline">
-                alwinaugustin@gmail.com
-              </a>
-            </p>
-          </section>
+          {page.sections.map((section) => (
+            <section key={section.h2} className="space-y-4">
+              <h2 className="text-xl font-semibold text-foreground">{section.h2}</h2>
+              {section.paragraphs.map((paragraph, index) => (
+                <p key={index}>{renderInlineLinks(paragraph)}</p>
+              ))}
+              {section.bullets && (
+                <ul className="list-disc pl-6 space-y-2">
+                  {section.bullets.map((bullet) => (
+                    <li key={bullet}>{renderInlineLinks(bullet)}</li>
+                  ))}
+                </ul>
+              )}
+              {section.h2 === 'Contact Us' && page.contactEmail && (
+                <p>
+                  <a
+                    href={`mailto:${page.contactEmail}`}
+                    className="text-primary hover:underline"
+                  >
+                    {page.contactEmail}
+                  </a>
+                </p>
+              )}
+            </section>
+          ))}
         </div>
       </div>
     </div>

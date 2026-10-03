@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { TOOLS } from '@/config/tools.config';
+import { TOOLS } from '@/content/tools.config';
 import {
   SITE,
   TOOL_PAGES,
@@ -8,10 +8,12 @@ import {
   COMPARISON_PAGES,
   GUIDE_PAGES,
   BLOG_POSTS,
+  LEGAL_PAGES,
   POPULAR_TOOL_SLUGS,
   getToolPage,
-} from '@/seo/seo-content.js';
-import { seoForLocation } from '@/seo/use-seo';
+  getLegalPage,
+} from '@/content/seo/seo-content.js';
+import { seoForLocation } from '@/content/seo/use-seo';
 
 const slugs = new Set(TOOL_PAGES.map((tool) => tool.slug));
 
@@ -135,5 +137,22 @@ describe('seoForLocation', () => {
   it('falls back to the site defaults for unknown routes', () => {
     expect(seoForLocation('/not-a-tool').canonicalPath).toBe('/');
     expect(seoForLocation('/').title).toBe(SITE.title);
+  });
+});
+
+describe('legal pages', () => {
+  it('covers privacy and terms exactly once with valid metadata', () => {
+    expect(LEGAL_PAGES.map((page) => page.slug).sort()).toEqual(['privacy', 'terms']);
+    for (const page of LEGAL_PAGES) {
+      expect(getLegalPage(page.slug)?.title).toBe(page.title);
+      expect(page.title.length).toBeLessThanOrEqual(70);
+      expect(page.description.length).toBeGreaterThanOrEqual(70);
+      expect(page.updated).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(page.sections.length).toBeGreaterThanOrEqual(5);
+      for (const section of page.sections) {
+        expect(section.h2).toBeTruthy();
+        expect(section.paragraphs.length).toBeGreaterThan(0);
+      }
+    }
   });
 });

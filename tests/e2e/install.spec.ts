@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('install action handles native prompt and browser instructions', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/about');
   const install = page.getByRole('button', { name: 'Install as PWA', exact: true });
   await install.click();
   await expect(page.getByRole('status').filter({ hasText: 'Add to Home Screen' })).toBeVisible();

@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { IconWifiOff as WifiOff, IconDownload as Download } from '@tabler/icons-react';
-import { Button } from '@/shared/ds/components';
+import { Button } from '@/components/ui/button';
 
 export function OfflineIndicator() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);

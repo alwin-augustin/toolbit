@@ -12,6 +12,7 @@ import { downloadBlob, downloadDataUrl } from '@/shared/tool-clipboard';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 
 export type QrMode = 'text' | 'url' | 'wifi' | 'vcard';
 
@@ -327,15 +328,15 @@ export function QrScreen() {
               <strong>Encryption</strong>
               <small>WiFi security type</small>
             </span>
-            <select
+            <NativeSelect
               aria-label="WiFi encryption"
               value={wifiEncryption}
               onChange={(e) => setWifiEncryption(e.target.value)}
             >
-              <option value="WPA">WPA</option>
-              <option value="WEP">WEP</option>
-              <option value="nopass">None</option>
-            </select>
+              <NativeSelectOption value="WPA">WPA</NativeSelectOption>
+              <NativeSelectOption value="WEP">WEP</NativeSelectOption>
+              <NativeSelectOption value="nopass">None</NativeSelectOption>
+            </NativeSelect>
           </div>
         </>
       ) : null}
@@ -399,16 +400,16 @@ export function QrScreen() {
           <strong>Error correction</strong>
           <small>Higher levels survive more damage</small>
         </span>
-        <select
+        <NativeSelect
           aria-label="Error correction"
           value={errorCorrection}
           onChange={(e) => setErrorCorrection(e.target.value as QrErrorCorrection)}
         >
-          <option value="L">L (7%)</option>
-          <option value="M">M (15%)</option>
-          <option value="Q">Q (25%)</option>
-          <option value="H">H (30%)</option>
-        </select>
+          <NativeSelectOption value="L">L (7%)</NativeSelectOption>
+          <NativeSelectOption value="M">M (15%)</NativeSelectOption>
+          <NativeSelectOption value="Q">Q (25%)</NativeSelectOption>
+          <NativeSelectOption value="H">H (30%)</NativeSelectOption>
+        </NativeSelect>
       </div>
       {mode !== 'text' ? (
         <>

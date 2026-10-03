@@ -3,6 +3,9 @@ import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { usePreferences } from '@/core/preferences';
 import { clearAllHistory, pruneExpiredHistory } from '@/core/history-db';
 import { setTheme, useTheme, type Theme } from '@/shared/theme';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const THEMES: Array<{ id: Theme; label: string }> = [
   { id: 'light', label: 'Light' },
@@ -51,33 +54,27 @@ export function SettingsScreen() {
           <strong>Theme</strong>
           <small>Follows your system appearance until you pick one. Saved on this device.</small>
         </span>
-        <div className="wb-saved-tabs" role="group" aria-label="Theme">
+        <ToggleGroup value={[theme]} onValueChange={(v) => setTheme((v[0] ?? "system") as Theme)} variant="outline">
           {THEMES.map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              aria-pressed={theme === option.id}
-              className={theme === option.id ? 'active' : ''}
-              onClick={() => setTheme(option.id)}
-            >
+            <ToggleGroupItem key={option.id} value={option.id}>
               {option.label}
-            </button>
+            </ToggleGroupItem>
           ))}
-        </div>
+        </ToggleGroup>
       </div>
       <label className="wb-setting-row">
         <span>
           <strong>Wrap long lines</strong>
           <small>Keep code readable without horizontal scrolling.</small>
         </span>
-        <input type="checkbox" checked={wrap} onChange={(e) => setWrap(e.target.checked)} />
+        <Checkbox checked={wrap} onCheckedChange={(checked) => setWrap(Boolean(checked))} />
       </label>
       <label className="wb-setting-row">
         <span>
           <strong>Remember runs in this session</strong>
           <small>Optional history. No data is kept after refreshing.</small>
         </span>
-        <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+        <Checkbox checked={remember} onCheckedChange={(checked) => setRemember(Boolean(checked))} />
       </label>
       <div className="wb-setting-row">
         <span>
@@ -90,10 +87,9 @@ export function SettingsScreen() {
           <strong>Product analytics</strong>
           <small>Pseudonymous usage and error events. No Tool content is sent.</small>
         </span>
-        <input
-          type="checkbox"
+        <Checkbox
           checked={analytics}
-          onChange={(e) => update({ analytics: e.target.checked })}
+          onCheckedChange={(checked) => update({ analytics: Boolean(checked) })}
         />
       </label>
       <label className="wb-setting-row">
@@ -101,14 +97,17 @@ export function SettingsScreen() {
           <strong>Record history</strong>
           <small>Secret Tools never record. Applies going forward.</small>
         </span>
-        <input type="checkbox" checked={history} onChange={(e) => update({ history: e.target.checked })} />
+        <Checkbox
+          checked={history}
+          onCheckedChange={(checked) => update({ history: Boolean(checked) })}
+        />
       </label>
       <div className="wb-setting-row">
         <span>
           <strong>Retention: {retentionDays} days</strong>
           <small>1 to 365 days. Expired entries are removed on request.</small>
         </span>
-        <input
+        <Input
           type="number"
           aria-label="Retention days"
           min={1}

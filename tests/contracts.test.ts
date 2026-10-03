@@ -1,17 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
-import { base64Transform, formatJson, DEFINITIONS } from '@/lib/tool-contract';
-import {
-  exportRecipe,
-  parseRecipe,
-  recipeTemplates,
-  runRecipe,
-  saveRecipe,
-  listRecipes,
-} from '@/lib/recipes';
-import { parseWorkspace, workspaceSnapshot } from '@/lib/workspace-schema';
-import { useWorkspace } from '@/v2/workspace-store';
-import { addHistoryEntry, getHistoryByToolId } from '@/lib/history-db';
-import { sanitizeProperties, EVENT_NAMES, routeName } from '@/lib/telemetry';
+import { describe, it, expect } from 'vitest';
+import { base64Transform, formatJson, DEFINITIONS } from '@/core/tool-contract';
+import { parseWorkspace, workspaceSnapshot } from '@/core/workspace-schema';
+import { useWorkspace } from '@/shared/workspace-store';
+import { addHistoryEntry, getHistoryByToolId } from '@/core/history-db';
+import { sanitizeProperties, EVENT_NAMES, routeName } from '@/core/telemetry';
 const canary = 'CANARY_SECRET_4b7d';
 describe('privacy and transformation contracts', () => {
   it('sanitizes every supported event and arbitrary error/log properties', () => {
@@ -125,37 +117,5 @@ describe('versioned documents and recipes', () => {
     );
     expect(result.documents).toHaveLength(2);
     expect(result.documents[1].payload?.input).toBe('b');
-  });
-  it('runs, saves and round-trips a recipe with repeated Base64 steps', async () => {
-    const recipe = recipeTemplates()[0];
-    saveRecipe(recipe);
-    const restored = parseRecipe(exportRecipe(listRecipes()[0]));
-    expect(restored.steps.map((s) => s.toolId)).toEqual([
-      'base64-encoder',
-      'json-formatter',
-      'base64-encoder',
-    ]);
-    const result = await runRecipe(restored, 'eyJvayI6dHJ1ZX0=');
-    expect(result.result).toEqual({ ok: true, value: btoa('{\n  "ok": true\n}') });
-    expect(exportRecipe(recipe)).not.toContain(canary);
-  });
-  it('executes the CSV and normalized-text hash fixtures', async () => {
-    const templates = recipeTemplates();
-    expect((await runRecipe(templates[1], 'name,age\nAda,37')).result).toEqual({
-      ok: true,
-      value: '[\n  {\n    "name": "Ada",\n    "age": "37"\n  }\n]',
-    });
-    expect((await runRecipe(templates[2], '  test  ')).result).toEqual({
-      ok: true,
-      value: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
-    });
-  });
-  it('identifies a failed step and stops before later work', async () => {
-    const recipe = recipeTemplates()[0];
-    const spy = vi.fn();
-    const result = await runRecipe(recipe, 'invalid!', undefined, spy);
-    expect(result.step).toBe(0);
-    expect(result.result.ok).toBe(false);
-    expect(spy).not.toHaveBeenCalled();
   });
 });

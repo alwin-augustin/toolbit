@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 import 'fake-indexeddb/auto';
 import { cleanup } from '@testing-library/react';
 import { createElement } from 'react';
@@ -15,7 +15,7 @@ Object.defineProperty(navigator, 'clipboard', {
   value: { writeText: vi.fn().mockResolvedValue(undefined) },
   configurable: true,
 });
-vi.mock('@/v2/CodeEditor', () => ({
+vi.mock('@/shared/CodeEditor', () => ({
   CodeEditor: ({
     value,
     onChange,

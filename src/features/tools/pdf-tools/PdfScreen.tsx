@@ -13,6 +13,8 @@ import {
 import { useSessionDocumentState } from '@/shared/document-state';
 import { downloadBlob } from '@/shared/tool-clipboard';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 export type PdfMode = 'merge' | 'split' | 'rotate';
 
@@ -246,30 +248,15 @@ export function PdfScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button
-          type="button"
-          className={`wb-button${mode === 'merge' ? ' primary' : ''}`}
-          aria-pressed={mode === 'merge'}
-          onClick={() => setMode('merge')}
+        <ToggleGroup
+          value={[mode]}
+          onValueChange={(v) => setMode((v[0] ?? 'merge') as PdfMode)}
+          variant="outline"
         >
-          Merge
-        </button>
-        <button
-          type="button"
-          className={`wb-button${mode === 'split' ? ' primary' : ''}`}
-          aria-pressed={mode === 'split'}
-          onClick={() => setMode('split')}
-        >
-          Split / Extract
-        </button>
-        <button
-          type="button"
-          className={`wb-button${mode === 'rotate' ? ' primary' : ''}`}
-          aria-pressed={mode === 'rotate'}
-          onClick={() => setMode('rotate')}
-        >
-          Rotate
-        </button>
+          <ToggleGroupItem value="merge">Merge</ToggleGroupItem>
+          <ToggleGroupItem value="split">Split / Extract</ToggleGroupItem>
+          <ToggleGroupItem value="rotate">Rotate</ToggleGroupItem>
+        </ToggleGroup>
         <button type="button" className="wb-button" onClick={() => fileInputRef.current?.click()}>
           <IconUpload size={22} stroke={1.7} aria-hidden="true" />
           Add PDF{mode === 'merge' ? 's' : ''}
@@ -286,7 +273,7 @@ export function PdfScreen() {
         type="file"
         accept=".pdf,application/pdf"
         multiple={mode === 'merge'}
-        aria-label="Add PDF files"
+        aria-label="Choose PDF file"
         className="wb-sr-only"
         onChange={handleFileInput}
       />
@@ -385,15 +372,15 @@ export function PdfScreen() {
         <div className="wb-toolbar">
           <label>
             Rotation angle
-            <select
+            <NativeSelect
               aria-label="Rotation angle"
               value={rotateAngle}
               onChange={(e) => setRotateAngle(Number(e.target.value))}
             >
-              <option value={90}>90 degrees clockwise</option>
-              <option value={180}>180 degrees</option>
-              <option value={270}>270 degrees clockwise</option>
-            </select>
+              <NativeSelectOption value={90}>90 degrees clockwise</NativeSelectOption>
+              <NativeSelectOption value={180}>180 degrees</NativeSelectOption>
+              <NativeSelectOption value={270}>270 degrees clockwise</NativeSelectOption>
+            </NativeSelect>
           </label>
           <label>
             Pages

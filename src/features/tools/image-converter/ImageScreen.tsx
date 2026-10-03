@@ -11,6 +11,8 @@ import {
 import { useSessionDocumentState } from '@/shared/document-state';
 import { downloadDataUrl } from '@/shared/tool-clipboard';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 export type ImageOutputFormat = 'image/png' | 'image/jpeg' | 'image/webp';
 
@@ -250,7 +252,7 @@ export function ImageScreen() {
           type="file"
           accept="image/*"
           multiple
-          aria-label="Select image files"
+          aria-label="Choose image file"
           className="wb-sr-only"
           onChange={(e) => void handleFileSelect(e)}
         />
@@ -297,19 +299,17 @@ export function ImageScreen() {
               <strong>Output format</strong>
               <small>JPEG drops transparency; PNG keeps it but ignores quality</small>
             </span>
-            <span className="wb-row-action">
+            <ToggleGroup
+              value={[outputFormat]}
+              onValueChange={(v) => setOutputFormat((v[0] ?? 'image/png') as ImageOutputFormat)}
+              variant="outline"
+            >
               {IMAGE_FORMAT_OPTIONS.map((f) => (
-                <button
-                  key={f.value}
-                  type="button"
-                  className={`wb-button${outputFormat === f.value ? ' primary' : ''}`}
-                  aria-pressed={outputFormat === f.value}
-                  onClick={() => setOutputFormat(f.value)}
-                >
+                <ToggleGroupItem key={f.value} value={f.value}>
                   {f.label}
-                </button>
+                </ToggleGroupItem>
               ))}
-            </span>
+            </ToggleGroup>
           </div>
           {outputFormat !== 'image/png' ? (
             <div className="wb-setting-row">
@@ -359,11 +359,10 @@ export function ImageScreen() {
               <strong>Maintain aspect ratio</strong>
               <small>Scale the other side automatically</small>
             </span>
-            <input
-              type="checkbox"
+            <Checkbox
               aria-label="Maintain aspect ratio"
               checked={maintainAspect}
-              onChange={(e) => setMaintainAspect(e.target.checked)}
+              onCheckedChange={(checked) => setMaintainAspect(Boolean(checked))}
             />
           </div>
           <div className="wb-toolbar">

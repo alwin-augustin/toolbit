@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { isPostHogEnabled, posthog } from '@/lib/posthog';
+import { isPostHogEnabled, posthog } from '@/platform/posthog';
 
 /** Captures SPA navigations without including query parameters or fragment data. */
 export function PostHogPageView() {

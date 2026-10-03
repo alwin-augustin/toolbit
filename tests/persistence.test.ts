@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { addHistoryEntry, clearHistoryByToolId, getHistoryByToolId } from '@/lib/history-db';
-import { deleteWorkspace, getWorkspace, listWorkspaces, saveWorkspace } from '@/lib/workspace-db';
+import { addHistoryEntry, clearHistoryByToolId, getHistoryByToolId } from '@/core/history-db';
+import { deleteWorkspace, getWorkspace, listWorkspaces, saveWorkspace } from '@/core/workspace-db';
 
 describe('persistence contracts', () => {
   it('round-trips tool history and clears it by tool', async () => {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { IconArrowRight, IconBookmark, IconPlayerPlay } from '@tabler/icons-react';
 import { useWorkbenchMemory, type SavedKind } from '@/shared/workbench-memory';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const KINDS: SavedKind[] = ['Sessions', 'Examples', 'Snippets'];
 
@@ -23,19 +24,15 @@ export function SavedScreen() {
         <h1>Saved</h1>
         <p>Keep useful work easy to find.</p>
       </div>
-      <div className="wb-saved-tabs" role="group" aria-label="Saved items">
-        {KINDS.map((kind) => (
-          <button
-            key={kind}
-            type="button"
-            aria-pressed={tab === kind}
-            className={tab === kind ? 'active' : ''}
-            onClick={() => setTab(kind)}
-          >
-            {kind}
-          </button>
-        ))}
-      </div>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as SavedKind)}>
+        <TabsList>
+          {KINDS.map((kind) => (
+            <TabsTrigger key={kind} value={kind}>
+              {kind}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
       <p className="wb-section-description">{DESCRIPTIONS[tab]}</p>
       {items.length === 0 ? (
         <div className="wb-empty">
@@ -45,7 +42,11 @@ export function SavedScreen() {
       ) : null}
       {items.map((item) => (
         <button key={item.id} type="button" className="wb-list-row" onClick={() => restore(item)}>
-          {tab === 'Examples' ? <IconPlayerPlay size={26} aria-hidden="true" /> : <IconBookmark size={26} aria-hidden="true" />}
+          {tab === 'Examples' ? (
+            <IconPlayerPlay size={26} aria-hidden="true" />
+          ) : (
+            <IconBookmark size={26} aria-hidden="true" />
+          )}
           <span>
             <strong>{item.name}</strong>
             <small>

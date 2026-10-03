@@ -6,7 +6,7 @@
  * what turns a bare install prompt into a rich one, and the images the README
  * links to. Both were previously referenced but not produced by anything.
  *
- *     npm run web:build
+ *     npm run build
  *     node scripts/generate-screenshots.mjs
  *
  * The script serves ./dist itself, so the build must exist first. Output is
@@ -41,7 +41,7 @@ const outDir = path.join(root, 'public/screenshots');
 const PORT = 4199;
 
 if (!existsSync(path.join(dist, 'index.html'))) {
-  console.error('dist/index.html not found — run `npm run web:build` first.');
+  console.error('dist/index.html not found — run `npm run build` first.');
   process.exit(1);
 }
 

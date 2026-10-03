@@ -1,5 +1,5 @@
 import { writeFile } from 'node:fs/promises';
-import { DEFINITIONS } from '../src/lib/tool-contract';
+import { DEFINITIONS } from '../src/core/tool-contract';
 const rows = [];
 for (const bytes of [100 * 1024, 1024 * 1024, 10 * 1024 * 1024]) {
   for (const id of ['json-formatter', 'base64-encoder', 'hash-generator']) {

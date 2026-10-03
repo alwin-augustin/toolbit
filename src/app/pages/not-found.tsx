@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { Link } from 'wouter';
-import { AlertCircle } from 'lucide-react';
+import { IconAlertCircle as AlertCircle } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
-import { applySeo } from '@/seo/use-seo';
-import { POPULAR_TOOL_SLUGS, getToolPage } from '@/seo/seo-content.js';
+import { applySeo } from '@/content/seo/use-seo';
+import { POPULAR_TOOL_SLUGS, getToolPage } from '@/content/seo/seo-content.js';
 
 export default function NotFound() {
   useEffect(() => {

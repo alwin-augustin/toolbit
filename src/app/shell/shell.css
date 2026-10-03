@@ -116,6 +116,11 @@ html.light .wb-shell {
 .wb-shell select,
 .wb-shell textarea {
   border-radius: 6px;
+  background: var(--wb-input-bg);
+  border: 1px solid var(--wb-border);
+  padding: 0 14px;
+  min-height: 46px;
+  color: inherit;
 }
 .wb-shell button:hover:not(:disabled) {
   background-color: var(--wb-hover);
@@ -628,6 +633,8 @@ html.light .wb-shell {
   border: 1px solid var(--wb-border);
   border-radius: 8px;
   max-width: 1040px;
+  width: 100%;
+  margin: 0 auto;
 }
 .wb-smart-paste textarea {
   margin-top: 20px;
@@ -652,7 +659,7 @@ html.light .wb-shell {
   font-size: 14px;
 }
 .wb-section-title {
-  margin: 32px 0 18px;
+  margin: 40px 0 18px;
 }
 .wb-tool-grid {
   display: grid;

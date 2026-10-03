@@ -6,7 +6,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Link } from 'wouter';
 import { reportError } from '@/core/telemetry';
-import { Button } from '@/shared/ds/components';
+import { Button } from '@/components/ui/button';
 import {
   IconAlertCircle as AlertCircle,
   IconRefresh as RefreshCw,

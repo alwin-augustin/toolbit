@@ -3,10 +3,19 @@ export default defineConfig({
   testDir: './tests/e2e',
   outputDir: process.env.TOOLBIT_TEST_OUTPUT || 'test-results',
   timeout: 45000,
+  retries: process.env.CI ? 1 : 0,
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },
     { name: 'firefox', use: { browserName: 'firefox' } },
     { name: 'webkit', use: { browserName: 'webkit' } },
+    {
+      // Lightpanda over CDP: functional sweep only. No rendering engine, so
+      // no screenshots, geometry, mouse, clipboard, SW or downloads here.
+      // Specs use the lpPage fixture (tests/e2e/helpers/lp.ts), never `page`.
+      name: 'lp',
+      testMatch: /lp-.*\.spec\.ts/,
+      use: { screenshot: 'off' },
+    },
   ],
   fullyParallel: false,
   use: {

@@ -29,7 +29,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { globSync } from 'node:fs';
 
-import { TOOL_PAGES, COMPARISON_PAGES, GUIDE_PAGES, BLOG_POSTS } from '../src/seo/seo-content.js';
+import {
+  TOOL_PAGES,
+  COMPARISON_PAGES,
+  GUIDE_PAGES,
+  BLOG_POSTS,
+} from '../src/content/seo/seo-content.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const siteOnly = process.argv.includes('--site');
@@ -74,11 +79,11 @@ function findChromium() {
   );
 }
 
-const fontData = readFileSync(path.join(root, 'src/ds/assets/fonts/Geist[wght].woff2')).toString(
-  'base64',
-);
+const fontData = readFileSync(
+  path.join(root, 'src/shared/ds/assets/fonts/Geist[wght].woff2'),
+).toString('base64');
 const monoData = readFileSync(
-  path.join(root, 'src/ds/assets/fonts/JetBrainsMono[wght].woff2'),
+  path.join(root, 'src/shared/ds/assets/fonts/JetBrainsMono[wght].woff2'),
 ).toString('base64');
 const logo = readFileSync(path.join(root, 'public/icon.svg')).toString('base64');
 

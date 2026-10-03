@@ -17,7 +17,8 @@ import {
   IconHammer as Hammer,
   IconFileText as FileText,
 } from '@tabler/icons-react';
-import { Button } from '@/shared/ds/components';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import appLogoUrl from '@/shared/ds/assets/logo-mark.svg';
 import { applySeo } from '@/content/seo/use-seo';
 import { TOOL_PAGES } from '@/content/seo/seo-content.js';
@@ -216,19 +217,23 @@ export function LandingPage() {
                   <div className="flex flex-wrap gap-2 mt-3">
                     <span className="text-xs text-muted-foreground self-center">Detected:</span>
                     {suggestions.map((s) => (
-                      <Link
+                      <Badge
                         key={s.toolId}
-                        href={s.path}
-                        onClick={() => {
-                          if (demoInput.trim()) {
-                            sessionStorage.setItem('toolbit:smart-paste', demoInput);
-                          }
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                        variant="secondary"
+                        render={
+                          <Link
+                            href={s.path}
+                            onClick={() => {
+                              if (demoInput.trim()) {
+                                sessionStorage.setItem('toolbit:smart-paste', demoInput);
+                              }
+                            }}
+                          />
+                        }
                       >
-                        <span>{s.toolName}</span>
-                        <ArrowRight className="h-3 w-3" />
-                      </Link>
+                        {s.toolName}
+                        <ArrowRight data-icon="inline-end" />
+                      </Badge>
                     ))}
                   </div>
                 )}

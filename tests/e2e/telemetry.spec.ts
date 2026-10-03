@@ -43,7 +43,7 @@ test('configured analytics strips a browser canary and opt-out stops requests', 
   });
   await page.goto(`/json-formatter?token=${canary}#${canary}`);
   await page
-    .getByRole('textbox', { name: 'Input', exact: true })
+    .getByRole('textbox', { name: 'Input code', exact: true })
     .fill(JSON.stringify({ secret: canary }));
   await expect.poll(() => bodies.length, { timeout: 20000 }).toBeGreaterThan(0);
   await expect.poll(() => accepted.includes(200), { timeout: 10000 }).toBe(true);
@@ -76,11 +76,18 @@ test('configured analytics strips a browser canary and opt-out stops requests', 
       ),
     ).toBe(true);
   }
-  await page.getByTitle('Privacy and storage').click();
-  await page.getByLabel('Product analytics').uncheck();
-  await page.getByLabel('Close settings').click();
+  await page.getByRole('button', { name: 'Format', exact: true }).click();
+  await page.goto('/settings');
+  await page.evaluate(() => {
+    localStorage.setItem(
+      'toolbit-preferences',
+      JSON.stringify({ state: { analytics: false, history: true, retentionDays: 30 } }),
+    );
+  });
+  await page.reload();
   const count = bodies.length;
-  await page.getByRole('textbox', { name: 'Input', exact: true }).fill('{"after":true}');
+  await page.getByRole('textbox', { name: 'Input code', exact: true }).fill('{"after":true}');
+  await page.getByRole('button', { name: 'Format', exact: true }).click();
   await page.waitForTimeout(12000);
   expect(bodies.length).toBe(count);
   expect(
@@ -97,9 +104,10 @@ test('blocked analytics does not interrupt transformation', async ({ page }) => 
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/json-formatter');
   await page
-    .getByRole('textbox', { name: 'Input', exact: true })
+    .getByRole('textbox', { name: 'Input code', exact: true })
     .fill('{"offline_analytics":true}');
-  await expect(page.getByRole('textbox', { name: 'Output', exact: true })).toContainText(
+  await page.getByRole('button', { name: 'Format', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Result code', exact: true })).toContainText(
     '"offline_analytics": true',
   );
   expect(errors).toEqual([]);

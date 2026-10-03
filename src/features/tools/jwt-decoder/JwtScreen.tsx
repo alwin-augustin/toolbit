@@ -9,6 +9,7 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Checkbox } from '@/components/ui/checkbox';
 
 /** Unsigned test token: header {"alg":"HS256","typ":"JWT"}, payload with sub/name/iat. */
 export const JWT_SAMPLE =
@@ -145,7 +146,7 @@ export function JwtScreen() {
           Clear
         </button>
         <label>
-          <input type="checkbox" checked={pretty} onChange={(e) => setPretty(e.target.checked)} />
+          <Checkbox checked={pretty} onCheckedChange={(checked) => setPretty(Boolean(checked))} />
           Pretty-print claims
         </label>
       </div>
