@@ -10,6 +10,7 @@ import logoMark from '@/shared/ds/assets/logo-mark.svg';
 import { useWorkspace } from '@/shared/workspace-store';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
 import { getSpec } from '@/features/tools/specs';
+import { Button } from '@/components/ui/button';
 
 const NAV: Array<{ path: string; label: string; icon: typeof IconHome }> = [
   { path: '/', label: 'Start', icon: IconHome },
@@ -35,24 +36,30 @@ export function Sidebar({ onNavigate, open }: { onNavigate: () => void; open: bo
 
   return (
     <aside className={`wb-sidebar${open ? ' mobile-open' : ''}`}>
-      <button type="button" className="wb-brand" onClick={() => go('/')}>
+      <Button
+        type="button"
+        variant="ghost"
+        className="wb-brand justify-start h-auto"
+        onClick={() => go('/')}
+      >
         <img src={logoMark} alt="" width={36} height={36} />
         <span>
           tool<span>bit</span>
         </span>
-      </button>
+      </Button>
       <nav aria-label="Main navigation">
         {NAV.map(({ path: target, label, icon: Icon }) => (
-          <button
+          <Button
             key={target}
             type="button"
-            className={`wb-nav-item${path === target ? ' selected' : ''}`}
+            variant="ghost"
+            className={`wb-nav-item justify-start h-auto${path === target ? ' selected' : ''}`}
             aria-current={path === target ? 'page' : undefined}
             onClick={() => go(target)}
           >
             <Icon size={25} stroke={1.7} />
             {label}
-          </button>
+          </Button>
         ))}
       </nav>
       <section className="wb-pins" aria-label="Pinned tools">
@@ -63,10 +70,11 @@ export function Sidebar({ onNavigate, open }: { onNavigate: () => void; open: bo
           const ToolIcon = tool.icon;
           const selected = onToolRoute && activeTool === id;
           return (
-            <button
+            <Button
               key={id}
               type="button"
-              className={`wb-nav-item${selected ? ' selected' : ''}`}
+              variant="ghost"
+              className={`wb-nav-item justify-start h-auto${selected ? ' selected' : ''}`}
               onClick={() => {
                 activateExistingOrOpen(id);
                 onNavigate();
@@ -74,18 +82,19 @@ export function Sidebar({ onNavigate, open }: { onNavigate: () => void; open: bo
             >
               <ToolIcon size={26} stroke={1.7} />
               {tool.title}
-            </button>
+            </Button>
           );
         })}
       </section>
-      <button
+      <Button
         type="button"
-        className={`wb-nav-item wb-settings-nav${path === '/settings' ? ' selected' : ''}`}
+        variant="ghost"
+        className={`wb-nav-item wb-settings-nav justify-start h-auto${path === '/settings' ? ' selected' : ''}`}
         onClick={() => go('/settings')}
       >
         <IconSettings size={25} stroke={1.7} />
         Settings
-      </button>
+      </Button>
     </aside>
   );
 }

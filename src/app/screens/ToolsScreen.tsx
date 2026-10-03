@@ -3,6 +3,8 @@ import { IconArrowRight, IconSearch } from '@tabler/icons-react';
 import { TOOLS, TOOL_CATEGORIES } from '@/content/tools.config';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
 import { ALL_SPECS, isWorkbenchToolId } from '@/features/tools/specs';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export function ToolsScreen() {
   const [query, setQuery] = useState('');
@@ -19,7 +21,7 @@ export function ToolsScreen() {
       </div>
       <label className="wb-catalog-search">
         <IconSearch size={22} />
-        <input
+        <Input
           aria-label="Filter tools"
           placeholder="Find a tool..."
           value={query}
@@ -30,17 +32,18 @@ export function ToolsScreen() {
         {workbench.map((tool) => {
           const ToolIcon = tool.icon;
           return (
-            <button
+            <Button
               key={tool.id}
               type="button"
-              className="wb-tool-tile"
+              variant="ghost"
+              className="wb-tool-tile text-left justify-start h-auto flex-col items-start"
               onClick={() => openTool(tool.id)}
             >
               <ToolIcon size={30} />
               <h3>{tool.title}</h3>
               <p>{tool.description}</p>
               <small>Runs on this device</small>
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -61,10 +64,11 @@ export function ToolsScreen() {
           <section key={categoryId} aria-label={category.name}>
             <h2 className="wb-section-title">{category.name}</h2>
             {tools.map((tool) => (
-              <button
+              <Button
                 key={tool.id}
                 type="button"
-                className="wb-list-row"
+                variant="ghost"
+                className="wb-list-row text-left justify-start h-auto w-full"
                 onClick={() =>
                   isWorkbenchToolId(tool.id) ? openTool(tool.id) : navigate(tool.path)
                 }
@@ -74,7 +78,7 @@ export function ToolsScreen() {
                   <small>{tool.description}</small>
                 </span>
                 <IconArrowRight size={20} />
-              </button>
+              </Button>
             ))}
           </section>
         );

@@ -5,6 +5,7 @@ import addFormats from 'ajv-formats';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
 
 export interface SchemaValidation {
   valid: boolean;
@@ -96,18 +97,18 @@ export function JsonSchemaScreen() {
       </div>
 
       <div className="wb-toolbar">
-        <button type="button" className="wb-button primary" onClick={validate}>
+        <Button type="button" className="wb-button primary" onClick={validate}>
           <IconShieldCheck size={22} stroke={1.7} aria-hidden="true" />
           Validate
-        </button>
-        <button type="button" className="wb-button" onClick={loadSample}>
+        </Button>
+        <Button type="button" variant="outline" className="wb-button" onClick={loadSample}>
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={clear}>
+        </Button>
+        <Button type="button" variant="outline" className="wb-button" onClick={clear}>
           <IconEraser size={22} stroke={1.7} aria-hidden="true" />
           Clear
-        </button>
+        </Button>
       </div>
 
       {validation && !validation.valid && (
@@ -123,13 +124,15 @@ export function JsonSchemaScreen() {
         <section className="wb-editor-pane" aria-label="JSON schema panel">
           <div className="wb-pane-header">
             <h2>Schema</h2>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               className="wb-button quiet wb-clear"
               onClick={() => setSchema('')}
             >
               Clear
-            </button>
+            </Button>
           </div>
           <CodeEditor
             value={schema}
@@ -150,13 +153,15 @@ export function JsonSchemaScreen() {
             <span className={validation?.valid ? 'wb-result-state wb-green' : 'wb-result-state'}>
               {validation ? (validation.valid ? 'Valid' : 'Invalid') : 'Not validated'}
             </span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               className="wb-button quiet wb-clear"
               onClick={() => setJsonData('')}
             >
               Clear
-            </button>
+            </Button>
           </div>
           <CodeEditor
             value={jsonData}

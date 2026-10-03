@@ -4,6 +4,8 @@ import { IconCircleCheckFilled, IconCopy, IconDeviceDesktop, IconEqual } from '@
 import { useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 /** Thin wrapper over convert-units so unit math stays unit-testable. */
 export function convertUnitValue(value: number, from: Unit, to: Unit): number {
@@ -135,26 +137,27 @@ export function UnitScreen() {
       <div className="wb-toolbar">
         <label>
           Value
-          <input
+          <Input
             aria-label="Value to convert"
             type="number"
             value={value}
             onChange={(e) => setValue(Number(e.target.value))}
           />
         </label>
-        <button type="button" className="wb-button primary" onClick={handleConvert}>
+        <Button type="button" className="wb-button primary" onClick={handleConvert}>
           <IconEqual size={22} stroke={1.7} aria-hidden="true" />
           Convert
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           disabled={!result}
           onClick={() => void copyText(result)}
         >
           <IconCopy size={22} stroke={1.7} aria-hidden="true" />
           Copy
-        </button>
+        </Button>
       </div>
       {error ? (
         <div className="wb-error-banner" role="alert">

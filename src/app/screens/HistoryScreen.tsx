@@ -2,6 +2,7 @@ import { IconArrowRight, IconClock } from '@tabler/icons-react';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 
 export function HistoryScreen() {
   const runs = useWorkbenchMemory((s) => s.runs);
@@ -24,10 +25,11 @@ export function HistoryScreen() {
       </label>
       {runs.length ? (
         runs.map((run) => (
-          <button
+          <Button
             key={run.id}
             type="button"
-            className="wb-list-row"
+            variant="ghost"
+            className="wb-list-row text-left justify-start h-auto w-full"
             onClick={() =>
               restore({
                 kind: 'Sessions',
@@ -44,7 +46,7 @@ export function HistoryScreen() {
               <small>This session · original input and result</small>
             </span>
             <IconArrowRight size={20} />
-          </button>
+          </Button>
         ))
       ) : (
         <div className="wb-empty">

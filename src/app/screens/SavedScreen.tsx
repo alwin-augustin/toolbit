@@ -3,6 +3,7 @@ import { IconArrowRight, IconBookmark, IconPlayerPlay } from '@tabler/icons-reac
 import { useWorkbenchMemory, type SavedKind } from '@/shared/workbench-memory';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 
 const KINDS: SavedKind[] = ['Sessions', 'Examples', 'Snippets'];
 
@@ -41,7 +42,13 @@ export function SavedScreen() {
         </div>
       ) : null}
       {items.map((item) => (
-        <button key={item.id} type="button" className="wb-list-row" onClick={() => restore(item)}>
+        <Button
+          key={item.id}
+          type="button"
+          variant="ghost"
+          className="wb-list-row text-left justify-start h-auto w-full"
+          onClick={() => restore(item)}
+        >
           {tab === 'Examples' ? (
             <IconPlayerPlay size={26} aria-hidden="true" />
           ) : (
@@ -57,7 +64,7 @@ export function SavedScreen() {
             {tab === 'Examples' ? 'Run example' : 'Open'}
             <IconArrowRight size={20} aria-hidden="true" />
           </span>
-        </button>
+        </Button>
       ))}
       <p className="wb-preview-note">
         Saved items stay in memory for this session. Refreshing resets them.

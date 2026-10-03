@@ -13,6 +13,7 @@ import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Button } from '@/components/ui/button';
 
 export const CRON_SAMPLE = '0 9 * * 1-5';
 
@@ -174,29 +175,41 @@ export function CronScreen() {
       </div>
 
       <div className="wb-toolbar">
-        <button
+        <Button
           type="button"
+          variant={mode === 'explain' ? 'default' : 'outline'}
           className={`wb-button${mode === 'explain' ? ' primary' : ''}`}
           onClick={() => setMode('explain')}
         >
           Explain
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant={mode === 'build' ? 'default' : 'outline'}
           className={`wb-button${mode === 'build' ? ' primary' : ''}`}
           onClick={() => setMode('build')}
         >
           <IconHammer size={22} stroke={1.7} aria-hidden="true" />
           Build
-        </button>
-        <button type="button" className="wb-button" onClick={() => setExpression(CRON_SAMPLE)}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => setExpression(CRON_SAMPLE)}
+        >
           <IconFlask size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={() => setExpression('')}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => setExpression('')}
+        >
           <IconTrash size={22} stroke={1.7} aria-hidden="true" />
           Clear
-        </button>
+        </Button>
       </div>
 
       {outcome.error && (
@@ -256,7 +269,7 @@ export function CronScreen() {
           <div className="wb-pane-header">
             <h2>Schedule</h2>
             <div className="wb-copy-actions">
-              <button
+              <Button
                 type="button"
                 className="wb-button primary"
                 disabled={!scheduleText}
@@ -264,7 +277,7 @@ export function CronScreen() {
               >
                 <IconCopy size={22} stroke={1.7} aria-hidden="true" />
                 Copy schedule
-              </button>
+              </Button>
             </div>
           </div>
           <CodeEditor
@@ -284,17 +297,18 @@ export function CronScreen() {
 
       <div>
         {CRON_PRESETS.map((preset) => (
-          <button
+          <Button
             key={preset.value}
             type="button"
-            className="wb-list-row"
+            variant="ghost"
+            className="wb-list-row text-left justify-start h-auto w-full"
             onClick={() => setExpression(preset.value)}
           >
             <span>
               <strong>{preset.label}</strong>
               <small>{preset.value}</small>
             </span>
-          </button>
+          </Button>
         ))}
       </div>
     </>

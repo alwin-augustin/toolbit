@@ -7,6 +7,8 @@ import {
 } from '@tabler/icons-react';
 import { useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export interface Rgb {
   r: number;
@@ -185,10 +187,15 @@ export function ColorScreen() {
             onChange={(e) => updateFromHex(e.target.value)}
           />
         </label>
-        <button type="button" className="wb-button" onClick={() => updateFromHex(COLOR_SAMPLE)}>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => updateFromHex(COLOR_SAMPLE)}
+        >
           <IconPalette size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
+        </Button>
       </div>
       {error ? (
         <div className="wb-error-banner" role="alert">
@@ -218,21 +225,22 @@ export function ColorScreen() {
           <small>Six hex digits</small>
         </span>
         <span className="wb-row-action">
-          <input
+          <Input
             aria-label="HEX value"
             value={hex}
             onChange={(e) => updateFromHex(e.target.value)}
             data-testid="input-hex"
           />
-          <button
+          <Button
             type="button"
+            variant="outline"
             className="wb-button"
             aria-label="Copy HEX"
             onClick={() => void copyText(hex, 'HEX')}
           >
             <IconCopy size={20} aria-hidden="true" />
             Copy
-          </button>
+          </Button>
         </span>
       </div>
       <div className="wb-setting-row">
@@ -241,7 +249,7 @@ export function ColorScreen() {
           <small>0–255 per channel</small>
         </span>
         <span className="wb-row-action">
-          <input
+          <Input
             aria-label="Red channel"
             type="number"
             min={0}
@@ -250,7 +258,7 @@ export function ColorScreen() {
             onChange={(e) => updateFromRgb({ ...rgb, r: parseInt(e.target.value, 10) || 0 })}
             data-testid="input-r"
           />
-          <input
+          <Input
             aria-label="Green channel"
             type="number"
             min={0}
@@ -259,7 +267,7 @@ export function ColorScreen() {
             onChange={(e) => updateFromRgb({ ...rgb, g: parseInt(e.target.value, 10) || 0 })}
             data-testid="input-g"
           />
-          <input
+          <Input
             aria-label="Blue channel"
             type="number"
             min={0}
@@ -268,15 +276,16 @@ export function ColorScreen() {
             onChange={(e) => updateFromRgb({ ...rgb, b: parseInt(e.target.value, 10) || 0 })}
             data-testid="input-b"
           />
-          <button
+          <Button
             type="button"
+            variant="outline"
             className="wb-button"
             aria-label="Copy RGB"
             onClick={() => void copyText(formatRgb(rgb), 'RGB')}
           >
             <IconCopy size={20} aria-hidden="true" />
             Copy
-          </button>
+          </Button>
         </span>
       </div>
       <div className="wb-setting-row">
@@ -285,7 +294,7 @@ export function ColorScreen() {
           <small data-testid="output-hsl">{formatHsl(hsl)}</small>
         </span>
         <span className="wb-row-action">
-          <input
+          <Input
             aria-label="Hue"
             type="number"
             min={0}
@@ -294,7 +303,7 @@ export function ColorScreen() {
             onChange={(e) => updateFromHsl({ ...hsl, h: parseInt(e.target.value, 10) || 0 })}
             data-testid="input-h"
           />
-          <input
+          <Input
             aria-label="Saturation"
             type="number"
             min={0}
@@ -303,7 +312,7 @@ export function ColorScreen() {
             onChange={(e) => updateFromHsl({ ...hsl, s: parseInt(e.target.value, 10) || 0 })}
             data-testid="input-s"
           />
-          <input
+          <Input
             aria-label="Lightness"
             type="number"
             min={0}
@@ -312,15 +321,16 @@ export function ColorScreen() {
             onChange={(e) => updateFromHsl({ ...hsl, l: parseInt(e.target.value, 10) || 0 })}
             data-testid="input-l"
           />
-          <button
+          <Button
             type="button"
+            variant="outline"
             className="wb-button"
             aria-label="Copy HSL"
             onClick={() => void copyText(formatHsl(hsl), 'HSL')}
           >
             <IconCopy size={20} aria-hidden="true" />
             Copy
-          </button>
+          </Button>
         </span>
       </div>
       <div className="wb-setting-row">

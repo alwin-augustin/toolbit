@@ -5,6 +5,7 @@ import { TOOLS } from '@/content/tools.config';
 import { useWorkspace } from '@/shared/workspace-store';
 import { specIcon, specTitle } from '@/features/tools/specs';
 import { setTheme, useResolvedTheme } from '@/shared/theme';
+import { Button } from '@/components/ui/button';
 
 export function Topbar({ onSearch, onMenu }: { onSearch: () => void; onMenu: () => void }) {
   const [path, navigate] = useLocation();
@@ -35,31 +36,40 @@ export function Topbar({ onSearch, onMenu }: { onSearch: () => void; onMenu: () 
   return (
     <header className="wb-topbar">
       <div className="wb-search-row">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           className="wb-button wb-icon-button wb-mobile-menu"
           aria-label="Open navigation"
           onClick={onMenu}
         >
           <IconMenu2 size={22} />
-        </button>
-        <button type="button" className="wb-search-trigger" onClick={onSearch}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-search-trigger h-auto"
+          onClick={onSearch}
+        >
           <IconSearch size={25} stroke={1.7} aria-hidden="true" />
           <span>Search tools or actions...</span>
           <kbd>
             {typeof navigator !== 'undefined' && navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}{' '}
             K
           </kbd>
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           className="wb-button wb-icon-button wb-theme-toggle"
           aria-label={resolved === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
           title={resolved === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
           onClick={() => setTheme(resolved === 'dark' ? 'light' : 'dark')}
         >
           {resolved === 'dark' ? <IconSun size={22} /> : <IconMoon size={22} />}
-        </button>
+        </Button>
       </div>
       <div className="wb-doc-tabs-row">
         <div className="wb-document-tabs" role="group" aria-label="Open documents">
@@ -83,25 +93,29 @@ export function Topbar({ onSearch, onMenu }: { onSearch: () => void; onMenu: () 
                   <ToolIcon size={24} stroke={1.8} aria-hidden="true" />
                   {label}
                 </Link>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   aria-label={`Close ${label} document`}
                   onClick={() => closeDoc(doc.id)}
                 >
                   <IconX size={18} />
-                </button>
+                </Button>
               </div>
             );
           })}
         </div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           className="wb-new-tab"
           aria-label="Open another tool"
           onClick={onSearch}
         >
           <IconPlus size={24} />
-        </button>
+        </Button>
       </div>
     </header>
   );

@@ -8,6 +8,7 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
 
 export interface HashResult {
   md5: string;
@@ -212,13 +213,19 @@ export function HashScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button type="button" className="wb-button primary" onClick={() => setInput(HASH_SAMPLE)}>
+        <Button type="button" className="wb-button primary" onClick={() => setInput(HASH_SAMPLE)}>
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={() => setInput('')} disabled={!input}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => setInput('')}
+          disabled={!input}
+        >
           Clear
-        </button>
+        </Button>
         {isComputing ? <span>Computing…</span> : null}
       </div>
       {error ? (
@@ -248,7 +255,7 @@ export function HashScreen() {
           <div className="wb-pane-header">
             <h2>Digests</h2>
             <div className="wb-copy-actions">
-              <button
+              <Button
                 type="button"
                 className="wb-button primary"
                 disabled={!hasOutput}
@@ -256,7 +263,7 @@ export function HashScreen() {
               >
                 <IconCopy size={22} stroke={1.7} aria-hidden="true" />
                 Copy all
-              </button>
+              </Button>
             </div>
           </div>
           {hasOutput ? (
@@ -267,14 +274,16 @@ export function HashScreen() {
                     <strong>{label}</strong>
                     <small data-testid={`output-${key}`}>{hashes[key]}</small>
                   </span>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     className="wb-icon-button"
                     aria-label={`Copy ${label}`}
                     onClick={() => void copyText(hashes[key], label)}
                   >
                     <IconCopy size={20} />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>

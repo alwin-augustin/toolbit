@@ -2,6 +2,7 @@ import { IconCopy, IconSparkles } from '@tabler/icons-react';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
 
 export interface WordStats {
   characters: number;
@@ -62,15 +63,21 @@ export function WordScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button type="button" className="wb-button primary" onClick={() => setText(WORD_SAMPLE)}>
+        <Button type="button" className="wb-button primary" onClick={() => setText(WORD_SAMPLE)}>
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={() => setText('')} disabled={!text}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => setText('')}
+          disabled={!text}
+        >
           Clear
-        </button>
+        </Button>
         <div className="wb-copy-actions">
-          <button
+          <Button
             type="button"
             className="wb-button primary"
             disabled={!text.trim()}
@@ -78,7 +85,7 @@ export function WordScreen() {
           >
             <IconCopy size={22} stroke={1.7} aria-hidden="true" />
             Copy stats
-          </button>
+          </Button>
         </div>
       </div>
       <div className="wb-editors">

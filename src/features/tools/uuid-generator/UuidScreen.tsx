@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { IconCircleCheckFilled, IconCopy, IconFlask, IconRefresh } from '@tabler/icons-react';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -148,19 +150,20 @@ export function UuidScreen() {
             ))}
           </NativeSelect>
         </label>
-        <button type="button" className="wb-button primary" onClick={regenerate}>
+        <Button type="button" className="wb-button primary" onClick={regenerate}>
           <IconRefresh size={22} stroke={1.7} aria-hidden="true" />
           Generate
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           disabled={!displayed.length}
           onClick={() => copyText(displayed.join('\n'), 'UUIDs copied')}
         >
           <IconCopy size={22} stroke={1.7} aria-hidden="true" />
           Copy all
-        </button>
+        </Button>
       </div>
 
       <div className="wb-setting-row">
@@ -197,15 +200,16 @@ export function UuidScreen() {
               </small>
             </span>
             <span className="wb-row-action">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 className="wb-button"
                 aria-label={`Copy ${u}`}
                 onClick={() => copyText(u, 'UUID copied')}
               >
                 <IconCopy size={20} aria-hidden="true" />
                 Copy
-              </button>
+              </Button>
             </span>
           </div>
         ))}
@@ -214,17 +218,22 @@ export function UuidScreen() {
       <div className="wb-toolbar">
         <label>
           Inspect a UUID
-          <input
+          <Input
             aria-label="UUID to inspect"
             value={inspectInput}
             onChange={(e) => setInspectInput(e.target.value)}
             placeholder="Paste a UUID to inspect…"
           />
         </label>
-        <button type="button" className="wb-button" onClick={() => setInspectInput(UUID_SAMPLE)}>
-          <IconFlask size={22} stroke={1.7} aria-hidden="true" />
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => setInspectInput(UUID_SAMPLE)}
+        >
+          <IconFlask size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Load sample
-        </button>
+        </Button>
       </div>
 
       {inspection && (

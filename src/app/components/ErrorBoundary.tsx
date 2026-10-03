@@ -1,5 +1,6 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
 import { reportError } from '@/core/telemetry';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   children: ReactNode;
@@ -116,18 +117,16 @@ export class ErrorBoundary extends Component<Props, State> {
             )}
 
             <div className="flex gap-3">
-              <button
-                onClick={this.handleReset}
-                className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-medium"
-              >
+              <Button onClick={this.handleReset} className="flex-1">
                 Try Again
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
                 onClick={() => window.location.reload()}
-                className="flex-1 px-4 py-2 bg-muted text-foreground rounded-md hover:bg-muted/80 transition-colors font-medium"
+                className="flex-1"
               >
                 Reload Page
-              </button>
+              </Button>
             </div>
           </div>
         </div>

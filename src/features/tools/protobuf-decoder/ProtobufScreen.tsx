@@ -9,6 +9,7 @@ import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Button } from '@/components/ui/button';
 
 export interface DecodedField {
   fieldNumber: number;
@@ -269,8 +270,9 @@ export function ProtobufScreen() {
           <ToggleGroupItem value="hex">Hex</ToggleGroupItem>
           <ToggleGroupItem value="base64">Base64</ToggleGroupItem>
         </ToggleGroup>
-        <button
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           onClick={() => {
             setInput(PROTOBUF_SAMPLE_HEX);
@@ -279,15 +281,16 @@ export function ProtobufScreen() {
         >
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant={showJson ? 'default' : 'outline'}
           className={`wb-button${showJson ? ' primary' : ''}`}
           onClick={() => setShowJson(!showJson)}
           aria-expanded={showJson}
         >
           JSON view
-        </button>
+        </Button>
       </div>
       {outcome.error ? (
         <div className="wb-error-banner" role="alert">
@@ -317,7 +320,7 @@ export function ProtobufScreen() {
           <div className="wb-pane-header">
             <h2>Fields{rows.length > 0 ? ` (${rows.length})` : ''}</h2>
             <div className="wb-copy-actions">
-              <button
+              <Button
                 type="button"
                 className="wb-button primary"
                 disabled={!jsonText}
@@ -325,7 +328,7 @@ export function ProtobufScreen() {
               >
                 <IconCopy size={22} stroke={1.7} aria-hidden="true" />
                 Copy JSON
-              </button>
+              </Button>
             </div>
           </div>
           {showJson ? (

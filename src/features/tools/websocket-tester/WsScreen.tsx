@@ -11,6 +11,8 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export type WsStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
@@ -211,30 +213,31 @@ export function WsScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button type="button" className="wb-button primary" onClick={loadSample}>
+        <Button type="button" className="wb-button primary" onClick={loadSample}>
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
+        </Button>
         {isActive ? (
-          <button type="button" className="wb-button" onClick={disconnect}>
+          <Button type="button" variant="outline" className="wb-button" onClick={disconnect}>
             <IconX size={22} stroke={1.7} aria-hidden="true" />
             Disconnect
-          </button>
+          </Button>
         ) : (
-          <button type="button" className="wb-button primary" onClick={connect}>
+          <Button type="button" className="wb-button primary" onClick={connect}>
             <IconPlug size={22} stroke={1.7} aria-hidden="true" />
             Connect
-          </button>
+          </Button>
         )}
-        <button
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           onClick={() => setMessages([])}
           disabled={messages.length === 0}
         >
           <IconTrash size={22} stroke={1.7} aria-hidden="true" />
           Clear log
-        </button>
+        </Button>
         <small>Connects to: {url.trim() || 'No URL yet'}</small>
         <span className="wb-result-state">{wsStatusLabel(status)}</span>
       </div>
@@ -249,7 +252,7 @@ export function WsScreen() {
           <strong>Endpoint URL</strong>
           <small>Messages go to this server. Must start with ws:// or wss://.</small>
         </span>
-        <input
+        <Input
           aria-label="WebSocket URL"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
@@ -263,7 +266,7 @@ export function WsScreen() {
           <div className="wb-pane-header">
             <h2>Message</h2>
             <div className="wb-copy-actions">
-              <button
+              <Button
                 type="button"
                 className="wb-button primary"
                 onClick={sendMessage}
@@ -271,7 +274,7 @@ export function WsScreen() {
               >
                 <IconSend size={22} stroke={1.7} aria-hidden="true" />
                 Send
-              </button>
+              </Button>
             </div>
           </div>
           <CodeEditor
@@ -293,14 +296,16 @@ export function WsScreen() {
         <section className="wb-editor-pane" aria-label="Message log panel">
           <div className="wb-pane-header">
             <h2>Message log</h2>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               className="wb-button quiet"
               onClick={() => setMessages([])}
               disabled={messages.length === 0}
             >
               Clear
-            </button>
+            </Button>
           </div>
           <div ref={logRef} role="log" aria-live="polite" aria-label="WebSocket message log">
             {messages.length === 0 ? (
@@ -319,14 +324,16 @@ export function WsScreen() {
                     <small>{formatWsContent(message.content)}</small>
                   </span>
                   <span className="wb-row-action">
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       className="wb-icon-button"
                       aria-label={`Copy ${message.direction} message`}
                       onClick={() => void copyText(message.content, 'Message')}
                     >
                       <IconCopy size={20} />
-                    </button>
+                    </Button>
                   </span>
                 </div>
               ))

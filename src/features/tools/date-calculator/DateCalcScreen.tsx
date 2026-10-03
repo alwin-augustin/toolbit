@@ -8,6 +8,8 @@ import {
 } from '@tabler/icons-react';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export interface DateDifference {
   years: number;
@@ -146,7 +148,7 @@ export function DateCalcScreen() {
       <div className="wb-toolbar">
         <label>
           Date
-          <input
+          <Input
             aria-label="Base date"
             type="date"
             value={baseDate}
@@ -155,20 +157,25 @@ export function DateCalcScreen() {
         </label>
         <label>
           Days
-          <input
+          <Input
             aria-label="Days to add or subtract"
             type="number"
             value={delta}
             onChange={(e) => setDelta(Number(e.target.value))}
           />
         </label>
-        <button type="button" className="wb-button primary" onClick={() => shift(delta)}>
+        <Button type="button" className="wb-button primary" onClick={() => shift(delta)}>
           <IconCalendarPlus size={22} stroke={1.7} aria-hidden="true" />
           Add / subtract
-        </button>
-        <button type="button" className="wb-button" onClick={() => setBaseDate(todayIsoDay())}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => setBaseDate(todayIsoDay())}
+        >
           Today
-        </button>
+        </Button>
       </div>
       {shifted ? (
         <div className="wb-setting-row">
@@ -185,7 +192,7 @@ export function DateCalcScreen() {
       <div className="wb-toolbar">
         <label>
           Start date
-          <input
+          <Input
             aria-label="Start date"
             type="date"
             value={startDate}
@@ -194,14 +201,14 @@ export function DateCalcScreen() {
         </label>
         <label>
           End date
-          <input
+          <Input
             aria-label="End date"
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
           />
         </label>
-        <button
+        <Button
           type="button"
           className="wb-button primary"
           disabled={!startDate || !endDate}
@@ -209,9 +216,10 @@ export function DateCalcScreen() {
         >
           <IconEqual size={22} stroke={1.7} aria-hidden="true" />
           Calculate difference
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           onClick={() => {
             const today = todayIsoDay();
@@ -221,7 +229,7 @@ export function DateCalcScreen() {
         >
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
+        </Button>
       </div>
 
       {hasCalculated ? (

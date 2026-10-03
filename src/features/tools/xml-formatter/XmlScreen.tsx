@@ -9,6 +9,8 @@ import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export type XmlMode = 'prettify' | 'minify' | 'json' | 'xpath' | 'validate';
 
@@ -314,13 +316,19 @@ export function XmlScreen() {
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <button type="button" className="wb-button" onClick={loadSample}>
+        <Button type="button" variant="outline" className="wb-button" onClick={loadSample}>
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={() => setInput('')} disabled={!input}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => setInput('')}
+          disabled={!input}
+        >
           Clear
-        </button>
+        </Button>
       </div>
       {mode === 'xpath' ? (
         <div className="wb-setting-row">
@@ -328,7 +336,7 @@ export function XmlScreen() {
             <strong>XPath query</strong>
             <small>Evaluated against the input document.</small>
           </span>
-          <input
+          <Input
             aria-label="XPath query"
             value={xpathQuery}
             onChange={(e) => setXpathQuery(e.target.value)}
@@ -362,7 +370,7 @@ export function XmlScreen() {
           <div className="wb-pane-header">
             <h2>{resultTitle}</h2>
             <div className="wb-copy-actions">
-              <button
+              <Button
                 type="button"
                 className="wb-button primary"
                 disabled={!outcome.output}
@@ -370,7 +378,7 @@ export function XmlScreen() {
               >
                 <IconCopy size={22} stroke={1.7} aria-hidden="true" />
                 Copy
-              </button>
+              </Button>
             </div>
           </div>
           <CodeEditor

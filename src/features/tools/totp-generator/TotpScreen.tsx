@@ -9,7 +9,9 @@ import {
 } from '@tabler/icons-react';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Button } from '@/components/ui/button';
 
 export interface TotpAccount {
   name: string;
@@ -188,22 +190,23 @@ export function TotpScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button
+        <Button
           type="button"
           className="wb-button primary"
           onClick={() => setSecret(TOTP_SAMPLE_SECRET)}
         >
           <IconFlask size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           disabled={!secret}
           onClick={() => setSecret('')}
         >
           Clear
-        </button>
+        </Button>
       </div>
       {error ? (
         <div className="wb-error-banner" role="alert">
@@ -216,7 +219,7 @@ export function TotpScreen() {
           <strong>Secret key (Base32)</strong>
           <small>Kept in this document only, never saved</small>
         </span>
-        <input
+        <Input
           aria-label="TOTP secret"
           value={secret}
           onChange={(e) => setSecret(e.target.value)}
@@ -261,10 +264,15 @@ export function TotpScreen() {
               Expires in {timeLeft}s of {period}s
             </small>
           </span>
-          <button type="button" className="wb-button" onClick={() => void copyCode()}>
+          <Button
+            type="button"
+            variant="outline"
+            className="wb-button"
+            onClick={() => void copyCode()}
+          >
             <IconCopy size={20} aria-hidden="true" />
             Copy
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="wb-empty">
@@ -277,7 +285,7 @@ export function TotpScreen() {
           <strong>Account name</strong>
           <small>Save this secret for the session only</small>
         </span>
-        <input
+        <Input
           aria-label="Account name"
           value={accountName}
           onChange={(e) => setAccountName(e.target.value)}
@@ -285,15 +293,16 @@ export function TotpScreen() {
         />
       </div>
       <div className="wb-toolbar">
-        <button
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           disabled={!accountName.trim() || !secret.trim()}
           onClick={addAccount}
         >
           <IconPlus size={22} stroke={1.7} aria-hidden="true" />
           Save account
-        </button>
+        </Button>
       </div>
       <div>
         {accounts.length === 0 ? (
@@ -311,18 +320,24 @@ export function TotpScreen() {
                 </small>
               </span>
               <span>
-                <button type="button" className="wb-button" onClick={() => loadAccount(account)}>
-                  Load
-                </button>
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  className="wb-button"
+                  onClick={() => loadAccount(account)}
+                >
+                  Load
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
                   className="wb-button"
                   aria-label={`Remove ${account.name}`}
                   onClick={() => removeAccount(index)}
                 >
                   <IconTrash size={20} aria-hidden="true" />
                   Remove
-                </button>
+                </Button>
               </span>
             </div>
           ))

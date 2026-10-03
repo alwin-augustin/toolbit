@@ -5,6 +5,7 @@ import type { StructuredPatch } from 'diff';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
 
 export interface PatchStats {
   files: number;
@@ -173,26 +174,33 @@ export function GitDiffScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button
+        <Button
           type="button"
           className="wb-button primary"
           onClick={() => setInput(GIT_DIFF_SAMPLE)}
         >
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={() => setInput('')} disabled={!input}>
-          Clear
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => setInput('')}
+          disabled={!input}
+        >
+          Clear
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
           className="wb-button"
           onClick={() => void copyPatch()}
           disabled={!input}
         >
           <IconCopy size={22} stroke={1.7} aria-hidden="true" />
           Copy patch
-        </button>
+        </Button>
       </div>
       <div className="wb-editors">
         <section className="wb-editor-pane" aria-label="Patch input panel">
@@ -220,10 +228,11 @@ export function GitDiffScreen() {
                 const name = getPatchFileName(file);
                 const counts = countFileChanges(file);
                 return (
-                  <button
+                  <Button
                     key={`${name}-${index}`}
                     type="button"
-                    className="wb-list-row"
+                    variant="ghost"
+                    className="wb-list-row text-left justify-start h-auto w-full"
                     onClick={() => setSelectedFile(index)}
                     aria-pressed={index === safeIndex}
                   >
@@ -234,7 +243,7 @@ export function GitDiffScreen() {
                         {file.hunks.length === 1 ? '' : 's'}
                       </small>
                     </span>
-                  </button>
+                  </Button>
                 );
               })}
             </div>

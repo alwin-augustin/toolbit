@@ -11,6 +11,7 @@ import * as pkijs from 'pkijs';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
 
 export type CertValidity = 'valid' | 'expired' | 'not_yet_valid';
 
@@ -295,27 +296,34 @@ export function CertScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button
+        <Button
           type="button"
           className="wb-button primary"
           onClick={() => setInput(CERT_SAMPLE_PEM)}
         >
           <IconFlask size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" disabled={!input} onClick={() => setInput('')}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          disabled={!input}
+          onClick={() => setInput('')}
+        >
           <IconTrash size={22} stroke={1.7} aria-hidden="true" />
           Clear
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           disabled={!certInfo}
           onClick={() => void copyDetails()}
         >
           <IconCopy size={22} stroke={1.7} aria-hidden="true" />
           Copy details
-        </button>
+        </Button>
         {loading ? <span>Decoding…</span> : null}
       </div>
       {error ? (

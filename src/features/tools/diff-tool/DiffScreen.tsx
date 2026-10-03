@@ -6,6 +6,7 @@ import { useDocumentField, useSessionDocumentState } from '@/shared/document-sta
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 
 export type DiffLineType = 'added' | 'removed' | 'unchanged';
 
@@ -213,18 +214,24 @@ export function DiffScreen() {
       </div>
 
       <div className="wb-toolbar">
-        <button type="button" className="wb-button" onClick={loadSample}>
+        <Button type="button" variant="outline" className="wb-button" onClick={loadSample}>
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={clear}>
+        </Button>
+        <Button type="button" variant="outline" className="wb-button" onClick={clear}>
           <IconEraser size={22} stroke={1.7} aria-hidden="true" />
           Clear
-        </button>
-        <button type="button" className="wb-button" onClick={copy} disabled={!output}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={copy}
+          disabled={!output}
+        >
           <IconCopy size={22} stroke={1.7} aria-hidden="true" />
           Copy diff
-        </button>
+        </Button>
         <label className="wb-indent-label">
           Mode:
           <NativeSelect
@@ -260,13 +267,15 @@ export function DiffScreen() {
         <section className="wb-editor-pane" aria-label="Original text panel">
           <div className="wb-pane-header">
             <h2>Original</h2>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               className="wb-button quiet wb-clear"
               onClick={() => setOriginal('')}
             >
               Clear
-            </button>
+            </Button>
           </div>
           <CodeEditor
             value={original}
@@ -283,13 +292,15 @@ export function DiffScreen() {
         <section className="wb-editor-pane" aria-label="Changed text panel">
           <div className="wb-pane-header">
             <h2>Changed</h2>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               className="wb-button quiet wb-clear"
               onClick={() => setChanged('')}
             >
               Clear
-            </button>
+            </Button>
           </div>
           <CodeEditor
             value={changed}

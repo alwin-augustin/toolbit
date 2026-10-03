@@ -9,6 +9,8 @@ import {
 import { useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export const PASSWORD_CHARSETS = {
   lowercase: 'abcdefghijklmnopqrstuvwxyz',
@@ -163,28 +165,30 @@ export function PasswordScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button type="button" className="wb-button primary" onClick={generate}>
+        <Button type="button" className="wb-button primary" onClick={generate}>
           <IconRefresh size={22} stroke={1.7} aria-hidden="true" />
           Generate
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           disabled={passwords.length === 0}
           onClick={() => void copyText(passwords.join('\n'), 'Passwords')}
         >
           <IconCopy size={22} stroke={1.7} aria-hidden="true" />
           Copy all
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           disabled={passwords.length === 0 && !error}
           onClick={clear}
         >
           <IconTrash size={22} stroke={1.7} aria-hidden="true" />
           Clear
-        </button>
+        </Button>
       </div>
       {error ? (
         <div className="wb-error-banner" role="alert">
@@ -211,7 +215,7 @@ export function PasswordScreen() {
           <strong>Count</strong>
           <small>How many passwords to generate (1 to 50)</small>
         </span>
-        <input
+        <Input
           type="number"
           aria-label="Password count"
           min={1}
@@ -282,15 +286,16 @@ export function PasswordScreen() {
                   </small>
                 </span>
                 <span>
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     className="wb-button"
                     aria-label="Copy password"
                     onClick={() => void copyText(password, 'Password')}
                   >
                     <IconCopy size={20} aria-hidden="true" />
                     Copy
-                  </button>
+                  </Button>
                 </span>
               </div>
             );

@@ -10,6 +10,7 @@ import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 
 /** Unsigned test token: header {"alg":"HS256","typ":"JWT"}, payload with sub/name/iat. */
 export const JWT_SAMPLE =
@@ -137,14 +138,14 @@ export function JwtScreen() {
       </div>
 
       <div className="wb-toolbar">
-        <button type="button" className="wb-button primary" onClick={() => setInput(JWT_SAMPLE)}>
+        <Button type="button" className="wb-button primary" onClick={() => setInput(JWT_SAMPLE)}>
           <IconFlask size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={() => setInput('')}>
+        </Button>
+        <Button type="button" variant="outline" className="wb-button" onClick={() => setInput('')}>
           <IconTrash size={22} stroke={1.7} aria-hidden="true" />
           Clear
-        </button>
+        </Button>
         <label>
           <Checkbox checked={pretty} onCheckedChange={(checked) => setPretty(Boolean(checked))} />
           Pretty-print claims
@@ -180,7 +181,7 @@ export function JwtScreen() {
           <div className="wb-pane-header">
             <h2>Claims</h2>
             <div className="wb-copy-actions">
-              <button
+              <Button
                 type="button"
                 className="wb-button primary"
                 disabled={!decoded}
@@ -188,7 +189,7 @@ export function JwtScreen() {
               >
                 <IconCopy size={22} stroke={1.7} aria-hidden="true" />
                 Copy claims
-              </button>
+              </Button>
             </div>
           </div>
           <CodeEditor

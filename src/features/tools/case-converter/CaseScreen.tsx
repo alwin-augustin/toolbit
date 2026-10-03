@@ -2,6 +2,7 @@ import { IconCopy, IconPlayerPlay, IconSparkles } from '@tabler/icons-react';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
 
 export interface CaseResults {
   upper: string;
@@ -84,7 +85,7 @@ export function CaseScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button
+        <Button
           type="button"
           className="wb-button primary"
           onClick={() => setResults(convertCases(input))}
@@ -92,14 +93,25 @@ export function CaseScreen() {
         >
           <IconPlayerPlay size={22} stroke={1.7} aria-hidden="true" />
           Convert
-        </button>
-        <button type="button" className="wb-button" onClick={() => setInput(CASE_SAMPLE)}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => setInput(CASE_SAMPLE)}
+        >
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={() => setInput('')} disabled={!input}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => setInput('')}
+          disabled={!input}
+        >
           Clear
-        </button>
+        </Button>
       </div>
       <div className="wb-editors">
         <section className="wb-editor-pane" aria-label="Input panel">
@@ -129,15 +141,17 @@ export function CaseScreen() {
                   <strong>{CASE_LABELS[key]}</strong>
                   <small data-testid={`output-${key}`}>{results[key] || '—'}</small>
                 </span>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   className="wb-icon-button"
                   aria-label={`Copy ${CASE_LABELS[key]}`}
                   disabled={!results[key]}
                   onClick={() => void copyText(results[key], CASE_LABELS[key])}
                 >
                   <IconCopy size={20} />
-                </button>
+                </Button>
               </div>
             ))}
           </div>

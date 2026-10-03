@@ -6,6 +6,7 @@ import { bracketMatching, syntaxHighlighting, HighlightStyle } from '@codemirror
 import { json } from '@codemirror/lang-json';
 import { tags } from '@lezer/highlight';
 import { useEditorStatus } from '@/shared/workspace-store';
+import { Button } from '@/components/ui/button';
 
 export type EditorLanguage = 'json' | 'text';
 
@@ -194,9 +195,15 @@ export function CodeEditor({
             ? 'Copy and pipe use the complete output.'
             : 'Processing uses the complete input. Paste to replace it, or clear to edit.'}
           {!readOnly && (
-            <button type="button" onClick={() => onChangeRef.current?.('')}>
+            <Button
+              type="button"
+              variant="link"
+              size="xs"
+              className="ml-2 inline-flex"
+              onClick={() => onChangeRef.current?.('')}
+            >
               Clear input
-            </button>
+            </Button>
           )}
         </p>
       )}

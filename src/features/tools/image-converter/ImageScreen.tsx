@@ -13,6 +13,8 @@ import { downloadDataUrl } from '@/shared/tool-clipboard';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export type ImageOutputFormat = 'image/png' | 'image/jpeg' | 'image/webp';
 
@@ -260,19 +262,19 @@ export function ImageScreen() {
           className="wb-sr-only"
           onChange={(e) => void handleFileSelect(e)}
         />
-        <button
+        <Button
           type="button"
           className="wb-button primary"
           onClick={() => fileInputRef.current?.click()}
         >
           <IconUpload size={22} stroke={1.7} aria-hidden="true" />
           Select image
-        </button>
+        </Button>
         {images.length > 0 ? (
-          <button type="button" className="wb-button" onClick={clear}>
+          <Button type="button" variant="outline" className="wb-button" onClick={clear}>
             <IconTrash size={22} stroke={1.7} aria-hidden="true" />
             Clear
-          </button>
+          </Button>
         ) : null}
       </div>
       {error ? (
@@ -337,7 +339,7 @@ export function ImageScreen() {
               <small>Large files convert slower and use more memory</small>
             </span>
             <span className="wb-row-action">
-              <input
+              <Input
                 aria-label="Resize width"
                 type="number"
                 min={1}
@@ -347,7 +349,7 @@ export function ImageScreen() {
                 onChange={(e) => handleWidthChange(parseInt(e.target.value, 10) || 0)}
               />
               <span aria-hidden="true">x</span>
-              <input
+              <Input
                 aria-label="Resize height"
                 type="number"
                 min={1}
@@ -370,7 +372,7 @@ export function ImageScreen() {
             />
           </div>
           <div className="wb-toolbar">
-            <button
+            <Button
               type="button"
               className="wb-button primary"
               disabled={processing}
@@ -378,12 +380,12 @@ export function ImageScreen() {
             >
               <IconRefresh size={22} stroke={1.7} aria-hidden="true" />
               {processing ? 'Converting...' : 'Convert'}
-            </button>
+            </Button>
             {convertedUrl ? (
-              <button type="button" className="wb-button" onClick={download}>
+              <Button type="button" variant="outline" className="wb-button" onClick={download}>
                 <IconDownload size={22} stroke={1.7} aria-hidden="true" />
                 Download ({formatImageSize(convertedSize)})
-              </button>
+              </Button>
             ) : null}
           </div>
           {convertedUrl ? (

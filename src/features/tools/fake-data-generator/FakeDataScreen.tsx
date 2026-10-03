@@ -8,6 +8,8 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -343,7 +345,7 @@ export function FakeDataScreen() {
       <div className="wb-toolbar">
         <label>
           Records
-          <input
+          <Input
             aria-label="Record count"
             type="number"
             min={1}
@@ -356,7 +358,7 @@ export function FakeDataScreen() {
         </label>
         <label>
           Seed
-          <input
+          <Input
             aria-label="Random seed"
             type="number"
             value={seed}
@@ -375,24 +377,26 @@ export function FakeDataScreen() {
             <NativeSelectOption value="sql">SQL</NativeSelectOption>
           </NativeSelect>
         </label>
-        <button
+        <Button
           type="button"
+          variant="default"
           className="wb-button primary"
           disabled={fields.length === 0}
           onClick={generate}
         >
-          <IconRefresh size={22} stroke={1.7} aria-hidden="true" />
+          <IconRefresh size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Generate
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           disabled={!output}
           onClick={() => void copyText(output)}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+          <IconCopy size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Copy
-        </button>
+        </Button>
       </div>
       {error ? (
         <div className="wb-error-banner" role="alert">

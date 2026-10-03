@@ -5,6 +5,8 @@ import { openDialog, closeDialog } from '@/shared/dialog';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
 import { isWorkbenchToolId } from '@/features/tools/specs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export function SearchDialog({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState('');
@@ -45,7 +47,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
       </h2>
       <div className="wb-dialog-search">
         <IconSearch size={25} />
-        <input
+        <Input
           autoFocus
           aria-label="Search tools and saved work"
           placeholder="Search tools or saved work..."
@@ -58,21 +60,25 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
             }
           }}
         />
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           className="wb-icon-button"
           aria-label="Close search"
           onClick={() => closeDialog(dialogRef.current)}
         >
           <IconX size={22} />
-        </button>
+        </Button>
       </div>
       <div className="wb-search-results">
         <p>Tools</p>
         {tools.map((tool) => (
-          <button
+          <Button
             key={tool.id}
             type="button"
+            variant="ghost"
+            className="w-full justify-between text-left h-auto"
             onClick={() => {
               onClose();
               if (isWorkbenchToolId(tool.id)) openTool(tool.id);
@@ -84,13 +90,15 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
               <small>{tool.description}</small>
             </span>
             <IconArrowRight size={18} />
-          </button>
+          </Button>
         ))}
         {!!savedResults.length && <p>Saved work</p>}
         {savedResults.map((item) => (
-          <button
+          <Button
             key={item.id}
             type="button"
+            variant="ghost"
+            className="w-full justify-between text-left h-auto"
             onClick={() => {
               onClose();
               restore(item);
@@ -102,7 +110,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
               <small>{item.kind}</small>
             </span>
             <IconArrowRight size={18} />
-          </button>
+          </Button>
         ))}
         {!tools.length && !savedResults.length && (
           <div className="wb-empty">No matching tools or saved work.</div>

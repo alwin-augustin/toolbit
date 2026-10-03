@@ -15,6 +15,8 @@ import { downloadBlob } from '@/shared/tool-clipboard';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export type PdfMode = 'merge' | 'split' | 'rotate';
 
@@ -263,10 +265,15 @@ export function PdfScreen() {
           <ToggleGroupItem value="split">Split / Extract</ToggleGroupItem>
           <ToggleGroupItem value="rotate">Rotate</ToggleGroupItem>
         </ToggleGroup>
-        <button type="button" className="wb-button" onClick={() => fileInputRef.current?.click()}>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => fileInputRef.current?.click()}
+        >
           <IconUpload size={22} stroke={1.7} aria-hidden="true" />
           Add PDF{mode === 'merge' ? 's' : ''}
-        </button>
+        </Button>
       </div>
       {status ? (
         <div className="wb-error-banner" role="alert">
@@ -294,9 +301,14 @@ export function PdfScreen() {
               </strong>
               <small>Files stay in this session and never leave the device</small>
             </span>
-            <button type="button" className="wb-button" onClick={() => setFiles([])}>
+            <Button
+              type="button"
+              variant="outline"
+              className="wb-button"
+              onClick={() => setFiles([])}
+            >
               Clear all
-            </button>
+            </Button>
           </div>
           <div>
             {files.map((file, i) => (
@@ -311,34 +323,40 @@ export function PdfScreen() {
                 <span className="wb-row-action">
                   {mode === 'merge' ? (
                     <>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         className="wb-icon-button"
                         aria-label={`Move ${file.name} up`}
                         disabled={i === 0}
                         onClick={() => setFiles((prev) => moveEntry(prev, i, -1))}
                       >
                         <IconArrowUp size={20} aria-hidden="true" />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon"
                         className="wb-icon-button"
                         aria-label={`Move ${file.name} down`}
                         disabled={i === files.length - 1}
                         onClick={() => setFiles((prev) => moveEntry(prev, i, 1))}
                       >
                         <IconArrowDown size={20} aria-hidden="true" />
-                      </button>
+                      </Button>
                     </>
                   ) : null}
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     className="wb-icon-button"
                     aria-label={`Remove ${file.name}`}
                     onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
                   >
                     <IconTrash size={20} aria-hidden="true" />
-                  </button>
+                  </Button>
                 </span>
               </div>
             ))}
@@ -355,14 +373,14 @@ export function PdfScreen() {
         <div className="wb-toolbar">
           <label>
             Page range (e.g. 1-3 or 1,3,5-7)
-            <input
+            <Input
               aria-label="Page range"
               value={splitRange}
               placeholder="1-3"
               onChange={(e) => setSplitRange(e.target.value)}
             />
           </label>
-          <button
+          <Button
             type="button"
             className="wb-button primary"
             disabled={processing}
@@ -370,7 +388,7 @@ export function PdfScreen() {
           >
             <IconDownload size={22} stroke={1.7} aria-hidden="true" />
             {processing ? 'Processing...' : 'Extract pages'}
-          </button>
+          </Button>
         </div>
       ) : null}
 
@@ -390,27 +408,27 @@ export function PdfScreen() {
           </label>
           <label>
             Pages
-            <input
+            <Input
               aria-label="Pages to rotate"
               value={rotatePages}
               placeholder="all or 1-3,5"
               onChange={(e) => setRotatePages(e.target.value)}
             />
           </label>
-          <button
+          <Button
             type="button"
             className="wb-button primary"
             disabled={processing}
             onClick={() => void rotatePdf()}
           >
             {processing ? 'Processing...' : 'Rotate & download'}
-          </button>
+          </Button>
         </div>
       ) : null}
 
       {mode === 'merge' && files.length >= 2 ? (
         <div className="wb-toolbar">
-          <button
+          <Button
             type="button"
             className="wb-button primary"
             disabled={processing}
@@ -418,7 +436,7 @@ export function PdfScreen() {
           >
             <IconDownload size={22} stroke={1.7} aria-hidden="true" />
             {processing ? 'Merging...' : `Merge ${files.length} PDFs`}
-          </button>
+          </Button>
         </div>
       ) : null}
     </>

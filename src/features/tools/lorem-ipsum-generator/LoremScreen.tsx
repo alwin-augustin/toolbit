@@ -8,6 +8,8 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -269,7 +271,7 @@ export function LoremScreen() {
       <div className="wb-toolbar">
         <label>
           Count
-          <input
+          <Input
             aria-label="Count"
             type="number"
             min={1}
@@ -290,19 +292,20 @@ export function LoremScreen() {
             <NativeSelectOption value="words">Words</NativeSelectOption>
           </NativeSelect>
         </label>
-        <button type="button" className="wb-button primary" onClick={generate}>
-          <IconRefresh size={22} stroke={1.7} aria-hidden="true" />
+        <Button type="button" variant="default" className="wb-button primary" onClick={generate}>
+          <IconRefresh size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Generate
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           disabled={!output}
           onClick={() => void copyText(output)}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+          <IconCopy size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Copy
-        </button>
+        </Button>
       </div>
       {error ? (
         <div className="wb-error-banner" role="alert">

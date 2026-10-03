@@ -15,6 +15,7 @@ import { CodeEditor } from '@/shared/CodeEditor';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { openDialog } from '@/shared/dialog';
 import { track } from '@/core/telemetry';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
@@ -34,10 +35,15 @@ function ToolbarButton({
   children: ReactNode;
 }) {
   return (
-    <button type="button" className={`wb-button${active ? ' primary' : ''}`} onClick={onClick}>
-      <Icon size={22} stroke={1.7} aria-hidden="true" />
+    <Button
+      type="button"
+      variant={active ? 'default' : 'outline'}
+      className={`wb-button${active ? ' primary' : ''}`}
+      onClick={onClick}
+    >
+      <Icon size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -174,16 +180,17 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
             ),
         )}
         <div className="wb-options-wrap">
-          <button
+          <Button
             type="button"
+            variant="outline"
             className="wb-button"
             aria-expanded={optionsOpen}
             onClick={() => setOptionsOpen(!optionsOpen)}
           >
-            <IconSettings size={22} stroke={1.7} aria-hidden="true" />
+            <IconSettings size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
             Options
-            <IconChevronDown size={18} />
-          </button>
+            <IconChevronDown size={18} data-icon="inline-end" />
+          </Button>
           {optionsOpen && (
             <div className="wb-popover wb-options-panel">
               <label>
@@ -231,14 +238,16 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
         <section className="wb-editor-pane" aria-label="Input panel">
           <div className="wb-pane-header">
             <h2>Input</h2>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               className="wb-button quiet wb-clear"
               onClick={() => update({ input: '', error: '', dirty: true })}
             >
-              <IconFile size={22} stroke={1.7} aria-hidden="true" />
+              <IconFile size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
               Clear
-            </button>
+            </Button>
           </div>
           <CodeEditor
             key={`${tab.id}-input`}
@@ -276,25 +285,33 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
               )}
             </span>
             <div className="wb-copy-actions">
-              <button type="button" className="wb-button primary" disabled={!valid} onClick={copy}>
-                <IconCopy size={22} stroke={1.7} aria-hidden="true" />
-                Copy result
-              </button>
-              <button
+              <Button
                 type="button"
+                variant="default"
+                className="wb-button primary"
+                disabled={!valid}
+                onClick={copy}
+              >
+                <IconCopy size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
+                Copy result
+              </Button>
+              <Button
+                type="button"
+                variant="default"
+                size="icon"
                 className="wb-copy-more"
                 aria-label="More result actions"
                 aria-expanded={copyMenuOpen}
                 onClick={() => setCopyMenuOpen(!copyMenuOpen)}
               >
                 <IconChevronDown size={18} />
-              </button>
+              </Button>
               {copyMenuOpen && (
                 <div className="wb-popover wb-copy-popover">
-                  <button type="button" disabled={!valid} onClick={download}>
-                    <IconDownload size={20} />
+                  <Button type="button" variant="ghost" disabled={!valid} onClick={download}>
+                    <IconDownload size={20} data-icon="inline-start" />
                     Download result
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -311,24 +328,31 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
             <span>{lineCount(doc.output)} lines</span>
             <span>{doc.output.length} characters</span>
             <span className="wb-file-type">{isJson ? 'JSON' : 'Text'}</span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               className="wb-icon-button"
               aria-label="Copy output"
               disabled={!valid}
               onClick={copy}
             >
               <IconCopy size={20} />
-            </button>
+            </Button>
           </div>
         </section>
       </div>
 
       <footer className="wb-workspace-footer">
-        <button type="button" className="wb-button" onClick={() => startSave('Sessions')}>
-          <IconBookmark size={22} stroke={1.7} aria-hidden="true" />
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => startSave('Sessions')}
+        >
+          <IconBookmark size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Save session
-        </button>
+        </Button>
       </footer>
       <SaveListener tab={tab} kind={saveKind} />
     </>
@@ -383,14 +407,16 @@ function SaveListener({ tab, kind }: { tab: WorkspaceTab; kind: 'Sessions' | 'Sn
       <form onSubmit={submit}>
         <div className="wb-dialog-title">
           <h2 id="wb-save-title">Save {dialogKind === 'Sessions' ? 'session' : 'snippet'}</h2>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             className="wb-icon-button"
             aria-label="Close save dialog"
             onClick={() => setDialogKind(null)}
           >
             <IconX size={22} />
-          </button>
+          </Button>
         </div>
         <p>
           {dialogKind === 'Sessions'
@@ -399,7 +425,7 @@ function SaveListener({ tab, kind }: { tab: WorkspaceTab; kind: 'Sessions' | 'Sn
         </p>
         <label>
           Name
-          <input
+          <Input
             required
             maxLength={80}
             value={name}
@@ -411,13 +437,18 @@ function SaveListener({ tab, kind }: { tab: WorkspaceTab; kind: 'Sessions' | 'Sn
         </label>
         <small>Saved in this session. Refreshing resets saved work.</small>
         <div className="wb-dialog-actions">
-          <button type="button" className="wb-button" onClick={() => setDialogKind(null)}>
+          <Button
+            type="button"
+            variant="outline"
+            className="wb-button"
+            onClick={() => setDialogKind(null)}
+          >
             Cancel
-          </button>
-          <button type="submit" className="wb-button primary">
-            <IconBookmark size={22} stroke={1.7} aria-hidden="true" />
+          </Button>
+          <Button type="submit" variant="default" className="wb-button primary">
+            <IconBookmark size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
             Save {dialogKind === 'Sessions' ? 'session' : 'snippet'}
-          </button>
+          </Button>
         </div>
       </form>
     </dialog>

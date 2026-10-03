@@ -1,3 +1,5 @@
+import { Skeleton } from '@/components/ui/skeleton';
+
 /**
  * Loading Fallback Component
  * Shown while lazy-loaded components are being loaded
@@ -45,12 +47,12 @@ export function FullPageLoading() {
  */
 export function SkeletonLoader({ count = 3 }: { count?: number }) {
   return (
-    <div className="space-y-4 p-6">
+    <div className="flex flex-col gap-4 p-6">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="space-y-3">
-          <div className="h-4 bg-muted rounded animate-pulse w-3/4"></div>
-          <div className="h-4 bg-muted rounded animate-pulse w-1/2"></div>
-          <div className="h-4 bg-muted rounded animate-pulse w-5/6"></div>
+        <div key={i} className="flex flex-col gap-3">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+          <Skeleton className="h-4 w-5/6" />
         </div>
       ))}
     </div>

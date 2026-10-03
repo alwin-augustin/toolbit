@@ -4,6 +4,8 @@ import { detectContentType } from '@/core/smart-detect';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
 import { getSpec } from '@/features/tools/specs';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 const PINNED = ['json-formatter', 'base64-encoder', 'timestamp-converter'];
 
@@ -24,7 +26,7 @@ export function StartScreen() {
       </div>
       <section className="wb-smart-paste">
         <h2>What are you working with?</h2>
-        <textarea
+        <Textarea
           aria-label="Paste data to find a tool"
           placeholder="Paste JSON, a timestamp, or encoded text..."
           value={scratch}
@@ -37,14 +39,14 @@ export function StartScreen() {
               : 'Pick a tool, or paste data to get started.'}
           </p>
           {suggested && (
-            <button
+            <Button
               type="button"
               className="wb-button primary"
               onClick={() => openTool(suggested.toolId, scratch)}
             >
-              <IconArrowRight size={22} stroke={1.7} aria-hidden="true" />
+              <IconArrowRight size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
               Open {getSpec(suggested.toolId)?.title}
-            </button>
+            </Button>
           )}
         </div>
       </section>
@@ -55,24 +57,41 @@ export function StartScreen() {
           if (!tool) return null;
           const ToolIcon = tool.icon;
           return (
-            <button key={id} type="button" className="wb-tool-tile" onClick={() => openTool(id)}>
+            <Button
+              key={id}
+              type="button"
+              variant="ghost"
+              className="wb-tool-tile text-left justify-start h-auto flex-col items-start"
+              onClick={() => openTool(id)}
+            >
               <ToolIcon size={30} />
               <h3>{tool.title}</h3>
               <p>{tool.description}</p>
               <IconArrowRight size={20} />
-            </button>
+            </Button>
           );
         })}
       </div>
       <div className="wb-section-title-row">
         <h2>Continue a session</h2>
-        <button type="button" className="wb-text-button" onClick={() => navigate('/saved')}>
+        <Button
+          type="button"
+          variant="link"
+          className="wb-text-button p-0 h-auto"
+          onClick={() => navigate('/saved')}
+        >
           View Saved
           <IconArrowRight size={18} />
-        </button>
+        </Button>
       </div>
       {sessions.map((item) => (
-        <button key={item.id} type="button" className="wb-list-row" onClick={() => restore(item)}>
+        <Button
+          key={item.id}
+          type="button"
+          variant="ghost"
+          className="wb-list-row text-left justify-start h-auto w-full"
+          onClick={() => restore(item)}
+        >
           <IconBraces size={26} />
           <span>
             <strong>{item.name}</strong>
@@ -82,7 +101,7 @@ export function StartScreen() {
             </small>
           </span>
           <IconArrowRight size={20} />
-        </button>
+        </Button>
       ))}
     </>
   );

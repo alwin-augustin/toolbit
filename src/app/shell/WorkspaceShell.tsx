@@ -5,6 +5,7 @@ import { Topbar } from '@/app/shell/Topbar';
 import { SearchDialog } from '@/app/shell/SearchDialog';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { applyTheme } from '@/shared/theme';
+import { Button } from '@/components/ui/button';
 
 export function WorkspaceShell({ children }: { children: ReactNode }) {
   const [mobileNav, setMobileNav] = useState(false);
@@ -52,9 +53,10 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
         Skip to workspace
       </a>
       {mobileNav && (
-        <button
+        <Button
           type="button"
-          className="wb-nav-backdrop"
+          variant="ghost"
+          className="wb-nav-backdrop p-0 border-0 rounded-none"
           aria-label="Close navigation"
           onClick={() => setMobileNav(false)}
         />

@@ -11,6 +11,8 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -285,26 +287,27 @@ export function ApiScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button type="button" className="wb-button primary" onClick={loadSample}>
+        <Button type="button" className="wb-button primary" onClick={loadSample}>
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           onClick={clear}
           disabled={!url && !body && !response}
         >
           <IconTrash size={22} stroke={1.7} aria-hidden="true" />
           Clear
-        </button>
+        </Button>
         {loading ? (
-          <button type="button" className="wb-button" onClick={cancelRequest}>
+          <Button type="button" variant="outline" className="wb-button" onClick={cancelRequest}>
             <IconX size={22} stroke={1.7} aria-hidden="true" />
             Cancel
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
             type="button"
             className="wb-button primary"
             onClick={() => void sendRequest()}
@@ -312,17 +315,18 @@ export function ApiScreen() {
           >
             <IconSend size={22} stroke={1.7} aria-hidden="true" />
             Send
-          </button>
+          </Button>
         )}
-        <button
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           onClick={() => void copyText(curlCommand, 'cURL command')}
           disabled={!url.trim()}
         >
           <IconCopy size={22} stroke={1.7} aria-hidden="true" />
           Copy as cURL
-        </button>
+        </Button>
         <small>Sends to: {url.trim() || 'No URL yet'}</small>
         {loading ? <span>Sending…</span> : null}
       </div>
@@ -357,7 +361,7 @@ export function ApiScreen() {
           <strong>URL</strong>
           <small>Endpoint that receives this request</small>
         </span>
-        <input
+        <Input
           aria-label="Request URL"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
@@ -373,7 +377,7 @@ export function ApiScreen() {
           <strong>Timeout: {timeoutSecs}s</strong>
           <small>1 to 120 seconds. Cancel anytime.</small>
         </span>
-        <input
+        <Input
           type="number"
           aria-label="Timeout seconds"
           min={1}
@@ -391,25 +395,26 @@ export function ApiScreen() {
           <strong>Copy as cURL only</strong>
           <small>Exported commands are for copying. They are never executed here.</small>
         </span>
-        <button
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           onClick={() => void copyText(curlCommand, 'cURL command')}
           disabled={!url.trim()}
         >
           <IconCopy size={20} aria-hidden="true" />
           Copy
-        </button>
+        </Button>
       </div>
       <div className="wb-setting-row">
         <span>
           <strong>Headers</strong>
           <small>{headers.length} configured</small>
         </span>
-        <button type="button" className="wb-button" onClick={addHeader}>
+        <Button type="button" variant="outline" className="wb-button" onClick={addHeader}>
           <IconPlus size={20} aria-hidden="true" />
           Add header
-        </button>
+        </Button>
       </div>
       {headers.map((header, index) => (
         <div className="wb-list-row" key={`header-${index}`}>
@@ -422,26 +427,28 @@ export function ApiScreen() {
             <strong>Header {index + 1}</strong>
             <small>{header.enabled ? 'Sent with the request' : 'Disabled'}</small>
           </span>
-          <input
+          <Input
             aria-label={`Header ${index + 1} name`}
             value={header.key}
             onChange={(e) => updateHeader(index, 'key', e.target.value)}
             placeholder="Header name"
           />
-          <input
+          <Input
             aria-label={`Header ${index + 1} value`}
             value={header.value}
             onChange={(e) => updateHeader(index, 'value', e.target.value)}
             placeholder="Value"
           />
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             className="wb-icon-button"
             aria-label={`Remove header ${index + 1}`}
             onClick={() => removeHeader(index)}
           >
             <IconX size={20} />
-          </button>
+          </Button>
         </div>
       ))}
       <div className="wb-editors">
@@ -475,7 +482,7 @@ export function ApiScreen() {
                   : `Status ${status} · ${elapsed ?? 0}ms`}
             </span>
             <div className="wb-copy-actions">
-              <button
+              <Button
                 type="button"
                 className="wb-button primary"
                 disabled={!response}
@@ -483,7 +490,7 @@ export function ApiScreen() {
               >
                 <IconCopy size={22} stroke={1.7} aria-hidden="true" />
                 Copy body
-              </button>
+              </Button>
             </div>
           </div>
           {response || status !== null ? (

@@ -9,6 +9,8 @@ import {
 } from '@tabler/icons-react';
 import { useDocumentField } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export interface HttpStatusEntry {
   code: number;
@@ -87,30 +89,42 @@ export function HttpStatusScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button type="button" className="wb-button primary" onClick={() => setQuery('404')}>
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
-          Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={() => setQuery('')} disabled={!query}>
-          <IconTrash size={22} stroke={1.7} aria-hidden="true" />
-          Clear
-        </button>
-        <button
+        <Button
           type="button"
+          variant="default"
+          className="wb-button primary"
+          onClick={() => setQuery('404')}
+        >
+          <IconSparkles size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
+          Load sample
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => setQuery('')}
+          disabled={!query}
+        >
+          <IconTrash size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
+          Clear
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
           className="wb-button"
           onClick={copyAll}
           disabled={results.length === 0}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+          <IconCopy size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Copy all
-        </button>
+        </Button>
         <span className="wb-result-state">
           {results.length} of {HTTP_STATUS_CODES.length} codes
         </span>
       </div>
       <div className="wb-catalog-search">
         <IconSearch size={20} aria-hidden="true" />
-        <input
+        <Input
           aria-label="Search status codes"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -130,15 +144,16 @@ export function HttpStatusScreen() {
               <small>{entry.phrase}</small>
             </span>
             <span className="wb-row-action">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 className="wb-button"
                 aria-label={`Copy ${entry.code} ${entry.phrase}`}
                 onClick={() => void copyText(statusCodeLabel(entry), statusCodeLabel(entry))}
               >
                 <IconCopy size={20} aria-hidden="true" />
                 Copy
-              </button>
+              </Button>
             </span>
           </div>
         ))

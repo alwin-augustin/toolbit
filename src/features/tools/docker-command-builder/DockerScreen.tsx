@@ -13,6 +13,8 @@ import { useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export interface DockerPort {
   host: string;
@@ -183,18 +185,18 @@ export function DockerScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button type="button" className="wb-button primary" onClick={loadSample}>
+        <Button type="button" className="wb-button primary" onClick={loadSample}>
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={resetAll}>
+        </Button>
+        <Button type="button" variant="outline" className="wb-button" onClick={resetAll}>
           <IconTrash size={22} stroke={1.7} aria-hidden="true" />
           Reset
-        </button>
-        <button type="button" className="wb-button primary" onClick={() => void copyCommand()}>
+        </Button>
+        <Button type="button" className="wb-button primary" onClick={() => void copyCommand()}>
           <IconCopy size={22} stroke={1.7} aria-hidden="true" />
           Copy command
-        </button>
+        </Button>
       </div>
       <p>
         Generated-command scope only: this builds a command string for review. Nothing here runs or
@@ -205,7 +207,7 @@ export function DockerScreen() {
           <strong>Image</strong>
           <small>Container image, with optional tag</small>
         </span>
-        <input
+        <Input
           aria-label="Docker image"
           value={image}
           onChange={(e) => setImage(e.target.value)}
@@ -217,7 +219,7 @@ export function DockerScreen() {
           <strong>Container name</strong>
           <small>Optional --name value</small>
         </span>
-        <input
+        <Input
           aria-label="Container name"
           value={containerName}
           onChange={(e) => setContainerName(e.target.value)}
@@ -229,7 +231,7 @@ export function DockerScreen() {
           <strong>Network</strong>
           <small>Optional --network value</small>
         </span>
-        <input
+        <Input
           aria-label="Docker network"
           value={network}
           onChange={(e) => setNetwork(e.target.value)}
@@ -270,14 +272,15 @@ export function DockerScreen() {
           <strong>Port mappings ({ports.length})</strong>
           <small>Expose container ports on the host</small>
         </span>
-        <button
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           onClick={() => setPorts([...ports, { host: '', container: '', protocol: 'tcp' }])}
         >
           <IconPlus size={20} aria-hidden="true" />
           Add
-        </button>
+        </Button>
       </div>
       {ports.length === 0 ? (
         <div className="wb-empty">
@@ -287,7 +290,7 @@ export function DockerScreen() {
       ) : null}
       {ports.map((port, index) => (
         <div className="wb-list-row" key={`port-${index}`}>
-          <input
+          <Input
             aria-label={`Port ${index + 1} host`}
             value={port.host}
             onChange={(e) =>
@@ -297,7 +300,7 @@ export function DockerScreen() {
             }
             placeholder="Host"
           />
-          <input
+          <Input
             aria-label={`Port ${index + 1} container`}
             value={port.container}
             onChange={(e) =>
@@ -323,14 +326,16 @@ export function DockerScreen() {
             <NativeSelectOption value="tcp">tcp</NativeSelectOption>
             <NativeSelectOption value="udp">udp</NativeSelectOption>
           </NativeSelect>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             className="wb-icon-button"
             aria-label={`Remove port ${index + 1}`}
             onClick={() => setPorts(ports.filter((_, i) => i !== index))}
           >
             <IconX size={20} />
-          </button>
+          </Button>
         </div>
       ))}
       <div className="wb-setting-row">
@@ -338,14 +343,15 @@ export function DockerScreen() {
           <strong>Volumes ({volumes.length})</strong>
           <small>Mount host paths or named volumes</small>
         </span>
-        <button
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           onClick={() => setVolumes([...volumes, { host: '', container: '', mode: 'rw' }])}
         >
           <IconPlus size={20} aria-hidden="true" />
           Add
-        </button>
+        </Button>
       </div>
       {volumes.length === 0 ? (
         <div className="wb-empty">
@@ -355,7 +361,7 @@ export function DockerScreen() {
       ) : null}
       {volumes.map((volume, index) => (
         <div className="wb-list-row" key={`volume-${index}`}>
-          <input
+          <Input
             aria-label={`Volume ${index + 1} host`}
             value={volume.host}
             onChange={(e) =>
@@ -367,7 +373,7 @@ export function DockerScreen() {
             }
             placeholder="Host path"
           />
-          <input
+          <Input
             aria-label={`Volume ${index + 1} container`}
             value={volume.container}
             onChange={(e) =>
@@ -393,14 +399,16 @@ export function DockerScreen() {
             <NativeSelectOption value="rw">rw</NativeSelectOption>
             <NativeSelectOption value="ro">ro</NativeSelectOption>
           </NativeSelect>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             className="wb-icon-button"
             aria-label={`Remove volume ${index + 1}`}
             onClick={() => setVolumes(volumes.filter((_, i) => i !== index))}
           >
             <IconX size={20} />
-          </button>
+          </Button>
         </div>
       ))}
       <div className="wb-setting-row">
@@ -408,14 +416,15 @@ export function DockerScreen() {
           <strong>Environment ({envVars.length})</strong>
           <small>KEY=value pairs passed into the container</small>
         </span>
-        <button
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           onClick={() => setEnvVars([...envVars, { key: '', value: '' }])}
         >
           <IconPlus size={20} aria-hidden="true" />
           Add
-        </button>
+        </Button>
       </div>
       {envVars.length === 0 ? (
         <div className="wb-empty">
@@ -425,7 +434,7 @@ export function DockerScreen() {
       ) : null}
       {envVars.map((variable, index) => (
         <div className="wb-list-row" key={`env-${index}`}>
-          <input
+          <Input
             aria-label={`Variable ${index + 1} key`}
             value={variable.key}
             onChange={(e) =>
@@ -437,7 +446,7 @@ export function DockerScreen() {
             }
             placeholder="KEY"
           />
-          <input
+          <Input
             aria-label={`Variable ${index + 1} value`}
             value={variable.value}
             onChange={(e) =>
@@ -449,14 +458,16 @@ export function DockerScreen() {
             }
             placeholder="value"
           />
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             className="wb-icon-button"
             aria-label={`Remove variable ${index + 1}`}
             onClick={() => setEnvVars(envVars.filter((_, i) => i !== index))}
           >
             <IconX size={20} />
-          </button>
+          </Button>
         </div>
       ))}
       <h2 className="wb-section-title">Generated command</h2>
@@ -465,14 +476,14 @@ export function DockerScreen() {
           <div className="wb-pane-header">
             <h2>docker run</h2>
             <div className="wb-copy-actions">
-              <button
+              <Button
                 type="button"
                 className="wb-button primary"
                 onClick={() => void copyCommand()}
               >
                 <IconCopy size={22} stroke={1.7} aria-hidden="true" />
                 Copy
-              </button>
+              </Button>
             </div>
           </div>
           <CodeEditor value={output} language="text" readOnly label="Generated docker command" />

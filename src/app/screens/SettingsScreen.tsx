@@ -3,6 +3,7 @@ import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { usePreferences } from '@/core/preferences';
 import { clearAllHistory, pruneExpiredHistory } from '@/core/history-db';
 import { setTheme, useTheme, type Theme } from '@/shared/theme';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -126,12 +127,22 @@ export function SettingsScreen() {
         />
       </div>
       <div className="wb-toolbar">
-        <button type="button" className="wb-button" onClick={() => void applyRetention()}>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => void applyRetention()}
+        >
           Apply retention
-        </button>
-        <button type="button" className="wb-button" onClick={() => void clearData()}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => void clearData()}
+        >
           Clear stored history
-        </button>
+        </Button>
         {status ? (
           <span role="status" aria-live="polite">
             {status}

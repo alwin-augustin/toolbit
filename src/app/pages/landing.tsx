@@ -19,6 +19,7 @@ import {
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import appLogoUrl from '@/shared/ds/assets/logo-mark.svg';
 import { applySeo } from '@/content/seo/use-seo';
 import { TOOL_PAGES } from '@/content/seo/seo-content.js';
@@ -204,13 +205,13 @@ export function LandingPage() {
                   </label>
                   <span className="text-xs text-muted-foreground/70">Local-only</span>
                 </div>
-                <textarea
+                <Textarea
                   id="landing-demo-input"
                   value={demoInput}
                   onChange={(e) => setDemoInput(e.target.value)}
                   placeholder="Paste JSON, JWT, Base64, cron, SQL, URLs..."
                   aria-label="Paste data to find a tool"
-                  className="w-full h-32 rounded-lg border border-border bg-background p-3 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary placeholder:text-muted-foreground/60"
+                  className="w-full h-32 font-mono text-sm resize-none"
                 />
 
                 {suggestions.length > 0 && (
@@ -241,34 +242,46 @@ export function LandingPage() {
                 {!demoInput && (
                   <div className="flex flex-wrap items-center gap-2 mt-3">
                     <span className="text-xs text-muted-foreground">Try:</span>
-                    <button
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setDemoInput('{"name": "toolbit", "version": "2.0"}')}
-                      className="text-xs px-2.5 py-1 rounded-md bg-muted text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                      className="text-xs h-7 px-2.5 py-1"
                     >
                       JSON
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
                       onClick={() =>
                         setDemoInput(
                           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoidG9vbGJpdCJ9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
                         )
                       }
-                      className="text-xs px-2.5 py-1 rounded-md bg-muted text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                      className="text-xs h-7 px-2.5 py-1"
                     >
                       JWT
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setDemoInput('*/5 * * * *')}
-                      className="text-xs px-2.5 py-1 rounded-md bg-muted text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                      className="text-xs h-7 px-2.5 py-1"
                     >
                       Cron
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setDemoInput('1707307200')}
-                      className="text-xs px-2.5 py-1 rounded-md bg-muted text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                      className="text-xs h-7 px-2.5 py-1"
                     >
                       Timestamp
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>

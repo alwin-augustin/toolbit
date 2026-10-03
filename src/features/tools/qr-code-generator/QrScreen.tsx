@@ -12,7 +12,9 @@ import { downloadBlob, downloadDataUrl } from '@/shared/tool-clipboard';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Button } from '@/components/ui/button';
 
 export type QrMode = 'text' | 'url' | 'wifi' | 'vcard';
 
@@ -226,23 +228,24 @@ export function QrScreen() {
       </div>
       <div className="wb-toolbar">
         {MODES.map((entry) => (
-          <button
+          <Button
             key={entry.value}
             type="button"
+            variant={mode === entry.value ? 'default' : 'outline'}
             className={`wb-button${mode === entry.value ? ' primary' : ''}`}
             onClick={() => setMode(entry.value)}
           >
             {entry.label}
-          </button>
+          </Button>
         ))}
-        <button type="button" className="wb-button primary" onClick={loadSample}>
+        <Button type="button" className="wb-button primary" onClick={loadSample}>
           <IconFlask size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={clear}>
+        </Button>
+        <Button type="button" variant="outline" className="wb-button" onClick={clear}>
           <IconTrash size={22} stroke={1.7} aria-hidden="true" />
           Clear
-        </button>
+        </Button>
       </div>
       {error ? (
         <div className="wb-error-banner" role="alert">
@@ -294,7 +297,7 @@ export function QrScreen() {
             <strong>URL</strong>
             <small>Link encoded in the QR code</small>
           </span>
-          <input
+          <Input
             aria-label="QR URL"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
@@ -310,7 +313,7 @@ export function QrScreen() {
               <strong>Network name (SSID)</strong>
               <small>WiFi network name</small>
             </span>
-            <input
+            <Input
               aria-label="WiFi SSID"
               value={wifiSsid}
               onChange={(e) => setWifiSsid(e.target.value)}
@@ -322,7 +325,7 @@ export function QrScreen() {
               <strong>Password</strong>
               <small>Kept in this document only</small>
             </span>
-            <input
+            <Input
               type="password"
               aria-label="WiFi password"
               value={wifiPassword}
@@ -355,7 +358,7 @@ export function QrScreen() {
               <strong>Full name</strong>
               <small>Contact display name</small>
             </span>
-            <input
+            <Input
               aria-label="Contact name"
               value={vcardName}
               onChange={(e) => setVcardName(e.target.value)}
@@ -367,7 +370,7 @@ export function QrScreen() {
               <strong>Phone</strong>
               <small>Contact phone number</small>
             </span>
-            <input
+            <Input
               aria-label="Contact phone"
               value={vcardPhone}
               onChange={(e) => setVcardPhone(e.target.value)}
@@ -379,7 +382,7 @@ export function QrScreen() {
               <strong>Email</strong>
               <small>Contact email address</small>
             </span>
-            <input
+            <Input
               aria-label="Contact email"
               value={vcardEmail}
               onChange={(e) => setVcardEmail(e.target.value)}
@@ -442,7 +445,7 @@ export function QrScreen() {
         </>
       ) : null}
       <div className="wb-toolbar">
-        <button
+        <Button
           type="button"
           className="wb-button primary"
           disabled={!qrDataUrl}
@@ -450,15 +453,26 @@ export function QrScreen() {
         >
           <IconDownload size={22} stroke={1.7} aria-hidden="true" />
           Download PNG
-        </button>
-        <button type="button" className="wb-button" disabled={!qrSvg} onClick={downloadSvg}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          disabled={!qrSvg}
+          onClick={downloadSvg}
+        >
           <IconDownload size={22} stroke={1.7} aria-hidden="true" />
           Download SVG
-        </button>
-        <button type="button" className="wb-button" onClick={() => void copyContent()}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => void copyContent()}
+        >
           <IconCopy size={22} stroke={1.7} aria-hidden="true" />
           Copy content
-        </button>
+        </Button>
       </div>
     </>
   );

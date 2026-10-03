@@ -11,6 +11,7 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
 
 export interface NginxIssue {
   line: number;
@@ -333,21 +334,38 @@ export function NginxScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button type="button" className="wb-button primary" onClick={() => setInput(NGINX_SAMPLE)}>
+        <Button type="button" className="wb-button primary" onClick={() => setInput(NGINX_SAMPLE)}>
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={formatConfig} disabled={!input.trim()}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={formatConfig}
+          disabled={!input.trim()}
+        >
           Format
-        </button>
-        <button type="button" className="wb-button" onClick={() => void copyConfig()}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => void copyConfig()}
+        >
           <IconCopy size={22} stroke={1.7} aria-hidden="true" />
           Copy
-        </button>
-        <button type="button" className="wb-button" onClick={() => setInput('')} disabled={!input}>
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="wb-button"
+          onClick={() => setInput('')}
+          disabled={!input}
+        >
           <IconTrash size={22} stroke={1.7} aria-hidden="true" />
           Clear
-        </button>
+        </Button>
       </div>
       <p>
         Limited static checks only: brace balance, missing semicolons, and known directives. Passing

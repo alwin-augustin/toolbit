@@ -3,6 +3,8 @@ import { IconCopy, IconEraser, IconRegex, IconSparkles } from '@tabler/icons-rea
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export interface RegexMatch {
   fullMatch: string;
@@ -155,22 +157,23 @@ export function RegexScreen() {
       </div>
 
       <div className="wb-toolbar">
-        <button type="button" className="wb-button" onClick={loadSample}>
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+        <Button type="button" variant="outline" className="wb-button" onClick={loadSample}>
+          <IconSparkles size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Load sample
-        </button>
-        <button type="button" className="wb-button" onClick={clear}>
-          <IconEraser size={22} stroke={1.7} aria-hidden="true" />
+        </Button>
+        <Button type="button" variant="outline" className="wb-button" onClick={clear}>
+          <IconEraser size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Clear
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant={showReplace ? 'default' : 'outline'}
           className={`wb-button${showReplace ? ' primary' : ''}`}
           onClick={() => setShowReplace(!showReplace)}
           aria-expanded={showReplace}
         >
           Replace preview
-        </button>
+        </Button>
       </div>
 
       {error && (
@@ -185,7 +188,7 @@ export function RegexScreen() {
           <strong>Pattern</strong>
           <small>JavaScript RegExp syntax, without the slashes.</small>
         </span>
-        <input
+        <Input
           aria-label="Pattern"
           value={pattern}
           onChange={(e) => setPattern(e.target.value)}
@@ -197,7 +200,7 @@ export function RegexScreen() {
           <strong>Flags</strong>
           <small>Common flags: g global, i case-insensitive, m multiline, s dotall.</small>
         </span>
-        <input
+        <Input
           aria-label="Flags"
           value={flags}
           onChange={(e) => setFlags(e.target.value)}
@@ -210,7 +213,7 @@ export function RegexScreen() {
             <strong>Replacement</strong>
             <small>Supports $1, $2 and named references.</small>
           </span>
-          <input
+          <Input
             aria-label="Replacement"
             value={replacement}
             onChange={(e) => setReplacement(e.target.value)}
@@ -223,13 +226,15 @@ export function RegexScreen() {
         <section className="wb-editor-pane" aria-label="Test text panel">
           <div className="wb-pane-header">
             <h2>Test text</h2>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               className="wb-button quiet wb-clear"
               onClick={() => setTestString('')}
             >
               Clear
-            </button>
+            </Button>
           </div>
           <CodeEditor
             value={testString}
@@ -246,15 +251,17 @@ export function RegexScreen() {
         <section className="wb-editor-pane" aria-label="Replace preview panel">
           <div className="wb-pane-header">
             <h2>Replace preview</h2>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               className="wb-button quiet wb-clear"
               disabled={!replacePreview.result}
               onClick={() => copy(replacePreview.result, 'Preview')}
             >
               <IconCopy size={18} aria-hidden="true" />
               Copy
-            </button>
+            </Button>
           </div>
           <CodeEditor
             value={replacePreview.error ?? replacePreview.result}
@@ -272,15 +279,16 @@ export function RegexScreen() {
 
       <div className="wb-section-title-row">
         <h2>Matches ({matches.length})</h2>
-        <button
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           disabled={!matches.length}
           onClick={() => copy(matches.map((m) => m.fullMatch).join('\n'), 'Matches')}
         >
           <IconCopy size={20} aria-hidden="true" />
           Copy matches
-        </button>
+        </Button>
       </div>
       {matches.length === 0 ? (
         <div className="wb-empty">

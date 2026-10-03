@@ -10,6 +10,7 @@ import DOMPurify from 'dompurify';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { Button } from '@/components/ui/button';
 
 export const MARKDOWN_SAMPLE = `# Sample Markdown
 
@@ -121,31 +122,33 @@ export function MarkdownScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <button
+        <Button
           type="button"
           className="wb-button primary"
           onClick={() => setMarkdown(MARKDOWN_SAMPLE)}
         >
           <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
           Load sample
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           onClick={() => setMarkdown('')}
           disabled={!markdown}
         >
           Clear
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="outline"
           className="wb-button"
           onClick={() => void copyHtml()}
           disabled={!html}
         >
           <IconCopy size={22} stroke={1.7} aria-hidden="true" />
           Copy HTML
-        </button>
+        </Button>
       </div>
       <div className="wb-editors">
         <section className="wb-editor-pane" aria-label="Markdown input panel">
@@ -167,7 +170,7 @@ export function MarkdownScreen() {
           <div className="wb-pane-header">
             <h2>Preview</h2>
             <div className="wb-copy-actions">
-              <button
+              <Button
                 type="button"
                 className="wb-button primary"
                 disabled={!html}
@@ -175,7 +178,7 @@ export function MarkdownScreen() {
               >
                 <IconCopy size={22} stroke={1.7} aria-hidden="true" />
                 Copy HTML
-              </button>
+              </Button>
             </div>
           </div>
           {html ? (
