@@ -22,6 +22,7 @@ jobs:
     name: Lint, typecheck, and unit tests
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -55,11 +56,16 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
     strategy:
       # One failing browser must not hide the results of the others.
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
+        browser:
+          - chromium
+          - firefox
+          - webkit
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -108,21 +114,30 @@ jobs:
   deploy:
     name: Deploy to Cloudflare Pages
     needs: e2e
-    # Production on the default branch, preview aliases on PRs. The
-    # CLOUDFLARE_API_TOKEN guard lives at the step level (the `secrets`
-    # context is not available in a job-level `if`).
+
+    # Production on main, preview deployments on pull requests.
+    # Secrets cannot be referenced directly from `if:` expressions,
+    # so CLOUDFLARE_API_TOKEN is exposed as a job-level environment variable.
+    #
     # NOTE: if the Pages project's Git integration auto-builds, disable
     # "Automatic deployments" in the Cloudflare dashboard first — otherwise
     # every push deploys twice (once here, once there).
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
     permissions:
       contents: read
       deployments: write
+
     environment:
       name: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
       url: ${{ steps.pages.outputs.deployment-url }}
+
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -144,10 +159,10 @@ jobs:
 
       - name: Deploy dist/ to Cloudflare Pages
         id: pages
-        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
         uses: cloudflare/wrangler-action@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
