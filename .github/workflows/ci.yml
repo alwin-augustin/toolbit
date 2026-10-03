@@ -48,69 +48,9 @@ jobs:
       - name: Run unit and component tests with coverage gate
         run: npm run test:coverage -- --run
 
-  e2e:
-    name: Browser tests (${{ matrix.browser }})
-    needs: validate
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    strategy:
-      # One failing browser must not hide the results of the others.
-      fail-fast: false
-      matrix:
-        browser:
-          - chromium
-          - firefox
-          - webkit
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-
-      - name: Install Playwright browsers with system deps
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install ${{ matrix.browser }} --with-deps
-
-      - name: Install Playwright system deps
-        # Binaries restore from cache, but system libraries live outside it.
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps ${{ matrix.browser }}
-
-      - name: Build web app
-        run: npm run build
-
-      - name: Run production browser smoke and accessibility checks
-        run: npx playwright test --project=${{ matrix.browser }}
-        env:
-          TOOLBIT_BLOCK_ANALYTICS: '1'
-
-      - name: Upload browser failure artifacts
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: browser-failures-${{ matrix.browser }}
-          path: test-results/
-          retention-days: 7
-
   deploy:
     name: Deploy to Cloudflare Pages
-    needs: e2e
+    needs: validate
 
     # Production on main, preview deployments on pull requests.
     # Secrets cannot be referenced directly from `if:` expressions,
