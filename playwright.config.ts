@@ -5,9 +5,9 @@ export default defineConfig({
   timeout: 45000,
   retries: process.env.CI ? 1 : 0,
   projects: [
-    { name: 'chromium', use: { browserName: 'chromium' } },
-    { name: 'firefox', use: { browserName: 'firefox' } },
-    { name: 'webkit', use: { browserName: 'webkit' } },
+    { name: 'chromium', use: { browserName: 'chromium' }, testIgnore: /lp-.*\.spec\.ts/ },
+    { name: 'firefox', use: { browserName: 'firefox' }, testIgnore: /lp-.*\.spec\.ts/ },
+    { name: 'webkit', use: { browserName: 'webkit' }, testIgnore: /lp-.*\.spec\.ts/ },
     {
       // Lightpanda over CDP: functional sweep only. No rendering engine, so
       // no screenshots, geometry, mouse, clipboard, SW or downloads here.

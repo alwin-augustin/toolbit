@@ -52,3 +52,52 @@ describe('seeded determinism', () => {
     expect(generatePasswords('ab', 4, 2, src)).toEqual(generatePasswords('ab', 4, 2, src));
   });
 });
+
+describe('shared dialog and utils', () => {
+  it('handles openDialog and closeDialog with showModal/close and fallbacks', async () => {
+    const { openDialog, closeDialog } = await import('@/shared/dialog');
+    const { cn } = await import('@/lib/utils');
+
+    expect(cn('px-2', 'py-1')).toBe('px-2 py-1');
+
+    openDialog(null);
+    closeDialog(null);
+
+    const dialog = document.createElement('dialog');
+    let showModalCalled = false;
+    let closeCalled = false;
+    dialog.showModal = () => {
+      showModalCalled = true;
+      dialog.open = true;
+    };
+    dialog.close = () => {
+      closeCalled = true;
+      dialog.open = false;
+    };
+
+    openDialog(dialog);
+    expect(showModalCalled).toBe(true);
+    expect(dialog.open).toBe(true);
+
+    // already open, no-op
+    openDialog(dialog);
+
+    closeDialog(dialog);
+    expect(closeCalled).toBe(true);
+    expect(dialog.open).toBe(false);
+
+    // already closed, no-op
+    closeDialog(dialog);
+
+    // Fallback branch without showModal/close
+    const fallbackDialog = document.createElement('dialog');
+    Object.defineProperty(fallbackDialog, 'showModal', { value: undefined });
+    Object.defineProperty(fallbackDialog, 'close', { value: undefined });
+
+    openDialog(fallbackDialog);
+    expect(fallbackDialog.hasAttribute('open')).toBe(true);
+
+    closeDialog(fallbackDialog);
+    expect(fallbackDialog.hasAttribute('open')).toBe(false);
+  });
+});

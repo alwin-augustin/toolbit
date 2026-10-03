@@ -55,6 +55,7 @@ export function SettingsScreen() {
           <small>Follows your system appearance until you pick one. Saved on this device.</small>
         </span>
         <ToggleGroup
+          aria-label="Theme"
           value={[theme]}
           onValueChange={(v) => setTheme((v[0] ?? 'system') as Theme)}
           variant="outline"

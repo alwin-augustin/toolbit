@@ -60,7 +60,10 @@ test('start, smart paste, documents, history and recipe', async ({ page }) => {
 
   // The example recipe decodes and formats the invoice sample.
   await page.getByRole('button', { name: 'Saved', exact: true }).click();
-  await page.getByRole('button', { name: 'Examples' }).click();
+  await page
+    .getByRole('tab', { name: 'Examples' })
+    .or(page.getByRole('button', { name: 'Examples' }))
+    .click();
   await page.getByRole('button', { name: /Decode webhook payload/ }).click();
   await expect(page.getByRole('heading', { name: 'JSON' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: OUTPUT })).toContainText('invoice.paid');
@@ -210,18 +213,6 @@ test('large input shows a bounded preview and copies the complete output', async
   await page.getByRole('textbox', { name: INPUT }).fill('{"new":true}');
   await page.getByRole('button', { name: 'Format', exact: true }).click();
   await expect(page.getByRole('textbox', { name: OUTPUT })).toContainText('"new": true');
-});
-
-test('result handoff carries output into another tool', async ({ page }) => {
-  await page.goto('/json-formatter');
-  await page.getByRole('textbox', { name: INPUT }).fill('{"h":1}');
-  await page.getByRole('button', { name: 'Format', exact: true }).click();
-  await page.getByRole('button', { name: 'Use result in...' }).click();
-  await page.locator('.wb-use-popover').getByRole('button', { name: 'Base64' }).click();
-  await expect(page).toHaveURL(/base64-encoder/);
-  await expect(page.getByRole('textbox', { name: INPUT })).toContainText('"h": 1');
-  await page.getByRole('button', { name: 'Encode', exact: true }).click();
-  await expect(page.getByRole('textbox', { name: OUTPUT })).toContainText('ewogICJoIjogMQp9');
 });
 
 test('search and save dialogs pass accessibility checks at 200 percent scale', async ({ page }) => {

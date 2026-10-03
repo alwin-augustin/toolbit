@@ -17,13 +17,7 @@ import { openDialog } from '@/shared/dialog';
 import { track } from '@/core/telemetry';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { getSpec, patchWorkbenchDoc, readDoc, specParams } from '@/features/tools/specs';
 import type { WorkbenchDocState } from '@/shared/workbench';
 import type { WorkspaceTab } from '@/shared/workspace-store';
@@ -165,21 +159,17 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
             option.type === 'select' && (
               <label key={option.key} className="wb-indent-label">
                 {option.label}
-                <Select
+                <NativeSelect
+                  aria-label={option.label.replace(/:$/, '')}
                   value={String(params[option.key] ?? '')}
-                  onValueChange={(value) => setParam(option.key, value ?? '')}
+                  onChange={(e) => setParam(option.key, e.target.value)}
                 >
-                  <SelectTrigger aria-label={option.label.replace(/:$/, '')}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {option.choices?.map((choice) => (
-                      <SelectItem key={choice.value} value={choice.value}>
-                        {choice.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  {option.choices?.map((choice) => (
+                    <NativeSelectOption key={choice.value} value={choice.value}>
+                      {choice.label}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
               </label>
             ),
         )}
