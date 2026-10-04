@@ -75,7 +75,7 @@ export const useWorkbenchMemory = create<WorkbenchMemory>()((set) => ({
   toast: '',
   setRemember: (remember) => set({ remember }),
   setWrap: (wrap) => set({ wrap }),
-  addSaved: (item) => set((s) => ({ saved: [item, ...s.saved] })),
+  addSaved: (item) => set((s) => ({ saved: [item, ...s.saved].slice(0, 50) })),
   addRun: (run) => set((s) => ({ runs: [run, ...s.runs].slice(0, 20) })),
   notify: (toast) => set({ toast }),
   clearToast: () => set({ toast: '' }),

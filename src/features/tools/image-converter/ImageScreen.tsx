@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 
 export type ImageOutputFormat = 'image/png' | 'image/jpeg' | 'image/webp';
 
@@ -323,13 +324,13 @@ export function ImageScreen() {
                 <strong>Quality: {quality}%</strong>
                 <small>Lower is a smaller file; higher keeps detail</small>
               </span>
-              <input
-                type="range"
+              <Slider
                 aria-label="Output quality"
                 min={1}
                 max={100}
                 value={quality}
-                onChange={(e) => setQuality(parseInt(e.target.value, 10))}
+                onValueChange={(val) => setQuality(typeof val === 'number' ? val : val[0])}
+                className="max-w-xs"
               />
             </div>
           ) : null}

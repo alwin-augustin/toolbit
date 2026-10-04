@@ -11,6 +11,7 @@ import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 
 export const PASSWORD_CHARSETS = {
   lowercase: 'abcdefghijklmnopqrstuvwxyz',
@@ -201,13 +202,13 @@ export function PasswordScreen() {
           <strong>Length: {length}</strong>
           <small>4 to 128 characters</small>
         </span>
-        <input
-          type="range"
+        <Slider
           aria-label="Password length"
           min={4}
           max={128}
           value={length}
-          onChange={(e) => setLength(Number(e.target.value))}
+          onValueChange={(val) => setLength(typeof val === 'number' ? val : val[0])}
+          className="max-w-xs"
         />
       </div>
       <div className="wb-setting-row">

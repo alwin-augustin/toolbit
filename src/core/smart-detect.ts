@@ -245,6 +245,15 @@ export function detectContentType(text: string): SmartSuggestion[] {
           reason: 'Large input — detected certificate',
         },
       ];
+    if (/^diff --git |^--- a\/|^\+\+\+ b\//m.test(sample))
+      return [
+        {
+          toolId: 'git-diff-viewer',
+          toolName: 'Git Diff Viewer',
+          path: '/git-diff-viewer',
+          reason: 'Large input — detected unified diff',
+        },
+      ];
     return [
       {
         toolId: 'json-formatter',

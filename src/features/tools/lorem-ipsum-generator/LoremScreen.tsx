@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 export const LOREM_WORDS = [
   'lorem',
@@ -269,7 +270,7 @@ export function LoremScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <label>
+        <Label className="flex items-center gap-2">
           Count
           <Input
             aria-label="Count"
@@ -279,8 +280,8 @@ export function LoremScreen() {
             value={count}
             onChange={(e) => setCount(Math.max(1, parseInt(e.target.value, 10) || 1))}
           />
-        </label>
-        <label>
+        </Label>
+        <Label className="flex items-center gap-2">
           Type
           <NativeSelect
             aria-label="Output type"
@@ -291,7 +292,7 @@ export function LoremScreen() {
             <NativeSelectOption value="sentences">Sentences</NativeSelectOption>
             <NativeSelectOption value="words">Words</NativeSelectOption>
           </NativeSelect>
-        </label>
+        </Label>
         <Button type="button" variant="default" className="wb-button primary" onClick={generate}>
           <IconRefresh size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Generate

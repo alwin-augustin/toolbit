@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 export type UuidVersion = 'v4' | 'v7';
 
@@ -125,7 +126,7 @@ export function UuidScreen() {
       </div>
 
       <div className="wb-toolbar">
-        <label>
+        <Label className="flex items-center gap-2">
           Version
           <NativeSelect
             aria-label="UUID version"
@@ -135,8 +136,8 @@ export function UuidScreen() {
             <NativeSelectOption value="v4">v4 — random</NativeSelectOption>
             <NativeSelectOption value="v7">v7 — time-ordered</NativeSelectOption>
           </NativeSelect>
-        </label>
-        <label>
+        </Label>
+        <Label className="flex items-center gap-2">
           Count
           <NativeSelect
             aria-label="Batch count"
@@ -149,7 +150,7 @@ export function UuidScreen() {
               </NativeSelectOption>
             ))}
           </NativeSelect>
-        </label>
+        </Label>
         <Button type="button" className="wb-button primary" onClick={regenerate}>
           <IconRefresh size={22} stroke={1.7} aria-hidden="true" />
           Generate
@@ -216,7 +217,7 @@ export function UuidScreen() {
       </div>
 
       <div className="wb-toolbar">
-        <label>
+        <Label className="flex items-center gap-2">
           Inspect a UUID
           <Input
             aria-label="UUID to inspect"
@@ -224,7 +225,7 @@ export function UuidScreen() {
             onChange={(e) => setInspectInput(e.target.value)}
             placeholder="Paste a UUID to inspect…"
           />
-        </label>
+        </Label>
         <Button
           type="button"
           variant="outline"

@@ -189,7 +189,7 @@ export function CodeEditor({
   return (
     <>
       {previewOnly && (
-        <p role="status" style={{ padding: '0 12px' }}>
+        <p role="status" className="px-3">
           Preview shows the first 100 KB.{' '}
           {readOnly
             ? 'Copy and pipe use the complete output.'
@@ -207,7 +207,7 @@ export function CodeEditor({
           )}
         </p>
       )}
-      <div ref={hostRef} style={{ flex: 1, minHeight: 0, overflow: 'auto' }} />
+      <div ref={hostRef} className="flex-1 min-h-0 overflow-auto" />
     </>
   );
 }

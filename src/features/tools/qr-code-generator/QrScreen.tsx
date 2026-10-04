@@ -15,6 +15,7 @@ import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 
 export type QrMode = 'text' | 'url' | 'wifi' | 'vcard';
 
@@ -146,12 +147,8 @@ export function QrScreen() {
     const content = getContent();
     if (!content.trim()) return;
     try {
-      const [dataUrl, svg] = await Promise.all([
-        generateQrDataUrl(content, size, errorCorrection),
-        generateQrSvg(content, size, errorCorrection),
-      ]);
+      const dataUrl = await generateQrDataUrl(content, size, errorCorrection);
       setQrDataUrl(dataUrl);
-      setQrSvg(svg);
       setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate QR code');
@@ -192,9 +189,19 @@ export function QrScreen() {
     downloadDataUrl(qrDataUrl, 'qrcode.png');
   };
 
-  const downloadSvg = () => {
-    if (!qrSvg) return;
-    downloadBlob(new Blob([qrSvg], { type: 'image/svg+xml' }), 'qrcode.svg');
+  const downloadSvg = async () => {
+    const content = getContent();
+    if (!content.trim()) return;
+    try {
+      let svg = qrSvg;
+      if (!svg) {
+        svg = await generateQrSvg(content, size, errorCorrection);
+        setQrSvg(svg);
+      }
+      downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), 'qrcode.svg');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to download SVG');
+    }
   };
 
   const copyContent = async () => {
@@ -396,14 +403,14 @@ export function QrScreen() {
           <strong>Size: {size}px</strong>
           <small>128 to 512 pixels</small>
         </span>
-        <input
-          type="range"
+        <Slider
           aria-label="QR size"
           min={128}
           max={512}
           step={32}
           value={size}
-          onChange={(e) => setSize(Number(e.target.value))}
+          onValueChange={(val) => setSize(typeof val === 'number' ? val : val[0])}
+          className="max-w-xs"
         />
       </div>
       <div className="wb-setting-row">

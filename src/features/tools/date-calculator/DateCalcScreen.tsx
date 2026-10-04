@@ -10,6 +10,7 @@ import { useDocumentField, useSessionDocumentState } from '@/shared/document-sta
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export interface DateDifference {
   years: number;
@@ -146,7 +147,7 @@ export function DateCalcScreen() {
       ) : null}
 
       <div className="wb-toolbar">
-        <label>
+        <Label className="flex items-center gap-2">
           Date
           <Input
             aria-label="Base date"
@@ -154,8 +155,8 @@ export function DateCalcScreen() {
             value={baseDate}
             onChange={(e) => setBaseDate(e.target.value)}
           />
-        </label>
-        <label>
+        </Label>
+        <Label className="flex items-center gap-2">
           Days
           <Input
             aria-label="Days to add or subtract"
@@ -163,7 +164,7 @@ export function DateCalcScreen() {
             value={delta}
             onChange={(e) => setDelta(Number(e.target.value))}
           />
-        </label>
+        </Label>
         <Button type="button" className="wb-button primary" onClick={() => shift(delta)}>
           <IconCalendarPlus size={22} stroke={1.7} aria-hidden="true" />
           Add / subtract
@@ -190,7 +191,7 @@ export function DateCalcScreen() {
       ) : null}
 
       <div className="wb-toolbar">
-        <label>
+        <Label className="flex items-center gap-2">
           Start date
           <Input
             aria-label="Start date"
@@ -198,8 +199,8 @@ export function DateCalcScreen() {
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
           />
-        </label>
-        <label>
+        </Label>
+        <Label className="flex items-center gap-2">
           End date
           <Input
             aria-label="End date"
@@ -207,7 +208,7 @@ export function DateCalcScreen() {
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
           />
-        </label>
+        </Label>
         <Button
           type="button"
           className="wb-button primary"

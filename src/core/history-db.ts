@@ -10,54 +10,26 @@ export interface ToolHistoryEntry {
   metadata?: Record<string, unknown>;
 }
 
+import { createDatabaseOpener, requestToPromise, transactionDone } from '@/core/idb-utils';
+
 const DB_NAME = 'toolbit-history';
 const DB_VERSION = 1;
 const STORE_NAME = 'history';
 const MAX_TOTAL_ENTRIES = 200;
 const MAX_PER_TOOL = 20;
 
-let dbPromise: Promise<IDBDatabase> | null = null;
-
-function openDb(): Promise<IDBDatabase> {
-  if (dbPromise) return dbPromise;
-  dbPromise = new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onerror = () => {
-      dbPromise = null;
-      reject(request.error);
-    };
-    request.onblocked = () => {
-      dbPromise = null;
-      reject(new Error('Storage upgrade blocked by another tab'));
-    };
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
-        store.createIndex('timestamp', 'timestamp', { unique: false });
-        store.createIndex('toolId', 'toolId', { unique: false });
-        store.createIndex('toolIdTimestamp', ['toolId', 'timestamp'], { unique: false });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-  });
-  return dbPromise;
-}
-
-function requestToPromise<T>(request: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-function transactionDone(tx: IDBTransaction): Promise<void> {
-  return new Promise((resolve, reject) => {
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error);
-  });
-}
+const openDb = createDatabaseOpener({
+  name: DB_NAME,
+  version: DB_VERSION,
+  onUpgrade: (db) => {
+    if (!db.objectStoreNames.contains(STORE_NAME)) {
+      const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+      store.createIndex('timestamp', 'timestamp', { unique: false });
+      store.createIndex('toolId', 'toolId', { unique: false });
+      store.createIndex('toolIdTimestamp', ['toolId', 'timestamp'], { unique: false });
+    }
+  },
+});
 
 async function pruneByToolId(db: IDBDatabase, toolId: string) {
   const tx = db.transaction(STORE_NAME, 'readwrite');

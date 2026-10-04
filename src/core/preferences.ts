@@ -13,7 +13,17 @@ export const safeStorage = {
   setItem(key: string, value: string) {
     try {
       localStorage.setItem(key, value);
-    } catch {
+    } catch (err) {
+      const isQuota =
+        (typeof DOMException !== 'undefined' &&
+          err instanceof DOMException &&
+          (err.name === 'QuotaExceededError' || err.code === 22)) ||
+        (err &&
+          typeof err === 'object' &&
+          (err as { name?: string }).name === 'QuotaExceededError');
+      if (typeof window !== 'undefined' && isQuota) {
+        window.dispatchEvent(new CustomEvent('toolbit:quota-exceeded'));
+      }
       /* session only */
     }
   },

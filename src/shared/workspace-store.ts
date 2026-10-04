@@ -85,7 +85,11 @@ export const useWorkspace = create<WorkspaceState>()(
           updatedAt: Date.now(),
         };
         set((s) => ({
-          tabs: existing ? s.tabs : [...s.tabs, document],
+          tabs: existing
+            ? s.tabs
+            : s.tabs.length >= MAX_OPEN_TABS
+              ? [...s.tabs.slice(1), document]
+              : [...s.tabs, document],
           activeTabId: document.id,
           view: { kind: 'tool' },
         }));

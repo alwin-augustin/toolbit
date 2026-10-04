@@ -5,6 +5,7 @@ import { useWorkbenchActions } from '@/shared/workbench-actions';
 import { ALL_SPECS, isWorkbenchToolId } from '@/features/tools/specs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 export function ToolsScreen() {
   const [query, setQuery] = useState('');
@@ -19,7 +20,7 @@ export function ToolsScreen() {
         <h1>Tools</h1>
         <p>Focused utilities for everyday development.</p>
       </div>
-      <label className="wb-catalog-search">
+      <Label className="wb-catalog-search">
         <IconSearch size={22} />
         <Input
           aria-label="Filter tools"
@@ -27,7 +28,7 @@ export function ToolsScreen() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-      </label>
+      </Label>
       <div className="wb-tool-grid">
         {workbench.map((tool) => {
           const ToolIcon = tool.icon;

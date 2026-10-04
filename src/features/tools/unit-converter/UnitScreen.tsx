@@ -6,6 +6,7 @@ import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 /** Thin wrapper over convert-units so unit math stays unit-testable. */
 export function convertUnitValue(value: number, from: Unit, to: Unit): number {
@@ -91,7 +92,7 @@ export function UnitScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <label>
+        <Label className="flex items-center gap-2">
           Measure
           <NativeSelect
             aria-label="Measure"
@@ -104,8 +105,8 @@ export function UnitScreen() {
               </NativeSelectOption>
             ))}
           </NativeSelect>
-        </label>
-        <label>
+        </Label>
+        <Label className="flex items-center gap-2">
           From
           <NativeSelect
             aria-label="From unit"
@@ -118,8 +119,8 @@ export function UnitScreen() {
               </NativeSelectOption>
             ))}
           </NativeSelect>
-        </label>
-        <label>
+        </Label>
+        <Label className="flex items-center gap-2">
           To
           <NativeSelect
             aria-label="To unit"
@@ -132,10 +133,10 @@ export function UnitScreen() {
               </NativeSelectOption>
             ))}
           </NativeSelect>
-        </label>
+        </Label>
       </div>
       <div className="wb-toolbar">
-        <label>
+        <Label className="flex items-center gap-2">
           Value
           <Input
             aria-label="Value to convert"
@@ -143,7 +144,7 @@ export function UnitScreen() {
             value={value}
             onChange={(e) => setValue(Number(e.target.value))}
           />
-        </label>
+        </Label>
         <Button type="button" className="wb-button primary" onClick={handleConvert}>
           <IconEqual size={22} stroke={1.7} aria-hidden="true" />
           Convert

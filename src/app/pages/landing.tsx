@@ -20,6 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import appLogoUrl from '@/shared/ds/assets/logo-mark.svg';
 import { applySeo } from '@/content/seo/use-seo';
 import { TOOL_PAGES } from '@/content/seo/seo-content.js';
@@ -197,12 +198,12 @@ export function LandingPage() {
               {/* Interactive Demo */}
               <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm shadow-xl p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <label
+                  <Label
                     htmlFor="landing-demo-input"
                     className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
                   >
                     Paste anything
-                  </label>
+                  </Label>
                   <span className="text-xs text-muted-foreground/70">Local-only</span>
                 </div>
                 <Textarea

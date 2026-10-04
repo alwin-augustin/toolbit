@@ -7,6 +7,7 @@ import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 export type DiffLineType = 'added' | 'removed' | 'unchanged';
 
@@ -232,7 +233,7 @@ export function DiffScreen() {
           <IconCopy size={22} stroke={1.7} aria-hidden="true" />
           Copy diff
         </Button>
-        <label className="wb-indent-label">
+        <Label className="wb-indent-label">
           Mode:
           <NativeSelect
             aria-label="Diff mode"
@@ -242,7 +243,7 @@ export function DiffScreen() {
             <NativeSelectOption value="unified">Unified</NativeSelectOption>
             <NativeSelectOption value="side-by-side">Side-by-side</NativeSelectOption>
           </NativeSelect>
-        </label>
+        </Label>
       </div>
 
       <div className="wb-setting-row">

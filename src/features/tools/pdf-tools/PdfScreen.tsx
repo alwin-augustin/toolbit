@@ -17,6 +17,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export type PdfMode = 'merge' | 'split' | 'rotate';
 
@@ -118,10 +119,14 @@ export function PdfScreen() {
         const pdf = await PDFDocument.load(data);
         incoming.push({ name: file.name, data, pageCount: pdf.getPageCount(), size: file.size });
         incomingBytes += file.size;
-      } catch {
+      } catch (err: unknown) {
+        const errMessage = err instanceof Error ? err.message.toLowerCase() : '';
+        const isEncrypted = errMessage.includes('encrypt') || errMessage.includes('password');
         setStatus({
           tone: 'danger',
-          message: `Failed to load ${file.name}. It may be encrypted or corrupt.`,
+          message: isEncrypted
+            ? `Failed to load ${file.name}. The document is password-protected or encrypted.`
+            : `Failed to load ${file.name}. The file appears to be corrupted or invalid PDF format.`,
         });
       }
     }
@@ -371,7 +376,7 @@ export function PdfScreen() {
 
       {mode === 'split' && files.length > 0 ? (
         <div className="wb-toolbar">
-          <label>
+          <Label className="flex items-center gap-2">
             Page range (e.g. 1-3 or 1,3,5-7)
             <Input
               aria-label="Page range"
@@ -379,7 +384,7 @@ export function PdfScreen() {
               placeholder="1-3"
               onChange={(e) => setSplitRange(e.target.value)}
             />
-          </label>
+          </Label>
           <Button
             type="button"
             className="wb-button primary"
@@ -394,7 +399,7 @@ export function PdfScreen() {
 
       {mode === 'rotate' && files.length > 0 ? (
         <div className="wb-toolbar">
-          <label>
+          <Label className="flex items-center gap-2">
             Rotation angle
             <NativeSelect
               aria-label="Rotation angle"
@@ -405,8 +410,8 @@ export function PdfScreen() {
               <NativeSelectOption value={180}>180 degrees</NativeSelectOption>
               <NativeSelectOption value={270}>270 degrees clockwise</NativeSelectOption>
             </NativeSelect>
-          </label>
-          <label>
+          </Label>
+          <Label className="flex items-center gap-2">
             Pages
             <Input
               aria-label="Pages to rotate"
@@ -414,7 +419,7 @@ export function PdfScreen() {
               placeholder="all or 1-3,5"
               onChange={(e) => setRotatePages(e.target.value)}
             />
-          </label>
+          </Label>
           <Button
             type="button"
             className="wb-button primary"

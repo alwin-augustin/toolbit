@@ -9,6 +9,7 @@ import { useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export interface Rgb {
   r: number;
@@ -178,15 +179,16 @@ export function ColorScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <label>
+        <Label className="flex items-center gap-2 cursor-pointer">
           Picker
           <input
             aria-label="Color picker"
             type="color"
             value={/^#[0-9a-fA-F]{6}$/.test(hex) ? hex : '#000000'}
             onChange={(e) => updateFromHex(e.target.value)}
+            className="size-8 cursor-pointer rounded-md border border-input bg-transparent p-0.5"
           />
-        </label>
+        </Label>
         <Button
           type="button"
           variant="outline"

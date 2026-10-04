@@ -11,6 +11,7 @@ import { useDocumentField, useSessionDocumentState } from '@/shared/document-sta
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 /** Unsigned test token: header {"alg":"HS256","typ":"JWT"}, payload with sub/name/iat. */
 export const JWT_SAMPLE =
@@ -146,10 +147,10 @@ export function JwtScreen() {
           <IconTrash size={22} stroke={1.7} aria-hidden="true" />
           Clear
         </Button>
-        <label>
+        <Label className="flex items-center gap-2 cursor-pointer">
           <Checkbox checked={pretty} onCheckedChange={(checked) => setPretty(Boolean(checked))} />
           Pretty-print claims
-        </label>
+        </Label>
       </div>
 
       {outcome.error && (

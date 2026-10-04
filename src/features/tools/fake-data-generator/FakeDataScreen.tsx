@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 export const FIRST_NAMES = [
   'James',
@@ -343,7 +344,7 @@ export function FakeDataScreen() {
         </div>
       </div>
       <div className="wb-toolbar">
-        <label>
+        <Label className="flex items-center gap-2">
           Records
           <Input
             aria-label="Record count"
@@ -355,8 +356,8 @@ export function FakeDataScreen() {
               setCount(Math.max(1, Math.min(1000, parseInt(e.target.value, 10) || 1)))
             }
           />
-        </label>
-        <label>
+        </Label>
+        <Label className="flex items-center gap-2">
           Seed
           <Input
             aria-label="Random seed"
@@ -364,8 +365,8 @@ export function FakeDataScreen() {
             value={seed}
             onChange={(e) => setSeed(parseInt(e.target.value, 10) || 0)}
           />
-        </label>
-        <label>
+        </Label>
+        <Label className="flex items-center gap-2">
           Format
           <NativeSelect
             aria-label="Output format"
@@ -376,7 +377,7 @@ export function FakeDataScreen() {
             <NativeSelectOption value="csv">CSV</NativeSelectOption>
             <NativeSelectOption value="sql">SQL</NativeSelectOption>
           </NativeSelect>
-        </label>
+        </Label>
         <Button
           type="button"
           variant="default"
@@ -409,16 +410,16 @@ export function FakeDataScreen() {
           <strong>Fields</strong>
           <small>Same record shape as the legacy generator</small>
         </span>
-        <span>
+        <span className="flex flex-wrap items-center gap-3">
           {ALL_FAKE_FIELDS.map(({ key, label }) => (
-            <label key={key} style={{ display: 'inline-flex', marginLeft: 12 }}>
+            <Label key={key} className="inline-flex items-center gap-1.5 cursor-pointer">
               <Checkbox
                 aria-label={label}
                 checked={fields.includes(key)}
                 onCheckedChange={() => toggleField(key)}
               />
               {label}
-            </label>
+            </Label>
           ))}
         </span>
       </div>

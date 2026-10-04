@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IconCopy, IconEraser, IconRegex, IconSparkles } from '@tabler/icons-react';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
@@ -40,6 +40,12 @@ export function findRegexMatches(pattern: string, flags: string, text: string): 
     return { matches: [], error: `Test text too large (max ${MAX_REGEX_TEXT} characters).` };
   if (!isValidFlags(flags))
     return { matches: [], error: 'Invalid flags. Use only g, i, m, s, u, y.' };
+  if (/\([^)]*[*+?][^)]*\)[*+?]/.test(pattern) && text.length > 50) {
+    return {
+      matches: [],
+      error: 'Potential catastrophic backtracking pattern detected — simplify nested quantifiers.',
+    };
+  }
   let re: RegExp;
   try {
     re = new RegExp(pattern, flags);
@@ -112,14 +118,27 @@ export function RegexScreen() {
   const notify = useWorkbenchMemory((s) => s.notify);
   const wrap = useWorkbenchMemory((s) => s.wrap);
 
+  const [debouncedPattern, setDebouncedPattern] = useState(pattern);
+  const [debouncedFlags, setDebouncedFlags] = useState(flags);
+  const [debouncedTestString, setDebouncedTestString] = useState(testString);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedPattern(pattern);
+      setDebouncedFlags(flags);
+      setDebouncedTestString(testString);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [pattern, flags, testString]);
+
   const { matches, error } = useMemo(
-    () => findRegexMatches(pattern, flags, testString),
-    [pattern, flags, testString],
+    () => findRegexMatches(debouncedPattern, debouncedFlags, debouncedTestString),
+    [debouncedPattern, debouncedFlags, debouncedTestString],
   );
   const replacePreview = useMemo(() => {
     if (!showReplace) return { result: '', error: null };
-    return applyRegexReplace(pattern, flags, testString, replacement);
-  }, [showReplace, pattern, flags, testString, replacement]);
+    return applyRegexReplace(debouncedPattern, debouncedFlags, debouncedTestString, replacement);
+  }, [showReplace, debouncedPattern, debouncedFlags, debouncedTestString, replacement]);
 
   const loadSample = () => {
     setPattern(SAMPLE_PATTERN);

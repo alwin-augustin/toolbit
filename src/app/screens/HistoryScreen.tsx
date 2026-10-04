@@ -3,6 +3,7 @@ import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 export function HistoryScreen() {
   const runs = useWorkbenchMemory((s) => s.runs);
@@ -16,13 +17,13 @@ export function HistoryScreen() {
         <h1>History</h1>
         <p>Return to a previous run with its original input.</p>
       </div>
-      <label className="wb-setting-row">
+      <Label className="wb-setting-row cursor-pointer">
         <span>
           <strong>Remember runs in this session</strong>
           <small>Off by default. History resets when this page refreshes.</small>
         </span>
         <Checkbox checked={remember} onCheckedChange={(checked) => setRemember(Boolean(checked))} />
-      </label>
+      </Label>
       {runs.length ? (
         runs.map((run) => (
           <Button

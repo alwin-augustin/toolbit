@@ -6,6 +6,7 @@ import { setTheme, useTheme, type Theme } from '@/shared/theme';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const THEMES: Array<{ id: Theme; label: string }> = [
@@ -68,27 +69,27 @@ export function SettingsScreen() {
           ))}
         </ToggleGroup>
       </div>
-      <label className="wb-setting-row">
+      <Label className="wb-setting-row cursor-pointer">
         <span>
           <strong>Wrap long lines</strong>
           <small>Keep code readable without horizontal scrolling.</small>
         </span>
         <Checkbox checked={wrap} onCheckedChange={(checked) => setWrap(Boolean(checked))} />
-      </label>
-      <label className="wb-setting-row">
+      </Label>
+      <Label className="wb-setting-row cursor-pointer">
         <span>
           <strong>Remember runs in this session</strong>
           <small>Optional history. No data is kept after refreshing.</small>
         </span>
         <Checkbox checked={remember} onCheckedChange={(checked) => setRemember(Boolean(checked))} />
-      </label>
+      </Label>
       <div className="wb-setting-row">
         <span>
           <strong>Privacy and storage</strong>
           <small>Local-first processing. Optional analytics excludes Tool input and output.</small>
         </span>
       </div>
-      <label className="wb-setting-row">
+      <Label className="wb-setting-row cursor-pointer">
         <span>
           <strong>Product analytics</strong>
           <small>Pseudonymous usage and error events. No Tool content is sent.</small>
@@ -97,8 +98,8 @@ export function SettingsScreen() {
           checked={analytics}
           onCheckedChange={(checked) => update({ analytics: Boolean(checked) })}
         />
-      </label>
-      <label className="wb-setting-row">
+      </Label>
+      <Label className="wb-setting-row cursor-pointer">
         <span>
           <strong>Record history</strong>
           <small>Secret Tools never record. Applies going forward.</small>
@@ -107,7 +108,7 @@ export function SettingsScreen() {
           checked={history}
           onCheckedChange={(checked) => update({ history: Boolean(checked) })}
         />
-      </label>
+      </Label>
       <div className="wb-setting-row">
         <span>
           <strong>Retention: {retentionDays} days</strong>

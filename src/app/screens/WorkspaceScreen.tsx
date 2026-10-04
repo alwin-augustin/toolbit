@@ -18,6 +18,7 @@ import { track } from '@/core/telemetry';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { getSpec, patchWorkbenchDoc, readDoc, specParams } from '@/features/tools/specs';
 import type { WorkbenchDocState } from '@/shared/workbench';
@@ -163,7 +164,7 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
         {inlineOptions.map(
           (option) =>
             option.type === 'select' && (
-              <label key={option.key} className="wb-indent-label">
+              <Label key={option.key} className="wb-indent-label">
                 {option.label}
                 <NativeSelect
                   aria-label={option.label.replace(/:$/, '')}
@@ -176,7 +177,7 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
                     </NativeSelectOption>
                   ))}
                 </NativeSelect>
-              </label>
+              </Label>
             ),
         )}
         <div className="wb-options-wrap">
@@ -193,27 +194,27 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
           </Button>
           {optionsOpen && (
             <div className="wb-popover wb-options-panel">
-              <label>
+              <Label className="cursor-pointer">
                 <Checkbox checked={wrap} onCheckedChange={(checked) => setWrap(Boolean(checked))} />
                 Wrap long lines
-              </label>
+              </Label>
               {popoverOptions.map((option) =>
                 option.type === 'checkbox' ? (
-                  <label key={option.key}>
+                  <Label key={option.key} className="cursor-pointer">
                     <Checkbox
                       checked={params[option.key] === true}
                       onCheckedChange={(checked) => setParam(option.key, Boolean(checked))}
                     />
                     {option.label}
-                  </label>
+                  </Label>
                 ) : (
-                  <label key={option.key}>
+                  <Label key={option.key}>
                     {option.label}
                     <Input
                       value={String(params[option.key] ?? '')}
                       onChange={(e) => setParam(option.key, e.target.value)}
                     />
-                  </label>
+                  </Label>
                 ),
               )}
               {spec.note && <p>{spec.note}</p>}
@@ -423,7 +424,7 @@ function SaveListener({ tab, kind }: { tab: WorkspaceTab; kind: 'Sessions' | 'Sn
             ? 'Keep this tool\u2019s input, result, and options together.'
             : 'Keep this result ready to reuse.'}
         </p>
-        <label>
+        <Label className="flex flex-col gap-1.5 text-sm">
           Name
           <Input
             required
@@ -434,7 +435,7 @@ function SaveListener({ tab, kind }: { tab: WorkspaceTab; kind: 'Sessions' | 'Sn
               dialogKind === 'Sessions' ? 'e.g. Webhook inspection' : 'e.g. Invoice payload'
             }
           />
-        </label>
+        </Label>
         <small>Saved in this session. Refreshing resets saved work.</small>
         <div className="wb-dialog-actions">
           <Button
