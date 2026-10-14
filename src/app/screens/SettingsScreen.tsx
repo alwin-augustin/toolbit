@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
+import { isDesktopHost } from '@/platform/desktop';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { usePreferences } from '@/core/preferences';
 import { clearAllHistory, pruneExpiredHistory } from '@/core/history-db';
@@ -38,6 +40,8 @@ export function SettingsScreen() {
   const analytics = usePreferences((s) => s.analytics);
   const history = usePreferences((s) => s.history);
   const retentionDays = usePreferences((s) => s.retentionDays);
+  const desktop = isDesktopHost();
+  const [, navigate] = useLocation();
   const update = usePreferences((s) => s.update);
   const [status, setStatus] = useState('');
 
@@ -149,18 +153,22 @@ export function SettingsScreen() {
         <div className="wb-card-head">
           <h2 id="wb-set-privacy">Privacy and data</h2>
         </div>
-        <Label className="wb-setting-row cursor-pointer">
-          <span>
-            <strong>Product analytics</strong>
-            <small>
-              Pseudonymous usage and error events. Tool input and output are never sent.
-            </small>
-          </span>
-          <Checkbox
-            checked={analytics}
-            onCheckedChange={(checked) => update({ analytics: Boolean(checked) })}
-          />
-        </Label>
+        {/* The installed app ships without analytics, so the switch is shown
+            only where it can actually do something. */}
+        {desktop ? null : (
+          <Label className="wb-setting-row cursor-pointer">
+            <span>
+              <strong>Product analytics</strong>
+              <small>
+                Pseudonymous usage and error events. Tool input and output are never sent.
+              </small>
+            </span>
+            <Checkbox
+              checked={analytics}
+              onCheckedChange={(checked) => update({ analytics: Boolean(checked) })}
+            />
+          </Label>
+        )}
         <Label className="wb-setting-row cursor-pointer">
           <span>
             <strong>Record history</strong>
@@ -180,6 +188,29 @@ export function SettingsScreen() {
             Clear stored history
           </Button>
         </div>
+        {/* Installed, the legal pages are not advertised anywhere else, so
+            Settings is where they stay reachable. */}
+        {desktop && (
+          <div className="wb-setting-row">
+            <span>
+              <strong>Privacy policy and terms</strong>
+              <small>The installed app keeps the same promises as the site.</small>
+            </span>
+            <div className="flex items-center gap-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/privacy')}
+              >
+                Privacy
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => navigate('/terms')}>
+                Terms
+              </Button>
+            </div>
+          </div>
+        )}
         {status ? (
           <p className="border-t border-line px-3 py-2 text-xs text-ink-muted" role="status">
             {status}

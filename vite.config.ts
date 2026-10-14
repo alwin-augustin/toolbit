@@ -3,7 +3,12 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath, URL } from 'node:url';
 
-export default defineConfig({
+/**
+ * `mode === 'desktop'` is the installed app's build (`vite build --mode desktop`,
+ * driven by the Tauri host in `Desktop/desktop-tauri`). It drops the marketing
+ * entry point, which the desktop route table does not serve.
+ */
+export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   // Node-isms referenced by bundled CJS helpers (e.g. core-js inside terser's
@@ -18,7 +23,11 @@ export default defineConfig({
     rolldownOptions: {
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
-        about: fileURLToPath(new URL('./about.html', import.meta.url)),
+        // The landing page is a web-only surface: the desktop build hides its
+        // route, so it ships without the entry point that renders it.
+        ...(mode === 'desktop'
+          ? {}
+          : { about: fileURLToPath(new URL('./about.html', import.meta.url)) }),
       },
       output: {
         manualChunks: (id) => {
@@ -34,4 +43,4 @@ export default defineConfig({
   },
   server: { host: '127.0.0.1', port: 5173, strictPort: true },
   preview: { headers: { 'Cache-Control': 'no-store' } },
-});
+}));

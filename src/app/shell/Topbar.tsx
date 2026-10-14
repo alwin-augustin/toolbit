@@ -7,6 +7,7 @@ import {
   IconShieldLock,
 } from '@tabler/icons-react';
 import { TOOL_BY_PATH, type Section } from '@/app/shell/navigation';
+import { isDesktopHost } from '@/platform/desktop';
 import { RESEARCH_CATEGORIES } from '@/content/tools.config';
 import { usePreferences } from '@/core/preferences';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
@@ -117,30 +118,35 @@ export function Topbar({
 
         {/* The consent control, one click from anywhere. It writes the same
             preference the Settings switch does, so the two can never disagree.
-            Pressed means analytics is collecting. */}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className={
-            analytics
-              ? 'gap-1.5 bg-state-selected text-state-selected-ink'
-              : 'gap-1.5 text-ink-faint'
-          }
-          aria-pressed={analytics}
-          aria-label={`Product analytics is ${analytics ? 'on' : 'off'}. ${
-            analytics ? 'Turn it off' : 'Turn it on'
-          }.`}
-          title={
-            analytics
-              ? 'Product analytics is on: anonymous usage events only, never tool input or output. Click to turn it off.'
-              : 'Product analytics is off. Nothing is collected from this device.'
-          }
-          onClick={toggleAnalytics}
-        >
-          <IconChartDots size={14} />
-          <span className="hidden md:inline">Analytics</span>
-        </Button>
+            Pressed means analytics is collecting.
+
+            The installed app collects nothing, so it shows no control: a switch
+            that cannot turn anything on is worse than no switch. */}
+        {isDesktopHost() ? null : (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className={
+              analytics
+                ? 'gap-1.5 bg-state-selected text-state-selected-ink'
+                : 'gap-1.5 text-ink-faint'
+            }
+            aria-pressed={analytics}
+            aria-label={`Product analytics is ${analytics ? 'on' : 'off'}. ${
+              analytics ? 'Turn it off' : 'Turn it on'
+            }.`}
+            title={
+              analytics
+                ? 'Product analytics is on: anonymous usage events only, never tool input or output. Click to turn it off.'
+                : 'Product analytics is off. Nothing is collected from this device.'
+            }
+            onClick={toggleAnalytics}
+          >
+            <IconChartDots size={14} />
+            <span className="hidden md:inline">Analytics</span>
+          </Button>
+        )}
 
         <Button
           type="button"

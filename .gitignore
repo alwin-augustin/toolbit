@@ -22,6 +22,11 @@ coverage/
 .env
 .env*
 !.env.example
+# Tracked on purpose: it holds no secrets, and the desktop build is not
+# reproducible without it — `vite --mode desktop` reads VITE_TARGET from here, and
+# that flag is what gates analytics off and drops the web-only routes in the
+# installed app.
+!.env.desktop
 
 # Browser test outputs
 playwright-report/

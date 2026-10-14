@@ -67,6 +67,16 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
     return () => clearTimeout(timer);
   }, [toast, clearToast]);
 
+  // The palette is opened from controls that sit outside this component — the
+  // sidebar, the tab strip, the start screen and, installed, the native menu —
+  // so they signal it on the window rather than threading a callback through
+  // the tree.
+  useEffect(() => {
+    const open = () => setSearchOpen(true);
+    window.addEventListener('wb:open-search', open);
+    return () => window.removeEventListener('wb:open-search', open);
+  }, []);
+
   // Leave the drawer behind whenever the route changes.
   useEffect(() => {
     setDrawerOpen(false);

@@ -1,5 +1,6 @@
 import { TOOLS } from '@/content/tools.config';
 import { safeStorage, usePreferences } from '@/core/preferences';
+import { isDesktopBuild } from '@/platform/desktop';
 
 export const EVENT_NAMES = [
   'page_viewed',
@@ -75,6 +76,9 @@ let sessionIdentity = `toolbit_${crypto.randomUUID()}`;
 const identityKey = 'toolbit:analytics-anonymous-id';
 const pending = new Set<AbortController>();
 function configure() {
+  // The installed app has no analytics at all: not a preference the user can
+  // flip, but a property of the build. Nothing is stored, nothing is sent.
+  if (isDesktopBuild) return;
   if (!usePreferences.getState().analytics) {
     safeStorage.removeItem(identityKey);
     sessionIdentity = `toolbit_${crypto.randomUUID()}`;
@@ -95,7 +99,13 @@ usePreferences.subscribe((state, previous) => {
 export function track(name: EventName, properties: Props = {}) {
   const apiKey = import.meta.env.VITE_POSTHOG_KEY;
   const apiHost = import.meta.env.VITE_POSTHOG_HOST;
-  if (!apiKey || !apiHost || !usePreferences.getState().analytics || !EVENT_NAMES.includes(name))
+  if (
+    isDesktopBuild ||
+    !apiKey ||
+    !apiHost ||
+    !usePreferences.getState().analytics ||
+    !EVENT_NAMES.includes(name)
+  )
     return;
   const controller = new AbortController();
   pending.add(controller);
@@ -161,5 +171,5 @@ export const posthog = {
 };
 // Compatibility gate only; track() rechecks the live preference before sending.
 export const isPostHogEnabled = Boolean(
-  import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST,
+  !isDesktopBuild && import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST,
 );

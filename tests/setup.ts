@@ -13,6 +13,25 @@ afterEach(() => {
 // jsdom has no layout, so scrolling the document strip into view must be a no-op.
 Element.prototype.scrollIntoView = () => {};
 
+// jsdom ships no matchMedia. The shell's panel breakpoint and the install
+// prompt both branch on it, so without a stub those paths throw in tests and
+// the pages that use them never render. `matches: false` is the wide viewport.
+// Writable, because tests that care about the breakpoint replace it per case.
+Object.defineProperty(window, 'matchMedia', {
+  configurable: true,
+  writable: true,
+  value: (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  }),
+});
+
 Object.defineProperty(globalThis, 'crypto', { value: webcrypto, configurable: true });
 Object.defineProperty(navigator, 'clipboard', {
   value: { writeText: vi.fn().mockResolvedValue(undefined) },

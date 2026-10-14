@@ -5,6 +5,8 @@ import { ErrorBoundary } from '@/app/components/ErrorBoundary';
 import { WorkspaceShell } from '@/app/shell/WorkspaceShell';
 import { OfflineIndicator } from '@/app/components/OfflineIndicator';
 import { LoadingFallback } from '@/app/components/LoadingFallback';
+import { DesktopHost } from '@/app/components/DesktopHost';
+import { isDesktopHost } from '@/platform/desktop';
 import { TOOLS } from '@/content/tools.config';
 import { PostHogPageView } from '@/app/components/PostHogPageView';
 
@@ -30,6 +32,7 @@ function App() {
   return (
     <Router>
       <PostHogPageView />
+      <DesktopHost />
       <AppShell />
     </Router>
   );
@@ -37,6 +40,11 @@ function App() {
 
 function AppShell() {
   const [location] = useLocation();
+  // The marketing page is a web-only surface. Installed, Toolbit opens straight
+  // into the workspace, and /about falls through to the same 404 as any other
+  // address the app does not serve. Legal pages stay: they are the app's own
+  // data promises, reachable from Settings.
+  const desktop = isDesktopHost();
   return (
     <ErrorBoundary resetKey={location}>
       <Switch>
@@ -70,16 +78,20 @@ function AppShell() {
         </Route>
 
         {/* SEO and product context page */}
-        <Route path="/about">
-          <Suspense fallback={<LoadingFallback />}>
-            <LandingPage />
-          </Suspense>
-        </Route>
-        <Route path="/about.html">
-          <Suspense fallback={<LoadingFallback />}>
-            <LandingPage />
-          </Suspense>
-        </Route>
+        {!desktop && (
+          <Route path="/about">
+            <Suspense fallback={<LoadingFallback />}>
+              <LandingPage />
+            </Suspense>
+          </Route>
+        )}
+        {!desktop && (
+          <Route path="/about.html">
+            <Suspense fallback={<LoadingFallback />}>
+              <LandingPage />
+            </Suspense>
+          </Route>
+        )}
 
         {/* Legal pages */}
         <Route path="/privacy">

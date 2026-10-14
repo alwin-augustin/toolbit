@@ -10,7 +10,9 @@
   "description": "Local developer utilities in a browser workspace",
   "scripts": {
     "dev": "vite",
+    "dev:desktop": "vite --mode desktop",
     "build": "vite build && npm run seo:generate && npm run pwa:generate",
+    "build:desktop": "vite build --mode desktop",
     "preview": "vite preview",
     "preview:fresh": "VITE_DISABLE_PWA=true vite build && npm run seo:generate && VITE_DISABLE_PWA=true vite preview",
     "check": "tsc",
