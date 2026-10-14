@@ -6,6 +6,15 @@ type NativeSelectProps = Omit<React.ComponentProps<'select'>, 'size'> & {
   size?: 'sm' | 'default';
 };
 
+/**
+ * A `<select>` for short option lists, where the platform's own menu is faster
+ * and more accessible than a custom popup.
+ *
+ * Sizing, fill, hairline and ink come from `.wb-select`, the same primitive the
+ * command palette's select uses, so this control is indistinguishable from the
+ * outline button beside it in a toolbar row. `data-size` picks the height from
+ * the control scale: `sm` (28px) inside a toolbar, `default` (32px) alone.
+ */
 function NativeSelect({ className, size = 'default', ...props }: NativeSelectProps) {
   return (
     <div
@@ -19,11 +28,11 @@ function NativeSelect({ className, size = 'default', ...props }: NativeSelectPro
       <select
         data-slot="native-select"
         data-size={size}
-        className="h-8 w-full min-w-0 appearance-none rounded-lg border border-input bg-transparent py-1 pr-8 pl-2.5 text-sm transition-colors outline-none select-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] data-[size=sm]:py-0.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+        className="wb-select w-full min-w-0 appearance-none py-1 pr-8 pl-2.5 select-none aria-invalid:border-danger"
         {...props}
       />
       <ChevronDownIcon
-        className="pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 text-muted-foreground select-none"
+        className="wb-select-caret absolute top-1/2 right-2.5 size-4 -translate-y-1/2"
         aria-hidden="true"
         data-slot="native-select-icon"
       />
@@ -31,6 +40,8 @@ function NativeSelect({ className, size = 'default', ...props }: NativeSelectPro
   );
 }
 
+/* Option and optgroup keep the platform's own colours: they render in the OS
+   menu, outside our token context, so overriding them makes them unreadable. */
 function NativeSelectOption({ className, ...props }: React.ComponentProps<'option'>) {
   return (
     <option

@@ -335,7 +335,7 @@ export function NginxScreen() {
       </div>
       <div className="wb-toolbar">
         <Button type="button" className="wb-button primary" onClick={() => setInput(NGINX_SAMPLE)}>
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button
@@ -353,7 +353,7 @@ export function NginxScreen() {
           className="wb-button"
           onClick={() => void copyConfig()}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+          <IconCopy size={16} stroke={1.7} aria-hidden="true" />
           Copy
         </Button>
         <Button
@@ -363,7 +363,7 @@ export function NginxScreen() {
           onClick={() => setInput('')}
           disabled={!input}
         >
-          <IconTrash size={22} stroke={1.7} aria-hidden="true" />
+          <IconTrash size={16} stroke={1.7} aria-hidden="true" />
           Clear
         </Button>
       </div>

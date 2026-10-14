@@ -214,7 +214,7 @@ export function HashScreen() {
       </div>
       <div className="wb-toolbar">
         <Button type="button" className="wb-button primary" onClick={() => setInput(HASH_SAMPLE)}>
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button
@@ -261,7 +261,7 @@ export function HashScreen() {
                 disabled={!hasOutput}
                 onClick={() => void copyText(allHashes, 'All digests')}
               >
-                <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+                <IconCopy size={16} stroke={1.7} aria-hidden="true" />
                 Copy all
               </Button>
             </div>

@@ -16,7 +16,7 @@ export default defineConfig({
       reporter: ['text', 'json-summary', 'json', 'html', 'lcov'],
       thresholds: {
         // Ratchet baseline (measured 2026-10-03: ~63 lines / 57 branches / 50 funcs).
-        // Raise toward 100 per TEST_PLAN §5 as phases land. CI fails if coverage drops.
+        // Raise these as coverage improves. CI fails if coverage drops.
         lines: 62,
         functions: 49,
         branches: 57,

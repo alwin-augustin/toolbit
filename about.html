@@ -6,7 +6,7 @@
     <title>About Toolbit — Local-first developer tools</title>
     <meta
       name="description"
-      content="Toolbit is a local-first developer workspace for formatting, transforming, inspecting, and generating code and data without sending it to a server."
+      content="Toolbit is a local-first developer workspace for formatting, transforming, inspecting and generating code and data without sending it to a server."
     />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://toolbit.app/about" />
@@ -16,7 +16,7 @@
     <meta property="og:title" content="About Toolbit — Local-first developer tools" />
     <meta
       property="og:description"
-      content="Format, transform, inspect, and generate code and data locally with Toolbit."
+      content="Format, transform, inspect and generate code and data locally with Toolbit."
     />
     <meta property="og:image" content="https://toolbit.app/og-image.png" />
     <meta property="og:image:width" content="1200" />
@@ -30,7 +30,9 @@
     />
     <meta name="twitter:image" content="https://toolbit.app/og-image.png" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg?v=3" />
-    <link rel="mask-icon" href="/mask-icon.svg" color="#3D63DD" />
+    <link rel="mask-icon" href="/mask-icon.svg" color="#6241dd" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#6241dd" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#06070a" />
     <link rel="manifest" href="/manifest.json" />
     <script src="/theme-init.js"></script>
     <script type="application/ld+json">
@@ -50,25 +52,86 @@
         }
       }
     </script>
+    <!-- Pre-hydration paint only: the workspace replaces this document body.
+         It mirrors the design tokens so there is no flash of a different
+         design language before the bundle runs. -->
+    <style>
+      :root {
+        color-scheme: light;
+        --tb-canvas: oklch(0.991 0.002 265);
+        --tb-surface: oklch(1 0 0);
+        --tb-line: oklch(0.936 0.005 265);
+        --tb-ink: oklch(0.183 0.011 265);
+        --tb-ink-muted: oklch(0.502 0.016 265);
+        --tb-ink-faint: oklch(0.596 0.014 265);
+        --tb-brand: oklch(0.511 0.222 285);
+        --tb-brand-ink: oklch(0.446 0.208 285);
+      }
+      html.dark {
+        color-scheme: dark;
+        --tb-canvas: oklch(0.128 0.009 265);
+        --tb-surface: oklch(0.152 0.01 265);
+        --tb-line: oklch(0.222 0.013 265);
+        --tb-ink: oklch(0.978 0.003 265);
+        --tb-ink-muted: oklch(0.706 0.012 265);
+        --tb-ink-faint: oklch(0.596 0.014 265);
+        --tb-brand: oklch(0.68 0.17 285);
+        --tb-brand-ink: oklch(0.8 0.13 285);
+      }
+      body {
+        margin: 0;
+        background: var(--tb-canvas);
+        color: var(--tb-ink);
+        font-family:
+          Geist,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: var(--tb-brand-ink);
+      }
+      .wrap {
+        max-width: 64rem;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+      }
+      #root {
+        padding: 3.5rem 0 4rem;
+      }
+      h1 {
+        font-size: 1.875rem;
+        font-weight: 600;
+        letter-spacing: -0.011em;
+        line-height: 1.2;
+        margin: 0 0 1rem;
+        max-width: 46rem;
+      }
+      p {
+        max-width: 46rem;
+        color: var(--tb-ink-muted);
+        margin: 0 0 1rem;
+      }
+    </style>
   </head>
   <body>
+    <!-- #root is the only element the app does not replace, so this page
+         carries no chrome of its own: the React tree renders the header and
+         footer inside it. Anything outside #root would double them up. -->
     <main id="root">
-      <article
-        style="
-          max-width: 900px;
-          margin: 0 auto;
-          padding: 64px 24px;
-          font-family: system-ui, sans-serif;
-        "
-      >
-        <p>TOOLBIT</p>
-        <h1>Local-first developer tools for everyday work.</h1>
+      <div class="wrap">
+        <h1>Every small developer task, in one tab.</h1>
         <p>
-          Format, transform, inspect, and generate code and data without sending your inputs to a
-          server.
+          Format, transform, inspect and generate code and data without sending your inputs to a
+          server. 42 utilities, running in this browser tab.
         </p>
         <p><a href="/">Open the Toolbit workspace</a></p>
-      </article>
+      </div>
     </main>
     <script type="module" src="/src/app/main.tsx"></script>
   </body>

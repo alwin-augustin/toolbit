@@ -6,7 +6,7 @@ export default function TermsOfService() {
     <LegalPageView
       slug="terms"
       canonicalPath="/terms"
-      icon={<FileText className="h-8 w-8 text-primary" />}
+      icon={<FileText size={20} aria-hidden="true" />}
     />
   );
 }

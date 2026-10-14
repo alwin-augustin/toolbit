@@ -195,7 +195,7 @@ export function ColorScreen() {
           className="wb-button"
           onClick={() => updateFromHex(COLOR_SAMPLE)}
         >
-          <IconPalette size={22} stroke={1.7} aria-hidden="true" />
+          <IconPalette size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
       </div>

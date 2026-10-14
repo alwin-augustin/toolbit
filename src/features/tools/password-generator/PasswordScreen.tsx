@@ -82,9 +82,9 @@ export function calculatePasswordStrength(password: string): {
   const uniqueChars = new Set(password).size;
   if (uniqueChars > password.length * 0.7) score += 1;
 
-  if (score <= 2) return { score, label: 'Weak', color: 'hsl(var(--danger))' };
-  if (score <= 4) return { score, label: 'Medium', color: 'hsl(var(--warning))' };
-  return { score, label: score <= 5 ? 'Strong' : 'Very Strong', color: 'hsl(var(--success))' };
+  if (score <= 2) return { score, label: 'Weak', color: 'var(--destructive)' };
+  if (score <= 4) return { score, label: 'Medium', color: 'var(--warning)' };
+  return { score, label: score <= 5 ? 'Strong' : 'Very Strong', color: 'var(--success)' };
 }
 
 export function PasswordScreen() {
@@ -167,7 +167,7 @@ export function PasswordScreen() {
       </div>
       <div className="wb-toolbar">
         <Button type="button" className="wb-button primary" onClick={generate}>
-          <IconRefresh size={22} stroke={1.7} aria-hidden="true" />
+          <IconRefresh size={16} stroke={1.7} aria-hidden="true" />
           Generate
         </Button>
         <Button
@@ -177,7 +177,7 @@ export function PasswordScreen() {
           disabled={passwords.length === 0}
           onClick={() => void copyText(passwords.join('\n'), 'Passwords')}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+          <IconCopy size={16} stroke={1.7} aria-hidden="true" />
           Copy all
         </Button>
         <Button
@@ -187,7 +187,7 @@ export function PasswordScreen() {
           disabled={passwords.length === 0 && !error}
           onClick={clear}
         >
-          <IconTrash size={22} stroke={1.7} aria-hidden="true" />
+          <IconTrash size={16} stroke={1.7} aria-hidden="true" />
           Clear
         </Button>
       </div>

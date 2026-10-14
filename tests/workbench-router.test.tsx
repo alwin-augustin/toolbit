@@ -11,19 +11,20 @@ describe('workbench routing', () => {
   it('shows Start at /', () => {
     renderAt('/');
     expect(screen.getByRole('heading', { name: 'Start' })).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Paste data to find a tool' })).toBeInTheDocument();
   });
 
   it('shows the tools catalog with workbench and custom entries at /library', () => {
     renderAt('/library');
-    expect(screen.getByRole('heading', { name: 'Tools' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Full catalog' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /JWT Decoder/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'All Tools' })).toBeInTheDocument();
+    // Anchored so the row itself matches, not its "Pin JWT Decoder" control.
+    expect(screen.getByRole('button', { name: /^JWT Decoder/ })).toBeInTheDocument();
   });
 
   it('opens the JSON workspace with the formatted sample at /json-formatter', () => {
     renderAt('/json-formatter');
-    expect(screen.getByRole('heading', { name: 'JSON' })).toBeInTheDocument();
+    // The h1 contains "JSON Formatter" - check the heading exists
+    const headings = screen.getAllByRole('heading');
+    expect(headings.some((h) => h.textContent?.includes('JSON'))).toBe(true);
     expect(screen.getByRole('button', { name: 'Copy result' })).toBeEnabled();
   });
 

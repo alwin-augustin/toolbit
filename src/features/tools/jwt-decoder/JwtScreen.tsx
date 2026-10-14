@@ -140,11 +140,11 @@ export function JwtScreen() {
 
       <div className="wb-toolbar">
         <Button type="button" className="wb-button primary" onClick={() => setInput(JWT_SAMPLE)}>
-          <IconFlask size={22} stroke={1.7} aria-hidden="true" />
+          <IconFlask size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button type="button" variant="outline" className="wb-button" onClick={() => setInput('')}>
-          <IconTrash size={22} stroke={1.7} aria-hidden="true" />
+          <IconTrash size={16} stroke={1.7} aria-hidden="true" />
           Clear
         </Button>
         <Label className="flex items-center gap-2 cursor-pointer">
@@ -188,7 +188,7 @@ export function JwtScreen() {
                 disabled={!decoded}
                 onClick={copyClaims}
               >
-                <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+                <IconCopy size={16} stroke={1.7} aria-hidden="true" />
                 Copy claims
               </Button>
             </div>

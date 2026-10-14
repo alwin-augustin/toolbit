@@ -135,7 +135,7 @@ export const ALL_SPECS: Record<string, Spec> = {
     options: [
       {
         key: 'unit',
-        label: 'Unit:',
+        label: 'Unit',
         type: 'select',
         inline: true,
         choices: [
@@ -146,7 +146,7 @@ export const ALL_SPECS: Record<string, Spec> = {
       },
       {
         key: 'zone',
-        label: 'Zone:',
+        label: 'Zone',
         type: 'select',
         inline: true,
         choices: [
@@ -411,15 +411,30 @@ export function smartPastePayload(
   return field ? { [field]: text } : null;
 }
 
-/** Pending landing-demo paste, consumed once so it never leaks into later docs. */
-export function takeSmartPaste(): string | null {
+/** Pending Smart paste, read without consuming it. */
+export function peekSmartPaste(): string | null {
   try {
     const pasted = sessionStorage.getItem('toolbit:smart-paste');
-    sessionStorage.removeItem('toolbit:smart-paste');
     return pasted?.trim() ? pasted : null;
   } catch {
     return null;
   }
+}
+
+/** Drop a pending Smart paste once it has been applied. */
+export function clearSmartPaste(): void {
+  try {
+    sessionStorage.removeItem('toolbit:smart-paste');
+  } catch {
+    /* session storage unavailable: nothing to clear */
+  }
+}
+
+/** Pending Smart paste, consumed once so it never leaks into later docs. */
+export function takeSmartPaste(): string | null {
+  const pasted = peekSmartPaste();
+  clearSmartPaste();
+  return pasted;
 }
 
 export const WORKBENCH_TOOL_IDS: string[] = Object.keys(ALL_SPECS);

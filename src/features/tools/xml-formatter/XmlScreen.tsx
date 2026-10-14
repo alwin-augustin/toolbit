@@ -317,7 +317,7 @@ export function XmlScreen() {
           ))}
         </ToggleGroup>
         <Button type="button" variant="outline" className="wb-button" onClick={loadSample}>
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button
@@ -376,7 +376,7 @@ export function XmlScreen() {
                 disabled={!outcome.output}
                 onClick={() => void copyOutput()}
               >
-                <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+                <IconCopy size={16} stroke={1.7} aria-hidden="true" />
                 Copy
               </Button>
             </div>

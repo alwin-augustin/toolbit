@@ -179,7 +179,7 @@ export function GitDiffScreen() {
           className="wb-button primary"
           onClick={() => setInput(GIT_DIFF_SAMPLE)}
         >
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button
@@ -198,7 +198,7 @@ export function GitDiffScreen() {
           onClick={() => void copyPatch()}
           disabled={!input}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+          <IconCopy size={16} stroke={1.7} aria-hidden="true" />
           Copy patch
         </Button>
       </div>
@@ -275,6 +275,7 @@ export function GitDiffScreen() {
         <CodeEditor
           value={hunkText}
           readOnly
+          language="diff"
           wrap={wrap}
           label="Selected file hunks"
           placeholder="Select a file to inspect its hunks..."

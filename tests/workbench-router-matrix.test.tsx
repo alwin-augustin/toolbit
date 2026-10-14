@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { AppRouter } from '@/app/router';
 import { TOOLS } from '@/content/tools.config';
+import { useWorkspace } from '@/shared/workspace-store';
 
 function renderAt(path: string) {
   window.history.replaceState(null, '', path);
@@ -15,6 +16,9 @@ function renderAt(path: string) {
 describe('router matrix (all tools)', () => {
   it('renders an h1 for every catalog tool without crashing', async () => {
     for (const tool of TOOLS) {
+      // Each route is mounted in isolation: documents from an earlier route
+      // must not be able to satisfy the next route's query.
+      useWorkspace.setState({ tabs: [], activeTabId: null, closed: [] });
       document.body.innerHTML = '';
       window.history.replaceState(null, '', tool.path);
       const { unmount } = render(<AppRouter />);

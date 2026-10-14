@@ -214,17 +214,17 @@ export function WsScreen() {
       </div>
       <div className="wb-toolbar">
         <Button type="button" className="wb-button primary" onClick={loadSample}>
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         {isActive ? (
           <Button type="button" variant="outline" className="wb-button" onClick={disconnect}>
-            <IconX size={22} stroke={1.7} aria-hidden="true" />
+            <IconX size={16} stroke={1.7} aria-hidden="true" />
             Disconnect
           </Button>
         ) : (
           <Button type="button" className="wb-button primary" onClick={connect}>
-            <IconPlug size={22} stroke={1.7} aria-hidden="true" />
+            <IconPlug size={16} stroke={1.7} aria-hidden="true" />
             Connect
           </Button>
         )}
@@ -235,7 +235,7 @@ export function WsScreen() {
           onClick={() => setMessages([])}
           disabled={messages.length === 0}
         >
-          <IconTrash size={22} stroke={1.7} aria-hidden="true" />
+          <IconTrash size={16} stroke={1.7} aria-hidden="true" />
           Clear log
         </Button>
         <small>Connects to: {url.trim() || 'No URL yet'}</small>
@@ -272,7 +272,7 @@ export function WsScreen() {
                 onClick={sendMessage}
                 disabled={status !== 'connected' || !messageInput.trim()}
               >
-                <IconSend size={22} stroke={1.7} aria-hidden="true" />
+                <IconSend size={16} stroke={1.7} aria-hidden="true" />
                 Send
               </Button>
             </div>

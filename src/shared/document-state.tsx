@@ -10,12 +10,26 @@ import {
 } from 'react';
 import { useWorkspace } from '@/shared/workspace-store';
 import type { JsonValue } from '@/core/tool-contract';
-export const DocumentContext = createContext<string | null>(null);
+/**
+ * Bound document for the screen below.
+ *
+ * `undefined` — no provider, so fall back to the active Tab (workbench tools).
+ * `null`      — a provider that deliberately binds NO document (custom
+ *               screens), whose state must stay session-local rather than
+ *               leaking into whatever Tab happens to be active.
+ */
+export const DocumentContext = createContext<string | null | undefined>(undefined);
+/**
+ * Values to use the first time a field is read, for screens that render
+ * without a persisted document (custom screens). The router fills this from a
+ * pending Smart paste, so pasted content lands in the tool's primary field.
+ */
+export const DocumentSeedContext = createContext<Record<string, JsonValue> | null>(null);
 /** Single source for the bound Document id: explicit context wins, else active Tab. */
 export function useDocumentId(): string | null {
   const contextId = useContext(DocumentContext);
   const activeId = useWorkspace((s) => s.activeTabId);
-  return contextId ?? activeId;
+  return contextId === undefined ? activeId : contextId;
 }
 /** Per-document state is ephemeral until explicitly saved with include-data. */
 export function useDocumentField<T extends JsonValue>(
@@ -23,8 +37,11 @@ export function useDocumentField<T extends JsonValue>(
   initial: T,
 ): [T, Dispatch<SetStateAction<T>>] {
   const id = useDocumentId();
+  const seed = useContext(DocumentSeedContext);
   const document = useWorkspace((s) => s.tabs.find((d) => d.id === id));
-  const [fallback, setFallback] = useState(initial);
+  const [fallback, setFallback] = useState<T>(() =>
+    seed && seed[key] !== undefined ? (seed[key] as T) : initial,
+  );
   const stored = document?.payload?.[key];
   const value = (
     stored !== undefined &&

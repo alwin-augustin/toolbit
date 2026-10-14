@@ -146,7 +146,7 @@ export function UnitScreen() {
           />
         </Label>
         <Button type="button" className="wb-button primary" onClick={handleConvert}>
-          <IconEqual size={22} stroke={1.7} aria-hidden="true" />
+          <IconEqual size={16} stroke={1.7} aria-hidden="true" />
           Convert
         </Button>
         <Button
@@ -156,7 +156,7 @@ export function UnitScreen() {
           disabled={!result}
           onClick={() => void copyText(result)}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+          <IconCopy size={16} stroke={1.7} aria-hidden="true" />
           Copy
         </Button>
       </div>

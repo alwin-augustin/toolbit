@@ -195,7 +195,7 @@ export function TotpScreen() {
           className="wb-button primary"
           onClick={() => setSecret(TOTP_SAMPLE_SECRET)}
         >
-          <IconFlask size={22} stroke={1.7} aria-hidden="true" />
+          <IconFlask size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button
@@ -300,7 +300,7 @@ export function TotpScreen() {
           disabled={!accountName.trim() || !secret.trim()}
           onClick={addAccount}
         >
-          <IconPlus size={22} stroke={1.7} aria-hidden="true" />
+          <IconPlus size={16} stroke={1.7} aria-hidden="true" />
           Save account
         </Button>
       </div>

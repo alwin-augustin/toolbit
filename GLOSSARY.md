@@ -1,6 +1,6 @@
 # Toolbit Workbench
 
-The local-first developer workspace: 42 tools that process input in the browser, with tabs, saved work, and opt-in history.
+The local-first developer workspace: 42 tools that process input in the browser, with tabs, saved work, and history you can switch off.
 
 ## Language
 
@@ -45,7 +45,7 @@ A saved item holding a runnable, single-purpose demonstration — currently the 
 _Avoid_: recipe
 
 **History run**:
-An opt-in record of one transform execution. Recording is off by default and secret tools never record.
+A record of one transform execution, kept while the History switch is on and expiring on the retention setting. Secret tools never record.
 
 **Secret tool**:
 A tool handling credentials or tokens (password, TOTP, JWT, certificate, API builder, WebSocket). Excluded from history and telemetry by default.

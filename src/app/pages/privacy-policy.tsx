@@ -6,7 +6,7 @@ export default function PrivacyPolicy() {
     <LegalPageView
       slug="privacy"
       canonicalPath="/privacy"
-      icon={<Shield className="h-8 w-8 text-primary" />}
+      icon={<Shield size={20} aria-hidden="true" />}
     />
   );
 }

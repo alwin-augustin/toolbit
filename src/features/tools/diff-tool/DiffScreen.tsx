@@ -216,11 +216,11 @@ export function DiffScreen() {
 
       <div className="wb-toolbar">
         <Button type="button" variant="outline" className="wb-button" onClick={loadSample}>
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button type="button" variant="outline" className="wb-button" onClick={clear}>
-          <IconEraser size={22} stroke={1.7} aria-hidden="true" />
+          <IconEraser size={16} stroke={1.7} aria-hidden="true" />
           Clear
         </Button>
         <Button
@@ -230,10 +230,10 @@ export function DiffScreen() {
           onClick={copy}
           disabled={!output}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+          <IconCopy size={16} stroke={1.7} aria-hidden="true" />
           Copy diff
         </Button>
-        <Label className="wb-indent-label">
+        <Label className="wb-toolbar-label">
           Mode:
           <NativeSelect
             aria-label="Diff mode"
@@ -324,7 +324,7 @@ export function DiffScreen() {
         <div className="wb-pane-header">
           <h2>{viewMode === 'side-by-side' ? 'Side-by-side' : 'Unified'} diff</h2>
         </div>
-        <CodeEditor value={output} readOnly wrap={wrap} label="Diff result" />
+        <CodeEditor value={output} readOnly language="diff" wrap={wrap} label="Diff result" />
         <div className="wb-pane-footer">
           <span>
             {stats.added} added · {stats.removed} removed · {stats.unchanged} unchanged

@@ -127,7 +127,7 @@ export function MarkdownScreen() {
           className="wb-button primary"
           onClick={() => setMarkdown(MARKDOWN_SAMPLE)}
         >
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button
@@ -146,7 +146,7 @@ export function MarkdownScreen() {
           onClick={() => void copyHtml()}
           disabled={!html}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+          <IconCopy size={16} stroke={1.7} aria-hidden="true" />
           Copy HTML
         </Button>
       </div>
@@ -176,7 +176,7 @@ export function MarkdownScreen() {
                 disabled={!html}
                 onClick={() => void copyHtml()}
               >
-                <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+                <IconCopy size={16} stroke={1.7} aria-hidden="true" />
                 Copy HTML
               </Button>
             </div>

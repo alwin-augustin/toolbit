@@ -95,7 +95,7 @@ export function HttpStatusScreen() {
           className="wb-button primary"
           onClick={() => setQuery('404')}
         >
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Load sample
         </Button>
         <Button
@@ -105,7 +105,7 @@ export function HttpStatusScreen() {
           onClick={() => setQuery('')}
           disabled={!query}
         >
-          <IconTrash size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
+          <IconTrash size={16} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Clear
         </Button>
         <Button
@@ -115,7 +115,7 @@ export function HttpStatusScreen() {
           onClick={copyAll}
           disabled={results.length === 0}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
+          <IconCopy size={16} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Copy all
         </Button>
         <span className="wb-result-state">

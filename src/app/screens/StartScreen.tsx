@@ -1,108 +1,342 @@
-import { useState } from 'react';
-import { IconArrowRight, IconBraces } from '@tabler/icons-react';
+import { useMemo, useState } from 'react';
+import {
+  IconArrowRight,
+  IconCommand,
+  IconLayoutGrid,
+  IconPin,
+  IconSearch,
+  IconShieldLock,
+  IconSparkles,
+  IconX,
+} from '@tabler/icons-react';
+import { useLocation } from 'wouter';
 import { detectContentType } from '@/core/smart-detect';
-import { useWorkbenchMemory } from '@/shared/workbench-memory';
-import { useWorkbenchActions } from '@/shared/workbench-actions';
-import { getSpec } from '@/features/tools/specs';
+import { TOOLS, RESEARCH_CATEGORIES } from '@/content/tools.config';
+import { useFavorites } from '@/core/favorites-store';
+import { useRecentTools } from '@/core/recent-tools';
+import { useWorkspace, type WorkspaceTab } from '@/shared/workspace-store';
+import { toolPath, useWorkbenchActions } from '@/shared/workbench-actions';
+import { isWorkbenchToolId, readDoc, specIcon, specTitle } from '@/features/tools/specs';
+import {
+  CATEGORY_ICONS,
+  CATEGORY_ORDER,
+  TOOLS_BY_CATEGORY,
+  TOOL_INDEX,
+} from '@/app/shell/navigation';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Kbd } from '@/components/ui/kbd';
 
-const PINNED = ['json-formatter', 'base64-encoder', 'timestamp-converter'];
+const PASTE_FIELD = 'Paste data to find a tool';
 
+function tabTitle(tab: WorkspaceTab): string {
+  if (isWorkbenchToolId(tab.toolId)) return readDoc(tab).label || specTitle(tab.toolId, tab.toolId);
+  return TOOL_INDEX.get(tab.toolId)?.name ?? tab.toolId;
+}
+
+/**
+ * Start.
+ *
+ * The job of this screen is to get out of the way in under three seconds. A
+ * developer arriving here usually has something in their clipboard, so the
+ * largest affordance is a field that recognises what you paste and offers the
+ * right tool for it — with search and browsing as the fallback, not the
+ * primary path.
+ */
 export function StartScreen() {
-  const [scratch, setScratch] = useState('');
-  const saved = useWorkbenchMemory((s) => s.saved);
-  const { openTool, restore, navigate } = useWorkbenchActions();
+  const [text, setText] = useState('');
+  const [, navigate] = useLocation();
+  const tabs = useWorkspace((s) => s.tabs);
+  const activeTabId = useWorkspace((s) => s.activeTabId);
+  const setActiveTab = useWorkspace((s) => s.setActiveTab);
+  const closeTab = useWorkspace((s) => s.closeTab);
+  const { openTool, activateExistingOrOpen } = useWorkbenchActions();
+  const { favorites } = useFavorites();
+  const { recents } = useRecentTools();
 
-  const suggestions = detectContentType(scratch);
-  const suggested = suggestions.find((s) => getSpec(s.toolId));
-  const sessions = saved.filter((s) => s.kind === 'Sessions').slice(0, 3);
+  const suggestions = useMemo(() => (text.trim() ? detectContentType(text) : []), [text]);
+
+  const pinned = favorites.map((id) => TOOL_INDEX.get(id)).filter((tool) => tool != null);
+
+  const recent = recents
+    .map((id) => TOOL_INDEX.get(id))
+    .filter((tool) => tool != null)
+    .slice(0, 8);
+
+  const openSearch = () => window.dispatchEvent(new CustomEvent('wb:open-search'));
+
+  /** Hand the pasted payload to the suggested tool, then clear the field. */
+  const runSuggestion = (toolId: string) => {
+    const payload = text;
+    setText('');
+    if (isWorkbenchToolId(toolId)) {
+      openTool(toolId, payload);
+      return;
+    }
+    try {
+      sessionStorage.setItem('toolbit:smart-paste', payload);
+    } catch {
+      /* storage denied: the tool opens empty rather than not at all */
+    }
+    navigate(TOOL_INDEX.get(toolId)?.path ?? toolPath(toolId));
+  };
+
+  const resume = (tab: WorkspaceTab) => {
+    setActiveTab(tab.id);
+    navigate(toolPath(tab.toolId));
+  };
 
   return (
-    <>
-      <div className="wb-page-heading">
+    <div className="flex flex-col gap-7 pb-10">
+      <header className="wb-page-heading">
         <h1>Start</h1>
-        <p>A quick place to pick up your next task.</p>
-      </div>
-      <section className="wb-smart-paste">
-        <h2>What are you working with?</h2>
-        <Textarea
-          aria-label="Paste data to find a tool"
-          placeholder="Paste JSON, a timestamp, or encoded text..."
-          value={scratch}
-          onChange={(e) => setScratch(e.target.value)}
-        />
-        <div>
-          <p>
-            {suggested
-              ? `${suggested.reason}. Try ${getSpec(suggested.toolId)?.title} with this data.`
-              : 'Pick a tool, or paste data to get started.'}
-          </p>
-          {suggested && (
+        <p>
+          Paste anything — JSON, a JWT, a diff, SQL, a certificate — and Toolbit opens the tool that
+          handles it. {TOOLS.length} utilities, all running in this tab.
+        </p>
+      </header>
+
+      {/* Paste-first entry point ------------------------------------------- */}
+      <section aria-label="Start from pasted data">
+        <label className="sr-only" htmlFor="wb-paste">
+          {PASTE_FIELD}
+        </label>
+        <div className="rounded-xl border border-line bg-surface shadow-xs transition-colors focus-within:border-brand">
+          <textarea
+            id="wb-paste"
+            aria-label={PASTE_FIELD}
+            placeholder={PASTE_FIELD}
+            rows={3}
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                event.preventDefault();
+                if (suggestions[0]) runSuggestion(suggestions[0].toolId);
+              }
+            }}
+            spellCheck={false}
+            className="block w-full resize-y bg-transparent px-4 py-3 font-mono text-sm text-ink outline-none placeholder:font-sans placeholder:text-ink-faint"
+          />
+          <div className="flex items-center gap-2 border-t border-line px-3 py-2">
             <Button
               type="button"
-              className="wb-button primary"
-              onClick={() => openTool(suggested.toolId, scratch)}
+              variant="outline"
+              size="sm"
+              className="gap-2 text-ink-muted"
+              onClick={openSearch}
             >
-              <IconArrowRight size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
-              Open {getSpec(suggested.toolId)?.title}
+              <IconSearch size={14} />
+              Search tools or actions...
+              <span className="ml-0.5 flex items-center gap-0.5">
+                <Kbd className="h-4 min-w-4 text-2xs">⌘</Kbd>
+                <Kbd className="h-4 min-w-4 text-2xs">K</Kbd>
+              </span>
             </Button>
-          )}
+            {text && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-ink-muted"
+                onClick={() => setText('')}
+              >
+                <IconX size={13} />
+                Clear
+              </Button>
+            )}
+            <span className="ml-auto hidden items-center gap-1.5 text-2xs text-ink-faint sm:flex">
+              <IconShieldLock size={12} aria-hidden="true" />
+              Nothing leaves your browser
+            </span>
+          </div>
+        </div>
+
+        {/* Detection results --------------------------------------------- */}
+        {suggestions.length > 0 && (
+          <div className="mt-2.5" aria-live="polite">
+            <p className="wb-caps mb-1.5 flex items-center gap-1.5">
+              <IconSparkles size={12} aria-hidden="true" />
+              {suggestions[0].reason}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {suggestions.map((suggestion) => (
+                <Button
+                  key={suggestion.toolId}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => runSuggestion(suggestion.toolId)}
+                >
+                  Open {suggestion.toolName}
+                  <IconArrowRight size={13} />
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Resume open work -------------------------------------------------- */}
+      {tabs.length > 0 && (
+        <section aria-labelledby="wb-home-continue">
+          <h2 id="wb-home-continue" className="wb-caps mb-2 flex items-center gap-2">
+            Continue
+            <span className="font-normal normal-case tracking-normal text-ink-faint">
+              {tabs.length} open
+            </span>
+          </h2>
+          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+            {tabs.map((tab) => {
+              const title = tabTitle(tab);
+              const Icon = isWorkbenchToolId(tab.toolId)
+                ? specIcon(tab.toolId)
+                : CATEGORY_ICONS[TOOL_INDEX.get(tab.toolId)?.researchCategory ?? 'utilities'];
+              return (
+                <div
+                  key={tab.id}
+                  className={`group/card flex items-center gap-2.5 rounded-lg border px-3 py-2.5 transition-colors ${
+                    tab.id === activeTabId
+                      ? 'border-brand/40 bg-brand-soft'
+                      : 'border-line bg-surface hover:bg-state-hover'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+                    onClick={() => resume(tab)}
+                  >
+                    {Icon ? (
+                      <Icon size={16} className="shrink-0 text-ink-muted" aria-hidden="true" />
+                    ) : null}
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium text-ink">{title}</span>
+                      <span className="block truncate text-xs text-ink-faint">
+                        {isWorkbenchToolId(tab.toolId) ? 'Document' : 'Tool'} ·{' '}
+                        {TOOL_INDEX.get(tab.toolId)?.name ?? tab.toolId}
+                      </span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Close ${title}`}
+                    className="grid size-6 shrink-0 place-items-center rounded-sm text-ink-faint opacity-0 transition-opacity hover:text-ink focus-visible:opacity-100 group-hover/card:opacity-100"
+                    onClick={() => {
+                      closeTab(tab.id);
+                      if (tabs.length <= 1) navigate('/');
+                    }}
+                  >
+                    <IconX size={13} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Pinned ----------------------------------------------------------- */}
+      {pinned.length > 0 && (
+        <section aria-labelledby="wb-home-pinned">
+          <h2 id="wb-home-pinned" className="wb-caps mb-2 flex items-center gap-1.5">
+            <IconPin size={12} aria-hidden="true" />
+            Pinned
+          </h2>
+          <div className="flex flex-wrap gap-1.5">
+            {pinned.map((tool) => (
+              <Button
+                key={tool.id}
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => activateExistingOrOpen(tool.id)}
+              >
+                {tool.name}
+              </Button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Recent ----------------------------------------------------------- */}
+      {recent.length > 0 && (
+        <section aria-labelledby="wb-home-recent">
+          <h2 id="wb-home-recent" className="wb-caps mb-2">
+            Recent
+          </h2>
+          <div className="flex flex-wrap gap-1.5">
+            {recent.map((tool) => (
+              <Button
+                key={tool.id}
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-ink-muted"
+                onClick={() => activateExistingOrOpen(tool.id)}
+              >
+                {tool.name}
+              </Button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Browse ----------------------------------------------------------- */}
+      <section aria-labelledby="wb-home-browse">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h2 id="wb-home-browse" className="wb-caps">
+            Browse
+          </h2>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-ink-muted"
+            onClick={() => navigate('/library')}
+          >
+            <IconLayoutGrid size={13} />
+            All {TOOLS.length} tools
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+          {CATEGORY_ORDER.map((category) => {
+            const tools = TOOLS_BY_CATEGORY.get(category) ?? [];
+            if (tools.length === 0) return null;
+            const Icon = CATEGORY_ICONS[category];
+            return (
+              <button
+                key={category}
+                type="button"
+                className="flex items-start gap-2.5 rounded-lg border border-line bg-surface px-3 py-2.5 text-left transition-colors hover:bg-state-hover"
+                onClick={() => navigate('/library')}
+              >
+                <Icon size={16} className="mt-0.5 shrink-0 text-ink-faint" aria-hidden="true" />
+                <span className="min-w-0">
+                  <span className="flex items-baseline gap-1.5">
+                    <span className="text-sm font-medium text-ink">
+                      {RESEARCH_CATEGORIES[category].name}
+                    </span>
+                    <span className="tb-tnum text-2xs text-ink-faint">{tools.length}</span>
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs text-ink-faint">
+                    {tools
+                      .slice(0, 3)
+                      .map((tool) => tool.name)
+                      .join(' · ')}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </section>
-      <h2 className="wb-section-title">Pinned tools</h2>
-      <div className="wb-tool-grid">
-        {PINNED.map((id) => {
-          const tool = getSpec(id);
-          if (!tool) return null;
-          const ToolIcon = tool.icon;
-          return (
-            <Button
-              key={id}
-              type="button"
-              variant="ghost"
-              className="wb-tool-tile text-left justify-start h-auto flex-col items-start"
-              onClick={() => openTool(id)}
-            >
-              <ToolIcon size={30} />
-              <h3>{tool.title}</h3>
-              <p>{tool.description}</p>
-              <IconArrowRight size={20} />
-            </Button>
-          );
-        })}
-      </div>
-      <div className="wb-section-title-row">
-        <h2>Continue a session</h2>
-        <Button
-          type="button"
-          variant="link"
-          className="wb-text-button p-0 h-auto"
-          onClick={() => navigate('/saved')}
-        >
-          View Saved
-          <IconArrowRight size={18} />
-        </Button>
-      </div>
-      {sessions.map((item) => (
-        <Button
-          key={item.id}
-          type="button"
-          variant="ghost"
-          className="wb-list-row text-left justify-start h-auto w-full"
-          onClick={() => restore(item)}
-        >
-          <IconBraces size={26} />
-          <span>
-            <strong>{item.name}</strong>
-            <small>
-              {getSpec(item.toolId)?.title ?? 'Tool'} ·{' '}
-              {item.example ? 'Example session' : 'Saved in this session'}
-            </small>
-          </span>
-          <IconArrowRight size={20} />
-        </Button>
-      ))}
-    </>
+
+      <p className="flex items-center gap-1.5 text-xs text-ink-faint">
+        <IconCommand size={13} aria-hidden="true" />
+        Press <Kbd className="h-4 text-2xs">⌘K</Kbd> anywhere to search, or{' '}
+        <Kbd className="h-4 text-2xs">/</Kbd> from any screen.
+      </p>
+    </div>
   );
 }

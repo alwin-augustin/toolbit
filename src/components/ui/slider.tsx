@@ -62,12 +62,12 @@ function Slider({
       {...props}
     >
       <SliderPrimitive.Control className="relative flex w-full items-center">
-        <SliderPrimitive.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-input/80 dark:bg-input/40">
-          <SliderPrimitive.Indicator className="absolute h-full bg-primary" />
+        <SliderPrimitive.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-line-strong">
+          <SliderPrimitive.Indicator className="absolute h-full bg-brand" />
         </SliderPrimitive.Track>
         <SliderPrimitive.Thumb
           aria-label={props['aria-label']}
-          className="block size-4 rounded-full border border-primary/50 bg-background shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none cursor-grab active:cursor-grabbing hover:bg-muted"
+          className="block size-4 rounded-full border border-brand/50 bg-canvas shadow-sm transition-colors disabled:pointer-events-none cursor-grab active:cursor-grabbing hover:bg-state-hover"
         />
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>

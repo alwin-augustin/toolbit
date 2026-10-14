@@ -24,7 +24,12 @@ export function useWorkbenchActions() {
   const notify = useWorkbenchMemory((s) => s.notify);
   const addSaved = useWorkbenchMemory((s) => s.addSaved);
 
-  /** Always creates a new document, mirroring the prototype's openTool. */
+  /**
+   * Open a tool as a NEW document. Opening a tool that is already open adds a
+   * second, independent document and numbers its label — the same mental model
+   * as opening a second file. Use `activateExistingOrOpen` when the user is
+   * navigating rather than deliberately starting fresh work.
+   */
   const openTool = useCallback(
     (toolId: string, input?: string) => {
       if (!isWorkbenchToolId(toolId)) {
@@ -32,11 +37,11 @@ export function useWorkbenchActions() {
         return;
       }
       const meta = getSpec(toolId);
-      const count = useWorkspace.getState().tabs.filter((d) => d.toolId === toolId).length;
       const title = meta?.title ?? toolId;
+      const alreadyOpen = useWorkspace.getState().tabs.filter((d) => d.toolId === toolId).length;
       const seed = {
         ...defaultDocState(toolId, input),
-        label: count ? `${title} ${count + 1}` : title,
+        label: alreadyOpen === 0 ? title : `${title} ${alreadyOpen + 1}`,
       };
       useWorkspace.getState().openDocument(toolId, seed);
       navigate(toolPath(toolId));
@@ -44,15 +49,23 @@ export function useWorkbenchActions() {
     [navigate],
   );
 
+  /**
+   * Navigate to a tool: focus its document when one is open, otherwise create
+   * one. Seeds are always applied, so pasting new content into an open tool
+   * opens a fresh document rather than silently overwriting the current one.
+   */
   const activateExistingOrOpen = useCallback(
-    (toolId: string) => {
-      const existing = useWorkspace.getState().tabs.find((d) => d.toolId === toolId);
+    (toolId: string, input?: string) => {
+      const existing =
+        input === undefined
+          ? useWorkspace.getState().tabs.find((d) => d.toolId === toolId)
+          : undefined;
       if (existing) {
         useWorkspace.getState().setActiveTab(existing.id);
         navigate(toolPath(toolId));
-      } else {
-        openTool(toolId);
+        return;
       }
+      openTool(toolId, input);
     },
     [navigate, openTool],
   );

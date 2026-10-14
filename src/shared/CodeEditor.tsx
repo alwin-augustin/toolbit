@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { EditorState, type Extension } from '@codemirror/state';
-import { EditorView, keymap, lineNumbers, placeholder as cmPlaceholder } from '@codemirror/view';
+import { EditorState, type Extension, Facet, StateField } from '@codemirror/state';
+import {
+  EditorView,
+  keymap,
+  lineNumbers,
+  placeholder as cmPlaceholder,
+  Decoration,
+} from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { bracketMatching, syntaxHighlighting, HighlightStyle } from '@codemirror/language';
 import { json } from '@codemirror/lang-json';
@@ -8,45 +14,98 @@ import { tags } from '@lezer/highlight';
 import { useEditorStatus } from '@/shared/workspace-store';
 import { Button } from '@/components/ui/button';
 
-export type EditorLanguage = 'json' | 'text';
+export type EditorLanguage = 'json' | 'text' | 'diff';
 
 /* Syntax palette from the design system tokens (--code-*). */
 const toolbitHighlight = HighlightStyle.define([
-  { tag: tags.propertyName, color: 'hsl(var(--code-key))' },
-  { tag: tags.string, color: 'hsl(var(--code-string))' },
-  { tag: tags.number, color: 'hsl(var(--code-number))' },
-  { tag: [tags.keyword, tags.bool, tags.null], color: 'hsl(var(--code-keyword))' },
-  { tag: [tags.punctuation, tags.separator, tags.bracket], color: 'hsl(var(--code-punc))' },
+  { tag: tags.propertyName, color: 'var(--code-key)' },
+  { tag: tags.string, color: 'var(--code-string)' },
+  { tag: tags.number, color: 'var(--code-number)' },
+  { tag: [tags.keyword, tags.bool, tags.null], color: 'var(--code-keyword)' },
+  { tag: [tags.punctuation, tags.separator, tags.bracket], color: 'var(--code-punc)' },
 ]);
+
+/* Diff-specific line decorations — highlights lines starting with + or - */
+const diffLanguage = Facet.define<boolean>();
+
+const diffThemeExt = EditorView.theme({
+  '.cm-line.diff-added': {
+    backgroundColor: 'var(--code-added-bg)',
+    color: 'var(--code-added)',
+  },
+  '.cm-line.diff-removed': {
+    backgroundColor: 'var(--code-removed-bg)',
+    color: 'var(--code-removed)',
+  },
+});
+
+const diffLineDecoration = Decoration.line({ class: 'diff-added' });
+const diffRemovedDecoration = Decoration.line({ class: 'diff-removed' });
+
+const diffDecorationsField = StateField.define<ReturnType<typeof Decoration.set>>({
+  create(state) {
+    if (!state.facet(diffLanguage)) return Decoration.none;
+    const widgets: Array<{ from: number; to: number; value: Decoration }> = [];
+    for (let i = 1; i <= state.doc.lines; i++) {
+      const line = state.doc.line(i);
+      const text = line.text;
+      if (text.startsWith('+')) {
+        widgets.push({ from: line.from, to: line.from, value: diffLineDecoration });
+      } else if (text.startsWith('-')) {
+        widgets.push({ from: line.from, to: line.from, value: diffRemovedDecoration });
+      }
+    }
+    return Decoration.set(widgets);
+  },
+  update(decorations, tr) {
+    if (!tr.state.facet(diffLanguage)) return Decoration.none;
+    decorations = decorations.map(tr.changes);
+    if (!tr.docChanged) return decorations;
+    const widgets: Array<{ from: number; to: number; value: Decoration }> = [];
+    for (let i = 1; i <= tr.state.doc.lines; i++) {
+      const line = tr.state.doc.line(i);
+      const text = line.text;
+      if (text.startsWith('+')) {
+        widgets.push({ from: line.from, to: line.from, value: diffLineDecoration });
+      } else if (text.startsWith('-')) {
+        widgets.push({ from: line.from, to: line.from, value: diffRemovedDecoration });
+      }
+    }
+    return Decoration.set(widgets);
+  },
+  provide(field) {
+    return EditorView.decorations.from(field);
+  },
+});
 
 const toolbitTheme = EditorView.theme({
   '&': {
     height: '100%',
-    fontSize: 'var(--text-sm)',
+    fontSize: '0.8125rem',
     backgroundColor: 'transparent',
-    color: 'hsl(var(--text-strong))',
+    color: 'var(--foreground)',
   },
   '.cm-content': {
     fontFamily: 'var(--font-mono)',
-    lineHeight: 'var(--leading-relaxed)',
+    lineHeight: '1.625',
     padding: '10px 0',
-    caretColor: 'hsl(var(--text-strong))',
+    caretColor: 'var(--foreground)',
   },
   '.cm-line': { padding: '0 12px' },
   '&.cm-focused': { outline: 'none' },
   '.cm-gutters': {
     backgroundColor: 'transparent',
     borderRight: 'none',
-    color: 'hsl(var(--text-faint))',
+    color: 'var(--muted-foreground)',
     fontFamily: 'var(--font-mono)',
-    fontSize: 'var(--text-xs)',
+    fontSize: '0.75rem',
   },
-  '.cm-activeLineGutter': { backgroundColor: 'transparent', color: 'hsl(var(--text-muted))' },
-  '.cm-cursor': { borderLeftColor: 'hsl(var(--text-strong))' },
+  '.cm-activeLineGutter': { backgroundColor: 'transparent', color: 'var(--muted-foreground)' },
+  '.cm-cursor': { borderLeftColor: 'var(--foreground)' },
   '.cm-selectionBackground, &.cm-focused .cm-selectionBackground': {
-    backgroundColor: 'hsl(var(--primary) / 0.25)',
+    backgroundColor: 'color-mix(in srgb, var(--primary) 25%, transparent)',
   },
-  '.cm-placeholder': { color: 'hsl(var(--text-faint))' },
+  '.cm-placeholder': { color: 'var(--muted-foreground)' },
 });
 
 interface CodeEditorProps {
@@ -123,6 +182,9 @@ export function CodeEditor({
     ];
     if (showLineNumbers) extensions.push(lineNumbers());
     if (language === 'json' && !large) extensions.push(json());
+    if (language === 'diff') {
+      extensions.push(diffLanguage.of(true), diffThemeExt, diffDecorationsField);
+    }
     if (placeholder) extensions.push(cmPlaceholder(placeholder));
     extensions.push(
       EditorView.updateListener.of((update) => {
@@ -189,7 +251,7 @@ export function CodeEditor({
   return (
     <>
       {previewOnly && (
-        <p role="status" className="px-3">
+        <p role="status" className="wb-preview-note px-3">
           Preview shows the first 100 KB.{' '}
           {readOnly
             ? 'Copy and pipe use the complete output.'

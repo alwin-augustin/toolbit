@@ -10,7 +10,7 @@ describe('search dialog accessibility', () => {
     const onClose = vi.fn();
     render(<SearchDialog onClose={onClose} />);
 
-    const input = screen.getByRole('textbox', { name: 'Search tools and saved work' });
+    const input = screen.getByRole('textbox', { name: 'Search tools' });
     await waitFor(() => expect(input).toHaveFocus());
 
     await user.type(input, 'timestamp');

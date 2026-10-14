@@ -294,7 +294,7 @@ export function LoremScreen() {
           </NativeSelect>
         </Label>
         <Button type="button" variant="default" className="wb-button primary" onClick={generate}>
-          <IconRefresh size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
+          <IconRefresh size={16} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Generate
         </Button>
         <Button
@@ -304,7 +304,7 @@ export function LoremScreen() {
           disabled={!output}
           onClick={() => void copyText(output)}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
+          <IconCopy size={16} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Copy
         </Button>
       </div>

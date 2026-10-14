@@ -75,158 +75,270 @@ function writePage(pathname, html) {
 
 /* --------------------------------------------------------------- template */
 
+/**
+ * The self-hosted faces the workspace uses, resolved to their hashed build
+ * output. These pages inline their own CSS and load no app stylesheet, so
+ * without this they would fall back to the system stack and lose the design
+ * system's typography. Vite emits content-hashed font names, so they are
+ * discovered from dist/assets rather than hard-coded.
+ */
+function fontFaceCss() {
+  const fontsDir = path.join(outDir, 'assets');
+  if (!existsSync(fontsDir)) return '';
+
+  const files = readdirSync(fontsDir);
+  const faces = [
+    { family: 'Geist', file: files.find((f) => /^Geist.*\.woff2$/.test(f)) },
+    // The Italic file sorts before the roman one, so match the roman by name.
+    { family: 'JetBrains Mono', file: files.find((f) => /^JetBrainsMono_wght.*\.woff2$/.test(f)) },
+  ];
+
+  return faces
+    .filter((face) => face.file)
+    .map(
+      (face) =>
+        `@font-face{font-family:'${face.family}';src:url('/assets/${face.file}') format('woff2');font-weight:100 900;font-style:normal;font-display:swap;}`,
+    )
+    .join('\n');
+}
+
 const PAGE_CSS = `
+/* Toolbit design tokens, inlined.
+   These pages are served standalone, so they cannot import
+   src/app/styles/tokens.css. Every value below is copied from that file —
+   light from its :root block, dark from its .dark block — and the names are
+   the design system's own, so a page's CSS reads like the app's. Keep the two
+   in step: tokens.css is the source of truth, this is a mirror of it. */
 :root {
   color-scheme: light;
-  --bg: #ffffff;
-  --surface: #f6f7f9;
-  --surface-2: #eef0f4;
-  --fg: #14161a;
-  --muted: #5b6070;
-  --line: #e3e5ea;
-  --accent: #2f52c8;
-  --accent-ink: #1e3a9e;
-  --accent-fg: #ffffff;
-  --radius: .8rem;
-  --shadow: 0 1px 2px rgb(20 22 26 / .05), 0 8px 24px -12px rgb(20 22 26 / .18);
+  --tb-canvas: oklch(0.991 0.002 265);
+  --tb-surface: oklch(1 0 0);
+  --tb-sunken: oklch(0.978 0.003 265);
+  --tb-raised: oklch(1 0 0);
+  --tb-state-hover: oklch(0.955 0.004 265);
+  --tb-line: oklch(0.936 0.005 265);
+  --tb-line-strong: oklch(0.83 0.008 265);
+  --tb-ink: oklch(0.183 0.011 265);
+  --tb-ink-muted: oklch(0.502 0.016 265);
+  --tb-ink-faint: oklch(0.596 0.014 265);
+  --tb-brand: oklch(0.511 0.222 285);
+  --tb-brand-hover: oklch(0.446 0.208 285);
+  --tb-brand-ink: oklch(0.446 0.208 285);
+  --tb-on-brand: oklch(1 0 0);
+  --tb-brand-soft: oklch(0.968 0.019 285);
+  --tb-brand-ring: oklch(0.585 0.203 285 / 0.45);
+  --tb-z-base: 0;
+  --tb-z-sticky: 10;
+  --tb-z-rail: 20;
+  --tb-z-drawer: 40;
+  --tb-z-overlay: 50;
+  --tb-z-popover: 60;
+  --tb-z-toast: 70;
+  --tb-z-skip: 80;
+  --tb-radius-xs: 3px;
+  --tb-radius-sm: 4px;
+  --tb-radius-md: 6px;
+  --tb-radius-lg: 9px;
+  --tb-radius-xl: 13px;
+  --tb-radius-full: 9999px;
+  --tb-control-xs: 22px;
+  --tb-control-sm: 28px;
+  --tb-control-md: 32px;
+  --tb-control-lg: 40px;
+  --tb-shadow-xs: 0 1px 2px 0 oklch(0.2 0.02 265 / 0.06);
+  --tb-shadow-sm: 0 1px 2px -1px oklch(0.2 0.02 265 / 0.09), 0 2px 4px -2px oklch(0.2 0.02 265 / 0.07);
+  --tb-shadow-md: 0 2px 4px -2px oklch(0.2 0.02 265 / 0.1), 0 6px 14px -4px oklch(0.2 0.02 265 / 0.12);
+  --tb-shadow-lg: 0 4px 8px -4px oklch(0.2 0.02 265 / 0.12), 0 16px 36px -12px oklch(0.2 0.02 265 / 0.2);
+  --tb-shadow-focus: 0 0 0 2px var(--tb-canvas), 0 0 0 4px var(--tb-brand-ring);
+  --tb-font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --tb-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --tb-text-2xs: 0.6875rem;
+  --tb-text-xs: 0.75rem;
+  --tb-text-sm: 0.8125rem;
+  --tb-text-base: 0.875rem;
+  --tb-text-md: 0.9375rem;
+  --tb-text-lg: 1.0625rem;
+  --tb-text-xl: 1.25rem;
+  --tb-text-2xl: 1.5rem;
+  --tb-text-3xl: 1.875rem;
+  --tb-leading-tight: 1.25;
+  --tb-leading-snug: 1.4;
+  --tb-leading-normal: 1.55;
+  --tb-tracking-tight: -0.011em;
+  --tb-tracking-caps: 0.08em;
+  --tb-duration-instant: 80ms;
+  --tb-duration-fast: 130ms;
+  --tb-duration-base: 190ms;
+  --tb-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 html.dark {
   color-scheme: dark;
-  --bg: #141519;
-  --surface: #1c1e24;
-  --surface-2: #24262e;
-  --fg: #eceef3;
-  --muted: #a7acbb;
-  --line: #2b2d34;
-  --accent: #93a9ff;
-  --accent-ink: #c3cfff;
-  --accent-fg: #14161a;
-  --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 12px 32px -12px rgb(0 0 0 / .5);
+  --tb-canvas: oklch(0.128 0.009 265);
+  --tb-surface: oklch(0.152 0.01 265);
+  --tb-sunken: oklch(0.128 0.009 265);
+  --tb-raised: oklch(0.183 0.011 265);
+  --tb-state-hover: oklch(0.222 0.013 265);
+  --tb-line: oklch(0.222 0.013 265);
+  --tb-line-strong: oklch(0.322 0.015 265);
+  --tb-ink: oklch(0.978 0.003 265);
+  --tb-ink-muted: oklch(0.706 0.012 265);
+  --tb-ink-faint: oklch(0.596 0.014 265);
+  --tb-brand: oklch(0.68 0.17 285);
+  --tb-brand-hover: oklch(0.75 0.16 285);
+  --tb-brand-ink: oklch(0.8 0.13 285);
+  --tb-on-brand: oklch(0.128 0.009 265);
+  --tb-brand-soft: oklch(0.26 0.07 285);
+  --tb-brand-ring: oklch(0.68 0.17 285 / 0.55);
+  --tb-shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 0.4);
+  --tb-shadow-sm: 0 1px 2px -1px oklch(0 0 0 / 0.5), 0 2px 4px -2px oklch(0 0 0 / 0.4);
+  --tb-shadow-md: 0 2px 4px -2px oklch(0 0 0 / 0.5), 0 6px 14px -4px oklch(0 0 0 / 0.5);
+  --tb-shadow-lg: 0 4px 10px -4px oklch(0 0 0 / 0.55), 0 18px 40px -12px oklch(0 0 0 / 0.6);
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  line-height: 1.65;
+  background: var(--tb-canvas);
+  color: var(--tb-ink);
+  font-family: var(--tb-font-sans);
+  font-size: var(--tb-text-base);
+  line-height: var(--tb-leading-normal);
   -webkit-font-smoothing: antialiased;
 }
-a { color: var(--accent); text-decoration: none; }
+a { color: var(--tb-brand-ink); text-decoration: none; }
 a:hover { text-decoration: underline; }
-a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: .25rem; }
-.skip {
-  position: absolute; left: 1rem; top: -4rem; z-index: 50;
-  background: var(--fg); color: var(--bg); padding: .5rem 1rem; border-radius: .5rem;
-  transition: top .15s ease;
+code, kbd, pre, samp { font-family: var(--tb-font-mono); }
+/* One focus treatment everywhere, matching the app: a 2px brand ring drawn as
+   a box-shadow, so it takes the shape of whatever it lands on. Setting a
+   radius here would restyle a control the moment it was focused. */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
+  outline: none;
+  box-shadow: var(--tb-shadow-focus);
 }
-.skip:focus { top: 1rem; color: var(--bg); }
+.skip {
+  position: absolute; left: 1rem; top: -4rem; z-index: var(--tb-z-skip);
+  background: var(--tb-brand); color: var(--tb-on-brand); padding: .5rem 1rem;
+  border-radius: var(--tb-radius-md);
+  transition: top var(--tb-duration-fast) var(--tb-ease-out);
+}
+.skip:focus { top: 1rem; color: var(--tb-on-brand); }
 .wrap { max-width: 64rem; margin: 0 auto; padding: 0 1.5rem; }
 .topbar {
-  position: sticky; top: 0; z-index: 20;
-  border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: var(--tb-z-sticky);
+  border-bottom: 1px solid var(--tb-line);
+  background: var(--tb-canvas);
 }
-.topbar .wrap { display: flex; align-items: center; gap: 1.25rem; min-height: 4rem; padding-top: .5rem; padding-bottom: .5rem; flex-wrap: wrap; }
-.brand { display: flex; align-items: center; gap: .55rem; font-weight: 700; color: var(--fg); font-size: 1.05rem; letter-spacing: -.01em; }
-.brand img { width: 26px; height: 26px; }
-.topbar nav { display: flex; gap: 1.1rem; font-size: .93rem; margin-left: auto; flex-wrap: wrap; }
-.topbar nav a { color: var(--muted); font-weight: 500; }
-.topbar nav a:hover { color: var(--fg); }
+.topbar .wrap { display: flex; align-items: center; gap: 1.25rem; padding-top: .75rem; padding-bottom: .75rem; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: .5rem; font-weight: 600; color: var(--tb-ink); font-size: var(--tb-text-base); letter-spacing: var(--tb-tracking-tight); }
+.brand img { width: 24px; height: 24px; }
+.topbar nav { display: flex; gap: .25rem; font-size: var(--tb-text-sm); margin-left: auto; flex-wrap: wrap; }
+.topbar nav a {
+  color: var(--tb-ink-muted); padding: .375rem .625rem; border-radius: var(--tb-radius-md);
+  transition: background-color var(--tb-duration-instant) var(--tb-ease-out), color var(--tb-duration-instant) var(--tb-ease-out);
+}
+.topbar nav a:hover { color: var(--tb-ink); background: var(--tb-state-hover); text-decoration: none; }
 main { padding: 0 0 3rem; }
+/* Flat band: a background step and one hairline, never a gradient. */
 .hero {
   margin: 0 0 2rem; padding: 3rem 0 2.25rem;
-  background:
-    radial-gradient(60rem 18rem at 15% -20%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
-    linear-gradient(var(--surface), transparent);
-  border-bottom: 1px solid var(--line);
+  background: var(--tb-sunken);
+  border-bottom: 1px solid var(--tb-line);
 }
 .hero .eyebrow {
-  display: inline-block; font-size: .78rem; font-weight: 700; letter-spacing: .08em;
-  text-transform: uppercase; color: var(--accent-ink);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  padding: .2rem .65rem; border-radius: 999px; margin: 0 0 1rem;
+  display: inline-block; font-size: var(--tb-text-2xs); font-weight: 600;
+  letter-spacing: var(--tb-tracking-caps);
+  text-transform: uppercase; color: var(--tb-brand-ink);
+  background: var(--tb-brand-soft);
+  border: 1px solid var(--tb-line);
+  padding: .2rem .65rem; border-radius: var(--tb-radius-full); margin: 0 0 1rem;
 }
 .hero h1 { margin-top: 0; }
-.hero .lede { font-size: 1.15rem; }
+.hero .lede { font-size: var(--tb-text-lg); }
 .stats { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; padding: 0; margin: 1.25rem 0 0; list-style: none; }
-.stats li { margin: 0; font-size: .92rem; color: var(--muted); }
-.stats strong { color: var(--fg); font-size: 1.05rem; margin-right: .3rem; }
-.crumbs { font-size: .85rem; color: var(--muted); margin-bottom: 1.25rem; padding-top: 1.5rem; }
+.stats li { margin: 0; font-size: var(--tb-text-sm); color: var(--tb-ink-muted); }
+.stats strong { color: var(--tb-ink); font-size: var(--tb-text-md); margin-right: .3rem; }
+.crumbs { font-size: var(--tb-text-sm); color: var(--tb-ink-muted); margin-bottom: 1.25rem; padding-top: 1.5rem; }
 .hero + .wrap .crumbs, .hero .crumbs { padding-top: 0; }
-.crumbs a { color: var(--muted); }
+.crumbs a { color: var(--tb-ink-muted); }
 .crumbs span { margin: 0 .4rem; opacity: .6; }
-h1 { font-size: clamp(2rem, 4.5vw, 2.9rem); line-height: 1.12; letter-spacing: -.024em; margin: 0 0 1rem; text-wrap: balance; }
-h2 { font-size: 1.32rem; letter-spacing: -.012em; margin: 2.5rem 0 .75rem; scroll-margin-top: 5rem; }
-h3 { font-size: 1rem; margin: 0 0 .25rem; }
+h1 { font-size: var(--tb-text-3xl); line-height: var(--tb-leading-tight); letter-spacing: var(--tb-tracking-tight); margin: 0 0 1rem; text-wrap: balance; }
+h2 { font-size: var(--tb-text-xl); letter-spacing: var(--tb-tracking-tight); margin: 2.5rem 0 .75rem; scroll-margin-top: 5rem; }
+h3 { font-size: var(--tb-text-md); margin: 0 0 .25rem; }
 p { margin: 0 0 1rem; }
 .prose { max-width: 46rem; }
-.prose p, .prose li { color: var(--fg); }
-.prose .lede, .lede { font-size: 1.1rem; color: var(--muted); max-width: 46rem; }
-ul, ol { margin: 0 0 1rem; padding-left: 1.2rem; color: var(--muted); }
+.prose p, .prose li { color: var(--tb-ink); }
+.prose .lede, .lede { font-size: var(--tb-text-lg); color: var(--tb-ink-muted); max-width: 46rem; }
+ul, ol { margin: 0 0 1rem; padding-left: 1.2rem; color: var(--tb-ink-muted); }
 li { margin: .3rem 0; }
-li strong { color: var(--fg); }
+li strong { color: var(--tb-ink); }
 .toc {
-  border: 1px solid var(--line); border-radius: var(--radius);
-  background: var(--surface); padding: 1rem 1.25rem; margin: 1.5rem 0 0; max-width: 46rem;
+  border: 1px solid var(--tb-line); border-radius: var(--tb-radius-lg);
+  background: var(--tb-surface); padding: 1rem 1.25rem; margin: 1.5rem 0 0; max-width: 46rem;
 }
-.toc p { font-size: .8rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 0 0 .5rem; }
+.toc p { font-size: var(--tb-text-2xs); font-weight: 600; letter-spacing: var(--tb-tracking-caps); text-transform: uppercase; color: var(--tb-ink-faint); margin: 0 0 .5rem; }
 .toc ol { margin: 0; padding-left: 1.1rem; }
-.toc li { margin: .2rem 0; font-size: .93rem; }
+.toc li { margin: .2rem 0; font-size: var(--tb-text-sm); }
 .cta-band {
   margin: 2.5rem 0 0; padding: 1.75rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
-  border-radius: var(--radius);
-  background:
-    radial-gradient(30rem 10rem at 90% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%),
-    var(--surface);
+  border: 1px solid var(--tb-line);
+  border-radius: var(--tb-radius-lg);
+  background: var(--tb-surface);
 }
 .cta-band h2 { margin-top: 0; }
 .cta { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.25rem 0 0; }
+/* The app's default button, to the pixel: 32px from the control scale (--tb-control-md),
+   a 9px radius, an 11px inline pad and a 13px label. A static page and an app
+   page must be interchangeable, so this may not invent its own size. */
 .btn {
-  display: inline-block; padding: .65rem 1.25rem; border-radius: .55rem;
-  background: var(--accent); color: var(--accent-fg); font-weight: 650; font-size: .95rem;
-  box-shadow: var(--shadow);
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: var(--tb-control-md); padding: 0 11px;
+  border: 1px solid transparent; border-radius: var(--tb-radius-lg);
+  background: var(--tb-brand); color: var(--tb-on-brand);
+  font-weight: 500; font-size: var(--tb-text-sm);
+  transition: background-color var(--tb-duration-instant) var(--tb-ease-out), border-color var(--tb-duration-instant) var(--tb-ease-out);
 }
-.btn:hover { text-decoration: none; opacity: .92; }
-.btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); box-shadow: none; }
-.note { font-size: .88rem; color: var(--muted); }
+.btn:hover { text-decoration: none; background: var(--tb-brand-hover); }
+/* The app's outline button: canvas fill, one hairline. */
+.btn.ghost { background: var(--tb-canvas); color: var(--tb-ink); border-color: var(--tb-line); }
+.btn.ghost:hover { background: var(--tb-state-hover); border-color: var(--tb-line-strong); }
+.note { font-size: var(--tb-text-xs); color: var(--tb-ink-faint); }
 .chips { display: flex; flex-wrap: wrap; gap: .5rem; padding: 0; margin: 0 0 1rem; list-style: none; }
 .chips li { margin: 0; }
+/* A chip, not a pill: the app's popular-tool chips are 6px radius, 12px text. */
 .chips a {
-  display: inline-block; padding: .3rem .75rem; border: 1px solid var(--line);
-  border-radius: 999px; font-size: .9rem; color: var(--fg); background: var(--surface);
+  display: inline-block; padding: .25rem .625rem; border: 1px solid var(--tb-line);
+  border-radius: var(--tb-radius-md); font-size: var(--tb-text-xs);
+  color: var(--tb-ink-muted); background: var(--tb-canvas);
+  transition: border-color var(--tb-duration-instant) var(--tb-ease-out), color var(--tb-duration-instant) var(--tb-ease-out);
 }
-.chips a:hover { border-color: var(--accent); text-decoration: none; }
+.chips a:hover { border-color: var(--tb-line-strong); color: var(--tb-ink); text-decoration: none; }
 .cards { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); padding: 0; margin: 0 0 1rem; list-style: none; }
 .cards li { margin: 0; }
 .cards a {
-  display: block; height: 100%; padding: 1rem 1.1rem; border: 1px solid var(--line);
-  border-radius: var(--radius); background: var(--surface); color: var(--fg);
-  transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  display: block; height: 100%; padding: 1rem 1.1rem; border: 1px solid var(--tb-line);
+  border-radius: var(--tb-radius-lg); background: var(--tb-surface); color: var(--tb-ink);
+  transition:
+    border-color var(--tb-duration-fast) var(--tb-ease-out),
+    background-color var(--tb-duration-fast) var(--tb-ease-out);
 }
-.cards a:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-2px); box-shadow: var(--shadow); }
-.cards .name { font-weight: 650; display: block; margin-bottom: .15rem; letter-spacing: -.01em; }
-.cards .desc { font-size: .88rem; color: var(--muted); display: block; line-height: 1.5; }
+.cards a:hover { border-color: var(--tb-line-strong); background: var(--tb-state-hover); text-decoration: none; }
+.cards .name { font-weight: 600; display: block; margin-bottom: .15rem; letter-spacing: var(--tb-tracking-tight); }
+.cards .desc { font-size: var(--tb-text-sm); color: var(--tb-ink-muted); display: block; line-height: var(--tb-leading-snug); }
 dl.faq { margin: 0; max-width: 46rem; }
-dl.faq dt { font-weight: 650; margin-top: 1.1rem; }
-dl.faq dd { margin: .2rem 0 0; color: var(--muted); }
-footer.site { border-top: 1px solid var(--line); margin-top: 3.5rem; padding: 2.5rem 0 2rem; font-size: .9rem; color: var(--muted); background: var(--surface); }
+dl.faq dt { font-weight: 600; margin-top: 1.1rem; }
+dl.faq dd { margin: .2rem 0 0; color: var(--tb-ink-muted); }
+footer.site { border-top: 1px solid var(--tb-line); margin-top: 3.5rem; padding: 2.5rem 0 2rem; font-size: var(--tb-text-sm); color: var(--tb-ink-muted); background: var(--tb-surface); }
 .foot-grid { display: grid; gap: 2rem; grid-template-columns: 1.4fr 1fr 1fr 1fr; margin-bottom: 2rem; }
 @media (max-width: 46rem) { .foot-grid { grid-template-columns: 1fr 1fr; } }
-.foot-grid h2 { font-size: .78rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 0 0 .75rem; }
+.foot-grid h2 { font-size: var(--tb-text-2xs); font-weight: 600; letter-spacing: var(--tb-tracking-caps); text-transform: uppercase; color: var(--tb-ink-faint); margin: 0 0 .75rem; }
 .foot-grid ul { list-style: none; margin: 0; padding: 0; }
 .foot-grid li { margin: .4rem 0; }
-.foot-grid a { color: var(--muted); }
-.foot-grid a:hover { color: var(--fg); }
+.foot-grid a { color: var(--tb-ink-muted); }
+.foot-grid a:hover { color: var(--tb-ink); }
 .foot-brand p { max-width: 20rem; }
-.foot-base { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; align-items: center; border-top: 1px solid var(--line); padding-top: 1.25rem; }
-.foot-base a { color: var(--muted); }
+.foot-base { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; align-items: center; border-top: 1px solid var(--tb-line); padding-top: 1.25rem; }
+.foot-base a { color: var(--tb-ink-muted); }
 `.trim();
 
 const NAV_LINKS = [
@@ -440,7 +552,7 @@ function footerHtml() {
   return `      <div class="wrap">
         <div class="foot-grid">
           <div class="foot-brand">
-            <a class="brand" href="/"><img src="/icon.svg" alt="" width="26" height="26" />Toolbit</a>
+            <a class="brand" href="/"><img src="/icon.svg" alt="" width="24" height="24" />Toolbit</a>
             <p>Local-first developer tools that run entirely in your browser. No uploads, no tracking, no sign-up.</p>
           </div>
           ${columns}
@@ -522,19 +634,22 @@ function renderPage(page) {
   <link rel="icon" type="image/svg+xml" href="/icon.svg?v=2" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=2" />
   <link rel="shortcut icon" href="/favicon.ico?v=2" />
-  <link rel="mask-icon" href="/mask-icon.svg" color="#3D63DD" />
+  <link rel="mask-icon" href="/mask-icon.svg" color="#6241dd" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#1e40af" />
+  <meta name="theme-color" content="#6241dd" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#6241dd" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#06070a" />
   <script src="/theme-init.js"></script>
-  <style>${PAGE_CSS}</style>
+  <style>${PAGE_CSS}
+${fontFaceCss()}</style>
   ${jsonLd({ '@context': 'https://schema.org', '@graph': graph })}
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
   <header class="topbar">
     <div class="wrap">
-      <a class="brand" href="/"><img src="/icon.svg" alt="" width="26" height="26" />Toolbit</a>
+      <a class="brand" href="/"><img src="/icon.svg" alt="" width="24" height="24" />Toolbit</a>
       <nav aria-label="Primary">${NAV_LINKS.map(([href, label]) => `<a href="${href}">${label}</a>`).join('')}</nav>
     </div>
   </header>

@@ -166,7 +166,7 @@ export function DateCalcScreen() {
           />
         </Label>
         <Button type="button" className="wb-button primary" onClick={() => shift(delta)}>
-          <IconCalendarPlus size={22} stroke={1.7} aria-hidden="true" />
+          <IconCalendarPlus size={16} stroke={1.7} aria-hidden="true" />
           Add / subtract
         </Button>
         <Button
@@ -215,7 +215,7 @@ export function DateCalcScreen() {
           disabled={!startDate || !endDate}
           onClick={calculate}
         >
-          <IconEqual size={22} stroke={1.7} aria-hidden="true" />
+          <IconEqual size={16} stroke={1.7} aria-hidden="true" />
           Calculate difference
         </Button>
         <Button
@@ -228,7 +228,7 @@ export function DateCalcScreen() {
             setEndDate(addDaysToDate(today, 7) ?? today);
           }}
         >
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
       </div>

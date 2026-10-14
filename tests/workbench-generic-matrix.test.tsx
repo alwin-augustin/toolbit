@@ -97,7 +97,6 @@ describe('generic workbench matrix (12 workbench tools)', () => {
     render(<Harness id={openDoc('json-formatter', '{"a":1}')} />);
     await user.click(screen.getByRole('button', { name: 'Format' }));
     expect(screen.getByRole('button', { name: 'Copy result' })).toBeEnabled();
-    await user.click(screen.getByRole('button', { name: 'More result actions' }));
-    expect(screen.getByRole('button', { name: /Download result/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Download/ })).toBeInTheDocument();
   });
 });

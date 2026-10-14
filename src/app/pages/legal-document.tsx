@@ -1,7 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { Link } from 'wouter';
-import { IconArrowLeft as ArrowLeft } from '@tabler/icons-react';
-import { Button } from '@/components/ui/button';
+import { SitePage } from '@/app/pages/site-chrome';
 import { applySeo } from '@/content/seo/use-seo';
 import { getLegalPage } from '@/content/seo/seo-content.js';
 
@@ -26,11 +25,11 @@ export function renderInlineLinks(text: string): ReactNode[] {
     if (label && href) {
       nodes.push(
         href.startsWith('/') ? (
-          <Link key={`${i}-${href}`} href={href} className="text-primary hover:underline">
+          <Link key={`${i}-${href}`} href={href} className="text-brand-ink hover:underline">
             {label}
           </Link>
         ) : (
-          <a key={`${i}-${href}`} href={href} className="text-primary hover:underline">
+          <a key={`${i}-${href}`} href={href} className="text-brand-ink hover:underline">
             {label}
           </a>
         ),
@@ -46,6 +45,15 @@ export interface LegalPageViewProps {
   icon: ReactNode;
 }
 
+/**
+ * Privacy and terms.
+ *
+ * The only long-form reading surface in the product, so it is the one place
+ * that prefers prose to density: a single column, body text at the base step
+ * and one callout that states the promise before the detail. It shares the
+ * out-of-shell chrome with the other standalone pages, which is also the way
+ * back into the workspace — no second back button competing with the header.
+ */
 export function LegalPageView({ slug, canonicalPath, icon }: LegalPageViewProps) {
   const page = getLegalPage(slug)!;
 
@@ -54,35 +62,30 @@ export function LegalPageView({ slug, canonicalPath, icon }: LegalPageViewProps)
   }, [canonicalPath, page]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <Link href="/">
-          <Button variant="ghost" className="mb-8">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
-          </Button>
-        </Link>
-
-        <div className="flex items-center gap-3 mb-8">
-          {icon}
-          <h1 className="text-3xl font-bold">{page.h1}</h1>
+    <SitePage>
+      <div className="mx-auto w-full max-w-3xl px-6 py-12">
+        <div className="mb-8 flex items-center gap-3">
+          <span className="grid size-11 shrink-0 place-items-center rounded-lg border border-line bg-brand-soft text-brand-ink">
+            {icon}
+          </span>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">{page.h1}</h1>
         </div>
 
-        <div className="prose dark:prose-invert max-w-none space-y-6 text-muted-foreground">
-          <p className="text-sm">Last updated: {formatLegalDate(page.updated)}</p>
+        <div className="wb-prose prose max-w-none space-y-6 text-ink-muted">
+          <p className="text-xs text-ink-faint">Last updated: {formatLegalDate(page.updated)}</p>
 
-          <p className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-foreground">
+          <p className="rounded-lg border border-line bg-brand-soft p-4 text-ink">
             <strong>The short version:</strong> {page.lede.replace(/^The short version:\s*/, '')}
           </p>
 
           {page.sections.map((section) => (
             <section key={section.h2} className="space-y-4">
-              <h2 className="text-xl font-semibold text-foreground">{section.h2}</h2>
+              <h2 className="text-lg font-semibold text-ink">{section.h2}</h2>
               {section.paragraphs.map((paragraph, index) => (
                 <p key={index}>{renderInlineLinks(paragraph)}</p>
               ))}
               {section.bullets && (
-                <ul className="list-disc pl-6 space-y-2">
+                <ul className="list-disc space-y-2 pl-6">
                   {section.bullets.map((bullet) => (
                     <li key={bullet}>{renderInlineLinks(bullet)}</li>
                   ))}
@@ -90,7 +93,10 @@ export function LegalPageView({ slug, canonicalPath, icon }: LegalPageViewProps)
               )}
               {section.h2 === 'Contact Us' && page.contactEmail && (
                 <p>
-                  <a href={`mailto:${page.contactEmail}`} className="text-primary hover:underline">
+                  <a
+                    href={`mailto:${page.contactEmail}`}
+                    className="text-brand-ink hover:underline"
+                  >
                     {page.contactEmail}
                   </a>
                 </p>
@@ -99,6 +105,6 @@ export function LegalPageView({ slug, canonicalPath, icon }: LegalPageViewProps)
           ))}
         </div>
       </div>
-    </div>
+    </SitePage>
   );
 }

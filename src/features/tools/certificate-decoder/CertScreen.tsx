@@ -301,7 +301,7 @@ export function CertScreen() {
           className="wb-button primary"
           onClick={() => setInput(CERT_SAMPLE_PEM)}
         >
-          <IconFlask size={22} stroke={1.7} aria-hidden="true" />
+          <IconFlask size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button
@@ -311,7 +311,7 @@ export function CertScreen() {
           disabled={!input}
           onClick={() => setInput('')}
         >
-          <IconTrash size={22} stroke={1.7} aria-hidden="true" />
+          <IconTrash size={16} stroke={1.7} aria-hidden="true" />
           Clear
         </Button>
         <Button
@@ -321,7 +321,7 @@ export function CertScreen() {
           disabled={!certInfo}
           onClick={() => void copyDetails()}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+          <IconCopy size={16} stroke={1.7} aria-hidden="true" />
           Copy details
         </Button>
         {loading ? <span>Decoding…</span> : null}

@@ -177,11 +177,11 @@ export function RegexScreen() {
 
       <div className="wb-toolbar">
         <Button type="button" variant="outline" className="wb-button" onClick={loadSample}>
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Load sample
         </Button>
         <Button type="button" variant="outline" className="wb-button" onClick={clear}>
-          <IconEraser size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
+          <IconEraser size={16} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Clear
         </Button>
         <Button

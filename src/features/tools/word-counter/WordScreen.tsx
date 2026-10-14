@@ -64,7 +64,7 @@ export function WordScreen() {
       </div>
       <div className="wb-toolbar">
         <Button type="button" className="wb-button primary" onClick={() => setText(WORD_SAMPLE)}>
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button
@@ -76,17 +76,15 @@ export function WordScreen() {
         >
           Clear
         </Button>
-        <div className="wb-copy-actions">
-          <Button
-            type="button"
-            className="wb-button primary"
-            disabled={!text.trim()}
-            onClick={() => void copyText()}
-          >
-            <IconCopy size={22} stroke={1.7} aria-hidden="true" />
-            Copy stats
-          </Button>
-        </div>
+        <Button
+          type="button"
+          className="wb-button primary"
+          disabled={!text.trim()}
+          onClick={() => void copyText()}
+        >
+          <IconCopy size={16} stroke={1.7} aria-hidden="true" />
+          Copy stats
+        </Button>
       </div>
       <div className="wb-editors">
         <section className="wb-editor-pane" aria-label="Text panel">
@@ -111,7 +109,7 @@ export function WordScreen() {
           <div className="wb-pane-header">
             <h2>Statistics</h2>
           </div>
-          <div>
+          <div className="flex-1 overflow-y-auto">
             <div className="wb-setting-row">
               <span>
                 <strong>Words</strong>

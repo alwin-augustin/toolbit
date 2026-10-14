@@ -10,6 +10,9 @@ afterEach(() => {
   cleanup();
 });
 
+// jsdom has no layout, so scrolling the document strip into view must be a no-op.
+Element.prototype.scrollIntoView = () => {};
+
 Object.defineProperty(globalThis, 'crypto', { value: webcrypto, configurable: true });
 Object.defineProperty(navigator, 'clipboard', {
   value: { writeText: vi.fn().mockResolvedValue(undefined) },

@@ -268,12 +268,12 @@ export function ImageScreen() {
           className="wb-button primary"
           onClick={() => fileInputRef.current?.click()}
         >
-          <IconUpload size={22} stroke={1.7} aria-hidden="true" />
+          <IconUpload size={16} stroke={1.7} aria-hidden="true" />
           Select image
         </Button>
         {images.length > 0 ? (
           <Button type="button" variant="outline" className="wb-button" onClick={clear}>
-            <IconTrash size={22} stroke={1.7} aria-hidden="true" />
+            <IconTrash size={16} stroke={1.7} aria-hidden="true" />
             Clear
           </Button>
         ) : null}
@@ -379,12 +379,12 @@ export function ImageScreen() {
               disabled={processing}
               onClick={() => void convert()}
             >
-              <IconRefresh size={22} stroke={1.7} aria-hidden="true" />
+              <IconRefresh size={16} stroke={1.7} aria-hidden="true" />
               {processing ? 'Converting...' : 'Convert'}
             </Button>
             {convertedUrl ? (
               <Button type="button" variant="outline" className="wb-button" onClick={download}>
-                <IconDownload size={22} stroke={1.7} aria-hidden="true" />
+                <IconDownload size={16} stroke={1.7} aria-hidden="true" />
                 Download ({formatImageSize(convertedSize)})
               </Button>
             ) : null}

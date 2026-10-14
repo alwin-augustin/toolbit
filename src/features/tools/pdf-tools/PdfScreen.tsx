@@ -276,7 +276,7 @@ export function PdfScreen() {
           className="wb-button"
           onClick={() => fileInputRef.current?.click()}
         >
-          <IconUpload size={22} stroke={1.7} aria-hidden="true" />
+          <IconUpload size={16} stroke={1.7} aria-hidden="true" />
           Add PDF{mode === 'merge' ? 's' : ''}
         </Button>
       </div>
@@ -318,7 +318,7 @@ export function PdfScreen() {
           <div>
             {files.map((file, i) => (
               <div className="wb-list-row" key={`${file.name}-${i}`}>
-                <IconFileText size={22} aria-hidden="true" />
+                <IconFileText size={16} aria-hidden="true" />
                 <span>
                   <strong>{file.name}</strong>
                   <small>
@@ -391,7 +391,7 @@ export function PdfScreen() {
             disabled={processing}
             onClick={() => void splitPdf()}
           >
-            <IconDownload size={22} stroke={1.7} aria-hidden="true" />
+            <IconDownload size={16} stroke={1.7} aria-hidden="true" />
             {processing ? 'Processing...' : 'Extract pages'}
           </Button>
         </div>
@@ -439,7 +439,7 @@ export function PdfScreen() {
             disabled={processing}
             onClick={() => void mergePdfs()}
           >
-            <IconDownload size={22} stroke={1.7} aria-hidden="true" />
+            <IconDownload size={16} stroke={1.7} aria-hidden="true" />
             {processing ? 'Merging...' : `Merge ${files.length} PDFs`}
           </Button>
         </div>

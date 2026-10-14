@@ -152,7 +152,7 @@ export function UuidScreen() {
           </NativeSelect>
         </Label>
         <Button type="button" className="wb-button primary" onClick={regenerate}>
-          <IconRefresh size={22} stroke={1.7} aria-hidden="true" />
+          <IconRefresh size={16} stroke={1.7} aria-hidden="true" />
           Generate
         </Button>
         <Button
@@ -162,7 +162,7 @@ export function UuidScreen() {
           disabled={!displayed.length}
           onClick={() => copyText(displayed.join('\n'), 'UUIDs copied')}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+          <IconCopy size={16} stroke={1.7} aria-hidden="true" />
           Copy all
         </Button>
       </div>
@@ -232,7 +232,7 @@ export function UuidScreen() {
           className="wb-button"
           onClick={() => setInspectInput(UUID_SAMPLE)}
         >
-          <IconFlask size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
+          <IconFlask size={16} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
           Load sample
         </Button>
       </div>

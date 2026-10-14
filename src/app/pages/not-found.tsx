@@ -1,10 +1,19 @@
 import { useEffect } from 'react';
 import { Link } from 'wouter';
 import { IconAlertCircle as AlertCircle } from '@tabler/icons-react';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { SitePage } from '@/app/pages/site-chrome';
 import { applySeo } from '@/content/seo/use-seo';
 import { POPULAR_TOOL_SLUGS, getToolPage } from '@/content/seo/seo-content.js';
 
+/**
+ * The 404.
+ *
+ * A dead end should still be a way forward, so the two real exits (the
+ * workspace and the tool directory) come first and the popular tools follow.
+ * It shares the out-of-shell chrome, which means the header and footer offer
+ * the same routes as everywhere else on the site.
+ */
 export default function NotFound() {
   useEffect(() => {
     applySeo({
@@ -19,33 +28,33 @@ export default function NotFound() {
   );
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-lg text-center">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10 text-primary mb-6">
-          <AlertCircle className="h-6 w-6" />
-        </div>
-        <h1 className="text-3xl font-bold mb-3">Page not found</h1>
-        <p className="text-muted-foreground mb-8">
+    <SitePage>
+      <div className="mx-auto w-full max-w-xl px-6 py-20 text-center">
+        <span className="inline-grid size-11 place-items-center rounded-lg border border-line bg-brand-soft text-brand-ink">
+          <AlertCircle size={20} aria-hidden="true" />
+        </span>
+        <h1 className="mt-5 text-2xl font-semibold tracking-tight text-ink">Page not found</h1>
+        <p className="mt-3 text-base text-ink-muted">
           That URL does not match a Toolbit page. The workspace and the full tool directory are a
           click away.
         </p>
 
-        <div className="flex flex-wrap justify-center gap-3 mb-10">
-          <Link href="/">
-            <Button>Open the workspace</Button>
+        <div className="mt-8 flex flex-wrap justify-center gap-2">
+          <Link href="/" className={buttonVariants()}>
+            Open the workspace
           </Link>
-          <a href="/tools">
-            <Button variant="secondary">Browse all tools</Button>
-          </a>
+          <Link href="/library" className={buttonVariants({ variant: 'secondary' })}>
+            Browse all tools
+          </Link>
         </div>
 
-        <p className="text-sm text-muted-foreground mb-3">Popular tools</p>
+        <p className="wb-caps mt-12 mb-3">Popular tools</p>
         <ul className="flex flex-wrap justify-center gap-2">
           {popular.map((tool) => (
             <li key={tool.slug}>
               <a
                 href={`/${tool.slug}`}
-                className="inline-block rounded-full border border-border px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+                className="inline-block rounded-md border border-line px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
               >
                 {tool.name}
               </a>
@@ -53,6 +62,6 @@ export default function NotFound() {
           ))}
         </ul>
       </div>
-    </div>
+    </SitePage>
   );
 }

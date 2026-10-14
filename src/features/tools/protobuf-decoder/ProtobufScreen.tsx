@@ -279,7 +279,7 @@ export function ProtobufScreen() {
             setFormat('hex');
           }}
         >
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button
@@ -326,7 +326,7 @@ export function ProtobufScreen() {
                 disabled={!jsonText}
                 onClick={() => void copyJson()}
               >
-                <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+                <IconCopy size={16} stroke={1.7} aria-hidden="true" />
                 Copy JSON
               </Button>
             </div>

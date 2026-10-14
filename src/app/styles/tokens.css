@@ -1,0 +1,336 @@
+/* ============================================================================
+   Toolbit Design System — Tokens
+   ----------------------------------------------------------------------------
+   This file is the single source of truth for every visual constant in the
+   product. Nothing else in the codebase may invent a colour, size or duration.
+
+   Three layers, read top to bottom:
+
+     1. Primitives  — raw ramps. Never referenced by components.
+     2. Semantic    — role-named tokens (canvas, ink, brand...). Components use
+                      these, and only these, so a theme change is one edit here.
+     3. Aliases     — shadcn/ui compatibility names, mapped onto semantic
+                      tokens so third-party primitives inherit the system.
+
+   Canonical vocabulary is documented in docs/design-system.md. If a token is
+   not in this file, it is not part of the design system.
+   ========================================================================= */
+
+/* ----------------------------------------------------------------------------
+   1. Primitives — neutral and brand ramps (OKLCH, perceptual even spacing)
+   ------------------------------------------------------------------------- */
+:root {
+  /* Neutral ramp — cool, low-saturation. Keeps long reading sessions calm. */
+  --tb-neutral-0: oklch(1 0 0);
+  --tb-neutral-25: oklch(0.991 0.002 265);
+  --tb-neutral-50: oklch(0.978 0.003 265);
+  --tb-neutral-100: oklch(0.955 0.004 265);
+  --tb-neutral-150: oklch(0.936 0.005 265);
+  --tb-neutral-200: oklch(0.902 0.006 265);
+  --tb-neutral-300: oklch(0.83 0.008 265);
+  --tb-neutral-400: oklch(0.706 0.012 265);
+  --tb-neutral-500: oklch(0.596 0.014 265);
+  --tb-neutral-600: oklch(0.502 0.016 265);
+  --tb-neutral-700: oklch(0.408 0.016 265);
+  --tb-neutral-800: oklch(0.322 0.015 265);
+  --tb-neutral-850: oklch(0.268 0.014 265);
+  --tb-neutral-900: oklch(0.222 0.013 265);
+  --tb-neutral-925: oklch(0.183 0.011 265);
+  --tb-neutral-950: oklch(0.152 0.01 265);
+  --tb-neutral-975: oklch(0.128 0.009 265);
+
+  /* Brand ramp — indigo/violet. Reserved for action, selection and focus. */
+  --tb-brand-50: oklch(0.968 0.019 285);
+  --tb-brand-100: oklch(0.934 0.041 285);
+  --tb-brand-200: oklch(0.885 0.073 285);
+  --tb-brand-300: oklch(0.812 0.114 285);
+  --tb-brand-400: oklch(0.712 0.163 285);
+  --tb-brand-500: oklch(0.585 0.203 285);
+  --tb-brand-600: oklch(0.511 0.222 285);
+  --tb-brand-700: oklch(0.446 0.208 285);
+  --tb-brand-800: oklch(0.386 0.176 285);
+  --tb-brand-900: oklch(0.336 0.146 285);
+  --tb-brand-950: oklch(0.268 0.113 285);
+
+  /* Status ramps — each pair is the readable ink on the light surface. */
+  --tb-green-500: oklch(0.66 0.17 152);
+  --tb-green-600: oklch(0.57 0.15 152);
+  --tb-green-700: oklch(0.48 0.13 152);
+  --tb-green-900: oklch(0.32 0.08 152);
+  --tb-green-400: oklch(0.76 0.17 152);
+  --tb-amber-600: oklch(0.66 0.15 75);
+  --tb-amber-700: oklch(0.57 0.13 70);
+  --tb-amber-400: oklch(0.81 0.15 80);
+  --tb-red-500: oklch(0.62 0.19 27);
+  --tb-red-600: oklch(0.55 0.2 27);
+  --tb-red-700: oklch(0.48 0.18 27);
+  --tb-red-900: oklch(0.34 0.11 27);
+  --tb-red-400: oklch(0.71 0.16 22);
+  --tb-blue-600: oklch(0.55 0.19 258);
+  --tb-blue-700: oklch(0.47 0.17 258);
+  --tb-blue-400: oklch(0.72 0.14 258);
+}
+
+/* ----------------------------------------------------------------------------
+   2. Semantic tokens — Light theme (default)
+   ------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* Surfaces, from the page canvas outward */
+  --tb-canvas: var(--tb-neutral-25);
+  --tb-surface: var(--tb-neutral-0);
+  --tb-sunken: var(--tb-neutral-50);
+  --tb-raised: var(--tb-neutral-0);
+  --tb-overlay: oklch(0.15 0.01 265 / 0.32);
+
+  /* Interactive surfaces */
+  --tb-state-hover: var(--tb-neutral-100);
+  --tb-state-selected: var(--tb-brand-50);
+  --tb-state-selected-ink: var(--tb-brand-700);
+
+  /* Lines */
+  --tb-line: var(--tb-neutral-150);
+  --tb-line-strong: var(--tb-neutral-300);
+
+  /* Ink */
+  --tb-ink: var(--tb-neutral-925);
+  --tb-ink-muted: var(--tb-neutral-600);
+  --tb-ink-faint: var(--tb-neutral-500);
+  --tb-ink-inverse: var(--tb-neutral-0);
+
+  /* Brand */
+  --tb-brand: var(--tb-brand-600);
+  --tb-brand-hover: var(--tb-brand-700);
+  --tb-brand-ink: var(--tb-brand-700);
+  --tb-on-brand: var(--tb-neutral-0);
+  --tb-brand-soft: var(--tb-brand-50);
+  --tb-brand-ring: oklch(0.585 0.203 285 / 0.45);
+
+  /* Status — ink / soft tint pairs */
+  --tb-success: var(--tb-green-700);
+  --tb-success-soft: oklch(0.96 0.03 152);
+  --tb-warning: var(--tb-amber-700);
+  --tb-warning-soft: oklch(0.97 0.035 80);
+  --tb-danger: var(--tb-red-700);
+  --tb-danger-soft: oklch(0.965 0.025 27);
+  --tb-info: var(--tb-blue-700);
+  --tb-info-soft: oklch(0.965 0.03 258);
+
+  /* Code / syntax — deliberately separate from the brand ramp so a brand
+     change never alters how source code reads. */
+  --tb-code-ink: var(--tb-neutral-800);
+  --tb-code-key: oklch(0.45 0.19 285);
+  --tb-code-string: var(--tb-green-700);
+  --tb-code-number: oklch(0.52 0.12 220);
+  --tb-code-keyword: oklch(0.52 0.17 40);
+  --tb-code-punc: var(--tb-neutral-500);
+  --tb-code-added: var(--tb-green-700);
+  --tb-code-added-bg: oklch(0.965 0.04 152);
+  --tb-code-removed: var(--tb-red-700);
+  --tb-code-removed-bg: oklch(0.968 0.028 27);
+  --tb-code-gutter: var(--tb-neutral-400);
+
+  /* Chart scale — neutral, for inline data viz */
+  --tb-chart-1: oklch(0.72 0.14 285);
+  --tb-chart-2: oklch(0.66 0.12 220);
+  --tb-chart-3: oklch(0.7 0.13 152);
+  --tb-chart-4: oklch(0.75 0.14 80);
+  --tb-chart-5: oklch(0.68 0.15 27);
+}
+
+/* ----------------------------------------------------------------------------
+   Semantic tokens — Dark theme
+   Dark is designed, not inverted: surfaces stay slightly cool, ink is toned
+   down from pure white to cut halation, and the brand lightens to hold
+   contrast against a dark canvas.
+   ------------------------------------------------------------------------- */
+.dark {
+  color-scheme: dark;
+
+  --tb-canvas: var(--tb-neutral-975);
+  --tb-surface: var(--tb-neutral-950);
+  --tb-sunken: var(--tb-neutral-975);
+  --tb-raised: var(--tb-neutral-925);
+  --tb-overlay: oklch(0.08 0.01 265 / 0.62);
+
+  --tb-state-hover: var(--tb-neutral-900);
+  --tb-state-selected: oklch(0.3 0.06 285);
+  --tb-state-selected-ink: oklch(0.88 0.09 285);
+
+  --tb-line: var(--tb-neutral-900);
+  --tb-line-strong: var(--tb-neutral-800);
+
+  --tb-ink: var(--tb-neutral-50);
+  --tb-ink-muted: var(--tb-neutral-400);
+  --tb-ink-faint: var(--tb-neutral-500);
+  --tb-ink-inverse: var(--tb-neutral-950);
+
+  --tb-brand: oklch(0.68 0.17 285);
+  --tb-brand-hover: oklch(0.75 0.16 285);
+  --tb-brand-ink: oklch(0.8 0.13 285);
+  --tb-on-brand: var(--tb-neutral-975);
+  --tb-brand-soft: oklch(0.26 0.07 285);
+  --tb-brand-ring: oklch(0.68 0.17 285 / 0.55);
+
+  --tb-success: var(--tb-green-400);
+  --tb-success-soft: oklch(0.24 0.06 152);
+  --tb-warning: var(--tb-amber-400);
+  --tb-warning-soft: oklch(0.25 0.06 80);
+  --tb-danger: var(--tb-red-400);
+  --tb-danger-soft: oklch(0.25 0.07 27);
+  --tb-info: var(--tb-blue-400);
+  --tb-info-soft: oklch(0.25 0.06 258);
+
+  --tb-code-ink: var(--tb-neutral-100);
+  --tb-code-key: oklch(0.79 0.12 285);
+  --tb-code-string: var(--tb-green-400);
+  --tb-code-number: oklch(0.8 0.11 220);
+  --tb-code-keyword: oklch(0.78 0.14 40);
+  --tb-code-punc: var(--tb-neutral-500);
+  --tb-code-added: var(--tb-green-400);
+  --tb-code-added-bg: oklch(0.26 0.06 152);
+  --tb-code-removed: var(--tb-red-400);
+  --tb-code-removed-bg: oklch(0.27 0.07 27);
+  --tb-code-gutter: var(--tb-neutral-600);
+
+  --tb-chart-1: oklch(0.72 0.14 285);
+  --tb-chart-2: oklch(0.72 0.12 220);
+  --tb-chart-3: oklch(0.74 0.13 152);
+  --tb-chart-4: oklch(0.79 0.14 80);
+  --tb-chart-5: oklch(0.72 0.15 27);
+}
+
+/* ----------------------------------------------------------------------------
+   3. Layout metrics — one place that decides how big the furniture is.
+   ------------------------------------------------------------------------- */
+:root {
+  --tb-rail-w: 52px;
+  --tb-panel-w: 264px;
+  --tb-topbar-h: 44px;
+  --tb-statusbar-h: 26px;
+  --tb-head-h: 40px;
+
+  /* Control heights. Anything interactive picks one of these three. */
+  --tb-control-xs: 22px;
+  --tb-control-sm: 28px;
+  --tb-control-md: 32px;
+  --tb-control-lg: 40px;
+
+  --tb-content-max: 1440px;
+}
+
+/* ----------------------------------------------------------------------------
+   4. Type scale — Geist for UI, JetBrains Mono for anything that is data.
+   ------------------------------------------------------------------------- */
+:root {
+  --tb-font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --tb-font-mono:
+    'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  --tb-text-2xs: 0.6875rem; /* 11px — meta, badges, kbd */
+  --tb-text-xs: 0.75rem; /* 12px — labels, status bar */
+  --tb-text-sm: 0.8125rem; /* 13px — body default in dense UI */
+  --tb-text-base: 0.875rem; /* 14px — body, inputs */
+  --tb-text-md: 0.9375rem; /* 15px — emphasised body */
+  --tb-text-lg: 1.0625rem; /* 17px — pane titles */
+  --tb-text-xl: 1.25rem; /* 20px — screen titles */
+  --tb-text-2xl: 1.5rem; /* 24px — page hero */
+  --tb-text-3xl: 1.875rem; /* 30px — landing */
+
+  --tb-leading-tight: 1.25;
+  --tb-leading-snug: 1.4;
+  --tb-leading-normal: 1.55;
+
+  --tb-tracking-tight: -0.011em;
+  --tb-tracking-normal: 0;
+  --tb-tracking-wide: 0.04em;
+  --tb-tracking-caps: 0.08em;
+}
+
+/* ----------------------------------------------------------------------------
+   5. Radius, elevation, motion
+   ------------------------------------------------------------------------- */
+:root {
+  --tb-radius-xs: 3px;
+  --tb-radius-sm: 4px;
+  --tb-radius-md: 6px;
+  --tb-radius-lg: 9px;
+  --tb-radius-xl: 13px;
+  --tb-radius-full: 9999px;
+
+  /* Elevation is only ever used for things that genuinely float: menus,
+     popovers, dialogs, toasts. Panels are separated by lines, not shadows. */
+  --tb-shadow-xs: 0 1px 2px 0 oklch(0.2 0.02 265 / 0.06);
+  --tb-shadow-sm:
+    0 1px 2px -1px oklch(0.2 0.02 265 / 0.09), 0 2px 4px -2px oklch(0.2 0.02 265 / 0.07);
+  --tb-shadow-md:
+    0 2px 4px -2px oklch(0.2 0.02 265 / 0.1), 0 6px 14px -4px oklch(0.2 0.02 265 / 0.12);
+  --tb-shadow-lg:
+    0 4px 8px -4px oklch(0.2 0.02 265 / 0.12), 0 16px 36px -12px oklch(0.2 0.02 265 / 0.2);
+  --tb-shadow-focus: 0 0 0 2px var(--tb-canvas), 0 0 0 4px var(--tb-brand-ring);
+
+  --tb-duration-instant: 80ms;
+  --tb-duration-fast: 130ms;
+  --tb-duration-base: 190ms;
+  --tb-duration-slow: 320ms;
+
+  --tb-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --tb-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --tb-ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  --tb-z-base: 0;
+  --tb-z-sticky: 10;
+  --tb-z-rail: 20;
+  --tb-z-drawer: 40;
+  --tb-z-overlay: 50;
+  --tb-z-popover: 60;
+  --tb-z-toast: 70;
+  --tb-z-skip: 80;
+}
+
+.dark {
+  --tb-shadow-xs: 0 1px 2px 0 oklch(0 0 0 / 0.4);
+  --tb-shadow-sm: 0 1px 2px -1px oklch(0 0 0 / 0.5), 0 2px 4px -2px oklch(0 0 0 / 0.4);
+  --tb-shadow-md: 0 2px 4px -2px oklch(0 0 0 / 0.5), 0 6px 14px -4px oklch(0 0 0 / 0.5);
+  --tb-shadow-lg: 0 4px 10px -4px oklch(0 0 0 / 0.55), 0 18px 40px -12px oklch(0 0 0 / 0.6);
+}
+
+/* ----------------------------------------------------------------------------
+   6. shadcn/ui compatibility aliases
+   Third-party primitives in src/components/ui read these names. They are
+   aliases onto the semantic tokens above — never edit a value here directly.
+   ------------------------------------------------------------------------- */
+:root,
+.dark {
+  --background: var(--tb-canvas);
+  --foreground: var(--tb-ink);
+  --card: var(--tb-surface);
+  --card-foreground: var(--tb-ink);
+  --popover: var(--tb-raised);
+  --popover-foreground: var(--tb-ink);
+  --primary: var(--tb-brand);
+  --primary-foreground: var(--tb-on-brand);
+  --secondary: var(--tb-sunken);
+  --secondary-foreground: var(--tb-ink);
+  --muted: var(--tb-sunken);
+  --muted-foreground: var(--tb-ink-muted);
+  --accent: var(--tb-state-hover);
+  --accent-foreground: var(--tb-ink);
+  --destructive: var(--tb-danger);
+  --destructive-foreground: var(--tb-on-brand);
+  --border: var(--tb-line);
+  --input: var(--tb-line-strong);
+  --ring: var(--tb-brand-ring);
+  --success: var(--tb-success);
+  --success-foreground: var(--tb-on-brand);
+  --warning: var(--tb-warning);
+  --warning-foreground: var(--tb-on-brand);
+  --info: var(--tb-info);
+  --info-foreground: var(--tb-on-brand);
+  --chart-1: var(--tb-chart-1);
+  --chart-2: var(--tb-chart-2);
+  --chart-3: var(--tb-chart-3);
+  --chart-4: var(--tb-chart-4);
+  --chart-5: var(--tb-chart-5);
+}

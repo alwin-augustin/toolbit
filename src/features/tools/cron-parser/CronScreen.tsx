@@ -189,7 +189,7 @@ export function CronScreen() {
           className={`wb-button${mode === 'build' ? ' primary' : ''}`}
           onClick={() => setMode('build')}
         >
-          <IconHammer size={22} stroke={1.7} aria-hidden="true" />
+          <IconHammer size={16} stroke={1.7} aria-hidden="true" />
           Build
         </Button>
         <Button
@@ -198,7 +198,7 @@ export function CronScreen() {
           className="wb-button"
           onClick={() => setExpression(CRON_SAMPLE)}
         >
-          <IconFlask size={22} stroke={1.7} aria-hidden="true" />
+          <IconFlask size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button
@@ -207,7 +207,7 @@ export function CronScreen() {
           className="wb-button"
           onClick={() => setExpression('')}
         >
-          <IconTrash size={22} stroke={1.7} aria-hidden="true" />
+          <IconTrash size={16} stroke={1.7} aria-hidden="true" />
           Clear
         </Button>
       </div>
@@ -275,7 +275,7 @@ export function CronScreen() {
                 disabled={!scheduleText}
                 onClick={copySchedule}
               >
-                <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+                <IconCopy size={16} stroke={1.7} aria-hidden="true" />
                 Copy schedule
               </Button>
             </div>

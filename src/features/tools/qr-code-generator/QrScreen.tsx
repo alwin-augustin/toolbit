@@ -246,11 +246,11 @@ export function QrScreen() {
           </Button>
         ))}
         <Button type="button" className="wb-button primary" onClick={loadSample}>
-          <IconFlask size={22} stroke={1.7} aria-hidden="true" />
+          <IconFlask size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button type="button" variant="outline" className="wb-button" onClick={clear}>
-          <IconTrash size={22} stroke={1.7} aria-hidden="true" />
+          <IconTrash size={16} stroke={1.7} aria-hidden="true" />
           Clear
         </Button>
       </div>
@@ -458,7 +458,7 @@ export function QrScreen() {
           disabled={!qrDataUrl}
           onClick={downloadPng}
         >
-          <IconDownload size={22} stroke={1.7} aria-hidden="true" />
+          <IconDownload size={16} stroke={1.7} aria-hidden="true" />
           Download PNG
         </Button>
         <Button
@@ -468,7 +468,7 @@ export function QrScreen() {
           disabled={!qrSvg}
           onClick={downloadSvg}
         >
-          <IconDownload size={22} stroke={1.7} aria-hidden="true" />
+          <IconDownload size={16} stroke={1.7} aria-hidden="true" />
           Download SVG
         </Button>
         <Button
@@ -477,7 +477,7 @@ export function QrScreen() {
           className="wb-button"
           onClick={() => void copyContent()}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+          <IconCopy size={16} stroke={1.7} aria-hidden="true" />
           Copy content
         </Button>
       </div>

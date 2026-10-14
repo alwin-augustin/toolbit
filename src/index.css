@@ -1,4 +1,6 @@
+/* Stylesheet entry point. Import order matters: tokens define every variable
+   the rest of the system resolves at runtime. */
+@import './app/styles/tokens.css';
 @import './app/styles/tailwind.css';
 @import './app/styles/globals.css';
-@import './app/styles/fonts.css';
-@import './app/shell/shell.css';
+@import './app/styles/system.css';

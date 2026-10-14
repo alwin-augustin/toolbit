@@ -98,15 +98,15 @@ export function JsonSchemaScreen() {
 
       <div className="wb-toolbar">
         <Button type="button" className="wb-button primary" onClick={validate}>
-          <IconShieldCheck size={22} stroke={1.7} aria-hidden="true" />
+          <IconShieldCheck size={16} stroke={1.7} aria-hidden="true" />
           Validate
         </Button>
         <Button type="button" variant="outline" className="wb-button" onClick={loadSample}>
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button type="button" variant="outline" className="wb-button" onClick={clear}>
-          <IconEraser size={22} stroke={1.7} aria-hidden="true" />
+          <IconEraser size={16} stroke={1.7} aria-hidden="true" />
           Clear
         </Button>
       </div>
@@ -193,7 +193,7 @@ export function JsonSchemaScreen() {
       ) : (
         validation.errors.map((message) => (
           <div key={message} className="wb-list-row">
-            <IconAlertTriangle size={22} aria-hidden="true" />
+            <IconAlertTriangle size={16} aria-hidden="true" />
             <span>
               <strong>{message}</strong>
             </span>

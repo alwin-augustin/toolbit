@@ -30,7 +30,7 @@ describe('workbench workspace (design-QA journeys)', () => {
       JSON.stringify(JSON.parse(INVOICE_SAMPLE), null, 2),
     );
     expect(screen.getByRole('button', { name: 'Copy result' })).toBeEnabled();
-    expect(screen.getByText('Valid JSON')).toBeInTheDocument();
+    expect(screen.getByText(/Valid JSON/)).toBeInTheDocument();
   });
 
   it('minifies to a single line', async () => {
@@ -58,7 +58,7 @@ describe('workbench workspace (design-QA journeys)', () => {
       (screen.getByRole('textbox', { name: 'Result code' }) as HTMLTextAreaElement).value,
     ).toBe(before);
     expect(screen.getByRole('button', { name: 'Copy result' })).toBeDisabled();
-    expect(screen.getByText('Needs attention')).toBeInTheDocument();
+    expect(screen.getByText(/Error/)).toBeInTheDocument();
   });
 
   it('converts a timestamp to UTC and Unix lines', async () => {

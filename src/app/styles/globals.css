@@ -1,206 +1,135 @@
-:root {
-  --elevate-1: rgba(0, 0, 0, 0.03);
-  --elevate-2: rgba(0, 0, 0, 0.08);
-}
-
-.dark {
-  --elevate-1: rgba(255, 255, 255, 0.04);
-  --elevate-2: rgba(255, 255, 255, 0.09);
-}
-
-/* Performance: skip rendering offscreen landing sections */
-.cv-auto {
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 800px;
-}
-
-@supports not (content-visibility: auto) {
-  .cv-auto {
-    content-visibility: visible;
-  }
-}
+/* ============================================================================
+   Base layer
+   ----------------------------------------------------------------------------
+   Resets, self-hosted fonts, focus, scrollbars, selection and motion policy.
+   Everything here is global and state-free; component styling lives in
+   system.css and in Tailwind utilities.
+   ========================================================================= */
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply bg-canvas text-ink text-base antialiased;
+    font-feature-settings: 'cv11' 1; /* Geist: single-storey-ish a for density */
+    text-rendering: optimizeLegibility;
   }
 
-  /* Enhanced focus indicators for accessibility */
+  /* One focus treatment for the whole product. Keyboard users get a visible
+     double ring that survives any background; pointer users get nothing. The
+     ring is a box-shadow, so it takes the shape of whatever it lands on —
+     setting a radius here would restyle the control the moment it was
+     focused. */
+  *:focus {
+    outline: none;
+  }
   *:focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    box-shadow: var(--tb-shadow-focus);
+    outline: none;
   }
 
-  /* Dark mode: crisper placeholder text */
+  /* Data is always monospaced. */
+  code,
+  kbd,
+  pre,
+  samp,
+  textarea[data-mono='true'] {
+    @apply font-mono;
+  }
+
+  ::selection {
+    background: var(--tb-state-selected);
+    color: var(--tb-state-selected-ink);
+  }
+
   .dark ::placeholder {
-    color: color-mix(in oklab, var(--muted-foreground) 65%, transparent);
+    color: color-mix(in oklab, var(--tb-ink-faint) 80%, transparent);
   }
 
-  /* Dark mode: subtle inner glow on focus for inputs */
-  .dark input:focus,
-  .dark textarea:focus,
-  .dark select:focus {
-    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ring) 15%, transparent);
-  }
-
-  /* Mobile touch target minimum size (48px per WCAG) */
+  /* Touch: meet the 44px target on coarse pointers and stop iOS from
+     zooming the viewport when a field is focused. */
   @media (pointer: coarse) {
-    button:not([class*='h-']),
-    [role='button'] {
-      min-height: 44px;
-      min-width: 44px;
-    }
-
-    /* Larger tap targets for select dropdowns on mobile */
-    select {
-      min-height: 44px;
-    }
-
-    /* Prevent zoom on input focus in iOS */
     input,
     textarea,
     select {
       font-size: 16px;
     }
   }
-
-  /* Smooth scrolling for better UX */
-  html {
-    scroll-behavior: smooth;
-  }
-
-  /* Reduce motion for users who prefer it */
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
-  }
 }
 
-/**
- * Using the elevate system.
- * Automatic contrast adjustment.
- *
- * <element className="hover-elevate" />
- * <element className="active-elevate-2" />
- *
- * // Using the tailwind utility when a data attribute is "on"
- * <element className="toggle-elevate data-[state=on]:toggle-elevated" />
- * // Or manually controlling the toggle state
- * <element className="toggle-elevate toggle-elevated" />
- *
- * Elevation systems have to handle many states.
- * - not-hovered, vs. hovered vs. active  (three mutually exclusive states)
- * - toggled or not
- * - focused or not (this is not handled with these utilities)
- *
- * Even without handling focused or not, this is six possible combinations that
- * need to be distinguished from eachother visually.
- */
 @layer utilities {
-  /* Hide ugly search cancel button in Chrome until we can style it properly */
+  /* Thin, themeable scrollbars — a developer tool should not ship default
+     OS chrome inside panels. */
+  .tb-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--tb-line-strong) transparent;
+  }
+  .tb-scroll::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  .tb-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .tb-scroll::-webkit-scrollbar-thumb {
+    background: var(--tb-line-strong);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    border-radius: var(--tb-radius-full);
+  }
+  .tb-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--tb-ink-faint);
+    background-clip: padding-box;
+  }
+
+  .tb-scroll-none {
+    scrollbar-width: none;
+  }
+  .tb-scroll-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Numbers that must not jitter as they update. */
+  .tb-tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Keep an offscreen section cheap to render (landing page). */
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 800px;
+  }
+  @supports not (content-visibility: auto) {
+    .cv-auto {
+      content-visibility: visible;
+    }
+  }
+
   input[type='search']::-webkit-search-cancel-button {
     @apply hidden;
   }
 
-  /* Placeholder styling for contentEditable div */
   [contenteditable][data-placeholder]:empty::before {
     content: attr(data-placeholder);
-    color: var(--muted-foreground);
+    color: var(--tb-ink-faint);
     pointer-events: none;
-  }
-
-  /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of
-   * buttons/badges can remove the automatic brightness adjustment on interactions
-   * and program their own. */
-  .no-default-hover-elevate {
-  }
-
-  .no-default-active-elevate {
-  }
-
-  /**
-   * Toggleable backgrounds go behind the content. Hoverable/active goes on top.
-   * This way they can stack/compound. Both will overlap the parent's borders!
-   * So borders will be automatically adjusted both on toggle, and hover/active,
-   * and they will be compounded.
-   */
-  .toggle-elevate::before,
-  .toggle-elevate-2::before {
-    content: '';
-    pointer-events: none;
-    position: absolute;
-    inset: 0px;
-    /*border-radius: inherit;   match rounded corners */
-    border-radius: inherit;
-    z-index: -1;
-    /* sits behind content but above backdrop */
-  }
-
-  .toggle-elevate.toggle-elevated::before {
-    background-color: var(--elevate-2);
-  }
-
-  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
-  .border.toggle-elevate::before {
-    inset: -1px;
-  }
-
-  /* Does not work on elements with overflow:hidden! */
-  .hover-elevate:not(.no-default-hover-elevate),
-  .active-elevate:not(.no-default-active-elevate),
-  .hover-elevate-2:not(.no-default-hover-elevate),
-  .active-elevate-2:not(.no-default-active-elevate) {
-    position: relative;
-    z-index: 0;
-  }
-
-  .hover-elevate:not(.no-default-hover-elevate)::after,
-  .active-elevate:not(.no-default-active-elevate)::after,
-  .hover-elevate-2:not(.no-default-hover-elevate)::after,
-  .active-elevate-2:not(.no-default-active-elevate)::after {
-    content: '';
-    pointer-events: none;
-    position: absolute;
-    inset: 0px;
-    /*border-radius: inherit;   match rounded corners */
-    border-radius: inherit;
-    z-index: 999;
-    /* sits in front of content */
-  }
-
-  .hover-elevate:hover:not(.no-default-hover-elevate)::after,
-  .active-elevate:active:not(.no-default-active-elevate)::after {
-    background-color: var(--elevate-1);
-  }
-
-  .hover-elevate-2:hover:not(.no-default-hover-elevate)::after,
-  .active-elevate-2:active:not(.no-default-active-elevate)::after {
-    background-color: var(--elevate-2);
-  }
-
-  /* If there's a 1px border, adjust the inset so that it covers that parent's border */
-  .border.hover-elevate:not(.no-hover-interaction-elevate)::after,
-  .border.active-elevate:not(.no-active-interaction-elevate)::after,
-  .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after,
-  .border.active-elevate-2:not(.no-active-interaction-elevate)::after,
-  .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
-    inset: -1px;
   }
 }
 
-/* ============================================================
-   Code editor tokens (consolidated from the retired DS system).
-   CodeMirror syntax palette + mono font + dense type scale.
-   ============================================================ */
+/* Respect the OS motion preference everywhere, once. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================================
+   Self-hosted type. No third-party font requests: the workspace is local-first
+   and must not leak a request on first paint.
+   ========================================================================= */
 @font-face {
   font-family: 'Geist';
   src: url('../../shared/ds/assets/fonts/Geist[wght].woff2') format('woff2');
@@ -208,6 +137,7 @@
   font-style: normal;
   font-display: swap;
 }
+
 @font-face {
   font-family: 'JetBrains Mono';
   src: url('../../shared/ds/assets/fonts/JetBrainsMono[wght].woff2') format('woff2');
@@ -215,6 +145,7 @@
   font-style: normal;
   font-display: swap;
 }
+
 @font-face {
   font-family: 'JetBrains Mono';
   src: url('../../shared/ds/assets/fonts/JetBrainsMono-Italic[wght].woff2') format('woff2');
@@ -223,38 +154,19 @@
   font-display: swap;
 }
 
+/* ============================================================================
+   Code syntax tokens — exposed to the CodeMirror theme and the diff viewer.
+   ========================================================================= */
 :root {
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --text-2xs: 0.6875rem;
-  --text-xs: 0.75rem;
-  --text-sm: 0.8125rem;
-  --text-base: 0.875rem;
-  --text-md: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.375rem;
-  --text-2xl: 1.75rem;
-  --text-3xl: 2.25rem;
-  --text-4xl: 3rem;
-  --text-5xl: 3.75rem;
-  --text-strong: 228 8% 12%;
-  --text-body: 226 7% 24%;
-  --text-muted: 225 5% 42%;
-  --text-faint: 225 5% 42%;
-  --code-key: 226 62% 46%;
-  --code-string: 125 65% 27%;
-  --code-number: 190 80% 30%;
-  --code-keyword: 20 60% 42%;
-  --code-punc: 225 5% 45%;
-}
-
-.dark {
-  --text-strong: 220 14% 96%;
-  --text-body: 222 10% 86%;
-  --text-muted: 224 6% 72%;
-  --text-faint: 225 5% 70%;
-  --code-key: 227 100% 76%;
-  --code-string: 130 32% 54%;
-  --code-number: 187 63% 48%;
-  --code-keyword: 22 50% 64%;
-  --code-punc: 224 6% 62%;
+  --code-ink: var(--tb-code-ink);
+  --code-key: var(--tb-code-key);
+  --code-string: var(--tb-code-string);
+  --code-number: var(--tb-code-number);
+  --code-keyword: var(--tb-code-keyword);
+  --code-punc: var(--tb-code-punc);
+  --code-added: var(--tb-code-added);
+  --code-added-bg: var(--tb-code-added-bg);
+  --code-removed: var(--tb-code-removed);
+  --code-removed-bg: var(--tb-code-removed-bg);
+  --code-gutter: var(--tb-code-gutter);
 }

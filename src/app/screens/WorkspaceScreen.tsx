@@ -1,20 +1,21 @@
-import { useEffect, useState, type ComponentType, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
+  IconAdjustments,
   IconBookmark,
-  IconChevronDown,
-  IconCircleCheckFilled,
+  IconCircleCheck,
   IconCopy,
-  IconDeviceDesktop,
   IconDownload,
-  IconFile,
-  IconFileCode,
-  IconSettings,
+  IconEraser,
+  IconStar,
+  IconStarFilled,
   IconX,
 } from '@tabler/icons-react';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { openDialog } from '@/shared/dialog';
 import { track } from '@/core/telemetry';
+import { useFavorites } from '@/core/favorites-store';
+import { useRecentTools } from '@/core/recent-tools';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -24,34 +25,23 @@ import { getSpec, patchWorkbenchDoc, readDoc, specParams } from '@/features/tool
 import type { WorkbenchDocState } from '@/shared/workbench';
 import type { WorkspaceTab } from '@/shared/workspace-store';
 
-function ToolbarButton({
-  icon: Icon,
-  active,
-  onClick,
-  children,
-}: {
-  icon: ComponentType<{ size?: number; stroke?: number; className?: string }>;
-  active?: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <Button
-      type="button"
-      variant={active ? 'default' : 'outline'}
-      className={`wb-button${active ? ' primary' : ''}`}
-      onClick={onClick}
-    >
-      <Icon size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
-      {children}
-    </Button>
-  );
-}
-
 function lineCount(text: string): number {
   return text ? text.split('\n').length : 0;
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/**
+ * The workbench document.
+ *
+ * Everything a tool needs, in reading order: what it is, what it can do, the
+ * input, the result. The two panes share a hairline seam so the eye reads them
+ * as one surface, and the status bar reports only facts a developer acts on.
+ */
 export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
   const spec = getSpec(tab.toolId);
   const doc = readDoc(tab);
@@ -60,20 +50,38 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
   const remember = useWorkbenchMemory((s) => s.remember);
   const addRun = useWorkbenchMemory((s) => s.addRun);
   const notify = useWorkbenchMemory((s) => s.notify);
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { addRecent } = useRecentTools();
   const [optionsOpen, setOptionsOpen] = useState(false);
-  const [copyMenuOpen, setCopyMenuOpen] = useState(false);
+  const optionsRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
-  const [saveKind, setSaveKind] = useState<'Sessions' | 'Snippets'>('Sessions');
+
+  // Track this tool as recently used
+  useEffect(() => {
+    if (spec) addRecent(spec.id);
+  }, [spec, addRecent]);
+
+  // Close options popover when clicking outside
+  useEffect(() => {
+    if (!optionsOpen) return;
+    const handler = (event: MouseEvent) => {
+      if (optionsRef.current && !optionsRef.current.contains(event.target as Node)) {
+        setOptionsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [optionsOpen]);
 
   if (!spec) return null;
 
+  const fav = isFavorite(spec.id);
   const update = (patch: Partial<WorkbenchDocState>) => patchWorkbenchDoc(tab.id, patch);
   const setParam = (key: string, value: string | boolean) =>
     update({ params: { ...doc.params, [key]: value }, dirty: true });
   const params = specParams(doc, spec);
   const valid = !!doc.output && !doc.error && !doc.dirty;
   const isJson = spec.language === 'json';
-  const ActionIcon = spec.actions.length === 1 ? spec.icon : IconFileCode;
 
   const transform = async (mode: string = doc.mode) => {
     setBusy(true);
@@ -118,58 +126,76 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
     anchor.download = `toolbit-result.${spec.fileExt ?? 'txt'}`;
     anchor.click();
     URL.revokeObjectURL(url);
-    setCopyMenuOpen(false);
   };
 
-  const startSave = (kind: 'Sessions' | 'Snippets') => {
-    setSaveKind(kind);
-    window.dispatchEvent(new CustomEvent('wb:save', { detail: kind }));
-  };
+  const inlineOptions = (spec.options ?? []).filter((option) => option.inline);
+  const popoverOptions = (spec.options ?? []).filter((option) => !option.inline);
 
-  const inlineOptions = (spec.options ?? []).filter((o) => o.inline);
-  const popoverOptions = (spec.options ?? []).filter((o) => !o.inline);
+  // The status bar reports whether the result still matches the input, not
+  // whether the input itself is valid — the pane header already says that.
+  const stateLabel = valid ? 'Up to date' : doc.error ? 'Error' : 'Needs run';
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col gap-3 p-4">
+      {/* Tool identity + document actions */}
       <div className="wb-workspace-heading">
-        <div>
-          <h1>{spec.title}</h1>
-          <p>{spec.description}</p>
+        <div className="min-w-0">
+          <h1 className="truncate">{spec.title}</h1>
+          <p className="truncate">{spec.description}</p>
         </div>
-        <div className="wb-processing">
-          <span>
-            <IconCircleCheckFilled size={16} className="wb-green" />
-            Runs on this device
-          </span>
-          <span>
-            <IconDeviceDesktop size={18} />
-            Session only
-          </span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={fav ? `Unpin ${spec.title}` : `Pin ${spec.title}`}
+            title={fav ? 'Remove from pinned' : 'Pin to top'}
+            onClick={() => toggleFavorite(spec.id)}
+          >
+            {fav ? <IconStarFilled size={15} /> : <IconStar size={15} />}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => window.dispatchEvent(new CustomEvent('wb:save', { detail: 'Sessions' }))}
+          >
+            <IconBookmark size={14} />
+            Save session
+          </Button>
         </div>
       </div>
 
+      {/* Actions + options */}
       <div className="wb-toolbar">
-        <div className="wb-transform-actions">
+        <div className="flex flex-wrap items-center gap-1.5">
           {spec.actions.map(({ mode, label }) => (
-            <ToolbarButton
+            <Button
               key={mode}
-              icon={ActionIcon}
-              active={doc.mode === mode}
-              onClick={() => transform(mode)}
+              type="button"
+              variant={doc.mode === mode ? 'default' : 'outline'}
+              size="sm"
+              disabled={busy}
+              onClick={() => void transform(mode)}
             >
               {label}
-            </ToolbarButton>
+            </Button>
           ))}
         </div>
+
         {inlineOptions.map(
           (option) =>
             option.type === 'select' && (
-              <Label key={option.key} className="wb-indent-label">
+              <Label key={option.key} className="wb-toolbar-label">
                 {option.label}
+                {/* `sm` keeps the control the same height as the toolbar's
+                    action buttons; mixing control heights in one row is a defect. */}
                 <NativeSelect
+                  size="sm"
                   aria-label={option.label.replace(/:$/, '')}
                   value={String(params[option.key] ?? '')}
-                  onChange={(e) => setParam(option.key, e.target.value)}
+                  onChange={(event) => setParam(option.key, event.target.value)}
                 >
                   {option.choices?.map((choice) => (
                     <NativeSelectOption key={choice.value} value={choice.value}>
@@ -180,27 +206,35 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
               </Label>
             ),
         )}
-        <div className="wb-options-wrap">
+
+        <div ref={optionsRef} className="relative ml-auto">
           <Button
             type="button"
-            variant="outline"
-            className="wb-button"
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-ink-muted"
             aria-expanded={optionsOpen}
+            aria-label="Options"
             onClick={() => setOptionsOpen(!optionsOpen)}
           >
-            <IconSettings size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
+            <IconAdjustments size={14} />
             Options
-            <IconChevronDown size={18} data-icon="inline-end" />
           </Button>
+          {/* One floating-layer definition: `.wb-popup` carries the radius,
+              hairline, elevation and stacking that every menu in the product
+              shares, so this popover cannot drift from the real ones. */}
           {optionsOpen && (
-            <div className="wb-popover wb-options-panel">
-              <Label className="cursor-pointer">
+            <div className="wb-popup absolute right-0 top-full mt-1 min-w-[260px] p-1">
+              <Label className="flex cursor-pointer items-center gap-2 px-2.5 py-2 text-sm">
                 <Checkbox checked={wrap} onCheckedChange={(checked) => setWrap(Boolean(checked))} />
                 Wrap long lines
               </Label>
               {popoverOptions.map((option) =>
                 option.type === 'checkbox' ? (
-                  <Label key={option.key} className="cursor-pointer">
+                  <Label
+                    key={option.key}
+                    className="flex cursor-pointer items-center gap-2 px-2.5 py-2 text-sm"
+                  >
                     <Checkbox
                       checked={params[option.key] === true}
                       onCheckedChange={(checked) => setParam(option.key, Boolean(checked))}
@@ -208,25 +242,26 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
                     {option.label}
                   </Label>
                 ) : (
-                  <Label key={option.key}>
+                  <Label key={option.key} className="flex flex-col gap-1.5 px-2.5 py-2 text-sm">
                     {option.label}
                     <Input
                       value={String(params[option.key] ?? '')}
-                      onChange={(e) => setParam(option.key, e.target.value)}
+                      onChange={(event) => setParam(option.key, event.target.value)}
                     />
                   </Label>
                 ),
               )}
-              {spec.note && <p>{spec.note}</p>}
-              <p>
-                Apply changes with{' '}
-                {spec.actions.length > 1 ? 'an action button' : 'the transform button'}.
-              </p>
+              {spec.note && (
+                <p className="border-t border-line px-2.5 py-2 text-xs text-ink-faint">
+                  {spec.note}
+                </p>
+              )}
             </div>
           )}
         </div>
       </div>
 
+      {/* Diagnostics */}
       {doc.error && (
         <div className="wb-error-banner" role="alert">
           <strong>Couldn&apos;t process this input.</strong>
@@ -235,6 +270,7 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
         </div>
       )}
 
+      {/* Input → result */}
       <div className="wb-editors">
         <section className="wb-editor-pane" aria-label="Input panel">
           <div className="wb-pane-header">
@@ -242,11 +278,11 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
             <Button
               type="button"
               variant="ghost"
-              size="sm"
-              className="wb-button quiet wb-clear"
+              size="xs"
+              className="ml-auto gap-1.5 text-ink-muted"
               onClick={() => update({ input: '', error: '', dirty: true })}
             >
-              <IconFile size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
+              <IconEraser size={13} />
               Clear
             </Button>
           </div>
@@ -262,60 +298,30 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
             <span>
               {lineCount(doc.input)} {doc.input.includes('\n') ? 'lines' : 'line'}
             </span>
-            <span>{doc.input.length} characters</span>
-            <span className="wb-file-type">
-              {isJson ? 'JSON' : 'Text'}
-              <IconChevronDown size={16} />
-            </span>
+            <span>{formatBytes(doc.input.length)}</span>
           </div>
         </section>
 
         <section className="wb-editor-pane" aria-label="Result panel">
           <div className="wb-pane-header">
             <h2>Result</h2>
-            <span className={valid ? 'wb-result-state wb-green' : 'wb-result-state'}>
-              {valid ? (
-                <>
-                  <IconCircleCheckFilled size={18} />
-                  {spec.resultLabel ?? (busy ? 'Working' : 'Complete')}
-                </>
-              ) : doc.error ? (
-                'Needs attention'
-              ) : (
-                'Run to update'
-              )}
-            </span>
-            <div className="wb-copy-actions">
-              <Button
-                type="button"
-                variant="default"
-                className="wb-button primary"
-                disabled={!valid}
-                onClick={copy}
-              >
-                <IconCopy size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
-                Copy result
-              </Button>
-              <Button
-                type="button"
-                variant="default"
-                size="icon"
-                className="wb-copy-more"
-                aria-label="More result actions"
-                aria-expanded={copyMenuOpen}
-                onClick={() => setCopyMenuOpen(!copyMenuOpen)}
-              >
-                <IconChevronDown size={18} />
-              </Button>
-              {copyMenuOpen && (
-                <div className="wb-popover wb-copy-popover">
-                  <Button type="button" variant="ghost" disabled={!valid} onClick={download}>
-                    <IconDownload size={20} data-icon="inline-start" />
-                    Download result
-                  </Button>
-                </div>
-              )}
-            </div>
+            {valid && (
+              <span className="flex items-center gap-1 text-2xs text-success">
+                <IconCircleCheck size={13} aria-hidden="true" />
+                {spec.resultLabel ?? 'Complete'}
+              </span>
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              className="ml-auto gap-1.5 text-ink-muted"
+              disabled={!valid}
+              onClick={() => void copy()}
+            >
+              <IconCopy size={13} />
+              Copy result
+            </Button>
           </div>
           <CodeEditor
             key={`${tab.id}-output`}
@@ -327,57 +333,71 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
           />
           <div className="wb-pane-footer">
             <span>{lineCount(doc.output)} lines</span>
-            <span>{doc.output.length} characters</span>
-            <span className="wb-file-type">{isJson ? 'JSON' : 'Text'}</span>
+            <span>{formatBytes(doc.output.length)}</span>
             <Button
               type="button"
               variant="ghost"
-              size="icon"
-              className="wb-icon-button"
-              aria-label="Copy output"
+              size="xs"
+              className="ml-auto gap-1.5 text-ink-muted"
               disabled={!valid}
-              onClick={copy}
+              onClick={download}
             >
-              <IconCopy size={20} />
+              <IconDownload size={13} />
+              Download
             </Button>
           </div>
         </section>
       </div>
 
-      <footer className="wb-workspace-footer">
-        <Button
-          type="button"
-          variant="outline"
-          className="wb-button"
-          onClick={() => startSave('Sessions')}
-        >
-          <IconBookmark size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
-          Save session
-        </Button>
-      </footer>
-      <SaveListener tab={tab} kind={saveKind} />
-    </>
+      {/* Status */}
+      <div className="wb-statusbar" role="status">
+        <span className="wb-statusbar-item">
+          <span
+            className={`size-1.5 rounded-full ${
+              valid ? 'bg-success' : doc.error ? 'bg-danger' : 'bg-ink-faint'
+            }`}
+            aria-hidden="true"
+          />
+          {stateLabel}
+        </span>
+        <span className="wb-statusbar-sep" aria-hidden="true" />
+        <span className="wb-statusbar-item">
+          {wrap ? 'Wrapped' : 'No wrap'} · {isJson ? 'JSON' : 'Plain text'}
+        </span>
+        <span className="wb-statusbar-sep" aria-hidden="true" />
+        <span className="wb-statusbar-item">Local only</span>
+      </div>
+
+      <SaveDialog tab={tab} />
+    </div>
   );
 }
 
-/** Listens for footer save requests and stores the snapshot in memory. */
-function SaveListener({ tab, kind }: { tab: WorkspaceTab; kind: 'Sessions' | 'Snippets' }) {
+/**
+ * Save dialog.
+ *
+ * Saving keeps a *session*: input, result and options together, so reopening
+ * restores the exact working state rather than just the output.
+ */
+function SaveDialog({ tab }: { tab: WorkspaceTab }) {
   const addSaved = useWorkbenchMemory((s) => s.addSaved);
   const notify = useWorkbenchMemory((s) => s.notify);
-  const [dialogKind, setDialogKind] = useState<'Sessions' | 'Snippets' | null>(null);
+  const [open, setOpen] = useState<'Sessions' | 'Snippets' | null>(null);
   const [name, setName] = useState('');
 
   useEffect(() => {
     const handler = (event: Event) => {
-      setDialogKind((event as CustomEvent<'Sessions' | 'Snippets'>).detail ?? kind);
+      const kind = (event as CustomEvent<'Sessions' | 'Snippets'>).detail;
+      setOpen(kind ?? 'Sessions');
       setName('');
     };
     window.addEventListener('wb:save', handler);
     return () => window.removeEventListener('wb:save', handler);
-  }, [kind]);
+  }, []);
 
-  if (!dialogKind) return null;
+  if (!open) return null;
   const doc = readDoc(tab);
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const trimmed = name.trim();
@@ -385,70 +405,66 @@ function SaveListener({ tab, kind }: { tab: WorkspaceTab; kind: 'Sessions' | 'Sn
     addSaved({
       id: crypto.randomUUID(),
       name: trimmed,
-      kind: dialogKind,
+      kind: open,
       toolId: tab.toolId,
-      doc: dialogKind === 'Sessions' ? doc : null,
-      input: dialogKind === 'Snippets' ? doc.output : doc.input,
+      doc: open === 'Sessions' ? doc : null,
+      input: open === 'Snippets' ? doc.output : doc.input,
       example: false,
     });
-    setDialogKind(null);
-    notify(`${dialogKind === 'Sessions' ? 'Session' : 'Snippet'} saved for this session`);
+    setOpen(null);
+    notify(`${open === 'Sessions' ? 'Session' : 'Snippet'} saved for this session`);
   };
 
   return (
     <dialog
-      className="wb-save-dialog"
+      className="w-full max-w-md rounded-xl border border-line bg-raised p-5 shadow-lg"
       aria-labelledby="wb-save-title"
       ref={(node) => {
         openDialog(node);
         if (node?.open) node.querySelector('input')?.focus();
       }}
-      onClose={() => setDialogKind(null)}
+      onClose={() => setOpen(null)}
     >
       <form onSubmit={submit}>
-        <div className="wb-dialog-title">
-          <h2 id="wb-save-title">Save {dialogKind === 'Sessions' ? 'session' : 'snippet'}</h2>
+        <div className="flex items-center justify-between">
+          <h2 id="wb-save-title" className="text-lg font-semibold">
+            Save {open === 'Sessions' ? 'session' : 'snippet'}
+          </h2>
           <Button
             type="button"
             variant="ghost"
-            size="icon"
-            className="wb-icon-button"
+            size="icon-sm"
             aria-label="Close save dialog"
-            onClick={() => setDialogKind(null)}
+            onClick={() => setOpen(null)}
           >
-            <IconX size={22} />
+            <IconX size={16} />
           </Button>
         </div>
-        <p>
-          {dialogKind === 'Sessions'
+        <p className="mt-2 text-sm text-ink-muted">
+          {open === 'Sessions'
             ? 'Keep this tool\u2019s input, result, and options together.'
             : 'Keep this result ready to reuse.'}
         </p>
-        <Label className="flex flex-col gap-1.5 text-sm">
+        <Label className="mt-4 flex flex-col gap-1.5 text-sm">
           Name
           <Input
             required
             maxLength={80}
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={
-              dialogKind === 'Sessions' ? 'e.g. Webhook inspection' : 'e.g. Invoice payload'
-            }
+            onChange={(event) => setName(event.target.value)}
+            placeholder={open === 'Sessions' ? 'e.g. Webhook inspection' : 'e.g. Invoice payload'}
           />
         </Label>
-        <small>Saved in this session. Refreshing resets saved work.</small>
-        <div className="wb-dialog-actions">
-          <Button
-            type="button"
-            variant="outline"
-            className="wb-button"
-            onClick={() => setDialogKind(null)}
-          >
+        <p className="mt-2 text-xs text-ink-faint">
+          Saved in this session. Refreshing resets saved work.
+        </p>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={() => setOpen(null)}>
             Cancel
           </Button>
-          <Button type="submit" variant="default" className="wb-button primary">
-            <IconBookmark size={22} stroke={1.7} aria-hidden="true" data-icon="inline-start" />
-            Save {dialogKind === 'Sessions' ? 'session' : 'snippet'}
+          <Button type="submit" className="gap-1.5">
+            <IconBookmark size={15} />
+            Save {open === 'Sessions' ? 'session' : 'snippet'}
           </Button>
         </div>
       </form>

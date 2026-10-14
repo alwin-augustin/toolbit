@@ -91,7 +91,7 @@ export function CaseScreen() {
           onClick={() => setResults(convertCases(input))}
           disabled={!input.trim()}
         >
-          <IconPlayerPlay size={22} stroke={1.7} aria-hidden="true" />
+          <IconPlayerPlay size={16} stroke={1.7} aria-hidden="true" />
           Convert
         </Button>
         <Button
@@ -100,7 +100,7 @@ export function CaseScreen() {
           className="wb-button"
           onClick={() => setInput(CASE_SAMPLE)}
         >
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button

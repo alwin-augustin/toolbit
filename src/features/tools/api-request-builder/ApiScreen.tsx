@@ -288,7 +288,7 @@ export function ApiScreen() {
       </div>
       <div className="wb-toolbar">
         <Button type="button" className="wb-button primary" onClick={loadSample}>
-          <IconSparkles size={22} stroke={1.7} aria-hidden="true" />
+          <IconSparkles size={16} stroke={1.7} aria-hidden="true" />
           Load sample
         </Button>
         <Button
@@ -298,12 +298,12 @@ export function ApiScreen() {
           onClick={clear}
           disabled={!url && !body && !response}
         >
-          <IconTrash size={22} stroke={1.7} aria-hidden="true" />
+          <IconTrash size={16} stroke={1.7} aria-hidden="true" />
           Clear
         </Button>
         {loading ? (
           <Button type="button" variant="outline" className="wb-button" onClick={cancelRequest}>
-            <IconX size={22} stroke={1.7} aria-hidden="true" />
+            <IconX size={16} stroke={1.7} aria-hidden="true" />
             Cancel
           </Button>
         ) : (
@@ -313,7 +313,7 @@ export function ApiScreen() {
             onClick={() => void sendRequest()}
             disabled={!url.trim()}
           >
-            <IconSend size={22} stroke={1.7} aria-hidden="true" />
+            <IconSend size={16} stroke={1.7} aria-hidden="true" />
             Send
           </Button>
         )}
@@ -324,7 +324,7 @@ export function ApiScreen() {
           onClick={() => void copyText(curlCommand, 'cURL command')}
           disabled={!url.trim()}
         >
-          <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+          <IconCopy size={16} stroke={1.7} aria-hidden="true" />
           Copy as cURL
         </Button>
         <small>Sends to: {url.trim() || 'No URL yet'}</small>
@@ -488,7 +488,7 @@ export function ApiScreen() {
                 disabled={!response}
                 onClick={() => void copyText(response, 'Response body')}
               >
-                <IconCopy size={22} stroke={1.7} aria-hidden="true" />
+                <IconCopy size={16} stroke={1.7} aria-hidden="true" />
                 Copy body
               </Button>
             </div>
