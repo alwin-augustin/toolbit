@@ -41,10 +41,7 @@ export function UnitScreen() {
   const [error, setError] = useState('');
   const notify = useWorkbenchMemory((s) => s.notify);
   // The conversion, written the way the pane reads it, is what gets saved.
-  usePublishedResult(
-    result ? `${value} ${fromUnit} = ${result} ${toUnit}` : '',
-    'Converted value',
-  );
+  usePublishedResult(result ? `${value} ${fromUnit} = ${result} ${toUnit}` : '', 'Converted value');
 
   const changeMeasure = (next: Measure) => {
     setMeasure(next);

@@ -270,7 +270,11 @@ export function CertScreen() {
 
   // The decoded certificate fields are what "Save Result…" writes for this tool.
   // The pane shows pretty-printed JSON, so a save should land as .json.
-  usePublishedResult(certInfo ? JSON.stringify(certInfo, null, 2) : '', 'Decoded certificate', 'json');
+  usePublishedResult(
+    certInfo ? JSON.stringify(certInfo, null, 2) : '',
+    'Decoded certificate',
+    'json',
+  );
 
   const copyDetails = async () => {
     if (!certInfo) return;
