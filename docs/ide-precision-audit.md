@@ -53,7 +53,8 @@ The catalog in `src/content/tools.config.ts` holds exactly **42 tools**, which r
    - `NginxScreen.tsx` and `DockerScreen.tsx` rendered raw `<p>` elements between `.wb-toolbar` and `.wb-editors` with unstyled browser defaults.
    - `ApiScreen.tsx` and `DockerScreen.tsx` used `className="wb-section-title"`, which was never defined in `system.css` (only `.wb-section-title-row`).
    - `RegexScreen.tsx`, `HashScreen.tsx`, `CaseScreen.tsx`, `WordScreen.tsx`, and `CertScreen.tsx` rendered multi-row lists inside `.wb-editor-pane` without a scrolling body, letting `.wb-pane-footer` float mid-pane.
-4. **CodeMirror 6 IDE Polish (`CodeEditor.tsx`)**:
+4. **Light-Theme Ink Tier**: `--tb-ink-faint` resolved to `--tb-neutral-500`, which renders below the WCAG AA ratio for the 11px tier it paints. Light theme now points the faint tier at a dedicated `--tb-neutral-550` step: the hierarchy survives, the tier is readable, and axe agrees — see section 7.
+5. **CodeMirror 6 IDE Polish (`CodeEditor.tsx`)**:
    - Active line and gutter highlight (`highlightActiveLine`, `highlightActiveLineGutter`, skipped when `readOnly`), a matching-bracket highlight derived from the primary color, and explicit caret/selection colors.
    - `reportStatus` (wired at `WorkspaceScreen.tsx`) publishes live `Ln X, Col Y` from the primary input editor into the status bar, alongside byte/line counts and the syntax grammar label.
 
@@ -110,7 +111,7 @@ Before this branch, saving and file handling existed twice: workbench tools kept
 - **One answer to "what would save write" (`activeSaveableResult()` in `src/shared/workbench-actions.ts`)**: for a workbench document it returns the document output and the spec's `fileExt`; otherwise it returns the published slot. Skipping the workbench branch when the visible tab is a bespoke screen is what makes the two architectures indistinguishable to the native save path.
 - **Native save (`DesktopHost.tsx`)**: the `save-result` handler now calls `activeSaveableResult()` and writes `toolbit-result.<ext>` through `save_text_file`, or reports "Run the tool before saving a result." when there is nothing to write.
 - **Native open / drag-and-drop (`DesktopHost.tsx`)**: a file arriving from the OS fills the tool that is on screen instead of navigating away — a workbench document is patched (`input`, cleared `output`/`error`, dirty), and a bespoke screen receives `smartPastePayload(toolId, contents)` merged into the document payload so the visible field fills. Only when neither applies does the file fall through to `detectContentType`.
-- **Coverage**: 26 of the 30 bespoke routes publish a result. The four that do not are `qr-code-generator` (image output), `http-status-codes` (reference table), `image-converter` and `pdf-tools` (binary output) — saving text does not describe what they produce.
+- **Coverage**: 26 of the 30 bespoke routes publish a result. The four that do not are `qr-code-generator` (image output), `http-status-codes` (reference table), `image-converter` and `pdf-tools` (binary output) — saving text does not describe what they produce. Where a screen's result has a natural file type, the suggested name follows it: decoded certificate and JWT claims save as `.json`, an API body that parses as JSON saves as `.json`, generated Lorem markup saves as `.html`, XML stays `.xml`, diffs stay `.diff`.
 
 ---
 
@@ -126,7 +127,14 @@ Code-level guarantees only; no runtime performance measurement was captured in t
 
 ## 7. Accessibility
 
-Code-level evidence only; no automated axe run or screen-reader pass was performed in this session (section 8).
+The e2e suite already carries the automation for this section — `tests/e2e/tools-sweep.spec.ts` audits all 40 tool routes with axe, `tests/e2e/theme.spec.ts` audits the start screen and editor, and `tests/e2e/workspace.spec.ts` audits both dialogs at 200% zoom. That suite had been dropped from CI, and running it in this pass is what surfaced two real defects, both fixed:
+
+- **Small-text contrast in light theme (serious, 199-441 nodes on every page)**: `--tb-ink-faint` resolved to `--tb-neutral-500`, which renders at 3.8-4.0:1 on the light surfaces — under the 4.5:1 small text needs. It backed the 11px label and status tier (`.wb-panel-title`, pane footers, byte/line counts, breadcrumbs). Light theme now uses a dedicated `--tb-neutral-550` step: 4.6:1 on the selected brand tint, better on plain surfaces, and the tier stays visibly lighter than `--tb-ink-muted`.
+- **Unnamed dialog (serious)**: the command palette rendered `role="dialog"` with no accessible name and no visible title, so assistive tech announced it as just "dialog". It now renders an `sr-only` `DialogTitle` ("Search tools"), which the dialog primitive wires to `aria-labelledby`; the save dialog already named itself from its own `<h2>`. Verified in the running app: `aria-labelledby` resolves to the hidden title, which stays 1×1 and clipped, so the visual design is untouched.
+
+The visual baselines under `tests/e2e/tools-sweep.spec.ts-snapshots/` were regenerated for chromium and webkit, because the ink token change is a deliberate, user-visible change to those pixels.
+
+Remaining, from code reading only:
 - **Landmarks**: screens render into `<main id="wb-main" tabIndex={-1}>`, giving one programmatic focus target and one main landmark per route; the rail and panel are separate navigation regions.
 - **Headings**: each tool screen opens with exactly one `<h1>` (asserted by `tests/custom-screens-matrix.test.tsx` and `tests/accessibility.test.tsx`).
 - **Live regions**: error and warning surfaces use `role="alert"` / `role="status"` (for example `.wb-warning-banner` and the editor preview note), so state changes are announced rather than silently repainted.
@@ -145,6 +153,8 @@ Executed on this branch, in `Web/web`:
 | `npm run lint` (`eslint . --report-unused-disable-directives --max-warnings 0`) | exit 0 |
 | `npm run test:run` (vitest) | 39 files, 478 passed, 2 skipped, exit 0 |
 | `npx vitest run tests/result-store.test.tsx tests/desktop-host.test.tsx` | 19 passed |
+| `npm run build` | exit 0 — 56 SEO pages (42 prerendered tool shells), service worker precaching 166 entries |
+| `npx playwright test --project=chromium --project=webkit` | 140 passed, 2 skipped, exit 0 |
 
 The lint result is load-bearing, not incidental: `eslint.config.js` sets `react-hooks/rules-of-hooks` to `error`, so every bespoke screen's new `usePublishedResult` call is provably at the top level of its component — no conditional hook, no hook after an early return.
 
@@ -161,10 +171,10 @@ Also executed through the running app (Vite dev server on `127.0.0.1:5173`, the 
 The XPath mode was not exercised in the browser (it needs a query typed into its second field), and no instrumentation or trace capture was used to confirm the published-result slot outside the unit tests.
 
 **Not verified in this pass** (no claim is made that these pass):
-- The Playwright specs under `tests/e2e/` (including the tool-journey and workspace sweeps) were not run.
+- The firefox project: this machine has no firefox build installed (`ms-playwright/firefox-1543` is absent), so those runs fail at browser launch. The e2e numbers above are chromium and webkit only, and firefox and the lp-* project were left out of the totals rather than counted as failures.
 - The Tauri desktop build, the packaging/prune scripts, and `Desktop/desktop-tauri/scripts/editor-check.mjs` were not run, so the Rust-side claims in section 4.2 are read, not re-verified here.
-- No Lighthouse, Core Web Vitals, or bundle-size measurement, and no axe scan.
-- No Windows or Linux desktop matrix; no screen-reader session.
+- No Lighthouse, Core Web Vitals, or bundle-size measurement.
+- No Windows or Linux desktop matrix; no screen-reader session — the accessibility evidence is axe plus the DOM, not a person using one.
 
 ---
 
@@ -172,8 +182,9 @@ The XPath mode was not exercised in the browser (it needs a query typed into its
 
 1. **A dropped file only fills a bespoke screen that holds a document.** `DesktopHost` fills the tool on screen when that tool is the active document — reachable for a bespoke screen through a restored snippet or session. A bespoke screen reached by URL alone is session-local (`DocumentContext` is `null`), so nothing is on screen to patch and the file is routed by content detection instead. The honest fix is to let the workspace record which tool is on screen (`WorkspaceView` currently carries no tool id) or to give every tool a document uniformly; either change is larger than this pass and touches routing, the shell, and the existing "custom screens hold no document" tests.
 2. **The IndexedDB history store is unreachable at runtime.** `addHistoryEntry` has no caller in `src/`, so persistent history, retention pruning, and per-tool history are exercised only by tests while the UI reads the in-memory `runs` list. Either wire `WorkspaceScreen`'s recording path through `canPersistTool` + `addHistoryEntry`, or delete the store; leaving both is the worst of the three.
-3. **Four bespoke screens publish no result** (section 5). QR and the two binary tools plausibly want their own save verbs (`.png`/`.svg`, converted bytes) rather than the text slot; today `⌘S` reports "Run the tool…" for them even when an image is on screen.
-4. **No accessibility automation.** The claims in section 7 are structural. Add an axe assertion to the existing per-screen matrix so a missing label or landmark fails a test instead of waiting for review.
+3. **Four bespoke screens publish no result** (section 5). QR and the two binary tools plausibly want their own save verbs (`.png`/`.svg`, converted bytes) rather than the text slot; today a save reports "Run the tool…" for them even when an image is on screen.
+4. **The accessibility automation exists but CI no longer runs it.** The axe assertions were already in `tests/e2e/`; a recent commit removed the browser suite from the GitHub Actions workflow, which is exactly how an unnamed dialog and a below-AA ink tier reached a branch. Restoring that job (or a nightly run) matters more than adding more assertions: `ui/sheet.tsx` builds a second dialog popup on the same primitive, is imported nowhere today, and will ship the same unnamed `role="dialog"` the moment someone adopts it.
 5. **The sample sweep only sees the loud half of sample breakage.** `tests/sample-sweep.test.tsx` fails on an error surface or a no-op click, which is what the prettifier bug produced in the app; it does not judge whether the output is correct, so each screen's own helper tests remain the place where a computation's exact result is pinned. Two screens (`image-converter`, `pdf-tools`) are outside the sweep because they need a real file, and the sweep's coverage floor is an explicit count so a renamed button cannot quietly shrink it.
 6. **Bounded but untimed.** Every expensive path has an input ceiling; none has a measured wall-clock budget or a worker boundary, so a pathological-but-legal input can still block the main thread. A perf budget test that asserts a ceiling on the largest representative inputs would turn section 6's guarantees into measurements.
-7. **e2e and desktop packaging remain unrun here**, which is also where a regression in native open/save would show up first.
+7. **The status bar is one live region for everything it shows.** `role="status"` sits on the whole `.wb-statusbar`, so caret position ("Ln 1, Col 6") is announced through it on every arrow key alongside the byte and line counts. Splitting the caret readout out of the live region would keep the useful announcements and drop the noise; it also removes the ambiguity that made this pass scope a copy-state assertion to `.wb-toast`.
+8. **Desktop packaging and firefox remain unrun here** — this pass covered chromium and webkit, and the native shell is where a regression in open/save would show up first.

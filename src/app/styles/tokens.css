@@ -30,6 +30,10 @@
   --tb-neutral-300: oklch(0.83 0.008 265);
   --tb-neutral-400: oklch(0.706 0.012 265);
   --tb-neutral-500: oklch(0.596 0.014 265);
+  /* Faint ink sits on the 11px label and status tier. The browser renders
+     neutral-500 at 3.8-4.0:1 on the light surfaces, under the 4.5:1 that
+     small text needs, so faint ink takes this step instead. */
+  --tb-neutral-550: oklch(0.53 0.015 265);
   --tb-neutral-600: oklch(0.502 0.016 265);
   --tb-neutral-700: oklch(0.408 0.016 265);
   --tb-neutral-800: oklch(0.322 0.015 265);
@@ -96,7 +100,7 @@
   /* Ink */
   --tb-ink: var(--tb-neutral-925);
   --tb-ink-muted: var(--tb-neutral-600);
-  --tb-ink-faint: var(--tb-neutral-500);
+  --tb-ink-faint: var(--tb-neutral-550);
   --tb-ink-inverse: var(--tb-neutral-0);
 
   /* Brand */

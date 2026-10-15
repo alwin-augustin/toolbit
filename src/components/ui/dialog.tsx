@@ -34,6 +34,12 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) 
   );
 }
 
+/**
+ * Dialog surface. It owns `role="dialog"`, so it must end up named: render a
+ * `DialogTitle` inside it (the primitive wires `aria-labelledby`), or pass
+ * `aria-label` when the dialog genuinely has no visible heading. A dialog with
+ * neither is announced as just "dialog" and fails an axe audit.
+ */
 function DialogContent({
   className,
   children,
