@@ -5,6 +5,7 @@ import type { StructuredPatch } from 'diff';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { Button } from '@/components/ui/button';
 
 export interface PatchStats {
@@ -146,6 +147,9 @@ export function GitDiffScreen() {
   const active = parsed.files[safeIndex];
   const hunkText = useMemo(() => (active ? buildHunkText(active) : ''), [active]);
 
+  // The hunks shown for the selected file are the parsed result to save.
+  usePublishedResult(hunkText, 'Parsed diff', 'diff');
+
   const copyPatch = async () => {
     if (!input) return;
     try {
@@ -225,7 +229,7 @@ export function GitDiffScreen() {
             <h2>Files ({parsed.stats.files})</h2>
           </div>
           {parsed.files.length > 0 ? (
-            <div>
+            <div className="wb-pane-body">
               {parsed.files.map((file, index) => {
                 const name = getPatchFileName(file);
                 const counts = countFileChanges(file);
@@ -234,13 +238,13 @@ export function GitDiffScreen() {
                     key={`${name}-${index}`}
                     type="button"
                     variant="ghost"
-                    className="wb-list-row text-left justify-start h-auto w-full"
+                    className="wb-list-row text-left justify-start h-auto w-full rounded-none"
                     onClick={() => setSelectedFile(index)}
                     aria-pressed={index === safeIndex}
                   >
                     <span>
-                      <strong>{name}</strong>
-                      <small>
+                      <strong className="font-mono">{name}</strong>
+                      <small className="ml-2 font-mono">
                         +{counts.add} -{counts.del} · {file.hunks.length} hunk
                         {file.hunks.length === 1 ? '' : 's'}
                       </small>

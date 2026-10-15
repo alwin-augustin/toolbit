@@ -11,6 +11,7 @@ import { CronExpressionParser } from 'cron-parser';
 import cronstrue from 'cronstrue';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
+import { usePublishedResult } from '@/shared/result-store';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Button } from '@/components/ui/button';
@@ -115,9 +116,9 @@ interface CronOutcome {
   error: string;
 }
 
-export function CronScreen() {
+export function CronScreen({ defaultMode = 'explain' }: { defaultMode?: CronMode }) {
   const [expression, setExpression] = useDocumentField<string>('input', '');
-  const [mode, setMode] = useSessionDocumentState<CronMode>('mode', 'explain');
+  const [mode, setMode] = useSessionDocumentState<CronMode>('mode', defaultMode);
   const wrap = useWorkbenchMemory((s) => s.wrap);
   const notify = useWorkbenchMemory((s) => s.notify);
 
@@ -144,6 +145,9 @@ export function CronScreen() {
   const scheduleText = outcome.description
     ? `${outcome.description}\n\nNext 5 runs (UTC):\n${outcome.nextRuns.map((r, i) => `${i + 1}. ${r}`).join('\n')}`
     : '';
+
+  // The explanation plus its next runs are what "Save Result…" writes.
+  usePublishedResult(scheduleText, 'Cron result', 'txt');
 
   const copySchedule = async () => {
     if (!scheduleText) return;
@@ -295,18 +299,21 @@ export function CronScreen() {
         </section>
       </div>
 
-      <div>
+      <div className="wb-card">
+        <div className="wb-card-head">
+          <h2>Presets</h2>
+        </div>
         {CRON_PRESETS.map((preset) => (
           <Button
             key={preset.value}
             type="button"
             variant="ghost"
-            className="wb-list-row text-left justify-start h-auto w-full"
+            className="wb-list-row text-left justify-start h-auto w-full rounded-none"
             onClick={() => setExpression(preset.value)}
           >
             <span>
               <strong>{preset.label}</strong>
-              <small>{preset.value}</small>
+              <small className="ml-2 font-mono">{preset.value}</small>
             </span>
           </Button>
         ))}

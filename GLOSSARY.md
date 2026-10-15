@@ -18,8 +18,14 @@ _Avoid_: migrated tool — that name describes project history, not the concept
 A bespoke layout for a tool that does not fit the generic chrome. One tool renders as either a workbench tool or a custom screen, never both.
 _Avoid_: custom tool, legacy screen
 
+**Published result**:
+The result a custom screen hands to the rest of the app (`usePublishedResult`), because a custom screen keeps its output in component state, where nothing outside it can reach it. One ephemeral slot per visible screen, withdrawn when the screen unmounts or has computed nothing yet.
+
+**Saveable result**:
+What "Save Result…" would write for the visible tool (`activeSaveableResult`): a workbench tool's document output, or a custom screen's published result.
+
 **Document**:
-The versioned per-tool state (`ToolDocumentV1`): tool id, payload, options, timestamps.
+The versioned per-tool state (`ToolDocumentV1`): tool id, payload, options, timestamps. A custom screen may hold none, in which case its fields fall back to session-only state until a saved item restores a document for it.
 _Avoid_: tab state, session data
 
 **Tab**:

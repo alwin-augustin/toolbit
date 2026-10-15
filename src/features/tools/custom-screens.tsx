@@ -52,6 +52,10 @@ const MarkdownScreenLazy = lazy(() =>
  * Heavy screens (image/pdf/protobuf/markdown) are lazy to keep the initial
  * bundle small; the router wraps them in Suspense.
  */
+function CrontabScreen() {
+  return <CronScreen defaultMode="build" />;
+}
+
 export const CUSTOM_SCREENS: Record<string, ComponentType> = {
   'hash-generator': HashScreen,
   'case-converter': CaseScreen,
@@ -59,7 +63,7 @@ export const CUSTOM_SCREENS: Record<string, ComponentType> = {
   'jwt-decoder': JwtScreen,
   'uuid-generator': UuidScreen,
   'cron-parser': CronScreen,
-  'crontab-generator': CronScreen,
+  'crontab-generator': CrontabScreen,
   'diff-tool': DiffScreen,
   'regex-tester': RegexScreen,
   'json-validator': JsonSchemaScreen,

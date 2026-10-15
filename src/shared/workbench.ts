@@ -16,6 +16,7 @@ export interface WorkbenchDocState {
   /** Per-tool options keyed by spec option key (select value or checkbox). */
   params: Record<string, string | boolean>;
   error: string;
+  warning?: string;
   dirty: boolean;
   label: string;
 }
@@ -61,7 +62,9 @@ export type SpecRun = (
   input: string,
   params: Record<string, string | boolean>,
   mode: string,
-) => { output: string; error: string } | Promise<{ output: string; error: string }>;
+) =>
+  | { output: string; error: string; warning?: string }
+  | Promise<{ output: string; error: string; warning?: string }>;
 
 /**
  * Declarative tool chrome. The workspace screen renders toolbar actions,
@@ -84,7 +87,7 @@ export interface WorkbenchToolSpec {
   /** Download extension. Defaults to 'txt'. */
   fileExt?: string;
   /** What the input pane holds. Defaults to 'text' (no grammar). */
-  language?: EditorLanguage;
+  language?: EditorLanguage | Record<string, EditorLanguage>;
   /**
    * What the result pane holds, when the tool converts between languages.
    * A per-mode map wins over a single value; anything unspecified falls back to

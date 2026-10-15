@@ -31,7 +31,46 @@ import {
 
 describe('xml helpers', () => {
   it('prettifies nested elements with indentation', () => {
-    expect(prettifyXml('<a><b>x</b></a>')).toBe('<a>\n  <b>x\n</b>\n</a>');
+    // A text-only element keeps its end tag beside its start tag, indented to
+    // match it — the previous expectation pinned the end tag to column 0.
+    expect(prettifyXml('<a><b>x</b></a>')).toBe('<a>\n  <b>x</b>\n</a>');
+  });
+
+  it('keeps sibling elements at their own level', () => {
+    // Depth accounting is the whole algorithm, and the only visible symptom of
+    // getting it wrong is indentation, so this pins it exactly: two siblings
+    // both sit one level in, and the closing tag returns to the start.
+    expect(prettifyXml('<a><b>x</b><c>y</c></a>')).toBe('<a>\n  <b>x</b>\n  <c>y</c>\n</a>');
+  });
+
+  it('prettifies the built-in sample without throwing', () => {
+    // The sample is what "Load sample" offers first, and a lost indent level
+    // per text-only element used to drive the count negative, so the default
+    // mode errored on it. Later elements are asserted too: early ones can look
+    // right while the drift has already started.
+    expect(runXml(XML_SAMPLE, 'prettify', '')).toMatchObject({ error: '' });
+    const pretty = prettifyXml(XML_SAMPLE);
+    expect(pretty).toContain('    <title lang="en">The Great Gatsby</title>');
+    expect(pretty).toContain('\n    <title lang="fr">Le Petit Prince</title>');
+    expect(pretty).toContain('\n    <price>8.99</price>');
+    expect(pretty).toContain('\n  </book>');
+    expect(pretty).toContain('\n</bookstore>');
+  });
+
+  it('never indents past zero on stray end tags', () => {
+    expect(prettifyXml('<a></b></a>')).toBe('<a>\n</b>\n</a>');
+    expect(prettifyXml('</a><b>x</b>')).toBe('</a>\n<b>x</b>');
+  });
+
+  it('indents only by whole levels, whatever the input', () => {
+    // Every line is either unindented or a multiple of one level: a line with
+    // an odd number of leading spaces means the counter drifted.
+    for (const xml of [XML_SAMPLE, '<a><b>x</b><c><d>y</d></c></a>', '<a>t</a>']) {
+      for (const line of prettifyXml(xml).split('\n')) {
+        const leading = line.length - line.trimStart().length;
+        expect(leading % 2).toBe(0);
+      }
+    }
   });
 
   it('minifies whitespace between tags', () => {

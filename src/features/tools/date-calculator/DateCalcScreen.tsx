@@ -8,6 +8,7 @@ import {
 } from '@tabler/icons-react';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -94,6 +95,15 @@ export function DateCalcScreen() {
   );
   const [error, setError] = useState('');
   const notify = useWorkbenchMemory((s) => s.notify);
+  // A measured difference is the whole result; before that, the shifted date is.
+  usePublishedResult(
+    hasCalculated
+      ? DATE_RESULT_LABELS.map(
+          ({ key, label }) => `${label}: ${result[key].toLocaleString()}`,
+        ).join('\n')
+      : shifted,
+    'Date result',
+  );
 
   const shift = (days: number) => {
     if (!baseDate) {

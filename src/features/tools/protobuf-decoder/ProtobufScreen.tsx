@@ -8,6 +8,7 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
 
@@ -233,6 +234,9 @@ export function ProtobufScreen() {
     [outcome.fields],
   );
 
+  // The decoded fields are the result; the JSON view is how they are written.
+  usePublishedResult(jsonText, 'Decoded message', 'json');
+
   const copyJson = async () => {
     if (!jsonText) return;
     try {
@@ -341,12 +345,12 @@ export function ProtobufScreen() {
               placeholder="Decoded JSON will appear here..."
             />
           ) : rows.length > 0 ? (
-            <div>
+            <div className="wb-pane-body">
               {rows.map((row) => (
                 <div key={row.label} className="wb-list-row">
                   <span>
-                    <strong>{row.label}</strong>
-                    <small>{row.detail}</small>
+                    <strong className="font-mono">{row.label}</strong>
+                    <small className="ml-2 font-mono">{row.detail}</small>
                   </span>
                 </div>
               ))}

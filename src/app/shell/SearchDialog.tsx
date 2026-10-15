@@ -5,7 +5,7 @@ import { useRecentTools } from '@/core/recent-tools';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
 import { isWorkbenchToolId, specIcon } from '@/features/tools/specs';
 import { CATEGORY_ICONS, CATEGORY_ORDER, DESTINATIONS, TOOL_INDEX } from '@/app/shell/navigation';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Kbd } from '@/components/ui/kbd';
 import type { ToolMetadata } from '@/content/tools.config';
 
@@ -176,6 +176,10 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
         showCloseButton={false}
         className="top-[14%] max-h-[70dvh] translate-y-0 gap-0 overflow-hidden p-0"
       >
+        {/* The palette has no visible title, and an unnamed dialog is announced
+            as just "dialog". This names it with the words the search field is
+            already labelled with, which the primitive wires to aria-labelledby. */}
+        <DialogTitle className="sr-only">Search tools</DialogTitle>
         <div className="flex items-center gap-2.5 border-b border-line px-3.5 py-3">
           <IconSearch size={17} aria-hidden="true" className="text-ink-faint" />
           <input

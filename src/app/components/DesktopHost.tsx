@@ -4,8 +4,8 @@ import { detectContentType } from '@/core/smart-detect';
 import { installExternalLinkGuard } from '@/platform/external-links';
 import { useWorkspace } from '@/shared/workspace-store';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
-import { toolPath, useWorkbenchActions } from '@/shared/workbench-actions';
-import { getSpec, isWorkbenchToolId, patchWorkbenchDoc, readDoc } from '@/features/tools/specs';
+import { activeSaveableResult, toolPath, useWorkbenchActions } from '@/shared/workbench-actions';
+import { isWorkbenchToolId, patchWorkbenchDoc, smartPastePayload } from '@/features/tools/specs';
 import {
   DESKTOP_EVENT,
   desktopErrorMessage,
@@ -18,11 +18,6 @@ import {
   saveFile,
   takePendingOpenPath,
 } from '@/platform/desktop';
-
-/** Default filename for "Save Result…", matching the workbench's own download. */
-function resultFileName(toolId: string): string {
-  return `toolbit-result.${getSpec(toolId)?.fileExt ?? 'txt'}`;
-}
 
 /** ⌥⌘W / "Close Document": mirrors the shell's own keyboard handler. */
 function closeActiveDocument(navigate: (to: string) => void): void {
@@ -58,16 +53,31 @@ export function DesktopHost() {
     (contents: string, name?: string) => {
       const state = useWorkspace.getState();
       const active = state.tabs.find((tab) => tab.id === state.activeTabId);
-      if (active && isWorkbenchToolId(active.toolId)) {
-        patchWorkbenchDoc(active.id, {
-          input: contents,
-          output: '',
-          error: '',
-          dirty: true,
-          ...(name ? { label: name } : {}),
-        });
-        navigate(toolPath(active.toolId));
-        return;
+      // A file opened while a tool is on screen fills that tool instead of
+      // being routed somewhere else by content detection, so the user never
+      // loses their place. A workbench tool takes the text as its input; a
+      // bespoke screen names its own primary field, and its fields live in the
+      // document payload, so patching the payload fills the visible pane.
+      if (active) {
+        if (isWorkbenchToolId(active.toolId)) {
+          patchWorkbenchDoc(active.id, {
+            input: contents,
+            output: '',
+            error: '',
+            dirty: true,
+            ...(name ? { label: name } : {}),
+          });
+          navigate(toolPath(active.toolId));
+          return;
+        }
+        const seeded = smartPastePayload(active.toolId, contents);
+        if (seeded) {
+          state.patchDocument(active.id, {
+            payload: { ...active.payload, ...seeded, ...(name ? { label: name } : {}) },
+          });
+          navigate(toolPath(active.toolId));
+          return;
+        }
       }
       const [best] = detectContentType(contents);
       if (best && isWorkbenchToolId(best.toolId)) {
@@ -115,17 +125,15 @@ export function DesktopHost() {
   const saveActiveResult = useCallback(async () => {
     const state = useWorkspace.getState();
     const active = state.tabs.find((tab) => tab.id === state.activeTabId);
-    if (!active || !isWorkbenchToolId(active.toolId)) {
-      notify('Open a tool before saving a result.');
-      return;
-    }
-    const output = readDoc(active).output;
-    if (!output) {
-      notify('Run the tool before saving a result.');
+    // Both architectures answer the same question, so a bespoke screen saves
+    // exactly like a workbench tool does.
+    const saveable = activeSaveableResult();
+    if (!saveable) {
+      notify(active ? 'Run the tool before saving a result.' : 'Open a tool before saving a result.');
       return;
     }
     try {
-      const saved = await saveFile(resultFileName(active.toolId), output);
+      const saved = await saveFile(`toolbit-result.${saveable.ext ?? 'txt'}`, saveable.text);
       if (saved) notify(`Result saved to ${saved}`);
     } catch (error) {
       notify(desktopErrorMessage(error));

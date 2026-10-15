@@ -3,6 +3,7 @@ import convert, { type Measure, type Unit } from 'convert-units';
 import { IconCircleCheckFilled, IconCopy, IconDeviceDesktop, IconEqual } from '@tabler/icons-react';
 import { useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +40,11 @@ export function UnitScreen() {
   const [result, setResult] = useSessionDocumentState<string>('result', '');
   const [error, setError] = useState('');
   const notify = useWorkbenchMemory((s) => s.notify);
+  // The conversion, written the way the pane reads it, is what gets saved.
+  usePublishedResult(
+    result ? `${value} ${fromUnit} = ${result} ${toUnit}` : '',
+    'Converted value',
+  );
 
   const changeMeasure = (next: Measure) => {
     setMeasure(next);

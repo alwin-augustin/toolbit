@@ -8,6 +8,7 @@ import {
 } from '@tabler/icons-react';
 import { useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -109,6 +110,8 @@ export function PasswordScreen() {
   const [passwords, setPasswords] = useSessionDocumentState<string[]>('passwords', []);
   const [error, setError] = useState('');
   const notify = useWorkbenchMemory((s) => s.notify);
+  // Every generated password on its own line: exactly what "Copy all" writes.
+  usePublishedResult(passwords.join('\n'), 'Generated passwords');
 
   const generate = useCallback(() => {
     const charset = buildPasswordCharset({

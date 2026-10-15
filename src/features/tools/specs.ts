@@ -54,14 +54,14 @@ function jsonRun(
   input: string,
   params: Record<string, string | boolean>,
   mode: string,
-): { output: string; error: string } {
+): { output: string; error: string; warning?: string } {
   const empty = emptyOk(input);
   if (empty) return empty;
   const indent =
     mode === 'minify' ? 0 : params.indent === 'tab' ? '\t' : Number(params.indent ?? 2);
   const result = formatJson(input, indent, params.sortKeys === true);
   if (!result.ok) return { output: '', error: jsonErrorMessage(input) };
-  return { output: result.value, error: '' };
+  return { output: result.value, error: '', ...(result.warning ? { warning: result.warning } : {}) };
 }
 
 export const ALL_SPECS: Record<string, Spec> = {
@@ -215,9 +215,9 @@ export const ALL_SPECS: Record<string, Spec> = {
       return { output: result.value, error: '' };
     },
     fileExt: 'yaml',
-    language: 'yaml',
+    language: { format: 'yaml', 'to-json': 'yaml', 'from-json': 'json' },
     // Formatting stays YAML; only the JSON conversion changes the result.
-    resultLanguage: { 'to-json': 'json' },
+    resultLanguage: { format: 'yaml', 'to-json': 'json', 'from-json': 'yaml' },
   },
   'csv-to-json': {
     id: 'csv-to-json',
@@ -480,7 +480,11 @@ export function specLanguages(
   doc: WorkbenchDocState,
   spec: Spec,
 ): { input: EditorLanguage; result: EditorLanguage } {
-  const input = spec.language ?? 'text';
+  const rawInput = spec.language;
+  const input: EditorLanguage =
+    typeof rawInput === 'string'
+      ? rawInput
+      : rawInput?.[doc.mode] ?? rawInput?.[spec.defaultMode] ?? 'text';
   const result = spec.resultLanguage;
   if (typeof result === 'string') return { input, result };
   return { input, result: result?.[doc.mode] ?? input };
@@ -498,6 +502,7 @@ export function defaultDocState(toolId: string, input?: string): WorkbenchDocSta
     zone: 'utc',
     params: {} as Record<string, string | boolean>,
     error: '',
+    warning: '',
   };
   if (toolId === 'json-formatter' && input === undefined) {
     const formatted = formatJson(INVOICE_SAMPLE, 2, false);

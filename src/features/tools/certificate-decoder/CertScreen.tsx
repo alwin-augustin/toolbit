@@ -10,6 +10,7 @@ import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
+import { usePublishedResult } from '@/shared/result-store';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Button } from '@/components/ui/button';
 
@@ -267,6 +268,10 @@ export function CertScreen() {
     };
   }, [input, setCertInfo]);
 
+  // The decoded certificate fields are what "Save Result…" writes for this tool.
+  // The pane shows pretty-printed JSON, so a save should land as .json.
+  usePublishedResult(certInfo ? JSON.stringify(certInfo, null, 2) : '', 'Decoded certificate', 'json');
+
   const copyDetails = async () => {
     if (!certInfo) return;
     try {
@@ -354,7 +359,7 @@ export function CertScreen() {
             <h2>Certificate details</h2>
           </div>
           {certInfo ? (
-            <div>
+            <div className="wb-pane-body">
               <div className="wb-setting-row">
                 <span>
                   <strong>Status</strong>

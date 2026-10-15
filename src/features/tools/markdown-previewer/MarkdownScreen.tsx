@@ -10,6 +10,7 @@ import DOMPurify from 'dompurify';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { Button } from '@/components/ui/button';
 
 export const MARKDOWN_SAMPLE = `# Sample Markdown
@@ -92,6 +93,9 @@ export function MarkdownScreen() {
       cancelled = true;
     };
   }, [markdown, setHtml]);
+
+  // The rendered, sanitized HTML is the result this tool produces.
+  usePublishedResult(html, 'Rendered HTML', 'html');
 
   const copyHtml = async () => {
     if (!html) return;
@@ -183,7 +187,7 @@ export function MarkdownScreen() {
             </div>
           </div>
           {html ? (
-            <div dangerouslySetInnerHTML={{ __html: html }} />
+            <div className="wb-markdown-preview" dangerouslySetInnerHTML={{ __html: html }} />
           ) : (
             <div className="wb-empty">
               <h2>No preview yet</h2>

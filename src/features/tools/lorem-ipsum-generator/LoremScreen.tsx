@@ -8,6 +8,7 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
@@ -232,6 +233,9 @@ export function LoremScreen() {
   const [error, setError] = useState('');
   const wrap = useWorkbenchMemory((s) => s.wrap);
   const notify = useWorkbenchMemory((s) => s.notify);
+  // The generated placeholder text is what "Save Result…" writes.
+  // With markup on, the result is a document rather than plain prose.
+  usePublishedResult(output, 'Generated text', htmlOutput ? 'html' : 'txt');
 
   const generate = () => {
     const safeCount = Math.max(1, Math.min(100, Math.trunc(count) || 1));
@@ -338,7 +342,7 @@ export function LoremScreen() {
           />
         </div>
       ) : null}
-      <div className="wb-editors">
+      <div className="wb-editors wb-editors--single">
         <section className="wb-editor-pane" aria-label="Placeholder text panel">
           <div className="wb-pane-header">
             <h2>Output</h2>

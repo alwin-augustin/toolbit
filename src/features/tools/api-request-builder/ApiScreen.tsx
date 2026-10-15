@@ -10,6 +10,7 @@ import {
 } from '@tabler/icons-react';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
+import { usePublishedResult } from '@/shared/result-store';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -267,6 +268,9 @@ export function ApiScreen() {
   const responseLooksJson =
     response.trimStart().startsWith('{') || response.trimStart().startsWith('[');
   const curlCommand = buildCurlCommand(method, url, headers, body);
+  // The body is saved as whatever it already is, so a JSON payload keeps its
+  // extension rather than arriving as a .txt the user has to rename.
+  usePublishedResult(response, 'Response body', responseLooksJson ? 'json' : 'txt');
 
   return (
     <>

@@ -5,6 +5,7 @@ import addFormats from 'ajv-formats';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { Button } from '@/components/ui/button';
 
 export interface SchemaValidation {
@@ -57,6 +58,17 @@ export function JsonSchemaScreen() {
   );
   const wrap = useWorkbenchMemory((s) => s.wrap);
   const notify = useWorkbenchMemory((s) => s.notify);
+
+  // What a save would write: the verdict, or the field-by-field errors. Before
+  // Validate has run there is no result, so the slot stays empty.
+  usePublishedResult(
+    !validation
+      ? ''
+      : validation.valid
+        ? 'Valid against schema'
+        : ['Invalid against schema:', ...validation.errors].join('\n'),
+    'Validation result',
+  );
 
   const validate = () => {
     const result = validateJsonAgainstSchema(jsonData, schema);

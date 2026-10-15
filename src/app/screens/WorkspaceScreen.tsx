@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   IconAdjustments,
+  IconAlertTriangle,
   IconBookmark,
   IconCircleCheck,
   IconCopy,
@@ -12,6 +13,7 @@ import {
 } from '@tabler/icons-react';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { useEditorStatus, type WorkspaceTab } from '@/shared/workspace-store';
 import { openDialog } from '@/shared/dialog';
 import { track } from '@/core/telemetry';
 import { useFavorites } from '@/core/favorites-store';
@@ -22,9 +24,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { getSpec, patchWorkbenchDoc, readDoc, specLanguages, specParams } from '@/features/tools/specs';
-import { languageLabel } from '@/shared/editor-language';
+import { languageLabel, type EditorLanguage } from '@/shared/editor-language';
+import { isDesktopHost } from '@/platform/desktop';
 import type { WorkbenchDocState } from '@/shared/workbench';
-import type { WorkspaceTab } from '@/shared/workspace-store';
 
 function lineCount(text: string): number {
   return text ? text.split('\n').length : 0;
@@ -53,14 +55,18 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
   const notify = useWorkbenchMemory((s) => s.notify);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { addRecent } = useRecentTools();
+  const ln = useEditorStatus((s) => s.ln);
+  const col = useEditorStatus((s) => s.col);
+  const resetEditorStatus = useEditorStatus((s) => s.reset);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const optionsRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
 
-  // Track this tool as recently used
+  // Track this tool as recently used and reset cursor coordinates on document switch
   useEffect(() => {
     if (spec) addRecent(spec.id);
-  }, [spec, addRecent]);
+    resetEditorStatus();
+  }, [spec, tab.id, addRecent, resetEditorStatus]);
 
   // Close options popover when clicking outside
   useEffect(() => {
@@ -74,47 +80,75 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
     return () => document.removeEventListener('mousedown', handler);
   }, [optionsOpen]);
 
-  if (!spec) return null;
-
-  const fav = isFavorite(spec.id);
+  // Derived values are built on every render, before any early return, so the
+  // hooks below keep a stable call order; the screen bails out after them once
+  // it knows the tab has no spec.
   const update = (patch: Partial<WorkbenchDocState>) => patchWorkbenchDoc(tab.id, patch);
-  const setParam = (key: string, value: string | boolean) =>
-    update({ params: { ...doc.params, [key]: value }, dirty: true });
-  const params = specParams(doc, spec);
-  const valid = !!doc.output && !doc.error && !doc.dirty;
+  const params = spec ? specParams(doc, spec) : {};
   // Each pane is highlighted with the grammar of what it holds, which is not
   // always the same on both sides: a converter reads one language and writes
   // another, and the status bar says so.
-  const languages = specLanguages(doc, spec);
+  const languages: { input: EditorLanguage; result: EditorLanguage } = spec
+    ? specLanguages(doc, spec)
+    : { input: 'text', result: 'text' };
+
+  const transform = useCallback(
+    async (mode: string = doc.mode) => {
+      if (!spec) return;
+      setBusy(true);
+      try {
+        const { output, error, warning } = await spec.run(doc.input, params, mode);
+        if (error) {
+          update({ error, warning: '', dirty: true });
+          track('transform_failed', { tool_id: spec.id, error_code: 'INVALID_INPUT' });
+          return;
+        }
+        const next = { ...doc, output, mode, error: '', warning: warning ?? '', dirty: false };
+        update({ output, mode, error: '', warning: warning ?? '', dirty: false });
+        track('transform_succeeded', { tool_id: spec.id });
+        if (remember) {
+          addRun({
+            id: crypto.randomUUID(),
+            name: `${spec.title} · ${mode}`,
+            toolId: spec.id,
+            doc: next,
+          });
+        }
+      } finally {
+        setBusy(false);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [spec, doc, params, remember, addRun, tab.id],
+  );
+
+  // ⌘Enter runs the active mode; ⌘S opens Save Session in browser builds.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const meta = event.metaKey || event.ctrlKey;
+      if (!meta) return;
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        void transform(doc.mode);
+      } else if (event.key.toLowerCase() === 's' && !isDesktopHost()) {
+        event.preventDefault();
+        window.dispatchEvent(new CustomEvent('wb:save', { detail: 'Sessions' }));
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [transform, doc.mode]);
+
+  if (!spec) return null;
+
+  const fav = isFavorite(spec.id);
+  const setParam = (key: string, value: string | boolean) =>
+    update({ params: { ...doc.params, [key]: value }, dirty: true });
+  const valid = !!doc.output && !doc.error && !doc.dirty;
   const languageStatus =
     languages.input === languages.result
       ? languageLabel(languages.input)
       : `${languageLabel(languages.input)} → ${languageLabel(languages.result)}`;
-
-  const transform = async (mode: string = doc.mode) => {
-    setBusy(true);
-    try {
-      const { output, error } = await spec.run(doc.input, params, mode);
-      if (error) {
-        update({ error, dirty: true });
-        track('transform_failed', { tool_id: spec.id, error_code: 'INVALID_INPUT' });
-        return;
-      }
-      const next = { ...doc, output, mode, error: '', dirty: false };
-      update({ output, mode, error: '', dirty: false });
-      track('transform_succeeded', { tool_id: spec.id });
-      if (remember) {
-        addRun({
-          id: crypto.randomUUID(),
-          name: `${spec.title} · ${mode}`,
-          toolId: spec.id,
-          doc: next,
-        });
-      }
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const copy = async () => {
     try {
@@ -277,6 +311,15 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
           <small>The previous result is kept for reference. Run again before copying.</small>
         </div>
       )}
+      {!doc.error && doc.warning && (
+        <div className="wb-warning-banner" role="status">
+          <span className="flex items-center gap-1.5">
+            <IconAlertTriangle size={14} aria-hidden="true" />
+            <strong>Precision warning</strong>
+          </span>
+          <span>{doc.warning}</span>
+        </div>
+      )}
 
       {/* Input → result */}
       <div className="wb-editors">
@@ -288,7 +331,7 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
               variant="ghost"
               size="xs"
               className="ml-auto gap-1.5 text-ink-muted"
-              onClick={() => update({ input: '', error: '', dirty: true })}
+              onClick={() => update({ input: '', error: '', warning: '', dirty: true })}
             >
               <IconEraser size={13} />
               Clear
@@ -299,6 +342,7 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
             value={doc.input}
             onChange={(input) => update({ input, dirty: true, error: '' })}
             wrap={wrap}
+            reportStatus
             label="Input code"
             language={languages.input}
           />
@@ -367,6 +411,10 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
             aria-hidden="true"
           />
           {stateLabel}
+        </span>
+        <span className="wb-statusbar-sep" aria-hidden="true" />
+        <span className="wb-statusbar-item">
+          Ln {ln}, Col {col}
         </span>
         <span className="wb-statusbar-sep" aria-hidden="true" />
         <span className="wb-statusbar-item">

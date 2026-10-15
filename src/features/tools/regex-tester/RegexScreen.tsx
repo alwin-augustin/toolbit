@@ -3,6 +3,7 @@ import { IconCopy, IconEraser, IconRegex, IconSparkles } from '@tabler/icons-rea
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -139,6 +140,21 @@ export function RegexScreen() {
     if (!showReplace) return { result: '', error: null };
     return applyRegexReplace(debouncedPattern, debouncedFlags, debouncedTestString, replacement);
   }, [showReplace, debouncedPattern, debouncedFlags, debouncedTestString, replacement]);
+
+  // The result a developer would save: every match with its index and capture
+  // groups, then the replacement text when the replace pane is in play. An
+  // invalid pattern has no result to write, so it withdraws the slot.
+  const saveable = error
+    ? ''
+    : [
+        ...matches.map(
+          (m, i) => `#${i + 1} at ${m.index}: ${m.fullMatch} (${describeGroups(m)})`,
+        ),
+        ...(showReplace && replacePreview.result
+          ? ['', 'Replacement preview:', replacePreview.result]
+          : []),
+      ].join('\n');
+  usePublishedResult(saveable, 'Regex matches');
 
   const loadSample = () => {
     setPattern(SAMPLE_PATTERN);

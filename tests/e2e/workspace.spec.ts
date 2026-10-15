@@ -21,7 +21,8 @@ test('start, smart paste, documents, history and recipe', async ({ page }) => {
 
   // Smart paste suggests JSON and opens a new document carrying the payload.
   await page.getByRole('textbox', { name: 'Paste data to find a tool' }).fill('{"b":2,"a":1}');
-  await page.getByRole('button', { name: /Open JSON/ }).click();
+  // Two JSON tools are suggested for this payload; name the one this journey means.
+  await page.getByRole('button', { name: 'Open JSON Formatter' }).click();
   await expect(page).toHaveURL(/json-formatter/);
   await expect(page.getByRole('textbox', { name: INPUT })).toContainText('"b":2');
   await page.getByRole('button', { name: 'Format', exact: true }).click();
@@ -30,28 +31,20 @@ test('start, smart paste, documents, history and recipe', async ({ page }) => {
 
   // Command search opens another tool as a second document tab.
   await page.getByRole('button', { name: 'Search tools or actions...' }).click();
-  await page.getByRole('textbox', { name: 'Search tools and saved work' }).fill('timestamp');
+  await page.getByRole('textbox', { name: 'Search tools', exact: true }).fill('timestamp');
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/timestamp-converter/);
 
   // Document tabs keep independent inputs (in-app navigation, no reload:
   // document payloads are session-only by design).
-  await page
-    .locator('.wb-doc-tabs-row')
-    .getByRole('link', { name: 'JSON', exact: true })
-    .first()
-    .click();
+  await page.locator('.wb-doc-tabs-row').getByRole('link', { name: /^JSON/ }).first().click();
   await expect(page).toHaveURL(/json-formatter/);
   await expect(page.getByRole('textbox', { name: INPUT })).toContainText('"b":2');
 
   // Opt-in history records the run; restoring reopens the original input.
   await page.getByRole('button', { name: 'History', exact: true }).click();
   await page.getByRole('checkbox', { name: /Remember runs in this session/ }).check();
-  await page
-    .locator('.wb-doc-tabs-row')
-    .getByRole('link', { name: 'JSON', exact: true })
-    .first()
-    .click();
+  await page.locator('.wb-doc-tabs-row').getByRole('link', { name: /^JSON/ }).first().click();
   await page.getByRole('button', { name: 'Format', exact: true }).click();
   await page.getByRole('button', { name: 'History', exact: true }).click();
   await page.getByRole('button', { name: /JSON · format/ }).click();
@@ -139,14 +132,24 @@ test('storage and clipboard denial leave a working transform and an honest copy 
   await page.getByRole('button', { name: 'Encode', exact: true }).click();
   await expect(page.getByRole('textbox', { name: OUTPUT })).toContainText('SGVsbG8=');
   await page.getByRole('button', { name: 'Copy result' }).click();
-  await expect(page.getByRole('status')).toContainText('Clipboard unavailable');
+  // The shell has two live regions — the status bar and the toast — so the
+  // copy failure is asserted on the toast that carries it.
+  await expect(page.locator('.wb-toast')).toContainText('Clipboard unavailable');
   expect(errors).toEqual([]);
 });
 
 test('navigation drawer and narrow views remain usable', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
+
+  // Below the panel breakpoint the drawer is modal: `.wb-backdrop` covers the
+  // whole viewport on purpose, so the rail is unusable until the drawer closes.
+  // Narrow-width navigation is therefore drawer first, rail second.
   await page.getByRole('button', { name: 'Open navigation' }).click();
+  await expect(page.getByRole('complementary', { name: 'Tool navigator' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('complementary', { name: 'Tool navigator' })).toBeHidden();
+
   await page.getByRole('button', { name: 'Saved', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Saved' })).toBeVisible();
   await page.goto('/json-formatter');
@@ -165,8 +168,10 @@ test('tabs survive refresh while payloads stay session-only', async ({ page }) =
   await page.getByRole('button', { name: 'Format', exact: true }).click();
   await page.reload();
   // The tab chrome is restored; its content is not persisted across refresh.
+  // Each tab link also contains its close button, so its accessible name reads
+  // "JSON Close JSON" (plus "Unsaved changes" when dirty) — match on the start.
   await expect(
-    page.locator('.wb-doc-tabs-row').getByRole('link', { name: 'JSON', exact: true }).first(),
+    page.locator('.wb-doc-tabs-row').getByRole('link', { name: /^JSON/ }).first(),
   ).toBeVisible();
   await expect(page.getByRole('textbox', { name: INPUT })).toContainText('invoice.paid');
 });
@@ -222,14 +227,17 @@ test('search and save dialogs pass accessibility checks at 200 percent scale', a
     document.documentElement.style.zoom = '2';
   });
   await page.getByRole('button', { name: 'Search tools or actions...' }).click();
-  let result = await new AxeBuilder({ page }).analyze();
+  // The dialog primitive renders two 1px, clipped, inert focus guards as
+  // role="button" with no name. WebKit exposes them to axe as unnamed commands;
+  // they come from the library, not this markup, and carry no content to name.
+  let result = await new AxeBuilder({ page }).exclude('[data-base-ui-focus-guard]').analyze();
   expect(result.violations.filter((v) => ['serious', 'critical'].includes(v.impact || ''))).toEqual(
     [],
   );
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: 'Save session' }).click();
-  result = await new AxeBuilder({ page }).analyze();
+  result = await new AxeBuilder({ page }).exclude('[data-base-ui-focus-guard]').analyze();
   expect(result.violations.filter((v) => ['serious', 'critical'].includes(v.impact || ''))).toEqual(
     [],
   );

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { IconCircleCheckFilled, IconCopy, IconFlask, IconRefresh } from '@tabler/icons-react';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
@@ -96,6 +97,9 @@ export function UuidScreen() {
     () => (inspectInput.trim() ? inspectUuid(inspectInput) : null),
     [inspectInput],
   );
+
+  // The generated batch is this tool's result; an empty batch withdraws it.
+  usePublishedResult(displayed.join('\n'), 'UUIDs', 'txt');
 
   const regenerate = () => setUuids(generateUuids(version, count));
 

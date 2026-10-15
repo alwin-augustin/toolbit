@@ -8,6 +8,7 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +44,20 @@ export const XML_SAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
   </book>
 </bookstore>`;
 
-// Hand-rolled prettifier copied from the legacy XmlFormatter.
+/** One level of nesting, pushed onto its own line at the current indent. */
+function indentFor(depth: number, indent: string): string {
+  return indent.repeat(Math.max(0, depth));
+}
+
+/**
+ * Hand-rolled prettifier copied from the legacy XmlFormatter.
+ *
+ * Depth is the only state: an opening tag pushes, its end tag pops, and an
+ * element whose whole body is one text node is emitted on a single line so the
+ * end tag keeps the indent of its start tag. The token cursor therefore has to
+ * advance by hand (`i`), because that single-line case consumes three tokens at
+ * once. A stray end tag cannot drive the indent negative.
+ */
 export function prettifyXml(xml: string, indent = '  '): string {
   const lines: string[] = [];
   let depth = 0;
@@ -53,38 +67,31 @@ export function prettifyXml(xml: string, indent = '  '): string {
   // Split into tokens: tags and text content
   const tokens = cleaned.match(/(<[^>]+>)|([^<]+)/g) || [];
 
-  for (const token of tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
     if (token.startsWith('</')) {
-      // Closing tag
-      depth--;
-      lines.push(indent.repeat(Math.max(0, depth)) + token);
-    } else if (token.startsWith('<?') || token.startsWith('<!')) {
-      // Processing instruction or DOCTYPE
-      lines.push(indent.repeat(depth) + token);
-    } else if (token.startsWith('<') && token.endsWith('/>')) {
-      // Self-closing tag
-      lines.push(indent.repeat(depth) + token);
+      // Closing tag: back out to the depth its start tag was written at.
+      depth = Math.max(0, depth - 1);
+      lines.push(indentFor(depth, indent) + token);
+    } else if (token.startsWith('<?') || token.startsWith('<!') || token.endsWith('/>')) {
+      // Processing instruction, DOCTYPE, or self-closing tag
+      lines.push(indentFor(depth, indent) + token);
     } else if (token.startsWith('<')) {
-      // Opening tag
-      lines.push(indent.repeat(depth) + token);
+      // Opening tag: `<b>x</b>` reads as one element, so the text and its end
+      // tag join this line instead of floating at the wrong indent.
+      const text = tokens[i + 1]?.trim();
+      const close = tokens[i + 2];
+      if (text && !text.startsWith('<') && close?.startsWith('</')) {
+        lines.push(indentFor(depth, indent) + token + text + close);
+        i += 2;
+        continue;
+      }
+      lines.push(indentFor(depth, indent) + token);
       depth++;
     } else {
-      // Text content
+      // Text content that is not the whole body of an element, so it stands alone.
       const text = token.trim();
-      if (text) {
-        // Inline text with previous opening tag
-        const lastLine = lines[lines.length - 1];
-        if (
-          lastLine &&
-          lastLine.trimStart().startsWith('<') &&
-          !lastLine.trimStart().startsWith('</')
-        ) {
-          lines[lines.length - 1] = lastLine + text;
-          depth--; // text will be followed by closing tag at same level
-        } else {
-          lines.push(indent.repeat(depth) + text);
-        }
-      }
+      if (text) lines.push(indentFor(depth, indent) + text);
     }
   }
 
@@ -283,6 +290,10 @@ export function XmlScreen() {
         : mode === 'validate'
           ? 'Validation'
           : 'Output';
+
+  // The pane's own output is what a save would write, named after the mode that
+  // produced it. An error withdraws the slot rather than saving a message.
+  usePublishedResult(outcome.error ? '' : outcome.output, resultTitle, mode === 'json' ? 'json' : 'xml');
 
   return (
     <>

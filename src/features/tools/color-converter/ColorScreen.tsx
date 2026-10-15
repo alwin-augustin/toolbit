@@ -7,6 +7,7 @@ import {
 } from '@tabler/icons-react';
 import { useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -117,6 +118,8 @@ export function ColorScreen() {
   const [hsl, setHsl] = useSessionDocumentState<Hsl>('hsl', { h: 217, s: 91, l: 60 });
   const [error, setError] = useState('');
   const notify = useWorkbenchMemory((s) => s.notify);
+  // All three notations describe the same colour, so all three are the result.
+  usePublishedResult(error ? '' : `${hex}\n${formatRgb(rgb)}\n${formatHsl(hsl)}`, 'Color values');
 
   const updateFromHex = (hexValue: string) => {
     setHex(hexValue);

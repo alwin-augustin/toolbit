@@ -2,6 +2,7 @@ import { IconCopy, IconSparkles } from '@tabler/icons-react';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { Button } from '@/components/ui/button';
 
 export interface WordStats {
@@ -43,11 +44,14 @@ export function WordScreen() {
 
   const stats = computeWordStats(text);
   const readingTime = readingTimeText(stats.words);
+  // One summary, so what "Copy stats" copies is exactly what "Save Result…"
+  // writes. Empty text has no statistics worth saving.
+  const statsSummary = `Words: ${stats.words}\nCharacters: ${stats.characters}\nCharacters (no spaces): ${stats.charactersNoSpaces}\nLines: ${stats.lines}\nParagraphs: ${stats.paragraphs}\nSentences: ${stats.sentences}`;
+  usePublishedResult(text.trim() ? statsSummary : '', 'Text statistics', 'txt');
 
   const copyText = async () => {
-    const summary = `Words: ${stats.words}\nCharacters: ${stats.characters}\nCharacters (no spaces): ${stats.charactersNoSpaces}\nLines: ${stats.lines}\nParagraphs: ${stats.paragraphs}\nSentences: ${stats.sentences}`;
     try {
-      await navigator.clipboard.writeText(summary);
+      await navigator.clipboard.writeText(statsSummary);
       notify('Statistics copied');
     } catch {
       notify('Clipboard unavailable. Select the values and copy them.');

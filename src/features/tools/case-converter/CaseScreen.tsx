@@ -2,6 +2,7 @@ import { IconCopy, IconPlayerPlay, IconSparkles } from '@tabler/icons-react';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { Button } from '@/components/ui/button';
 
 export interface CaseResults {
@@ -76,6 +77,12 @@ export function CaseScreen() {
     }
   };
 
+  const conversions = (Object.keys(CASE_LABELS) as (keyof CaseResults)[])
+    .filter((key) => results[key])
+    .map((key) => `${CASE_LABELS[key]}: ${results[key]}`)
+    .join('\n');
+  usePublishedResult(conversions, 'Case conversions', 'txt');
+
   return (
     <>
       <div className="wb-workspace-heading">
@@ -134,12 +141,14 @@ export function CaseScreen() {
           <div className="wb-pane-header">
             <h2>Results</h2>
           </div>
-          <div>
+          <div className="wb-pane-body">
             {(Object.keys(CASE_LABELS) as (keyof CaseResults)[]).map((key) => (
               <div key={key} className="wb-setting-row">
                 <span>
                   <strong>{CASE_LABELS[key]}</strong>
-                  <small data-testid={`output-${key}`}>{results[key] || '—'}</small>
+                  <small className="font-mono break-all" data-testid={`output-${key}`}>
+                    {results[key] || '—'}
+                  </small>
                 </span>
                 <Button
                   type="button"
