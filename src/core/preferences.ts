@@ -47,7 +47,12 @@ export const usePreferences = create<{
     // pseudonymous id in localStorage is a tracking identifier wherever
     // prior consent is required. The topbar switch turns it on; the stored
     // choice is respected either way.
-    (set) => ({ analytics: false, history: true, retentionDays: 30, update: (patch) => set(patch) }),
+    (set) => ({
+      analytics: false,
+      history: true,
+      retentionDays: 30,
+      update: (patch) => set(patch),
+    }),
     {
       name: 'toolbit-preferences',
       storage: createJSONStorage(() => safeStorage),

@@ -147,9 +147,7 @@ export function RegexScreen() {
   const saveable = error
     ? ''
     : [
-        ...matches.map(
-          (m, i) => `#${i + 1} at ${m.index}: ${m.fullMatch} (${describeGroups(m)})`,
-        ),
+        ...matches.map((m, i) => `#${i + 1} at ${m.index}: ${m.fullMatch} (${describeGroups(m)})`),
         ...(showReplace && replacePreview.result
           ? ['', 'Replacement preview:', replacePreview.result]
           : []),

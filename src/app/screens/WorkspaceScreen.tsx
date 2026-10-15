@@ -23,7 +23,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
-import { getSpec, patchWorkbenchDoc, readDoc, specLanguages, specParams } from '@/features/tools/specs';
+import {
+  getSpec,
+  patchWorkbenchDoc,
+  readDoc,
+  specLanguages,
+  specParams,
+} from '@/features/tools/specs';
 import { languageLabel, type EditorLanguage } from '@/shared/editor-language';
 import { isDesktopHost } from '@/platform/desktop';
 import type { WorkbenchDocState } from '@/shared/workbench';

@@ -129,7 +129,9 @@ export function DesktopHost() {
     // exactly like a workbench tool does.
     const saveable = activeSaveableResult();
     if (!saveable) {
-      notify(active ? 'Run the tool before saving a result.' : 'Open a tool before saving a result.');
+      notify(
+        active ? 'Run the tool before saving a result.' : 'Open a tool before saving a result.',
+      );
       return;
     }
     try {

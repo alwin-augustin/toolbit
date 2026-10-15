@@ -293,7 +293,11 @@ export function XmlScreen() {
 
   // The pane's own output is what a save would write, named after the mode that
   // produced it. An error withdraws the slot rather than saving a message.
-  usePublishedResult(outcome.error ? '' : outcome.output, resultTitle, mode === 'json' ? 'json' : 'xml');
+  usePublishedResult(
+    outcome.error ? '' : outcome.output,
+    resultTitle,
+    mode === 'json' ? 'json' : 'xml',
+  );
 
   return (
     <>
