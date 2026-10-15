@@ -61,7 +61,11 @@ function jsonRun(
     mode === 'minify' ? 0 : params.indent === 'tab' ? '\t' : Number(params.indent ?? 2);
   const result = formatJson(input, indent, params.sortKeys === true);
   if (!result.ok) return { output: '', error: jsonErrorMessage(input) };
-  return { output: result.value, error: '', ...(result.warning ? { warning: result.warning } : {}) };
+  return {
+    output: result.value,
+    error: '',
+    ...(result.warning ? { warning: result.warning } : {}),
+  };
 }
 
 export const ALL_SPECS: Record<string, Spec> = {
@@ -484,7 +488,7 @@ export function specLanguages(
   const input: EditorLanguage =
     typeof rawInput === 'string'
       ? rawInput
-      : rawInput?.[doc.mode] ?? rawInput?.[spec.defaultMode] ?? 'text';
+      : (rawInput?.[doc.mode] ?? rawInput?.[spec.defaultMode] ?? 'text');
   const result = spec.resultLanguage;
   if (typeof result === 'string') return { input, result };
   return { input, result: result?.[doc.mode] ?? input };

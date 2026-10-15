@@ -85,7 +85,16 @@ const toolbitHighlight = HighlightStyle.define([
     color: 'var(--code-key)',
   },
   {
-    tag: [tags.operator, tags.punctuation, tags.separator, tags.bracket, tags.squareBracket, tags.paren, tags.brace, tags.angleBracket],
+    tag: [
+      tags.operator,
+      tags.punctuation,
+      tags.separator,
+      tags.bracket,
+      tags.squareBracket,
+      tags.paren,
+      tags.brace,
+      tags.angleBracket,
+    ],
     color: 'var(--code-punc)',
   },
   // Prose tags: markdown and documentation comments carry shape, not colour.
@@ -308,16 +317,7 @@ export function CodeEditor({
     // Recreate the editor only when structural options change.
     // displayValue is intentionally excluded: content syncs via the effect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    readOnly,
-    placeholder,
-    showLineNumbers,
-    reportStatus,
-    label,
-    large,
-    previewOnly,
-    wrap,
-  ]);
+  }, [readOnly, placeholder, showLineNumbers, reportStatus, label, large, previewOnly, wrap]);
 
   // Load the grammar for the language this pane handles, once, and hand it to
   // the editor. Rebuilt views pick the loaded value up; a language swap only
