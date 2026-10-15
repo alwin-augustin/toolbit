@@ -342,7 +342,7 @@ export function LoremScreen() {
           />
         </div>
       ) : null}
-      <div className="wb-editors">
+      <div className="wb-editors wb-editors--single">
         <section className="wb-editor-pane" aria-label="Placeholder text panel">
           <div className="wb-pane-header">
             <h2>Output</h2>

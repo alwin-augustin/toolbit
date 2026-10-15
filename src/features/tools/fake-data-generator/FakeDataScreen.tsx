@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   IconCircleCheckFilled,
   IconCopy,
@@ -294,6 +294,13 @@ export function FakeDataScreen() {
     DEFAULT_FAKE_FIELDS,
   );
   const [output, setOutput] = useSessionDocumentState<string>('output', '');
+  // The number inputs edit a text draft and commit on blur. Clamping on every
+  // keystroke would snap an emptied field back to a value, so the user could
+  // never type a new number over the old one.
+  const [countDraft, setCountDraft] = useState(String(count));
+  const [seedDraft, setSeedDraft] = useState(String(seed));
+  useEffect(() => setCountDraft(String(count)), [count]);
+  useEffect(() => setSeedDraft(String(seed)), [seed]);
   const [error, setError] = useState('');
   const wrap = useWorkbenchMemory((s) => s.wrap);
   const notify = useWorkbenchMemory((s) => s.notify);
@@ -356,10 +363,12 @@ export function FakeDataScreen() {
             type="number"
             min={1}
             max={1000}
-            value={count}
-            onChange={(e) =>
-              setCount(Math.max(1, Math.min(1000, parseInt(e.target.value, 10) || 1)))
-            }
+            value={countDraft}
+            onChange={(e) => setCountDraft(e.target.value)}
+            onBlur={() => {
+              const parsed = parseInt(countDraft, 10);
+              setCount(Number.isNaN(parsed) ? count : Math.max(1, Math.min(1000, parsed)));
+            }}
           />
         </Label>
         <Label className="flex items-center gap-2">
@@ -367,8 +376,12 @@ export function FakeDataScreen() {
           <Input
             aria-label="Random seed"
             type="number"
-            value={seed}
-            onChange={(e) => setSeed(parseInt(e.target.value, 10) || 0)}
+            value={seedDraft}
+            onChange={(e) => setSeedDraft(e.target.value)}
+            onBlur={() => {
+              const parsed = parseInt(seedDraft, 10);
+              setSeed(Number.isNaN(parsed) ? seed : parsed);
+            }}
           />
         </Label>
         <Label className="flex items-center gap-2">
@@ -415,7 +428,7 @@ export function FakeDataScreen() {
           <strong>Fields</strong>
           <small>Same record shape as the legacy generator</small>
         </span>
-        <span className="flex flex-wrap items-center gap-3">
+        <span className="wb-option-list">
           {ALL_FAKE_FIELDS.map(({ key, label }) => (
             <Label key={key} className="inline-flex items-center gap-1.5 cursor-pointer">
               <Checkbox
@@ -428,7 +441,7 @@ export function FakeDataScreen() {
           ))}
         </span>
       </div>
-      <div className="wb-editors">
+      <div className="wb-editors wb-editors--single">
         <section className="wb-editor-pane" aria-label="Fixtures panel">
           <div className="wb-pane-header">
             <h2>Fixtures</h2>

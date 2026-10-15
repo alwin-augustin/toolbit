@@ -813,6 +813,12 @@
   }
 }
 
+/* A screen with one pane (its output only) takes the full width. Without this
+   the second grid column stays as an empty grey strip beside the pane. */
+.wb-editors--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .wb-editor-pane {
   display: flex;
   flex-direction: column;
@@ -914,6 +920,17 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+}
+
+/* A row of toggles (checkboxes) lays out in a line, right-aligned, and wraps.
+   It is a direct child of the row, so the rule above would otherwise stack
+   its items in a column and centre each one. */
+.wb-setting-row > .wb-option-list {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 16px;
 }
 
 .wb-setting-row strong {

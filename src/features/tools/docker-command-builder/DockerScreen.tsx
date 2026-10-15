@@ -474,7 +474,7 @@ export function DockerScreen() {
         </div>
       ))}
       <h2 className="wb-section-title">Generated command</h2>
-      <div className="wb-editors">
+      <div className="wb-editors wb-editors--single">
         <section className="wb-editor-pane" aria-label="Generated command panel">
           <div className="wb-pane-header">
             <h2>docker run</h2>
