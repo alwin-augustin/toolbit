@@ -27,6 +27,7 @@ The catalog in `src/content/tools.config.ts` holds exactly **42 tools**, which r
 ### 1.3 Architectural Gaps Identified & Resolved
 - **Split-Brain Document & File Handling**: `DesktopHost.tsx` (`openContents` and `saveActiveResult`) previously interacted only with the 12 `isWorkbenchToolId` tools. Dropping a `.xml`, `.diff`, `.pem`, or `.md` file while viewing XML Formatter, Git Diff Viewer, Certificate Decoder, or Markdown Previewer failed to populate the tool on screen, and `⌘S` ("Save Result…") refused to save outputs from bespoke tools. Resolved in section 5.
 - **Lost Contract Warnings**: `formatJson` in `tool-contract.ts` computes an IEEE-754 safe-integer precision warning, but the `WorkbenchToolSpec.run` return signature stripped `warning`. `WorkbenchDocState.warning` and the run contract now carry it into `.wb-warning-banner` (`WorkspaceScreen.tsx`).
+- **XML Prettifier Depth Drift (found and fixed in this pass)**: `prettifyXml` decremented its indent counter for inline text *and* for the end tag that followed it, so each text-only element lost a level. After four of them the counter went negative and the default mode threw `RangeError: Invalid count value: -1` on the tool's own bundled sample — "Load sample" produced an error instead of output. Depth now advances only on start and end tags, an element whose body is a single text node is emitted as one line (`<b>x</b>`, keeping the end tag beside its start tag), and a stray end tag clamps at zero. Covered by three cases in `tests/workbench-xml-markdown-cert.test.ts`, including the bundled sample and a stray-tag input.
 - **Crontab Generator Route Alias**: `/cron-parser` and `/crontab-generator` both mounted `CronScreen` in `'explain'` mode. `CrontabScreen` now mounts it with `defaultMode="build"`.
 - **Per-Mode Editor Language**: `yaml-formatter` declared one language for both panes, so `from-json` highlighted JSON input as YAML. `Spec.language` now accepts a per-mode map and `specLanguages()` resolves it against `doc.mode` then `defaultMode`.
 - **Dual History Stores (open)**: `workbench-memory.ts` keeps an in-memory `runs` list (`WorkspaceScreen` records a run via `addRun` only when "remember" is on); `history-db.ts` implements a bounded IndexedDB store (200 total / 20 per tool, retention pruning) gated by `canPersistTool` and `usePreferences.history`. Nothing in `src/` calls `addHistoryEntry` — only `tests/persistence.test.ts` and `tests/contracts.test.ts` do, and `SettingsScreen` calls the clear/prune functions. The persistent store is therefore implemented and tested but never populated at runtime. Not bridged in this branch; see section 9.
@@ -142,10 +143,22 @@ Executed on this branch, in `Web/web`:
 | --- | --- |
 | `npm run check` (`tsc`) | exit 0 |
 | `npm run lint` (`eslint . --report-unused-disable-directives --max-warnings 0`) | exit 0 |
-| `npm run test:run` (vitest) | 38 files, 445 passed, 2 skipped, exit 0 |
+| `npm run test:run` (vitest) | 38 files, 447 passed, 2 skipped, exit 0 |
 | `npx vitest run tests/result-store.test.tsx tests/desktop-host.test.tsx` | 19 passed |
 
 The lint result is load-bearing, not incidental: `eslint.config.js` sets `react-hooks/rules-of-hooks` to `error`, so every bespoke screen's new `usePublishedResult` call is provably at the top level of its component — no conditional hook, no hook after an early return.
+
+Also executed through the running app (Vite dev server on `127.0.0.1:5173`, the interface a user actually holds), which is what surfaced the prettifier defect:
+
+| Check | Observed |
+| --- | --- |
+| `/xml-formatter` renders a bespoke screen | `<h1>XML</h1>`, `main#wb-main` with `tabindex="-1"`, named regions "Input panel" / "Result panel", editors named "Input XML" / "XML result" |
+| Toolbar height discipline | every control in `.wb-toolbar` measures 28px; `.wb-toolbar` padding `5px 8px`, matching section 2.2 |
+| Pane geometry | `.wb-editor-pane` computed `min-height: 260px`; `.wb-editors` collapses to one column at panel width; a `.wb-pane-footer` sits within 24px of its pane's bottom edge |
+| XML modes on the bundled sample | Prettify `Valid XML` with correct indentation and a closed root, Minify 509 characters, XML to JSON parseable with a `bookstore` root, Validate `XML is valid` — no error banner in any mode |
+| Before the fix | Prettify reported `Couldn't process this input. Invalid count value: -1` on that same sample |
+
+The XPath mode was not exercised in the browser (it needs a query typed into its second field), and no instrumentation or trace capture was used to confirm the published-result slot outside the unit tests.
 
 **Not verified in this pass** (no claim is made that these pass):
 - The Playwright specs under `tests/e2e/` (including the tool-journey and workspace sweeps) were not run.

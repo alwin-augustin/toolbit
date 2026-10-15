@@ -31,7 +31,23 @@ import {
 
 describe('xml helpers', () => {
   it('prettifies nested elements with indentation', () => {
-    expect(prettifyXml('<a><b>x</b></a>')).toBe('<a>\n  <b>x\n</b>\n</a>');
+    // A text-only element keeps its end tag beside its start tag, indented to
+    // match it — the previous expectation pinned the end tag to column 0.
+    expect(prettifyXml('<a><b>x</b></a>')).toBe('<a>\n  <b>x</b>\n</a>');
+  });
+
+  it('prettifies the built-in sample without throwing', () => {
+    // The sample is what "Load sample" offers first, and inline text used to
+    // drive the indent count negative, so the default mode errored on it.
+    expect(runXml(XML_SAMPLE, 'prettify', '')).toMatchObject({ error: '' });
+    const pretty = prettifyXml(XML_SAMPLE);
+    expect(pretty).toContain('    <title lang="en">The Great Gatsby</title>');
+    expect(pretty.trimEnd().endsWith('</bookstore>')).toBe(true);
+  });
+
+  it('never indents past zero on stray end tags', () => {
+    expect(prettifyXml('<a></b></a>')).toBe('<a>\n</b>\n</a>');
+    expect(prettifyXml('</a><b>x</b>')).toBe('</a>\n<b>x</b>');
   });
 
   it('minifies whitespace between tags', () => {
