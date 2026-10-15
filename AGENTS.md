@@ -4,10 +4,10 @@ Toolbit (`Web/web`) is a local-first developer workspace. The product promise is
 
 ## Privacy — non-negotiable, applies to ALL tasks
 
-- Content never leaves the device. There is no analytics, no crash reporting, no remote anything. (The legacy opt-in analytics module is mid-removal — delete it if you meet it, never extend it: `PRIVACY.md` §6.)
+- Content never leaves the device. There is no analytics, no crash reporting, no remote anything. The opt-in PostHog channel was removed on 2026-10-16 (`PRIVACY.md` §6) — keep it that way; there is nothing to extend.
 - No silent network. With defaults and no user action the app makes zero requests beyond its own origin. The only network features are user-initiated: the API request builder and the WebSocket tester.
 - Secrets (tools classified `secret` in `src/core/tool-policy.ts`) are never persisted, shared, or logged.
-- The desktop build of this app ships with zero analytics env vars and a minimal capability set — never extend it silently.
+- The desktop build of this app ships with a minimal capability set and no telemetry of any kind — never extend it silently.
 - Privacy claims in UI, legal, and SEO copy must stay backed by code and tests.
 
 ## Before touching any of these — read PRIVACY.md first
