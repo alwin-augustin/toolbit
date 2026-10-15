@@ -155,6 +155,8 @@ Executed on this branch, in `Web/web`:
 | `npx vitest run tests/result-store.test.tsx tests/desktop-host.test.tsx` | 19 passed |
 | `npm run build` | exit 0 — 56 SEO pages (42 prerendered tool shells), service worker precaching 166 entries |
 | `npx playwright test --project=chromium --project=webkit` | 140 passed, 2 skipped, exit 0 |
+| `npm run build:desktop` | exit 0 — the desktop-mode bundle builds from the same sources |
+| `cargo check` in `Desktop/desktop-tauri/src-tauri` | exit 0, no warnings |
 
 The lint result is load-bearing, not incidental: `eslint.config.js` sets `react-hooks/rules-of-hooks` to `error`, so every bespoke screen's new `usePublishedResult` call is provably at the top level of its component — no conditional hook, no hook after an early return.
 
@@ -172,7 +174,7 @@ The XPath mode was not exercised in the browser (it needs a query typed into its
 
 **Not verified in this pass** (no claim is made that these pass):
 - The firefox project: this machine has no firefox build installed (`ms-playwright/firefox-1543` is absent), so those runs fail at browser launch. The e2e numbers above are chromium and webkit only, and firefox and the lp-* project were left out of the totals rather than counted as failures.
-- The Tauri desktop build, the packaging/prune scripts, and `Desktop/desktop-tauri/scripts/editor-check.mjs` were not run, so the Rust-side claims in section 4.2 are read, not re-verified here.
+- Nothing on the desktop side was run *as an application*. The crate type-checks and the desktop bundle builds, but no packaged `.app`, no `Desktop/desktop-tauri/scripts/editor-check.mjs`, and no OS-level file open/save or drag-and-drop journey was exercised, so section 4.2 describes reviewed code plus unit tests that stub the shell's IPC (`tests/desktop-host.test.tsx`), not observed behaviour.
 - No Lighthouse, Core Web Vitals, or bundle-size measurement.
 - No Windows or Linux desktop matrix; no screen-reader session — the accessibility evidence is axe plus the DOM, not a person using one.
 
