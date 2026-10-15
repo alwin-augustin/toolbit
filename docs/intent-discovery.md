@@ -67,7 +67,7 @@ interface ToolCapability {
 
 `src/core/capability-graph.ts` derives everything read at runtime:
 `toolIdsByInputType`, `toolsForOperation`, `nextActionsFor`, task clusters for
-the Start screen, and `suggestForDetectedType` for paste. No consumer reads the
+the Start screen, and `pasteSuggestionsFor` for paste. No consumer reads the
 raw record directly; the graph is the single accessor.
 
 ## 4. The resolver pipeline
@@ -125,13 +125,21 @@ query text / pasted data
   they want.
 - **Start screen** (`StartScreen.tsx` — paste-first, exists). Gains
   task-shaped entry clusters derived from the graph (the capability model, not
-  a hand-rotated carousel), and paste suggestions become the full operation
-  set for the detected type with reasons: JSON → format / validate / convert /
-  compare, each carrying the pasted text.
+  a hand-rotated carousel), and paste suggestions expand through the graph
+  (`core/intent/detect.ts`): the detector's own answer stays first, its curated
+  handoff edges add the useful operations for the data with reasons — JSON →
+  format / validate / compare / convert — and every suggestion carries the
+  pasted text into the tool it opens.
 - **Next Useful Action.** After a successful run, the result chrome offers at
-  most **two** follow-ups taken from `related` (or the paste payload handed
-  forward), never a wall of recommendations. This is the discovery loop: the
-  next tool appears when the user has a reason to care.
+  most **two** follow-ups taken from `related` (`NextActions`), never a wall of
+  recommendations. One component serves both architectures: the generic
+  workbench renders it under the result panes with the document output as the
+  payload; custom screens render it under the screen with the published result
+  as the payload. Each action is labelled in the tool's own intent phrasing
+  ("validate json against a schema"), hands the payload over through the same
+  `openWithPayload` path Smart paste uses, and reports `discovery_handoff`.
+  This is the discovery loop: the next tool appears when the user has a reason
+  to care.
 - **Library and rail.** Unchanged role: the complete catalogue.
 
 Semantic search ships **off by default** behind a Settings toggle ("smarter
@@ -177,9 +185,14 @@ status, palette affordance, eval v2 (`npm run eval:intent`) — the current
 asset lifts both lexical top-spot misses while off-catalogue asks stay
 unconfident.
 
-**P3 — Next Useful Action.** Result-chrome strip (≤2 actions) from `related`,
-multi-suggestion paste flow with graph expansion, handoff carries the payload,
-telemetry, tests. GLOSSARY gains the user-visible terms.
+**P3 — Next Useful Action.** Result-chrome strip (`NextActions`, ≤2 actions
+from `nextActionsFor`) under the workbench result panes and under custom
+screens; multi-suggestion paste flow (`core/intent/detect.ts`) whose graph
+expansion and handoffs share one payload path (`openWithPayload`); handoff
+telemetry (`discovery_handoff`); component tests, router integration, and e2e
+for paste → operation set → handoff and result → next action → handoff.
+GLOSSARY gains the user-visible terms (intent search, smarter search, next
+useful action, handoff).
 
 Each phase lands green: `npm run check && npm run lint && npm run test:run`,
 plus the Playwright suite for P1–P3 surfaces.

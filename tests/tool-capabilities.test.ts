@@ -4,7 +4,9 @@ import {
   capabilityCorpusLineKinds,
   capabilityCorpusLines,
   capabilityOf,
+  capabilityReason,
   nextActionsFor,
+  pasteSuggestionsFor,
   taskClusters,
   toolIdsByInputType,
   toolsForOperation,
@@ -60,6 +62,35 @@ describe('capability graph', () => {
       expect(actions).not.toContain(tool.id);
       for (const action of actions) expect(capabilityOf(action), action).toBeDefined();
     }
+  });
+
+  it('expands a paste into the anchor plus its handoff edges', () => {
+    expect(pasteSuggestionsFor('json-formatter')).toEqual([
+      'json-formatter',
+      'json-validator',
+      'diff-tool',
+      'yaml-formatter',
+    ]);
+    // The anchor survives the cap even when the edges are longer.
+    expect(pasteSuggestionsFor('jwt-decoder')).toEqual([
+      'jwt-decoder',
+      'timestamp-converter',
+      'json-formatter',
+    ]);
+    expect(pasteSuggestionsFor('json-formatter', 2)).toEqual(['json-formatter', 'json-validator']);
+    expect(pasteSuggestionsFor('not-a-tool')).toEqual([]);
+    for (const tool of TOOLS) {
+      const suggestions = pasteSuggestionsFor(tool.id);
+      expect(suggestions.length).toBeLessThanOrEqual(4);
+      expect(suggestions[0]).toBe(tool.id);
+    }
+  });
+
+  it('gives every suggested tool a reason in its own words', () => {
+    expect(capabilityReason('json-validator')).toBe('validate json against a schema');
+    expect(capabilityReason('crontab-generator')).toBe('build a cron expression');
+    expect(capabilityReason('not-a-tool')).toBeNull();
+    for (const tool of TOOLS) expect(capabilityReason(tool.id), tool.id).toBeTruthy();
   });
 
   it('exposes task clusters with only known tools', () => {

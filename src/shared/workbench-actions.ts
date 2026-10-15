@@ -72,6 +72,30 @@ export function useWorkbenchActions() {
     [navigate, openTool],
   );
 
+  /**
+   * Hand a text payload to a tool: discovery's one handoff path, used by Smart
+   * paste, paste expansion, and Next Useful Action. A workbench tool opens as
+   * a fresh document seeded with the payload; a custom screen cannot take a
+   * document, so the text is staged in the pending-paste channel the router
+   * already drains into its primary field. Always a new document — a handoff
+   * must never overwrite work in progress.
+   */
+  const openWithPayload = useCallback(
+    (toolId: string, payload: string) => {
+      if (isWorkbenchToolId(toolId)) {
+        openTool(toolId, payload);
+        return;
+      }
+      try {
+        sessionStorage.setItem('toolbit:smart-paste', payload);
+      } catch {
+        /* storage denied: the tool opens empty rather than not at all */
+      }
+      navigate(toolPath(toolId));
+    },
+    [navigate, openTool],
+  );
+
   const restore = useCallback(
     (item: {
       kind: SavedKind;
@@ -111,7 +135,7 @@ export function useWorkbenchActions() {
     [navigate, notify, openTool],
   );
 
-  return { openTool, activateExistingOrOpen, restore, navigate, notify, addSaved };
+  return { openTool, activateExistingOrOpen, openWithPayload, restore, navigate, notify, addSaved };
 }
 
 /**

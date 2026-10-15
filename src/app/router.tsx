@@ -2,9 +2,11 @@ import { Suspense, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { Switch, Route, useLocation } from 'wouter';
 import { ToolErrorBoundary } from '@/app/components/ToolErrorBoundary';
 import { LoadingFallback } from '@/app/components/LoadingFallback';
+import { NextActions } from '@/app/components/NextActions';
 import { TOOLS } from '@/content/tools.config';
 import { DocumentContext, DocumentSeedContext } from '@/shared/document-state';
 import { useWorkspace } from '@/shared/workspace-store';
+import { useActiveResult } from '@/shared/result-store';
 import { StartScreen } from '@/app/screens/StartScreen';
 import { ToolsScreen } from '@/app/screens/ToolsScreen';
 import { SavedScreen } from '@/app/screens/SavedScreen';
@@ -32,6 +34,7 @@ function ScreenPage({ children }: { children: ReactNode }) {
 function ToolRoute({ toolId }: { toolId: string }) {
   const tabs = useWorkspace((s) => s.tabs);
   const activeTabId = useWorkspace((s) => s.activeTabId);
+  const publishedResult = useActiveResult((s) => s.text);
   const [, navigate] = useLocation();
 
   // A pending Smart paste is read once per mount and cleared once applied, so
@@ -132,6 +135,10 @@ function ToolRoute({ toolId }: { toolId: string }) {
                     result pane. */}
                 <div className="grid gap-3 p-4">
                   <Custom key={activeId ?? toolId} />
+                  {/* Custom screens keep their result in component state and
+                      publish what a save would write; that published text is
+                      the payload Next Useful Action carries forward. */}
+                  <NextActions toolId={toolId} payload={publishedResult} />
                 </div>
               </DocumentSeedContext.Provider>
             </DocumentContext.Provider>

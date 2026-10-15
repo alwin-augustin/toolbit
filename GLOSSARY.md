@@ -57,7 +57,22 @@ A record of one transform execution, kept while the History switch is on and exp
 A tool handling credentials or tokens (password, TOTP, JWT, certificate, API builder, WebSocket). Excluded from history and telemetry by default.
 
 **Smart paste**:
-Pasting raw data to get a tool suggestion and carrying the pasted text into the opened tool.
+Pasting raw data to get tool suggestions and carrying the pasted text into the opened tool. The detector's own answer comes first; the capability graph adds the useful operations for that data (format / validate / compare / convert).
+
+### Discovery
+
+**Intent search**:
+The ⌘K palette matching a task phrasing ("make json readable") to tools by meaning, not just by name. Always on, in the browser tab.
+
+**Smarter search**:
+The opt-in on-device semantic layer under intent search. Downloads a model once, then reranks locally; when off, loading, or failed, keyword matching carries the palette unchanged.
+
+**Next Useful Action**:
+After a successful run, at most two follow-ups from the capability graph (`related`) shown in the result chrome, each carrying the current result into the next tool.
+_Avoid_: recommendation, "you might also like"
+
+**Handoff**:
+Carrying a payload — a result or a paste — into the next tool's input. Workbench tools open a fresh document seeded with it; custom screens take it through the pending Smart paste channel. Nothing is sent anywhere.
 
 ### Processing guarantees
 

@@ -56,3 +56,40 @@ test('an empty palette offers the opt-in on-device model', async ({ page }) => {
   await expect(page).toHaveURL(/settings/);
   await expect(page.getByRole('checkbox', { name: /Smarter search/ })).not.toBeChecked();
 });
+
+test('a paste expands into the operation set and hands the payload forward', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/');
+
+  await page.getByRole('textbox', { name: 'Paste data to find a tool' }).fill('{"b":2,"a":1}');
+
+  // Detection stays first; the graph adds the useful operations for the data.
+  await expect(
+    page.getByRole('button', { name: 'Open JSON Formatter', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Validate json against a schema' }).click();
+
+  await expect(page).toHaveURL(/json-validator/);
+  await expect(page.getByRole('textbox', { name: 'JSON data' })).toContainText('{"b":2,"a":1}');
+  expect(errors).toEqual([]);
+});
+
+test('a result offers the next useful action carrying the payload', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+
+  // A tool with nothing run yet offers no next step.
+  await page.goto('/base64-encoder');
+  await expect(page.getByRole('region', { name: 'Next useful actions' })).toHaveCount(0);
+
+  // The JSON formatter's default document holds a valid result, so it does.
+  await page.goto('/json-formatter');
+  const strip = page.getByRole('region', { name: 'Next useful actions' });
+  await expect(strip).toBeVisible();
+  await strip.getByRole('button', { name: 'Validate json against a schema' }).click();
+
+  await expect(page).toHaveURL(/json-validator/);
+  await expect(page.getByRole('textbox', { name: 'JSON data' })).toContainText('inv_1042');
+  expect(errors).toEqual([]);
+});

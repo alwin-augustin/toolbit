@@ -63,6 +63,27 @@ export function nextActionsFor(toolId: string, limit = 2): readonly string[] {
   return related.filter((id) => id !== toolId && TOOL_IDS.has(id)).slice(0, limit);
 }
 
+/**
+ * Paste suggestions for a detected tool: the detector's own answer first, then
+ * its curated handoff edges — the useful operation set for the pasted data
+ * (a detected JSON gets format, validate, compare, convert…), not one tool.
+ * Unknown anchors yield nothing; the anchor itself is never dropped by the cap.
+ */
+export function pasteSuggestionsFor(detectedToolId: string, limit = 4): readonly string[] {
+  if (!TOOL_IDS.has(detectedToolId)) return [];
+  return [detectedToolId, ...nextActionsFor(detectedToolId, Math.max(0, limit - 1))];
+}
+
+/**
+ * Why a tool is offered, in the user's own words: the first intent from its
+ * capability record ("validate json against a schema"). Suggestions must be
+ * able to say why they are shown; this is that sentence for graph-driven
+ * surfaces — paste expansion and Next Useful Action.
+ */
+export function capabilityReason(toolId: string): string | null {
+  return CAPABILITIES[toolId]?.intents[0] ?? null;
+}
+
 /** Task clusters with any unknown ids pruned (validation reports them). */
 export function taskClusters(): ReadonlyArray<{ id: string; title: string; toolIds: string[] }> {
   return TASK_CLUSTERS.map((cluster) => ({
