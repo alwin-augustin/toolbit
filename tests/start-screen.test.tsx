@@ -73,6 +73,36 @@ describe('start screen', () => {
   });
 });
 
+describe('common task clusters', () => {
+  it('expands a cluster by task and opens a tool from it', async () => {
+    const user = userEvent.setup();
+    const pushes: string[] = [];
+    renderStart(pushes);
+
+    const cluster = screen.getByRole('button', { name: /Inspect & debug API data/ });
+    expect(cluster).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(cluster);
+    expect(cluster).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(screen.getByRole('button', { name: 'JWT Decoder' }));
+    expect(pushes).toContain('/jwt-decoder');
+  });
+
+  it('collapses again on a second click', async () => {
+    const user = userEvent.setup();
+    renderStart();
+
+    const cluster = screen.getByRole('button', { name: /Validate configuration/ });
+    await user.click(cluster);
+    expect(screen.getByRole('button', { name: 'GraphQL Formatter' })).toBeInTheDocument();
+
+    await user.click(cluster);
+    expect(cluster).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: 'GraphQL Formatter' })).not.toBeInTheDocument();
+  });
+});
+
 describe('custom tool routes', () => {
   it('renders the tool instead of redirecting to the start screen', () => {
     window.history.replaceState(null, '', '/jwt-decoder');

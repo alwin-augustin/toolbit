@@ -16,6 +16,9 @@ export const EVENT_NAMES = [
   'snippet_saved',
   'tool_shared',
   'smart_detection_used',
+  'discovery_query',
+  'discovery_suggestion_accepted',
+  'discovery_handoff',
   'app_error',
   'operational_log',
 ] as const;
@@ -32,6 +35,8 @@ export const ERROR_CODES = [
 export type ErrorCode = (typeof ERROR_CODES)[number];
 type Props = {
   tool_id?: string;
+  from_tool_id?: string;
+  to_tool_id?: string;
   operation_id?: 'encode' | 'decode' | 'format' | 'validate' | 'normalize' | 'hash';
   route?: string;
   error_code?: ErrorCode;
@@ -42,11 +47,16 @@ type Props = {
   release_id?: string;
   component?: 'app' | 'tool';
   source?: 'pipeline' | 'open_tabs';
+  discovery_source?: 'palette' | 'start';
+  resolved_by?: 'name' | 'intent' | 'keyword' | 'type' | 'mixed' | 'none' | 'detect';
+  result_count_bucket?: 'none' | 'few' | 'many';
 };
 const toolIds = new Set(TOOLS.map((t) => t.id));
 const routes = new Set(['home', 'about', 'privacy', 'terms', 'unknown', ...toolIds]);
 const enumProps: Record<string, Set<unknown>> = {
   tool_id: toolIds,
+  from_tool_id: toolIds,
+  to_tool_id: toolIds,
   route: routes,
   operation_id: new Set(['encode', 'decode', 'format', 'validate', 'normalize', 'hash']),
   error_code: new Set(ERROR_CODES),
@@ -54,6 +64,9 @@ const enumProps: Record<string, Set<unknown>> = {
   byte_bucket: new Set(['small', 'medium', 'large']),
   component: new Set(['app', 'tool']),
   source: new Set(['pipeline', 'open_tabs']),
+  discovery_source: new Set(['palette', 'start']),
+  resolved_by: new Set(['name', 'intent', 'keyword', 'type', 'mixed', 'none', 'detect']),
+  result_count_bucket: new Set(['none', 'few', 'many']),
 };
 /** Rebuild properties from enums and bounded numbers; never pass through strings. */
 export function sanitizeProperties(raw: Record<string, unknown> = {}): Props {

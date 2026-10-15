@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IconArrowRight, IconClock, IconCornerDownLeft, IconSearch } from '@tabler/icons-react';
 import { TOOLS, RESEARCH_CATEGORIES } from '@/content/tools.config';
+import { resolveIntent } from '@/core/intent/resolver';
 import { useRecentTools } from '@/core/recent-tools';
+import { track } from '@/core/telemetry';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
 import { isWorkbenchToolId, specIcon } from '@/features/tools/specs';
 import { CATEGORY_ICONS, CATEGORY_ORDER, DESTINATIONS, TOOL_INDEX } from '@/app/shell/navigation';
@@ -22,8 +24,10 @@ interface PaletteItem {
  * Command palette.
  *
  * The fastest path in the product: one keystroke from anywhere, then type.
- * Results are ranked name-first so an exact name always wins, and the whole
- * list is drivable with ↑ ↓ ⏎ — a palette that needs the mouse is a menu.
+ * Queries match by name *and* by task — "make json readable" finds the JSON
+ * formatter — with each result carrying the reason it is shown. Name matches
+ * still rank first, and the whole list is drivable with ↑ ↓ ⏎ — a palette that
+ * needs the mouse is a menu.
  */
 export function SearchDialog({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState('');
@@ -31,6 +35,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
   const { recents } = useRecentTools();
   const { openTool, navigate } = useWorkbenchActions();
   const listRef = useRef<HTMLDivElement>(null);
+  const reportedQueries = useRef(new Set<string>());
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -40,24 +45,52 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  const trimmed = query.trim().toLowerCase();
+
+  const resolution = useMemo(
+    () => (trimmed ? resolveIntent(trimmed, { limit: 8 }) : null),
+    [trimmed],
+  );
+
   const openToolAction = useCallback(
     (tool: Pick<ToolMetadata, 'id' | 'path'>) => {
       onClose();
+      if (resolution && trimmed.length >= 2) {
+        track('discovery_suggestion_accepted', {
+          tool_id: tool.id,
+          discovery_source: 'palette',
+          resolved_by: resolution.resolvedBy,
+        });
+      }
       if (isWorkbenchToolId(tool.id)) openTool(tool.id);
       else navigate(tool.path);
     },
-    [onClose, openTool, navigate],
+    [onClose, openTool, navigate, resolution, trimmed],
   );
+
+  // One `discovery_query` per distinct query the user actually types.
+  useEffect(() => {
+    if (trimmed.length < 2 || reportedQueries.current.has(trimmed)) return;
+    const handle = setTimeout(() => {
+      if (reportedQueries.current.has(trimmed)) return;
+      reportedQueries.current.add(trimmed);
+      const count = resolution?.suggestions.length ?? 0;
+      track('discovery_query', {
+        discovery_source: 'palette',
+        resolved_by: resolution?.resolvedBy ?? 'none',
+        result_count_bucket: count === 0 ? 'none' : count <= 3 ? 'few' : 'many',
+      });
+    }, 600);
+    return () => clearTimeout(handle);
+  }, [trimmed, resolution]);
 
   const browseCatalogue = useCallback(() => {
     onClose();
     navigate('/library');
   }, [onClose, navigate]);
 
-  const trimmed = query.trim().toLowerCase();
-
   const items = useMemo<PaletteItem[]>(() => {
-    const toolItem = (tool: ToolMetadata, group: string): PaletteItem => {
+    const toolItem = (tool: ToolMetadata, group: string, hint?: string): PaletteItem => {
       const Icon = isWorkbenchToolId(tool.id)
         ? (specIcon(tool.id) ?? CATEGORY_ICONS[tool.researchCategory])
         : CATEGORY_ICONS[tool.researchCategory];
@@ -65,7 +98,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
         key: `${group}:${tool.id}`,
         group,
         label: tool.name,
-        hint: RESEARCH_CATEGORIES[tool.researchCategory].name,
+        hint: hint ?? RESEARCH_CATEGORIES[tool.researchCategory].name,
         icon: Icon,
         run: () => openToolAction(tool),
       };
@@ -95,21 +128,13 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
       return [...recent, ...go, ...suggested];
     }
 
-    // Rank: name prefix, then name contains, then everything else.
-    const scored = TOOLS.map((tool) => {
-      const name = tool.name.toLowerCase();
-      const haystack = `${name} ${tool.description.toLowerCase()} ${(tool.keywords ?? []).join(' ').toLowerCase()}`;
-      let score = -1;
-      if (name.startsWith(trimmed)) score = 0;
-      else if (name.includes(trimmed)) score = 1;
-      else if (haystack.includes(trimmed)) score = 2;
-      else if (trimmed.includes(name)) score = 3;
-      return { tool, score };
-    })
-      .filter((entry) => entry.score >= 0)
-      .sort((a, b) => a.score - b.score);
-
-    const tools = scored.map((entry) => toolItem(entry.tool, 'Tools'));
+    const tools = (resolution?.suggestions ?? [])
+      .map((suggestion) => {
+        const tool = TOOL_INDEX.get(suggestion.toolId);
+        if (!tool) return null;
+        return toolItem(tool, 'Tools', suggestion.reasons[0]);
+      })
+      .filter((item): item is PaletteItem => item != null);
 
     const categories = CATEGORY_ORDER.filter((category) =>
       RESEARCH_CATEGORIES[category].name.toLowerCase().includes(trimmed),
@@ -123,7 +148,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
     }));
 
     return [...tools, ...categories];
-  }, [trimmed, recents, navigate, openToolAction, browseCatalogue, onClose]);
+  }, [trimmed, resolution, recents, navigate, openToolAction, browseCatalogue, onClose]);
 
   // A fresh result set always starts at the top.
   useEffect(() => {
@@ -186,7 +211,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
             autoFocus
             type="text"
             aria-label="Search tools"
-            placeholder="Search tools, or type a category…"
+            placeholder="Search tools, or describe a task…"
             className="flex-1 bg-transparent text-md text-ink outline-none placeholder:text-ink-faint"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -203,9 +228,12 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
 
         <div ref={listRef} className="tb-scroll max-h-[52dvh] overflow-y-auto py-1.5">
           {items.length === 0 && (
-            <p className="px-4 py-10 text-center text-sm text-ink-muted">
-              Nothing matches “{query.trim()}”.
-            </p>
+            <div className="px-4 py-10 text-center">
+              <p className="text-sm text-ink-muted">Nothing matches “{query.trim()}”.</p>
+              <p className="mt-1 text-xs text-ink-faint">
+                Try the task instead of the name — “make json readable”.
+              </p>
+            </div>
           )}
 
           {groups.map((group) => (
@@ -231,7 +259,9 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
                     {group.name === 'Recent' && (
                       <IconClock size={12} aria-hidden="true" className="text-ink-faint" />
                     )}
-                    <span className="shrink-0 text-2xs text-ink-faint">{item.hint}</span>
+                    <span className="max-w-[46%] shrink-0 truncate text-2xs text-ink-faint">
+                      {item.hint}
+                    </span>
                     {selected && (
                       <IconArrowRight size={13} aria-hidden="true" className="shrink-0" />
                     )}

@@ -11,6 +11,7 @@ import {
 } from '@tabler/icons-react';
 import { useLocation } from 'wouter';
 import { detectContentType } from '@/core/smart-detect';
+import { track } from '@/core/telemetry';
 import { TOOLS, RESEARCH_CATEGORIES } from '@/content/tools.config';
 import { useFavorites } from '@/core/favorites-store';
 import { useRecentTools } from '@/core/recent-tools';
@@ -25,6 +26,7 @@ import {
 } from '@/app/shell/navigation';
 import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
+import { TaskClusters } from '@/app/components/TaskClusters';
 
 const PASTE_FIELD = 'Paste data to find a tool';
 
@@ -68,6 +70,11 @@ export function StartScreen() {
   const runSuggestion = (toolId: string) => {
     const payload = text;
     setText('');
+    track('discovery_suggestion_accepted', {
+      tool_id: toolId,
+      discovery_source: 'start',
+      resolved_by: 'detect',
+    });
     if (isWorkbenchToolId(toolId)) {
       openTool(toolId, payload);
       return;
@@ -281,6 +288,9 @@ export function StartScreen() {
           </div>
         </section>
       )}
+
+      {/* Common tasks ------------------------------------------------------ */}
+      <TaskClusters />
 
       {/* Browse ----------------------------------------------------------- */}
       <section aria-labelledby="wb-home-browse">
