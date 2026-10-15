@@ -10,7 +10,7 @@ function renderAt(path: string) {
 }
 
 /**
- * Phase 2 — router matrix over all 42 tool routes.
+ * Phase 2 — router matrix over all 43 tool routes.
  * Extends workbench-router.test.tsx (5 routes) to full catalog.
  */
 describe('router matrix (all tools)', () => {

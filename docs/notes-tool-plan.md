@@ -429,3 +429,39 @@ session. Aligned with the brief: "not full scale — just paste plain text".
   in a workspace export; opening `/notes` emits no analytics event.
 - `npm run check && npm run lint && npm run test:run && npm run build` pass, and
   `/notes` is prerendered.
+
+---
+
+## 16. Addendum — intent discovery (landed after this plan)
+
+The plan predates the intent discovery system (`docs/intent-discovery.md`, on
+`main` as of `93e014f`). Two of its guarantees changed the shape of landing
+Notes, and Notes had to be brought into the new contract:
+
+1. **The capability model is 1:1 and build-enforced.** `validateToolRegistry()`
+   → `validateCapabilities()` fails the build if a catalogued tool has no record
+   in `src/content/tool-capabilities.ts` (and `tests/tool-capabilities.test.ts`
+   asserts `Object.keys(CAPABILITIES).length === TOOLS.length`). Notes therefore
+   ships a record: task-shaped `intents`, `inputTypes: ['text', 'markdown']`,
+   `operations: ['preview', 'reference']`.
+2. **`related` is the handoff edge — and Notes must not have one.** Every
+   `related` edge becomes a Next Useful Action whose payload is carried into the
+   next tool via `openWithPayload`. For a private tool that would push the note
+   into a tool that records history or offers to share it, so `related` is
+   deliberately empty: Notes stays discoverable (searchable, reasoned) but hands
+   nothing onward. Pinned by a test.
+3. **`openWithPayload` is the one handoff path**, and it is now gated on
+   `ownsDocument(...)` rather than `isWorkbenchToolId(...)`, so a paste or a
+   handoff into Notes opens a fresh, seeded document like any other.
+4. **Telemetry names tools in more places.** The private-tool guard now drops
+   any event naming a non-shareable tool as `tool_id`, `from_tool_id`,
+   `to_tool_id`, or `route` — covering `discovery_suggestion_accepted` and
+   `discovery_handoff`, not just page views.
+5. **The embedding asset is a build artifact.** Adding a tool changes
+   `capabilityCorpusHash()`, so `npm run embeddings:generate` must be re-run and
+   the refreshed `public/embeddings/tool-capabilities.v1.json` committed, or
+   `tests/embeddings.test.ts` fails.
+
+The plan's optional DesktopHost item is now moot: the merged `DesktopHost.tsx`
+already fills a screen that owns a document through `smartPastePayload`, so a
+dropped `.md`/`.txt` lands in Notes without a change.

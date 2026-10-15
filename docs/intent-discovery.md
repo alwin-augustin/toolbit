@@ -11,7 +11,7 @@ is the authority on intent.
 The sidebar is a navigation system: categories, counts, nested tools, recents.
 It works when a user already knows what they need and where it lives. It fails
 the user who has a **problem** — "why is my token failing?", "make this JSON
-readable", "compare these two configs" — and does not know which of 42 tools
+readable", "compare these two configs" — and does not know which of 43 tools
 answers it, or that an answer exists at all.
 
 The fix is not a bigger menu. It is three changes of direction:
@@ -168,7 +168,7 @@ get used.
 
 ## 7. Phases
 
-**P0 — Capability model.** `tool-capabilities.ts` (42 records), graph accessors,
+**P0 — Capability model.** `tool-capabilities.ts` (43 records), graph accessors,
 corpus hash, validation in `validateToolRegistry()`, unit tests. No UI change.
 
 **P1 — Lexical intent search.** Resolver + reasons + typo tolerance; palette

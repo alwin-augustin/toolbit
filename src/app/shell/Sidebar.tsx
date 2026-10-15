@@ -27,7 +27,7 @@ import {
 /**
  * The Navigator.
  *
- * One panel, one job: get to any of the 42 tools in a keystroke or two. It
+ * One panel, one job: get to any of the 43 tools in a keystroke or two. It
  * holds pinned tools, the recent trail and the full categorised tree, plus a
  * local filter for when you know the name but not the category. Global search
  * lives in the command palette; this filter narrows the tree in place.

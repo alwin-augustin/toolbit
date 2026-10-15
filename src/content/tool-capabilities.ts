@@ -376,6 +376,21 @@ export const CAPABILITIES: Record<string, ToolCapability> = {
     operations: ['preview'],
     related: [],
   },
+  notes: {
+    intents: [
+      'jot down a quick note',
+      'paste text to keep for a moment',
+      'scratchpad for a snippet',
+      'hold some text while i work',
+      'draft something with a markdown preview',
+    ],
+    inputTypes: ['text', 'markdown'],
+    operations: ['preview', 'reference'],
+    // Deliberately no handoff edges. Every next step would carry the note text
+    // into a tool that records history (or offers to share it), which is the one
+    // thing Notes promises not to do; empty is the honest answer here.
+    related: [],
+  },
   'lorem-ipsum-generator': {
     intents: [
       'generate placeholder text',

@@ -11,7 +11,7 @@ import { CUSTOM_SCREENS } from '@/features/tools/custom-screens';
  * its heading + primary controls without crashing (jsdom + mocked CodeEditor).
  * Deep behavior stays in workbench-custom-*.test.ts (helpers) + e2e sweep.
  */
-describe('custom screens matrix (29 components)', () => {
+describe('custom screens matrix (30 components)', () => {
   beforeEach(() => {
     useWorkspace.setState({ tabs: [], activeTabId: null });
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
