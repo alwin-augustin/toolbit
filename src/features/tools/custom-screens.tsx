@@ -42,6 +42,9 @@ const MarkdownScreenLazy = lazy(() =>
     default: m.MarkdownScreen,
   })),
 );
+const NotesScreenLazy = lazy(() =>
+  import('@/features/tools/notes/NotesScreen').then((m) => ({ default: m.NotesScreen })),
+);
 
 /**
  * Bespoke workbench screens for tools that don't fit the generic
@@ -69,6 +72,7 @@ export const CUSTOM_SCREENS: Record<string, ComponentType> = {
   'json-validator': JsonSchemaScreen,
   'xml-formatter': XmlScreen,
   'markdown-previewer': MarkdownScreenLazy,
+  notes: NotesScreenLazy,
   'git-diff-viewer': GitDiffScreen,
   'protobuf-decoder': ProtobufScreenLazy,
   'password-generator': PasswordScreen,
@@ -91,6 +95,7 @@ export const CUSTOM_SCREENS: Record<string, ComponentType> = {
 
 export const LAZY_CUSTOM_SCREENS = new Set([
   'markdown-previewer',
+  'notes',
   'protobuf-decoder',
   'image-converter',
   'pdf-tools',

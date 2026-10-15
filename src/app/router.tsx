@@ -18,6 +18,7 @@ import {
   defaultDocState,
   getSpec,
   isWorkbenchToolId,
+  ownsDocument,
   peekSmartPaste,
   smartPastePayload,
 } from '@/features/tools/specs';
@@ -45,11 +46,13 @@ function ToolRoute({ toolId }: { toolId: string }) {
   const pasted = pendingPaste.current;
 
   const isWorkbench = isWorkbenchToolId(toolId);
-  const title = getSpec(toolId)?.title ?? toolId;
-  const Custom = CUSTOM_SCREENS[toolId];
   const meta = TOOLS.find((tool) => tool.id === toolId);
+  const title = getSpec(toolId)?.title ?? meta?.name ?? toolId;
+  const Custom = CUSTOM_SCREENS[toolId];
   const Component = meta?.component;
   const routable = isWorkbench || !!Custom || !!Component;
+  // Document-backed custom screens (Notes) open a Tab like a workbench tool.
+  const ownsDoc = ownsDocument(toolId);
 
   // Find existing tab for this tool (without creating one)
   const active =
@@ -66,24 +69,24 @@ function ToolRoute({ toolId }: { toolId: string }) {
     }
   }, [activeId, activeTabId, active]);
 
-  // Workbench tools open as documents on direct URL navigation. Custom
-  // screens render without a document — their state is session-only by design
-  // — and an unknown slug falls back home rather than showing an empty shell.
+  // Tools that own a document (workbench tools and document-backed screens like
+  // Notes) open one on direct URL navigation. Bespoke screens with no document
+  // keep their state session-local by design, and an unknown slug falls back
+  // home rather than showing an empty shell.
   useEffect(() => {
-    if (active || !routable) return;
-    if (!isWorkbench) return;
+    if (active || !routable || !ownsDoc) return;
     const state = useWorkspace.getState();
     const existing = state.tabs.find((t) => t.toolId === toolId);
     if (existing) {
       if (existing.id !== state.activeTabId) state.setActiveTab(existing.id);
       return;
     }
-    state.openDocument(toolId, {
-      ...defaultDocState(toolId, pasted ?? undefined),
-      label: title,
-    });
+    const seed = isWorkbench
+      ? { ...defaultDocState(toolId, pasted ?? undefined), label: title }
+      : { ...(pasted ? (smartPastePayload(toolId, pasted) ?? {}) : {}), label: title };
+    state.openDocument(toolId, seed);
     clearSmartPaste();
-  }, [toolId, title, isWorkbench, routable, active, pasted]);
+  }, [toolId, title, isWorkbench, ownsDoc, routable, active, pasted]);
 
   // Custom screens hold no document, so a pending paste is applied through the
   // seed context and then dropped.

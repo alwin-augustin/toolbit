@@ -1,6 +1,6 @@
 # Toolbit
 
-42 developer utilities in one browser workbench. [Open Toolbit](https://toolbit.app) or install it as a PWA.
+43 developer utilities in one browser workbench. [Open Toolbit](https://toolbit.app) or install it as a PWA.
 
 JSON, YAML, SQL, JWT, regex, diffs, hashes, certificates, QR codes and more —
 all transforming locally in the tab. The only tools that touch the network are

@@ -307,6 +307,15 @@ const TOOL_CATALOG: Omit<ToolMetadata, keyof ToolPolicy>[] = [
     keywords: ['markdown', 'preview', 'md', 'render'],
   },
   {
+    id: 'notes',
+    name: 'Notes',
+    description: 'A private scratchpad for pasting and previewing text',
+    category: 'text',
+    researchCategory: 'text',
+    path: '/notes',
+    keywords: ['notes', 'notepad', 'scratchpad', 'markdown', 'paste', 'text', 'draft'],
+  },
+  {
     id: 'lorem-ipsum-generator',
     name: 'Lorem Ipsum Generator',
     description: 'Generate placeholder text for designs and mockups',

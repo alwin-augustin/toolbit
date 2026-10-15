@@ -1,6 +1,6 @@
 # Toolbit Workbench
 
-The local-first developer workspace: 42 tools that process input in the browser, with tabs, saved work, and history you can switch off.
+The local-first developer workspace: 43 tools that process input in the browser, with tabs, saved work, and history you can switch off.
 
 ## Language
 

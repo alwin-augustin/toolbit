@@ -17,7 +17,13 @@ import { useFavorites } from '@/core/favorites-store';
 import { useRecentTools } from '@/core/recent-tools';
 import { useWorkspace, type WorkspaceTab } from '@/shared/workspace-store';
 import { toolPath, useWorkbenchActions } from '@/shared/workbench-actions';
-import { isWorkbenchToolId, readDoc, specIcon, specTitle } from '@/features/tools/specs';
+import {
+  isWorkbenchToolId,
+  ownsDocument,
+  readDoc,
+  specIcon,
+  specTitle,
+} from '@/features/tools/specs';
 import {
   CATEGORY_ICONS,
   CATEGORY_ORDER,
@@ -75,6 +81,8 @@ export function StartScreen() {
       discovery_source: 'start',
       resolved_by: suggestion.anchor ? 'detect' : 'type',
     });
+    // The unified handoff path: it seeds a document for tools that own one
+    // (including Notes) and stages the pending paste for those that do not.
     openWithPayload(suggestion.toolId, payload);
   };
 
@@ -216,7 +224,7 @@ export function StartScreen() {
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-medium text-ink">{title}</span>
                       <span className="block truncate text-xs text-ink-faint">
-                        {isWorkbenchToolId(tab.toolId) ? 'Document' : 'Tool'} ·{' '}
+                        {ownsDocument(tab.toolId) ? 'Document' : 'Tool'} ·{' '}
                         {TOOL_INDEX.get(tab.toolId)?.name ?? tab.toolId}
                       </span>
                     </span>

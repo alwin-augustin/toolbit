@@ -14,7 +14,7 @@ import { TOOLS, RESEARCH_CATEGORIES, type ResearchCategory } from '@/content/too
 import { useFavorites } from '@/core/favorites-store';
 import { useRecentTools } from '@/core/recent-tools';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
-import { isWorkbenchToolId } from '@/features/tools/specs';
+import { ownsDocument } from '@/features/tools/specs';
 import { Button } from '@/components/ui/button';
 import {
   CATEGORY_ICONS,
@@ -74,7 +74,7 @@ export function Sidebar({
   const activate = (toolId: string) => {
     const tool = TOOL_INDEX.get(toolId);
     if (!tool) return;
-    if (isWorkbenchToolId(toolId)) openTool(toolId);
+    if (ownsDocument(toolId)) openTool(toolId);
     else navigateAction(tool.path);
     onNavigate();
   };
