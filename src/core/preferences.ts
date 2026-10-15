@@ -35,20 +35,20 @@ export const safeStorage = {
     }
   },
 };
+
+/**
+ * The settings the app remembers on its own. They are local by construction:
+ * the persist layer writes through `safeStorage` to localStorage, and nothing
+ * else. Retired fields are dropped by `merge`, so an old stored shape can
+ * never resurrect a setting the app no longer has.
+ */
 export const usePreferences = create<{
-  analytics: boolean;
   history: boolean;
   retentionDays: number;
-  update: (patch: Partial<{ analytics: boolean; history: boolean; retentionDays: number }>) => void;
+  update: (patch: Partial<{ history: boolean; retentionDays: number }>) => void;
 }>()(
   persist(
-    // Analytics is opt-in. A local-first product that says nothing leaves the
-    // browser has to mean it before the user has made a choice, and a
-    // pseudonymous id in localStorage is a tracking identifier wherever
-    // prior consent is required. The topbar switch turns it on; the stored
-    // choice is respected either way.
     (set) => ({
-      analytics: false,
       history: true,
       retentionDays: 30,
       update: (patch) => set(patch),
@@ -60,7 +60,6 @@ export const usePreferences = create<{
         const p = (persisted ?? {}) as Record<string, unknown>;
         return {
           ...current,
-          analytics: typeof p.analytics === 'boolean' ? p.analytics : current.analytics,
           history: typeof p.history === 'boolean' ? p.history : current.history,
           retentionDays:
             typeof p.retentionDays === 'number' &&

@@ -2,14 +2,6 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import path from 'node:path';
 
-test.beforeEach(async ({ page }) => {
-  if (process.env.TOOLBIT_BLOCK_ANALYTICS)
-    await page.route(
-      (url) => url.hostname === 'us.i.posthog.com',
-      (route) => route.abort(),
-    );
-});
-
 async function forceTheme(page: import('@playwright/test').Page, theme: 'light' | 'dark') {
   await page.addInitScript((value) => {
     window.localStorage.setItem('theme', value);

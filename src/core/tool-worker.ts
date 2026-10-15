@@ -14,7 +14,7 @@ self.onmessage = async (event) => {
       return;
     }
     const parsed = definition.parse(input);
-    // Preserve byte-limit and cancel semantics; callers map codes for telemetry.
+    // Preserve byte-limit and cancel semantics; callers map the result codes.
     self.postMessage(
       parsed.ok ? await definition.transform(parsed.value, options as never) : parsed,
     );

@@ -3,29 +3,8 @@ import { base64Transform, formatJson, DEFINITIONS } from '@/core/tool-contract';
 import { parseWorkspace, workspaceSnapshot } from '@/core/workspace-schema';
 import { useWorkspace } from '@/shared/workspace-store';
 import { addHistoryEntry, getHistoryByToolId } from '@/core/history-db';
-import { sanitizeProperties, EVENT_NAMES, routeName } from '@/core/telemetry';
 const canary = 'CANARY_SECRET_4b7d';
 describe('privacy and transformation contracts', () => {
-  it('sanitizes every supported event and arbitrary error/log properties', () => {
-    for (const name of EVENT_NAMES) {
-      const raw = {
-        event: name,
-        input: canary,
-        output: canary,
-        url: `/json-formatter?token=${canary}`,
-        headers: { Authorization: canary },
-        workspace: canary,
-        message: canary,
-        tool_id: canary,
-        error_code: canary,
-        component: canary,
-        release_id: canary,
-        route: canary,
-      };
-      expect(JSON.stringify(sanitizeProperties(raw))).not.toContain(canary);
-    }
-    expect(routeName(`/json-formatter?token=${canary}#${canary}`)).toBe('json-formatter');
-  });
   it.each([
     'password-generator',
     'totp-generator',

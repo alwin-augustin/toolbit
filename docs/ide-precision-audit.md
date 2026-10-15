@@ -13,7 +13,7 @@
 
 Toolbit shares a single local-first React 19 + TypeScript + Vite 8 workspace across two delivery targets:
 
-1. **Web / PWA (`Web/web`)**: Offline-capable service worker (`workbox-build`), static SEO pre-rendering (`scripts/generate-seo-pages.mjs`), and opt-in zero-payload telemetry (`src/core/telemetry/index.ts`).
+1. **Web / PWA (`Web/web`)**: Offline-capable service worker (`workbox-build`), static SEO pre-rendering (`scripts/generate-seo-pages.mjs`), and no telemetry of any kind (removed 2026-10-16).
 2. **Desktop (`Desktop/desktop-tauri`)**: A lightweight Rust/Tauri v2 shell (`src-tauri/src/main.rs`) wrapping the exact same frontend bundle (`--mode desktop`), providing native OS menus, native file open/save dialogs, single-instance arbitration, window state persistence, and OS file associations/drag-and-drop.
 
 ### 1.2 Tool Execution & Registry Architecture
@@ -106,7 +106,7 @@ The catalog in `src/content/tools.config.ts` holds exactly **42 tools**, which r
 - **ReDoS & Work Bounds**: `RegexScreen.tsx` caps test text at 200 000 characters, patterns at 5 000, and matches at 1 000, rejecting oversized input before execution; `DiffScreen.tsx` refuses inputs whose combined length exceeds 1 000 000; `HashScreen.tsx` caps input at 2 000 000 characters; `CodeEditor.tsx` latches into a read-only 100 KB preview above 100 KB and only releases below 90 KB (hysteresis), while copy/transform still act on the full buffer.
 - **Other Caps**: `ApiScreen` truncates responses at 1 MB, `WsScreen` keeps the last 500 messages of at most 100 000 characters each, `PdfScreen` caps 50 MB per file / 100 MB total, `ImageScreen` caps 25 MB per file and 16 M output pixels (4096 px per side), `QrScreen` caps content at 2 000 characters, and `workspace-schema.ts` rejects imports above 2 MB.
 - **Secret Tool Isolation (`tool-policy.ts`)**: `password-generator`, `totp-generator`, `jwt-decoder`, `certificate-decoder`, `api-request-builder`, `websocket-tester`, `qr-code-generator`, `docker-command-builder` are `sensitivity: 'secret'` with `historyDefault: 'disabled'`; `pdf-tools` and `image-converter` are `'personal'`; only `api-request-builder` and `websocket-tester` may open a network connection, and only user-initiated.
-- **Zero-Payload Telemetry (`src/core/telemetry/index.ts`)**: `sanitizeProperties()` admits whitelisted shapes only, Do-Not-Track and `globalPrivacyControl` suppress collection, `isDesktopBuild` compiles collection out entirely, and the transport is only constructed when a PostHog key exists at build time.
+- **Zero Telemetry (removed 2026-10-16)**: the legacy opt-in PostHog channel was removed entirely — its transport, property sanitizer, and consent controls are gone. The app ships no analytics, no crash reporting, and no remote configuration (PRIVACY.md §6).
 
 ### 4.2 Desktop Tauri Hardening (`Desktop/desktop-tauri`)
 

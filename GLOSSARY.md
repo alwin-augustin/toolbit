@@ -54,7 +54,7 @@ _Avoid_: recipe
 A record of one transform execution, kept while the History switch is on and expiring on the retention setting. Secret tools never record.
 
 **Secret tool**:
-A tool handling credentials or tokens (password, TOTP, JWT, certificate, API builder, WebSocket). Excluded from history and telemetry by default.
+A tool handling credentials or tokens (password, TOTP, JWT, certificate, API builder, WebSocket). Excluded from history and sharing by default.
 
 **Smart paste**:
 Pasting raw data to get a tool suggestion and carrying the pasted text into the opened tool.

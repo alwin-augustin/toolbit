@@ -35,6 +35,11 @@ const openDb = createDatabaseOpener({
   },
 });
 
+/** Release the cached connection so "delete all local data" can remove the DB. */
+export function closeWorkspaceDb(): Promise<void> {
+  return openDb.close();
+}
+
 export async function listWorkspaces(): Promise<Workspace[]> {
   const db = await openDb();
   const tx = db.transaction(STORE_NAME, 'readonly');

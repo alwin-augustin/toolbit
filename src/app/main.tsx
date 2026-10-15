@@ -1,6 +1,5 @@
 import { registerServiceWorker } from '@/platform/service-worker';
 import { createRoot } from 'react-dom/client';
-import '@/platform/posthog';
 import App from '@/app/App';
 import '../index.css';
 import { pruneExpiredHistory } from '@/core/history-db';

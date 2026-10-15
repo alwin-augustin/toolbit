@@ -19,13 +19,18 @@ export interface DatabaseOpenerOptions {
   onUpgrade: (db: IDBDatabase, oldVersion: number, newVersion: number | null) => void;
 }
 
+export type DatabaseOpener = (() => Promise<IDBDatabase>) & {
+  /** Drop the cached handle so the database can be deleted or upgraded. */
+  close: () => Promise<void>;
+};
+
 export function createDatabaseOpener({
   name,
   version,
   onUpgrade,
-}: DatabaseOpenerOptions): () => Promise<IDBDatabase> {
+}: DatabaseOpenerOptions): DatabaseOpener {
   let dbPromise: Promise<IDBDatabase> | null = null;
-  return () => {
+  const open = () => {
     if (dbPromise) return dbPromise;
     dbPromise = new Promise((resolve, reject) => {
       try {
@@ -49,4 +54,12 @@ export function createDatabaseOpener({
     });
     return dbPromise;
   };
+  const close = async () => {
+    const pending = dbPromise;
+    if (!pending) return;
+    dbPromise = null;
+    const db = await pending.catch(() => null);
+    db?.close();
+  };
+  return Object.assign(open, { close });
 }

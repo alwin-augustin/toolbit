@@ -92,9 +92,9 @@ Duplicating the Saved list inside it would give the same information two homes.
   button; the choice persists. While the panel is hidden, that same control
   appears at the topbar's left edge — beside the panel it controls, never on the
   far right, where it would read as a control over the workspace.
-- **Topbar** — breadcrumb plus global actions only: search, and the analytics
-  consent toggle. Tool actions live in the document, so this bar never competes
-  with the work.
+- **Topbar** — breadcrumb plus global actions only: search, and the local-only
+  badge. Tool actions live in the document, so this bar never competes with the
+  work.
 - **Tab strip** — the document shelf. Tabs are real links: middle-click closes,
   hover reveals a close button, a dot marks a document whose input changed since
   the last run.
@@ -172,10 +172,9 @@ Two shapes, both session-scoped and both explicitly labelled:
 
 The claim "nothing leaves your browser" is stated in the same words in three
 places: the Start screen, the topbar badge, and Settings. Settings then gives the
-detail — analytics is switchable and its contents are named, session runs are
-remembered only on request, secret tools never record, and retention is a number
-the user controls with an explicit Apply. The consent switch itself is one click
-away in the topbar, and it writes the same preference Settings does.
+detail — session runs are remembered only on request, secret tools never record,
+retention is a number the user controls with an explicit Apply, and one action
+deletes everything this device has stored.
 
 ---
 
@@ -280,7 +279,7 @@ Deliberately not built, so they do not creep in:
 
 - **No tool-first navigation on Start.** The user's data chooses the tool.
 - **No accounts, sync, or cloud history.** Local-first is the product, not a mode.
-- **No payloads in URLs, telemetry, or analytics.** Ever.
+- **No payloads in URLs, logs, or storage beyond the documented list.** Ever.
 - **No wizard/multi-step flows.** Each tool is one screen and one run.
 - **No auto-save of payloads.** Session-only content is stated, not hidden.
 - **No gamification, streaks, or usage nudges** inside the workbench.

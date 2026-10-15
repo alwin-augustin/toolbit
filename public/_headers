@@ -1,12 +1,13 @@
 # Site-wide security headers.
 /
-  # No third-party script is loaded: analytics is an explicit `fetch` to the
-  # capture endpoint, so `script-src` stays at `'self'` and PostHog is allowed
-  # only as a connection. `object-src`/`frame-src` are closed rather than
-  # inherited, and `base-uri` is closed outright — nothing in the app uses
-  # `<base>`, and a `<base>` injected into rendered content would silently
-  # re-point every relative URL on the page.
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https:; connect-src 'self' https://us.i.posthog.com wss:; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; manifest-src 'self'
+  # No third-party script is loaded and there is no telemetry endpoint, so
+  # `script-src` stays at `'self'` and `connect-src` needs only `'self'` — plus
+  # `wss:`, which the WebSocket tester uses for the endpoints the user opens
+  # explicitly. `object-src`/`frame-src` are closed rather than inherited, and
+  # `base-uri` is closed outright — nothing in the app uses `<base>`, and a
+  # `<base>` injected into rendered content would silently re-point every
+  # relative URL on the page.
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https:; connect-src 'self' wss:; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; manifest-src 'self'
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY

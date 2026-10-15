@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { isDesktopHost } from '@/platform/desktop';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { usePreferences } from '@/core/preferences';
+import { deleteAllLocalData } from '@/core/privacy';
 import { clearAllHistory, pruneExpiredHistory } from '@/core/history-db';
 import { setTheme, useTheme, type Theme } from '@/shared/theme';
 import { Button } from '@/components/ui/button';
@@ -39,13 +40,13 @@ export function SettingsScreen() {
   const remember = useWorkbenchMemory((s) => s.remember);
   const setRemember = useWorkbenchMemory((s) => s.setRemember);
   const theme = useTheme();
-  const analytics = usePreferences((s) => s.analytics);
   const history = usePreferences((s) => s.history);
   const retentionDays = usePreferences((s) => s.retentionDays);
   const desktop = isDesktopHost();
   const [, navigate] = useLocation();
   const update = usePreferences((s) => s.update);
   const [status, setStatus] = useState('');
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
 
   const clearData = async () => {
     try {
@@ -63,6 +64,18 @@ export function SettingsScreen() {
     } catch {
       setStatus('Storage unavailable.');
     }
+  };
+
+  // The deletion is awaited store by store; the reload then rehydrates every
+  // in-memory store from empty storage, so nothing deleted lingers on screen.
+  const deleteEverything = async () => {
+    try {
+      await deleteAllLocalData();
+    } catch {
+      setStatus('Storage unavailable. Nothing was deleted.');
+      return;
+    }
+    window.location.reload();
   };
 
   return (
@@ -155,22 +168,6 @@ export function SettingsScreen() {
         <div className="wb-card-head">
           <h2 id="wb-set-privacy">Privacy and data</h2>
         </div>
-        {/* The installed app ships without analytics, so the switch is shown
-            only where it can actually do something. */}
-        {desktop ? null : (
-          <Label className="wb-setting-row cursor-pointer">
-            <span>
-              <strong>Product analytics</strong>
-              <small>
-                Pseudonymous usage and error events. Tool input and output are never sent.
-              </small>
-            </span>
-            <Checkbox
-              checked={analytics}
-              onCheckedChange={(checked) => update({ analytics: Boolean(checked) })}
-            />
-          </Label>
-        )}
         <Label className="wb-setting-row cursor-pointer">
           <span>
             <strong>Record history</strong>
@@ -189,6 +186,43 @@ export function SettingsScreen() {
           <Button type="button" variant="outline" size="sm" onClick={() => void clearData()}>
             Clear stored history
           </Button>
+        </div>
+        <div className="wb-setting-row">
+          <span>
+            <strong>Delete all local data</strong>
+            <small>
+              Removes stored history, workspaces, pins, recents, and preferences from this device.
+            </small>
+          </span>
+          {confirmDeleteAll ? (
+            <div className="flex items-center gap-1.5">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmDeleteAll(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => void deleteEverything()}
+              >
+                Delete everything
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmDeleteAll(true)}
+            >
+              Delete all local data
+            </Button>
+          )}
         </div>
         {/* Installed, the legal pages are not advertised anywhere else, so
             Settings is where they stay reachable. */}
@@ -244,9 +278,9 @@ export function SettingsScreen() {
         <p>
           Local transformations run in your browser and nowhere else. Tab structure is saved on this
           device without its contents. Session runs are remembered only when you ask. Stored history
-          and retention follow the switches above. Analytics sends anonymous usage events — never
-          tool input or output — and the switch above turns it off. The API Request Builder and
-          WebSocket Tester contact only the endpoints you explicitly run.
+          and retention follow the switches above, and Delete all local data removes everything at
+          once. There is no analytics and no tracking. The API Request Builder and WebSocket Tester
+          contact only the endpoints you explicitly run.
         </p>
       </div>
     </div>

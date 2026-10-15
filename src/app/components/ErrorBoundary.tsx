@@ -1,5 +1,4 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
-import { reportError } from '@/core/telemetry';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -16,8 +15,8 @@ interface State {
 
 /**
  * Error Boundary Component
- * Catches JavaScript errors anywhere in the child component tree,
- * logs those errors, and displays a fallback UI.
+ * Catches JavaScript errors anywhere in the child component tree and
+ * displays a fallback UI instead of letting the app unmount.
  */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
@@ -35,9 +34,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    reportError(error, 'app');
-
-    // Update state with error details
+    // Keep the error in state; the fallback below is the only surface for it.
     this.setState({
       error,
       errorInfo,
