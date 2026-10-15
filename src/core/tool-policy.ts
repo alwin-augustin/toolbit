@@ -5,6 +5,9 @@ export interface ToolPolicy {
   network: NetworkPolicy;
   historyDefault: 'enabled' | 'disabled';
 }
+// Tools whose content must never be recorded, exported or shared: credentials
+// and tokens (which named this class) and user-authored private content such as
+// Notes, which asks for the same treatment — no history, no share, no telemetry.
 const secret = new Set([
   'password-generator',
   'totp-generator',
@@ -14,6 +17,7 @@ const secret = new Set([
   'websocket-tester',
   'qr-code-generator',
   'docker-command-builder',
+  'notes',
 ]);
 const personal = new Set(['pdf-tools', 'image-converter']);
 export function getToolPolicy(id: string): ToolPolicy {

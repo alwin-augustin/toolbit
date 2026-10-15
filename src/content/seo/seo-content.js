@@ -758,6 +758,40 @@ export const TOOL_PAGES = [
     related: ['html-escape', 'word-counter', 'git-diff-viewer'],
   },
   {
+    slug: 'notes',
+    name: 'Notes',
+    category: 'text',
+    title: 'Private Notes Scratchpad — Local & Session-Only | Toolbit',
+    description:
+      'A private scratchpad for pasting and previewing text and Markdown. Everything stays in your browser tab, is never saved, and is never sent anywhere.',
+    h1: 'Private Notes Scratchpad',
+    lede: 'Hold onto a snippet, a draft, or a list for a moment and read it back as formatted Markdown. Notes is deliberately the least persistent tool here: the text lives in the open tab for the session and is gone the moment you refresh.',
+    bullets: [
+      'A single plain-text pane for pasting or typing.',
+      'Toggle a live, sanitised Markdown preview with one click.',
+      'Nothing is written to history, saved, or included in a workspace export.',
+      'The text never leaves the tab and disappears on refresh.',
+    ],
+    howTo: [
+      'Open Notes and paste or type your text.',
+      'Switch to Preview to read it rendered as Markdown.',
+      'Copy or download it before you refresh, because nothing is kept.',
+    ],
+    faq: [
+      {
+        q: 'Does Toolbit save my notes?',
+        a: 'No. Notes is session-only by design: the text lives in the open tab and disappears when you refresh or close it. It is not written to history, not saved, and not included in a workspace export.',
+      },
+      { q: 'Is my note sent anywhere?', a: privacyAnswer },
+      {
+        q: 'Is the Markdown preview safe?',
+        a: 'Rendered Markdown is sanitised before it is displayed, so embedded scripts and event handlers are stripped rather than executed.',
+      },
+    ],
+    keywords: ['notes', 'notepad', 'scratchpad', 'markdown preview', 'paste text', 'offline notes'],
+    related: ['markdown-previewer', 'word-counter', 'strip-whitespace'],
+  },
+  {
     slug: 'yaml-formatter',
     name: 'YAML Formatter',
     category: 'format',

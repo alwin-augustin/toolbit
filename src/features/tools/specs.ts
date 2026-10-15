@@ -411,6 +411,7 @@ const SMART_PASTE_FIELDS: Record<string, string> = {
   'websocket-tester': 'url',
   'http-status-codes': 'query',
   'nginx-config-validator': 'input',
+  notes: 'text',
 };
 
 /** Payload patch carrying smart-pasted text into the tool's primary field. */
@@ -457,6 +458,24 @@ export type WorkbenchToolId = string;
 
 export function isWorkbenchToolId(id: string): boolean {
   return id in ALL_SPECS;
+}
+
+/**
+ * Custom screens that own a workspace document. Most bespoke screens keep their
+ * state in component state and drop it on navigation; these open a Tab, so the
+ * work survives moving between tools. It is still session-only — the persist
+ * layer strips payloads — so the content is gone on refresh.
+ */
+export const DOCUMENT_BACKED_SCREENS = new Set<string>(['notes']);
+
+/**
+ * True when a tool owns a document: every workbench tool, plus the custom
+ * screens that opt in above. Gate document creation on this rather than on
+ * `isWorkbenchToolId`, so a document-backed screen gets a Tab in every entry
+ * point a workbench tool does.
+ */
+export function ownsDocument(id: string): boolean {
+  return isWorkbenchToolId(id) || DOCUMENT_BACKED_SCREENS.has(id);
 }
 
 export function specTitle(id: string, fallback: string): string {

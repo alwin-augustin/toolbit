@@ -4,7 +4,7 @@
    The shared vocabulary every screen builds from. Two groups:
 
      A. Shell furniture  — rail, context panel, topbar, tab strip, status bar.
-     B. Primitives       — the `wb-*` classes consumed by all 42 tool screens.
+     B. Primitives       — the `wb-*` classes consumed by all 43 tool screens.
 
    Rules:
      · Colours come from semantic tokens only (never a raw hex or a Tailwind

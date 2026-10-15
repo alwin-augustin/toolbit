@@ -40,7 +40,7 @@ Both modes end the same way: a result on screen that they copy and leave with.
 /saved                  Saved — sessions, examples, snippets
 /history                History — record of runs, switchable, and cleared on request
 /settings               Settings — appearance, session, privacy, keyboard
-/{toolId}               A tool document (42 of them)
+/{toolId}               A tool document (43 of them)
 
 /about  /privacy  /terms    Marketing and legal, outside the shell
 ```

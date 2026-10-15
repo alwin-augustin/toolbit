@@ -14,7 +14,7 @@ import { TOOLS, RESEARCH_CATEGORIES, type ResearchCategory } from '@/content/too
 import { useFavorites } from '@/core/favorites-store';
 import { useRecentTools } from '@/core/recent-tools';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
-import { isWorkbenchToolId } from '@/features/tools/specs';
+import { ownsDocument } from '@/features/tools/specs';
 import { Button } from '@/components/ui/button';
 import {
   CATEGORY_ICONS,
@@ -27,7 +27,7 @@ import {
 /**
  * The Navigator.
  *
- * One panel, one job: get to any of the 42 tools in a keystroke or two. It
+ * One panel, one job: get to any of the 43 tools in a keystroke or two. It
  * holds pinned tools, the recent trail and the full categorised tree, plus a
  * local filter for when you know the name but not the category. Global search
  * lives in the command palette; this filter narrows the tree in place.
@@ -74,7 +74,7 @@ export function Sidebar({
   const activate = (toolId: string) => {
     const tool = TOOL_INDEX.get(toolId);
     if (!tool) return;
-    if (isWorkbenchToolId(toolId)) openTool(toolId);
+    if (ownsDocument(toolId)) openTool(toolId);
     else navigateAction(tool.path);
     onNavigate();
   };

@@ -3,7 +3,7 @@
 > The single reference for how Toolbit looks and behaves. If something in the
 > interface is not described here, it is not part of the system yet.
 
-Toolbit is a local-first workbench of 42 developer utilities. The interface has
+Toolbit is a local-first workbench of 43 developer utilities. The interface has
 one job: get a developer from "I have data" to "I have the answer" without
 making them think about the interface at all. Everything below serves that.
 

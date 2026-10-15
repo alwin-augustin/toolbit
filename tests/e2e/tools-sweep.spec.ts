@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
     );
 });
 
-// All 42 catalog routes. Mirrors src/content/tools.config.ts paths.
+// All 43 catalog routes. Mirrors src/content/tools.config.ts paths.
 const TOOL_PATHS = [
   '/json-formatter',
   '/json-validator',
@@ -27,6 +27,7 @@ const TOOL_PATHS = [
   '/css-formatter',
   '/js-json-minifier',
   '/markdown-previewer',
+  '/notes',
   '/yaml-formatter',
   '/api-request-builder',
   '/xml-formatter',

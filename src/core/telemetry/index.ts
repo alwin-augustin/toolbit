@@ -1,5 +1,6 @@
 import { TOOLS } from '@/content/tools.config';
 import { safeStorage, usePreferences } from '@/core/preferences';
+import { canShareTool } from '@/core/tool-policy';
 import { isDesktopBuild } from '@/platform/desktop';
 
 export const EVENT_NAMES = [
@@ -132,6 +133,24 @@ export function track(name: EventName, properties: Props = {}) {
     !EVENT_NAMES.includes(name)
   )
     return;
+  const eventProperties = sanitizeProperties({
+    route: routeName(window.location.pathname),
+    ...properties,
+  });
+  // A tool excluded from sharing (secret/private, e.g. Notes) keeps its presence
+  // out of analytics too: if the event names one — as tool_id, a handoff edge,
+  // or its route — it never leaves the device. Payloads are already stripped by
+  // sanitizeProperties.
+  const namedTools = [
+    eventProperties.tool_id,
+    eventProperties.from_tool_id,
+    eventProperties.to_tool_id,
+  ];
+  if (
+    namedTools.some((id) => id !== undefined && !canShareTool(id)) ||
+    (eventProperties.route && !canShareTool(eventProperties.route))
+  )
+    return;
   const controller = new AbortController();
   pending.add(controller);
   const timer = setTimeout(() => controller.abort(), 5000);
@@ -140,7 +159,7 @@ export function track(name: EventName, properties: Props = {}) {
       api_key: apiKey,
       event: name,
       properties: {
-        ...sanitizeProperties({ route: routeName(window.location.pathname), ...properties }),
+        ...eventProperties,
         distinct_id: sessionIdentity,
         $process_person_profile: false,
       },

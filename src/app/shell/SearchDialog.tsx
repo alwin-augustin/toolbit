@@ -6,7 +6,7 @@ import { useSemanticEnabled, useSemanticHits } from '@/core/intent/use-semantic'
 import { useRecentTools } from '@/core/recent-tools';
 import { track } from '@/core/telemetry';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
-import { isWorkbenchToolId, specIcon } from '@/features/tools/specs';
+import { isWorkbenchToolId, ownsDocument, specIcon } from '@/features/tools/specs';
 import { CATEGORY_ICONS, CATEGORY_ORDER, DESTINATIONS, TOOL_INDEX } from '@/app/shell/navigation';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Kbd } from '@/components/ui/kbd';
@@ -71,7 +71,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
           resolved_by: resolution.resolvedBy,
         });
       }
-      if (isWorkbenchToolId(tool.id)) openTool(tool.id);
+      if (ownsDocument(tool.id)) openTool(tool.id);
       else navigate(tool.path);
     },
     [onClose, openTool, navigate, resolution, trimmed],
