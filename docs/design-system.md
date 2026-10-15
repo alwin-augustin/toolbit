@@ -192,6 +192,14 @@ never guessed: `z-sticky` (10), `z-rail` (20), `z-drawer` (40), `z-overlay` (50)
 
 ## 5. Motion
 
+Motion is a reading aid, not an entrance show. The product moves in one
+direction and only when something has actually changed — a result arriving, a
+diagnostic appearing, a surface lifting — so a developer notices the new state
+without being asked to watch for it. If a pixel moves and nothing changed, it is
+removed.
+
+### 5.1 Tokens
+
 | Token                   | Value | Use                       |
 | ----------------------- | ----- | ------------------------- |
 | `--tb-duration-instant` | 80ms  | Hover and colour changes  |
@@ -204,6 +212,34 @@ Easings: `--tb-ease-out` (entrances, the default), `--tb-ease-in-out` (movement)
 
 Only `background-color`, `color`, `opacity` and `translate`/`transform` are
 animated — never layout properties.
+
+Both defaults are bridged in `tailwind.css`, so a `transition-*` utility with no
+duration moves at `--tb-duration-fast` on `--tb-ease-out`. A specific duration is
+named from the scale — `duration-(--tb-duration-instant)`, never `duration-100`.
+The `ui/` primitives (popovers, dialog scrim, sheet, toast) follow the same rule.
+
+### 5.2 Product motion
+
+`system.css` owns the keyframes; nothing here is a third-party `animate-*`
+utility. Each re-triggers on mount, so a fresh result animates while an ordinary
+re-render stays still (in React, a changing `key`).
+
+| Class             | Keyframe       | Meaning                                                        |
+| ----------------- | -------------- | -------------------------------------------------------------- |
+| `.wb-anim-fade`   | `wb-fade-in`   | A surface appearing without direction — empty states, overlays |
+| `.wb-anim-rise`   | `wb-rise-in`   | Content landing from below — a result arriving                 |
+| `.wb-anim-settle` | `wb-settle-in` | A diagnostic settling from above — error and warning banners   |
+
+The result badge in the workspace animates with `.wb-anim-rise` on each run, and
+the status-bar currency dot (`.wb-status-dot`) eases its colour between "needs
+run", "up to date" and "error" — the status bar is where "is my result current?"
+is answered, so the eye should be able to follow it. Error and warning banners
+(`.wb-error-banner`, `.wb-warning-banner`) and empty states (`.wb-empty`) settle
+in from their primitives, without any markup change.
+
+Deliberately still: switching documents, collapsing the panel and toggling the
+theme are instant. They are navigation, not new information, and a fade would
+turn a fast instrument into a slow one.
 
 **Reduced motion is honoured globally.** `globals.css` collapses every duration
 to 0.01ms and disables smooth scrolling when the OS asks for it. No component

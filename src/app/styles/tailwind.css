@@ -118,10 +118,16 @@
   --shadow-lg: var(--tb-shadow-lg);
   --shadow-focus: var(--tb-shadow-focus);
 
-  /* Motion */
+  /* Motion. `--ease-*` names the curves. The two defaults below make every
+     `transition-*` utility with no explicit duration move on the house scale —
+     130ms on the product's ease-out — instead of Tailwind's 150ms default, so
+     an un-annotated transition is still on-system. Where a specific duration is
+     needed, name it from the scale: `duration-(--tb-duration-instant|fast|base|slow)`. */
   --ease-out: var(--tb-ease-out);
   --ease-in-out: var(--tb-ease-in-out);
   --ease-spring: var(--tb-ease-spring);
+  --default-transition-duration: var(--tb-duration-fast);
+  --default-transition-timing-function: var(--tb-ease-out);
 
   /* Stacking order. Without this bridge `z-popover`, `z-toast` and friends
      generate nothing at all, and floating layers silently lose their order. */

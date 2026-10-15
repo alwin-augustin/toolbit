@@ -15,6 +15,84 @@
    ========================================================================= */
 
 /* ============================================================================
+   Motion
+   ----------------------------------------------------------------------------
+   The product moves in one direction, and only when something has actually
+   changed: a result arriving, a diagnostic appearing, a surface lifting. Motion
+   is a reading aid, never an entrance show — it exists so a developer notices a
+   new state without being asked to watch for it. Four rules, matching §5 of the
+   design system:
+
+     · Only `opacity` and `translate`/`transform` animate. Never layout.
+     · Durations and easings are the tokens from tokens.css. Nothing here
+       invents a value.
+     · Keyframes re-trigger on mount, so "a fresh result" animates while an
+       ordinary re-render stays still. In React that means a changing `key`.
+     · `prefers-reduced-motion` is handled once, globally, in globals.css, which
+       collapses every duration to 0.01ms. No rule here repeats that check.
+
+   Reach for these `wb-anim-*` classes rather than a raw `animate-*` utility, so
+   the motion vocabulary stays inside the system.
+   ========================================================================= */
+
+/* A surface appearing: overlays, empty states, anything without direction. */
+@keyframes wb-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Content rising into place from below — a result landing in its pane. */
+@keyframes wb-rise-in {
+  from {
+    opacity: 0;
+    translate: 0 3px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/* Content settling from above — a diagnostic arriving over the work it
+   describes. */
+@keyframes wb-settle-in {
+  from {
+    opacity: 0;
+    translate: 0 -3px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.wb-anim-fade {
+  animation: wb-fade-in var(--tb-duration-base) var(--tb-ease-out);
+}
+
+.wb-anim-rise {
+  animation: wb-rise-in var(--tb-duration-fast) var(--tb-ease-out);
+}
+
+.wb-anim-settle {
+  animation: wb-settle-in var(--tb-duration-fast) var(--tb-ease-out);
+}
+
+/* The result-currency dot. Its colour moves between "needs run", "up to date"
+   and "error", so the change is eased rather than snapping — the status bar is
+   where "is my result current?" is answered, and the eye should follow it. */
+.wb-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--tb-radius-full);
+  transition: background-color var(--tb-duration-base) var(--tb-ease-out);
+}
+
+/* ============================================================================
    A. Shell
    ----------------------------------------------------------------------------
    Rail is always present — it is the navigation spine at every breakpoint.
@@ -1017,6 +1095,9 @@
   padding: 40px 20px;
   text-align: center;
   color: var(--tb-ink-faint);
+  /* An empty state is a state, not an error: it fades in when a list or filter
+     reaches nothing, and otherwise holds still. */
+  animation: wb-fade-in var(--tb-duration-base) var(--tb-ease-out);
 }
 
 .wb-empty h2 {
@@ -1041,6 +1122,9 @@
   background: var(--tb-danger-soft);
   color: var(--tb-danger);
   font-size: var(--tb-text-sm);
+  /* A diagnostic arrives over the work it describes; it settles in rather than
+     blinking on, so the failure registers as new information. */
+  animation: wb-settle-in var(--tb-duration-fast) var(--tb-ease-out);
 }
 
 .wb-error-banner strong {
@@ -1062,6 +1146,7 @@
   background: var(--tb-warning-soft);
   color: var(--tb-warning);
   font-size: var(--tb-text-xs);
+  animation: wb-settle-in var(--tb-duration-fast) var(--tb-ease-out);
 }
 
 .wb-warning-banner strong {

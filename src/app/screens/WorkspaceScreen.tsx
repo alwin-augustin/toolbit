@@ -67,6 +67,9 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
   const [optionsOpen, setOptionsOpen] = useState(false);
   const optionsRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
+  // Bumped on every successful run. It re-keys the result badge below so a
+  // fresh result animates in, while an ordinary re-render leaves it still.
+  const [runKey, setRunKey] = useState(0);
 
   // Track this tool as recently used and reset cursor coordinates on document switch
   useEffect(() => {
@@ -111,6 +114,7 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
         }
         const next = { ...doc, output, mode, error: '', warning: warning ?? '', dirty: false };
         update({ output, mode, error: '', warning: warning ?? '', dirty: false });
+        setRunKey((key) => key + 1);
         track('transform_succeeded', { tool_id: spec.id });
         if (remember) {
           addRun({
@@ -364,7 +368,10 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
           <div className="wb-pane-header">
             <h2>Result</h2>
             {valid && (
-              <span className="flex items-center gap-1 text-2xs text-success">
+              <span
+                key={runKey}
+                className="wb-anim-rise flex items-center gap-1 text-2xs text-success"
+              >
                 <IconCircleCheck size={13} aria-hidden="true" />
                 {spec.resultLabel ?? 'Complete'}
               </span>
@@ -411,7 +418,7 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
       <div className="wb-statusbar" role="status">
         <span className="wb-statusbar-item">
           <span
-            className={`size-1.5 rounded-full ${
+            className={`wb-status-dot ${
               valid ? 'bg-success' : doc.error ? 'bg-danger' : 'bg-ink-faint'
             }`}
             aria-hidden="true"
