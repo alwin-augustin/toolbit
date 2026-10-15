@@ -110,6 +110,7 @@ the CodeMirror theme and the diff viewer.
 | `--code-number`                        | Numbers                     |
 | `--code-keyword`                       | Keywords, booleans, null    |
 | `--code-punc`                          | Punctuation and brackets    |
+| `--code-comment`                       | Comments and meta           |
 | `--code-added` / `--code-added-bg`     | Added diff lines            |
 | `--code-removed` / `--code-removed-bg` | Removed diff lines          |
 

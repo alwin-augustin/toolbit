@@ -7,6 +7,9 @@ describe('live analytics boundary', () => {
     vi.stubGlobal('fetch', sender);
     const { track, EVENT_NAMES, posthog } = await import('@/core/telemetry');
     const { usePreferences } = await import('@/core/preferences');
+    // Analytics is opt-in, so this test states its premise rather than relying on
+    // a default: consent on means everything below has to be sanitized.
+    usePreferences.getState().update({ analytics: true });
     const secret = 'CANARY_DO_NOT_TRANSMIT';
     for (const event of EVENT_NAMES)
       posthog.capture(event, {
@@ -34,6 +37,42 @@ describe('live analytics boundary', () => {
     expect(localStorage.getItem('toolbit:analytics-anonymous-id')).toBeNull();
     usePreferences.getState().update({ analytics: true });
     expect(localStorage.getItem('toolbit:analytics-anonymous-id')).not.toBe(old);
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it('honours a browser privacy signal without rewriting the stored preference', async () => {
+    vi.stubEnv('VITE_POSTHOG_KEY', 'synthetic-test-key');
+    vi.stubEnv('VITE_POSTHOG_HOST', 'https://example.invalid');
+    const sender = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', sender);
+    const { track, privacySignalRefused } = await import('@/core/telemetry');
+    const { usePreferences } = await import('@/core/preferences');
+    usePreferences.getState().update({ analytics: true });
+
+    Object.defineProperty(navigator, 'doNotTrack', { configurable: true, value: '1' });
+    expect(privacySignalRefused()).toBe(true);
+    track('tool_opened', { tool_id: 'json-formatter' });
+    expect(sender).not.toHaveBeenCalled();
+    expect(usePreferences.getState().analytics).toBe(true);
+
+    // Global Privacy Control is the same refusal.
+    Object.defineProperty(navigator, 'doNotTrack', { configurable: true, value: null });
+    Object.defineProperty(navigator, 'globalPrivacyControl', {
+      configurable: true,
+      value: true,
+    });
+    track('tool_opened', { tool_id: 'json-formatter' });
+    expect(sender).not.toHaveBeenCalled();
+
+    // With no signal raised, the event goes out again.
+    Object.defineProperty(navigator, 'globalPrivacyControl', {
+      configurable: true,
+      value: false,
+    });
+    track('tool_opened', { tool_id: 'json-formatter' });
+    expect(sender).toHaveBeenCalledTimes(1);
+
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
   });

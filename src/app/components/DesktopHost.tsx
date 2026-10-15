@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { detectContentType } from '@/core/smart-detect';
+import { installExternalLinkGuard } from '@/platform/external-links';
 import { useWorkspace } from '@/shared/workspace-store';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { toolPath, useWorkbenchActions } from '@/shared/workbench-actions';
@@ -25,10 +26,14 @@ function resultFileName(toolId: string): string {
 
 /** ⌥⌘W / "Close Document": mirrors the shell's own keyboard handler. */
 function closeActiveDocument(navigate: (to: string) => void): void {
-  const { activeTabId, closeTab, tabs } = useWorkspace.getState();
-  if (!activeTabId) return;
-  closeTab(activeTabId);
-  if (tabs.length <= 1) navigate('/');
+  const { activeTabId, tabs, closeTab } = useWorkspace.getState();
+  const closed = tabs.find((tab) => tab.id === activeTabId);
+  if (!closed) return;
+  const nextToolId = closeTab(closed.id);
+  // A menu command is deliberate, so the workspace moves to the neighbouring
+  // document (or home). Staying put would let the tool route open the closed
+  // document again.
+  navigate(nextToolId ? toolPath(nextToolId) : '/');
 }
 
 /**
@@ -136,6 +141,10 @@ export function DesktopHost() {
     let cancelled = false;
     const disposers: Array<() => void> = [];
 
+    // The installed app has no address bar or back button, so a link in
+    // rendered content must not be able to replace the workspace.
+    disposers.push(installExternalLinkGuard(notify));
+
     void (async () => {
       const wired = await Promise.all([
         onDesktopMenu((name) => {
@@ -185,7 +194,7 @@ export function DesktopHost() {
       cancelled = true;
       disposers.forEach((dispose) => dispose());
     };
-  }, [navigate, openFromPath, openViaPanel, saveActiveResult]);
+  }, [navigate, notify, openFromPath, openViaPanel, saveActiveResult]);
 
   return null;
 }

@@ -21,7 +21,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
-import { getSpec, patchWorkbenchDoc, readDoc, specParams } from '@/features/tools/specs';
+import { getSpec, patchWorkbenchDoc, readDoc, specLanguages, specParams } from '@/features/tools/specs';
+import { languageLabel } from '@/shared/editor-language';
 import type { WorkbenchDocState } from '@/shared/workbench';
 import type { WorkspaceTab } from '@/shared/workspace-store';
 
@@ -81,7 +82,14 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
     update({ params: { ...doc.params, [key]: value }, dirty: true });
   const params = specParams(doc, spec);
   const valid = !!doc.output && !doc.error && !doc.dirty;
-  const isJson = spec.language === 'json';
+  // Each pane is highlighted with the grammar of what it holds, which is not
+  // always the same on both sides: a converter reads one language and writes
+  // another, and the status bar says so.
+  const languages = specLanguages(doc, spec);
+  const languageStatus =
+    languages.input === languages.result
+      ? languageLabel(languages.input)
+      : `${languageLabel(languages.input)} → ${languageLabel(languages.result)}`;
 
   const transform = async (mode: string = doc.mode) => {
     setBusy(true);
@@ -292,7 +300,7 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
             onChange={(input) => update({ input, dirty: true, error: '' })}
             wrap={wrap}
             label="Input code"
-            language={isJson ? 'json' : 'text'}
+            language={languages.input}
           />
           <div className="wb-pane-footer">
             <span>
@@ -329,7 +337,7 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
             readOnly
             wrap={wrap}
             label="Result code"
-            language={isJson ? 'json' : 'text'}
+            language={languages.result}
           />
           <div className="wb-pane-footer">
             <span>{lineCount(doc.output)} lines</span>
@@ -362,7 +370,7 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
         </span>
         <span className="wb-statusbar-sep" aria-hidden="true" />
         <span className="wb-statusbar-item">
-          {wrap ? 'Wrapped' : 'No wrap'} · {isJson ? 'JSON' : 'Plain text'}
+          {wrap ? 'Wrapped' : 'No wrap'} · {languageStatus}
         </span>
         <span className="wb-statusbar-sep" aria-hidden="true" />
         <span className="wb-statusbar-item">Local only</span>

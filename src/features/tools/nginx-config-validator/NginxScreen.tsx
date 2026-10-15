@@ -379,6 +379,7 @@ export function NginxScreen() {
           <CodeEditor
             value={input}
             onChange={setInput}
+            language="nginx"
             wrap={wrap}
             label="Nginx config"
             placeholder="Paste your nginx configuration here..."

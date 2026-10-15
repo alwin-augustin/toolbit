@@ -125,12 +125,15 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
 
       // ⌥W closes the active document.
       if (event.altKey && event.key.toLowerCase() === 'w') {
-        const activeId = useWorkspace.getState().activeTabId;
-        if (!activeId) return;
+        const { activeTabId, tabs, closeTab } = useWorkspace.getState();
+        const closed = tabs.find((tab) => tab.id === activeTabId);
+        if (!closed) return;
         event.preventDefault();
-        const { closeTab, tabs } = useWorkspace.getState();
-        closeTab(activeId);
-        if (tabs.length <= 1) navigate('/');
+        const nextToolId = closeTab(closed.id);
+        // The workspace follows the close only when the document leaving is the
+        // one on screen — otherwise the address would outlive the document and
+        // the tool route would open it again.
+        if (path === toolPath(closed.toolId)) navigate(nextToolId ? toolPath(nextToolId) : '/');
         return;
       }
 
@@ -145,7 +148,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [navigate, togglePanel]);
+  }, [navigate, path, togglePanel]);
 
   return (
     <div

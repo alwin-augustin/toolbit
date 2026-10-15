@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Router } from 'wouter';
 import { AppRouter } from '@/app/router';
@@ -235,6 +235,79 @@ describe('document strip', () => {
 
     await user.click(within(tab(second)).getByRole('button', { name: 'Close JWT Decoder' }));
     expect(useWorkspace.getState().tabs.map((t) => t.id)).toEqual([third]);
+  });
+
+  it('names a second document of the same tool apart from the first', () => {
+    renderShell('/');
+    openDoc('json-formatter', 'JSON');
+    openDoc('json-formatter', 'JSON 2');
+
+    const strip = within(screen.getByLabelText('Open documents'));
+    expect(strip.getByText('JSON')).toBeInTheDocument();
+    expect(strip.getByText('JSON 2')).toBeInTheDocument();
+  });
+
+  it('marks a tab as the current page only while its document is on screen', async () => {
+    renderShell('/');
+    const id = openDoc('json-formatter', 'JSON');
+    const tab = () => document.querySelector<HTMLElement>(`[data-tab-id="${id}"]`)!;
+
+    // Home displays no document, so the strip marks none of them.
+    expect(tab().getAttribute('aria-current')).toBeNull();
+
+    act(() => press(window, '1', { metaKey: true }));
+    await waitFor(() => expect(window.location.pathname).toBe('/json-formatter'));
+    expect(tab().getAttribute('aria-current')).toBe('page');
+
+    // A screen that holds no document takes the mark away again.
+    act(() => {
+      window.history.replaceState(null, '', '/library');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'All Tools' })).toBeInTheDocument(),
+    );
+    expect(tab().getAttribute('aria-current')).toBeNull();
+  });
+
+  it('closes the document on screen instead of letting the route open it again', async () => {
+    const user = userEvent.setup();
+    renderShell('/json-formatter');
+
+    await waitFor(() => expect(useWorkspace.getState().tabs).toHaveLength(1));
+    const id = useWorkspace.getState().tabs[0].id;
+
+    await user.click(
+      within(document.querySelector<HTMLElement>(`[data-tab-id="${id}"]`)!).getByRole('button', {
+        name: /^Close /,
+      }),
+    );
+
+    await waitFor(() => expect(window.location.pathname).toBe('/'));
+    expect(useWorkspace.getState().tabs).toHaveLength(0);
+    expect(await screen.findByRole('heading', { name: 'Start' })).toBeInTheDocument();
+  });
+
+  it('hands the workspace to the neighbouring document when the open one closes', async () => {
+    const user = userEvent.setup();
+    renderShell('/json-formatter');
+
+    await waitFor(() => expect(useWorkspace.getState().tabs).toHaveLength(1));
+    const first = useWorkspace.getState().tabs[0].id;
+    const second = openDoc('csv-to-json', 'CSV to JSON');
+
+    // ⌘1 puts the first document back on screen, address and all.
+    act(() => press(window, '1', { metaKey: true }));
+    await waitFor(() => expect(window.location.pathname).toBe('/json-formatter'));
+
+    await user.click(
+      within(document.querySelector<HTMLElement>(`[data-tab-id="${first}"]`)!).getByRole('button', {
+        name: /^Close /,
+      }),
+    );
+
+    expect(useWorkspace.getState().tabs.map((t) => t.id)).toEqual([second]);
+    await waitFor(() => expect(window.location.pathname).toBe('/csv-to-json'));
   });
 
   it('hides the strip entirely when nothing is open', () => {

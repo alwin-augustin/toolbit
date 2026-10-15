@@ -432,7 +432,7 @@ export function FakeDataScreen() {
             value={output}
             readOnly
             wrap={wrap}
-            language={format === 'json' ? 'json' : 'text'}
+            language={format === 'json' ? 'json' : format === 'sql' ? 'sql' : 'text'}
             label="Generated fixtures"
             placeholder="Press Generate to create test data."
             showLineNumbers={false}

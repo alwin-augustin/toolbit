@@ -223,6 +223,9 @@ Format and inspect structured data
   means: preview truncated, processing and copy still use everything.
 - The status bar reports currency (`up to date` / `needs run` / `error`) — not
   input validity, which the result header already states.
+- It also names the language being highlighted, so a pane never leaves you
+  guessing which grammar you are reading. Each tool highlights what it handles:
+  a converter shows one language on the left and another on the right.
 
 ### Saved, History, Settings
 

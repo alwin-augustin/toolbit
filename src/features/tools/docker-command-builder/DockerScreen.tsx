@@ -486,7 +486,7 @@ export function DockerScreen() {
               </Button>
             </div>
           </div>
-          <CodeEditor value={output} language="text" readOnly label="Generated docker command" />
+          <CodeEditor value={output} language="shell" readOnly label="Generated docker command" />
           <div className="wb-pane-footer">
             <span>Review before running. Nothing here executes it.</span>
           </div>

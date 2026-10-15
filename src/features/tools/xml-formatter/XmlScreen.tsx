@@ -358,6 +358,7 @@ export function XmlScreen() {
           <CodeEditor
             value={input}
             onChange={setInput}
+            language="xml"
             wrap={wrap}
             label="Input XML"
             placeholder="Paste your XML here..."
@@ -386,7 +387,9 @@ export function XmlScreen() {
             readOnly
             wrap={wrap}
             label="XML result"
-            language={mode === 'json' ? 'json' : 'text'}
+            // Converting to JSON is the only mode that leaves XML behind, and
+            // a validation report is prose rather than markup.
+            language={mode === 'json' ? 'json' : mode === 'validate' ? 'text' : 'xml'}
             placeholder={
               mode === 'xpath' ? 'XPath matches will appear here.' : 'Output will appear here...'
             }

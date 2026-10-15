@@ -210,6 +210,8 @@ export function GitDiffScreen() {
           <CodeEditor
             value={input}
             onChange={setInput}
+            // A pasted patch is a unified diff, so it reads as one.
+            language="diff"
             wrap={wrap}
             label="Git patch input"
             placeholder="Paste git diff output here..."

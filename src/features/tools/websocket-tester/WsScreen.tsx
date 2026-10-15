@@ -280,6 +280,7 @@ export function WsScreen() {
           <CodeEditor
             value={messageInput}
             onChange={setMessageInput}
+            language="json"
             wrap={wrap}
             label="Message to send"
             placeholder='Type a message... (e.g. {"type": "hello"})'

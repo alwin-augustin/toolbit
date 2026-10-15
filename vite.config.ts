@@ -31,7 +31,15 @@ export default defineConfig(({ mode }) => ({
       },
       output: {
         manualChunks: (id) => {
-          if (id.includes('@codemirror') || id.includes('@lezer')) return 'codemirror';
+          // The editor core every route needs, so one eager chunk. Grammars are
+          // deliberately excluded: they are imported on demand, and sweeping
+          // `@codemirror/lang-*` in here would ship every language to every
+          // visitor — the reason a tool only highlights the language it handles.
+          if (
+            /@codemirror\/(?:autocomplete|commands|language|lint|search|state|view)\//.test(id) ||
+            /@lezer\/(?:common|highlight|lr)\//.test(id)
+          )
+            return 'codemirror';
           if (id.includes('pdf-lib')) return 'vendor_pdf';
           if (id.includes('/qrcode')) return 'vendor_qr';
           if (id.includes('/marked') || id.includes('/dompurify')) return 'vendor_markdown';

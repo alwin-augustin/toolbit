@@ -462,6 +462,8 @@ export function ApiScreen() {
           <CodeEditor
             value={body}
             onChange={setBody}
+            // The builder sends JSON by default; the pane highlights what it will send.
+            language="json"
             wrap={wrap}
             label="Request body"
             placeholder='{"key": "value"}'

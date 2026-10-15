@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { EditorState, type Extension, Facet, StateField } from '@codemirror/state';
+import { Compartment, EditorState, type Extension, Facet, StateField } from '@codemirror/state';
 import {
   EditorView,
   keymap,
@@ -9,21 +9,93 @@ import {
 } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { bracketMatching, syntaxHighlighting, HighlightStyle } from '@codemirror/language';
-import { json } from '@codemirror/lang-json';
 import { tags } from '@lezer/highlight';
+import { loadLanguageSupport, type EditorLanguage } from '@/shared/editor-language';
 import { useEditorStatus } from '@/shared/workspace-store';
 import { Button } from '@/components/ui/button';
 
-export type EditorLanguage = 'json' | 'text' | 'diff';
+export type { EditorLanguage };
 
-/* Syntax palette from the design system tokens (--code-*). */
+/**
+ * Syntax palette from the design system tokens (--code-*).
+ *
+ * Every tag the supported grammars emit has to land somewhere here: an
+ * unmapped tag renders in the plain reading colour, which makes a language
+ * look half-highlighted. Names share the key colour, literals keep their own,
+ * and comments are the muted reading voice.
+ */
 const toolbitHighlight = HighlightStyle.define([
-  { tag: tags.propertyName, color: 'var(--code-key)' },
-  { tag: tags.string, color: 'var(--code-string)' },
-  { tag: tags.number, color: 'var(--code-number)' },
-  { tag: [tags.keyword, tags.bool, tags.null], color: 'var(--code-keyword)' },
-  { tag: [tags.punctuation, tags.separator, tags.bracket], color: 'var(--code-punc)' },
+  {
+    tag: [
+      tags.comment,
+      tags.lineComment,
+      tags.blockComment,
+      tags.docComment,
+      tags.meta,
+      tags.processingInstruction,
+    ],
+    color: 'var(--code-comment)',
+    fontStyle: 'italic',
+  },
+  {
+    tag: [
+      tags.string,
+      tags.special(tags.string),
+      tags.character,
+      tags.escape,
+      tags.regexp,
+      tags.url,
+      tags.link,
+      tags.docString,
+    ],
+    color: 'var(--code-string)',
+  },
+  {
+    tag: [tags.number, tags.integer, tags.float, tags.unit, tags.constant(tags.number)],
+    color: 'var(--code-number)',
+  },
+  {
+    tag: [
+      tags.keyword,
+      tags.controlKeyword,
+      tags.definitionKeyword,
+      tags.moduleKeyword,
+      tags.operatorKeyword,
+      tags.self,
+      tags.atom,
+      tags.bool,
+      tags.null,
+    ],
+    color: 'var(--code-keyword)',
+  },
+  {
+    tag: [
+      tags.propertyName,
+      tags.attributeName,
+      tags.definition(tags.variableName),
+      tags.definition(tags.propertyName),
+      tags.typeName,
+      tags.className,
+      tags.tagName,
+      tags.namespace,
+      tags.labelName,
+    ],
+    color: 'var(--code-key)',
+  },
+  {
+    tag: [tags.operator, tags.punctuation, tags.separator, tags.bracket, tags.squareBracket, tags.paren, tags.brace, tags.angleBracket],
+    color: 'var(--code-punc)',
+  },
+  // Prose tags: markdown and documentation comments carry shape, not colour.
+  { tag: tags.heading, color: 'var(--code-ink)', fontWeight: '600' },
+  { tag: tags.strong, fontWeight: '600' },
+  { tag: tags.emphasis, fontStyle: 'italic' },
+  { tag: tags.strikethrough, textDecoration: 'line-through' },
+  { tag: tags.invalid, color: 'var(--code-removed)' },
 ]);
+
+/** Holds the loaded grammar, so it can be swapped without rebuilding the view. */
+const languageCompartment = new Compartment();
 
 /* Diff-specific line decorations — highlights lines starting with + or - */
 const diffLanguage = Facet.define<boolean>();
@@ -147,6 +219,8 @@ export function CodeEditor({
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const synchronizing = useRef(false);
+  /** Highlighting extensions for the current language, kept across view rebuilds. */
+  const languageExtensions = useRef<Extension[]>([]);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const setStatus = useEditorStatus((s) => s.setStatus);
@@ -181,10 +255,9 @@ export function CodeEditor({
       }),
     ];
     if (showLineNumbers) extensions.push(lineNumbers());
-    if (language === 'json' && !large) extensions.push(json());
-    if (language === 'diff') {
-      extensions.push(diffLanguage.of(true), diffThemeExt, diffDecorationsField);
-    }
+    // The grammar arrives through the loader below; the editor is built first
+    // so a slow chunk delays colour, never the ability to type.
+    extensions.push(languageCompartment.of(languageExtensions.current));
     if (placeholder) extensions.push(cmPlaceholder(placeholder));
     extensions.push(
       EditorView.updateListener.of((update) => {
@@ -222,7 +295,6 @@ export function CodeEditor({
     // displayValue is intentionally excluded: content syncs via the effect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    language,
     readOnly,
     placeholder,
     showLineNumbers,
@@ -232,6 +304,35 @@ export function CodeEditor({
     previewOnly,
     wrap,
   ]);
+
+  // Load the grammar for the language this pane handles, once, and hand it to
+  // the editor. Rebuilt views pick the loaded value up; a language swap only
+  // reconfigures, so switching a tool's mode never costs the user their caret.
+  // Large documents stay uncoloured — a full parse costs more than it shows.
+  useEffect(() => {
+    let cancelled = false;
+    const apply = (extensions: Extension[]) => {
+      if (cancelled) return;
+      languageExtensions.current = extensions;
+      viewRef.current?.dispatch({ effects: languageCompartment.reconfigure(extensions) });
+    };
+    if (large || previewOnly) {
+      apply([]);
+      return;
+    }
+    void loadLanguageSupport(language).then((extensions) => {
+      // The diff view colours lines rather than tokens, so its decorations ride
+      // along with whatever the loader returned.
+      apply(
+        language === 'diff'
+          ? [...extensions, diffLanguage.of(true), diffThemeExt, diffDecorationsField]
+          : extensions,
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [language, large, previewOnly]);
 
   // Sync external value changes into the editor.
   useEffect(() => {

@@ -62,7 +62,7 @@ export const CATEGORY_GROUPS = [
 ];
 
 const privacyAnswer =
-  'Local transformations process input in your browser. HTTP and WebSocket tools send user-initiated requests. Optional product analytics excludes tool input and output, and can be disabled in Privacy and storage.';
+  'Local transformations process input in your browser. HTTP and WebSocket tools send user-initiated requests. Optional product analytics is off by default, excludes tool input and output, and stays off when your browser signals Do Not Track or Global Privacy Control.';
 
 const offlineAnswer =
   'Toolbit installs as a PWA in supported browsers. Cached local tools can work without a connection; network tools still require their endpoints.';
@@ -2394,7 +2394,7 @@ export const LEGAL_PAGES = [
       {
         h2: 'Analytics',
         paragraphs: [
-          'Toolbit uses PostHog to measure pseudonymous product usage, diagnose errors, and improve the application. When enabled and configured, we collect a random device identifier, known route/tool identifiers, bounded counts, and error codes. You can disable analytics before collection using Privacy and storage; this also removes the stored device identity. We do not send the text, files, tokens, snippets, or other content you process with Toolbit.',
+          'Toolbit uses PostHog to measure pseudonymous product usage, diagnose errors, and improve the application. Analytics is off until you turn it on in Privacy and storage, and a browser that signals Do Not Track or Global Privacy Control is never tracked. When enabled, we collect a random device identifier, known route/tool identifiers, bounded counts, and error codes; turning it off removes the stored device identity immediately. We do not send the text, files, tokens, snippets, or other content you process with Toolbit.',
         ],
       },
       {

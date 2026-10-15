@@ -32,6 +32,7 @@ import {
   type WorkbenchDocState,
   type WorkbenchToolSpec as Spec,
 } from '@/shared/workbench';
+import type { EditorLanguage } from '@/shared/editor-language';
 import { useWorkspace } from '@/shared/workspace-store';
 
 export type { Spec as WorkbenchToolSpec };
@@ -214,6 +215,9 @@ export const ALL_SPECS: Record<string, Spec> = {
       return { output: result.value, error: '' };
     },
     fileExt: 'yaml',
+    language: 'yaml',
+    // Formatting stays YAML; only the JSON conversion changes the result.
+    resultLanguage: { 'to-json': 'json' },
   },
   'csv-to-json': {
     id: 'csv-to-json',
@@ -230,8 +234,9 @@ export const ALL_SPECS: Record<string, Spec> = {
       if (!result.ok) return { output: '', error: 'Enter valid CSV with a header row.' };
       return { output: result.value, error: '' };
     },
+    // The input is CSV, which has no grammar here; the result is JSON.
     fileExt: 'json',
-    language: 'json',
+    resultLanguage: 'json',
   },
   'sql-formatter': {
     id: 'sql-formatter',
@@ -253,6 +258,7 @@ export const ALL_SPECS: Record<string, Spec> = {
       return { output: result.value, error: '' };
     },
     fileExt: 'sql',
+    language: 'sql',
     note: 'Heuristic formatting; verify quoted literals in the output before running statements.',
   },
   'css-formatter': {
@@ -274,6 +280,7 @@ export const ALL_SPECS: Record<string, Spec> = {
       return { output: result.value, error: '' };
     },
     fileExt: 'css',
+    language: 'css',
   },
   'graphql-formatter': {
     id: 'graphql-formatter',
@@ -294,6 +301,7 @@ export const ALL_SPECS: Record<string, Spec> = {
       return { output: result.value, error: '' };
     },
     fileExt: 'graphql',
+    language: 'graphql',
   },
   'js-json-minifier': {
     id: 'js-json-minifier',
@@ -311,6 +319,7 @@ export const ALL_SPECS: Record<string, Spec> = {
       return { output: result.value, error: '' };
     },
     fileExt: 'js',
+    language: 'javascript',
     note: 'Minifies JavaScript; it does not process JSON.',
   },
   'html-escape': {
@@ -333,6 +342,7 @@ export const ALL_SPECS: Record<string, Spec> = {
         : { output: '', error: 'Could not process.' };
     },
     fileExt: 'html',
+    language: 'html',
   },
   'strip-whitespace': {
     id: 'strip-whitespace',
@@ -459,6 +469,21 @@ export function workbenchSpecIds(): string[] {
 
 export function specParams(doc: WorkbenchDocState, spec: Spec): Record<string, string | boolean> {
   return { ...spec.defaults, ...doc.params };
+}
+
+/**
+ * What each pane of a tool holds, so the editor can highlight the matching
+ * grammar. A converter names the modes whose result differs from its input;
+ * every other mode reuses the input language.
+ */
+export function specLanguages(
+  doc: WorkbenchDocState,
+  spec: Spec,
+): { input: EditorLanguage; result: EditorLanguage } {
+  const input = spec.language ?? 'text';
+  const result = spec.resultLanguage;
+  if (typeof result === 'string') return { input, result };
+  return { input, result: result?.[doc.mode] ?? input };
 }
 
 export function defaultDocState(toolId: string, input?: string): WorkbenchDocState {

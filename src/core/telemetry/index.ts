@@ -75,11 +75,22 @@ export function routeName(path: string) {
 let sessionIdentity = `toolbit_${crypto.randomUUID()}`;
 const identityKey = 'toolbit:analytics-anonymous-id';
 const pending = new Set<AbortController>();
+/**
+ * The browser's own privacy signal, treated the way the consent toggle is: a
+ * refusal. `Do Not Track` and Global Privacy Control are the two signals a
+ * browser or extension can set without the app being asked, and neither should
+ * be outvoted by a stored preference — so a signal suppresses sending without
+ * rewriting the user's stored choice.
+ */
+export function privacySignalRefused(): boolean {
+  const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
+  return nav.doNotTrack === '1' || nav.globalPrivacyControl === true;
+}
 function configure() {
   // The installed app has no analytics at all: not a preference the user can
   // flip, but a property of the build. Nothing is stored, nothing is sent.
   if (isDesktopBuild) return;
-  if (!usePreferences.getState().analytics) {
+  if (!usePreferences.getState().analytics || privacySignalRefused()) {
     safeStorage.removeItem(identityKey);
     sessionIdentity = `toolbit_${crypto.randomUUID()}`;
     for (const request of pending) request.abort();
@@ -104,6 +115,7 @@ export function track(name: EventName, properties: Props = {}) {
     !apiKey ||
     !apiHost ||
     !usePreferences.getState().analytics ||
+    privacySignalRefused() ||
     !EVENT_NAMES.includes(name)
   )
     return;

@@ -42,7 +42,12 @@ export const usePreferences = create<{
   update: (patch: Partial<{ analytics: boolean; history: boolean; retentionDays: number }>) => void;
 }>()(
   persist(
-    (set) => ({ analytics: true, history: true, retentionDays: 30, update: (patch) => set(patch) }),
+    // Analytics is opt-in. A local-first product that says nothing leaves the
+    // browser has to mean it before the user has made a choice, and a
+    // pseudonymous id in localStorage is a tracking identifier wherever
+    // prior consent is required. The topbar switch turns it on; the stored
+    // choice is respected either way.
+    (set) => ({ analytics: false, history: true, retentionDays: 30, update: (patch) => set(patch) }),
     {
       name: 'toolbit-preferences',
       storage: createJSONStorage(() => safeStorage),

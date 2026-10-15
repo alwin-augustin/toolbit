@@ -6,7 +6,17 @@ import { useWorkspace, type WorkspaceTab } from '@/shared/workspace-store';
 import { toolPath } from '@/shared/workbench-actions';
 import { specIcon, specTitle, isWorkbenchToolId, readDoc } from '@/features/tools/specs';
 
+/**
+ * What the tab is called.
+ *
+ * A document's own label wins, because that is what makes two documents of the
+ * same tool tell each other apart: the workspace numbers the second one
+ * ("JSON 2") and a document opened from disk carries its file name. Without it
+ * both tabs of one tool render as the identical tool title.
+ */
 function resolveTabTitle(tab: WorkspaceTab): string {
+  const label = readDoc(tab).label.trim();
+  if (label) return label;
   if (isWorkbenchToolId(tab.toolId)) return specTitle(tab.toolId, tab.toolId);
   return TOOLS.find((tool) => tool.id === tab.toolId)?.name ?? tab.toolId;
 }
@@ -28,7 +38,7 @@ export function TabBar() {
   const activeTabId = useWorkspace((s) => s.activeTabId);
   const setActiveTab = useWorkspace((s) => s.setActiveTab);
   const closeTab = useWorkspace((s) => s.closeTab);
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const stripRef = useRef<HTMLDivElement>(null);
 
   // Keep the active tab visible when it changes from a shortcut or the palette.
@@ -49,9 +59,18 @@ export function TabBar() {
     navigate(toolPath(tab.toolId));
   };
 
+  /**
+   * Closing the document on screen hands the workspace to its neighbour, or
+   * home when it was the last one. The route has to move with it: a workspace
+   * still addressed to a document that is no longer open simply opens a fresh
+   * one for it, so the tab would reappear the moment it was closed.
+   */
   const close = (id: string) => {
-    closeTab(id);
-    if (useWorkspace.getState().tabs.length === 0) navigate('/');
+    const closing = useWorkspace.getState().tabs.find((tab) => tab.id === id);
+    const nextToolId = closeTab(id);
+    if (closing && location === toolPath(closing.toolId)) {
+      navigate(nextToolId ? toolPath(nextToolId) : '/');
+    }
   };
 
   const onKeyDown = (event: React.KeyboardEvent, index: number) => {
@@ -73,6 +92,10 @@ export function TabBar() {
     >
       {tabs.map((tab, index) => {
         const active = tab.id === activeTabId;
+        // Marked as the current page only while its document is the one on
+        // screen: home and the tool screens that hold no document must not
+        // leave the strip pointing at a document the user is not looking at.
+        const current = active && location === toolPath(tab.toolId);
         const title = resolveTabTitle(tab);
         const Icon = isWorkbenchToolId(tab.toolId) ? specIcon(tab.toolId) : undefined;
         const dirty = isDirty(tab);
@@ -82,7 +105,7 @@ export function TabBar() {
             key={tab.id}
             data-tab-id={tab.id}
             href={toolPath(tab.toolId)}
-            aria-current={active ? 'page' : undefined}
+            aria-current={current ? 'page' : undefined}
             className="wb-tab"
             title={title}
             onClick={(event) => {

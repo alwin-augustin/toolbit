@@ -1,9 +1,22 @@
 # Site-wide security headers.
 /
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://us.i.posthog.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https:; connect-src 'self' https://us.i.posthog.com wss:; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'
+  # No third-party script is loaded: analytics is an explicit `fetch` to the
+  # capture endpoint, so `script-src` stays at `'self'` and PostHog is allowed
+  # only as a connection. `object-src`/`frame-src` are closed rather than
+  # inherited, and `base-uri` is closed outright — nothing in the app uses
+  # `<base>`, and a `<base>` injected into rendered content would silently
+  # re-point every relative URL on the page.
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https:; connect-src 'self' https://us.i.posthog.com wss:; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; manifest-src 'self'
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
+  # The workspace is a single origin with no popups, no embeddable assets and no
+  # device APIs: close the cross-origin windows and the device prompts the app
+  # never asks for. `interest-cohort`/`browsing-topics` opt out of ad-topic
+  # derivation as well.
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Permissions-Policy: accelerometer=(), autoplay=(), browsing-topics=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), interest-cohort=(), magnetometer=(), microphone=(), midi=(), payment=(), usb=()
 
 # Content-hashed filenames: a change ships a new URL, so these never need
 # revalidating. Without this Cloudflare defaults to max-age=14400.

@@ -1,3 +1,4 @@
+import type { EditorLanguage } from '@/shared/editor-language';
 import type { Icon as TablerIcon } from '@tabler/icons-react';
 
 export const INVOICE_SAMPLE =
@@ -82,8 +83,14 @@ export interface WorkbenchToolSpec {
   resultLabel?: string;
   /** Download extension. Defaults to 'txt'. */
   fileExt?: string;
-  /** Editor language. Defaults to 'text'. */
-  language?: 'json' | 'text';
+  /** What the input pane holds. Defaults to 'text' (no grammar). */
+  language?: EditorLanguage;
+  /**
+   * What the result pane holds, when the tool converts between languages.
+   * A per-mode map wins over a single value; anything unspecified falls back to
+   * `language`, so a converter only names the modes that change the answer.
+   */
+  resultLanguage?: EditorLanguage | Record<string, EditorLanguage>;
   /** Accuracy or scope note shown under Options. */
   note?: string;
 }

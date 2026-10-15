@@ -31,7 +31,7 @@ const WHY = [
   {
     icon: IconShieldLock,
     title: 'Nothing is uploaded',
-    body: 'Formatting, decoding, hashing and conversion run in this tab. Analytics sends anonymous usage events — never your input or output — and Settings turns it off in one click.',
+    body: 'Formatting, decoding, hashing and conversion run in this tab. Analytics is off unless you turn it on, and even then it never sees your input or output.',
   },
   {
     icon: IconWifiOff,

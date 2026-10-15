@@ -372,14 +372,14 @@
   color: var(--tb-ink);
 }
 
-.wb-tab[aria-selected='true'] {
+.wb-tab[aria-current='page'] {
   background: var(--tb-surface);
   color: var(--tb-ink);
 }
 
 /* Active tab is marked by a brand underline, not a top border: the strip
    already has a hairline above it. */
-.wb-tab[aria-selected='true']::after {
+.wb-tab[aria-current='page']::after {
   content: '';
   position: absolute;
   inset-inline: 0;
@@ -400,7 +400,7 @@
 }
 
 .wb-tab:hover .wb-tab-close,
-.wb-tab[aria-selected='true'] .wb-tab-close {
+.wb-tab[aria-current='page'] .wb-tab-close {
   opacity: 1;
 }
 

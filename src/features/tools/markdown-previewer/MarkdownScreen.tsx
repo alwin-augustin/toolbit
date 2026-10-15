@@ -158,6 +158,7 @@ export function MarkdownScreen() {
           <CodeEditor
             value={markdown}
             onChange={setMarkdown}
+            language="markdown"
             wrap={wrap}
             label="Markdown input"
             placeholder="# Your markdown here..."

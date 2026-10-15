@@ -164,6 +164,7 @@
   --code-number: var(--tb-code-number);
   --code-keyword: var(--tb-code-keyword);
   --code-punc: var(--tb-code-punc);
+  --code-comment: var(--tb-code-comment);
   --code-added: var(--tb-code-added);
   --code-added-bg: var(--tb-code-added-bg);
   --code-removed: var(--tb-code-removed);
