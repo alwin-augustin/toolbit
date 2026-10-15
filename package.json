@@ -29,6 +29,8 @@
     "seo:og-image": "node scripts/generate-og-image.mjs",
     "seo:screenshots": "node scripts/generate-screenshots.mjs",
     "pwa:generate": "node scripts/generate-service-worker.mjs",
+    "embeddings:generate": "tsx scripts/generate-tool-embeddings.ts",
+    "eval:intent": "tsx scripts/eval-intent.ts",
     "benchmark": "tsx scripts/benchmark-tools.ts"
   },
   "dependencies": {
@@ -46,6 +48,7 @@
     "@codemirror/legacy-modes": "^6.5.5",
     "@codemirror/state": "^6.7.6",
     "@codemirror/view": "^6.43.13",
+    "@huggingface/transformers": "^4.3.1",
     "@lezer/highlight": "^1.2.5",
     "@tabler/icons-react": "3.48.0",
     "ajv": "^8.20.0",

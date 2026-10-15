@@ -91,15 +91,17 @@ query text / pasted data
   renders them; they are not debugging output.
 - `lexical.ts` scores fields with weights (name > keyword > intent > type/op),
   tokenizes on non-alphanumerics, and tolerates one-edit typos on tokens of
-  five characters or more. Deterministic, synchronous, zero dependencies.
+  four characters or more. Deterministic, synchronous, zero dependencies.
 - `detect.ts` wraps `smart-detect.ts`: detectors stay as they are (precision
   first), but their output feeds the graph instead of returning a fixed tool.
-- `semantic.ts` (P2) is lazily imported — the bundle never pays for it. It
-  reads precomputed vectors from `public/embeddings/tool-capabilities.v1.json`,
-  embeds the query with `mixedbread-ai/mxbai-embed-xsmall-v1` via
-  `@huggingface/transformers` (WebGPU, WASM fallback), and blends cosine
-  similarity into the lexical ranking. Model state is exposed
-  (`unavailable | idle | loading | ready`); search never waits for it.
+- `semantic.ts` (P2) is lazily imported — the bundle never pays for it until
+  the user opts in. It reads precomputed per-line vectors from
+  `public/embeddings/tool-capabilities.v1.json` (int8, ~450 KB, fetched on
+  demand), embeds the query with `mixedbread-ai/mxbai-embed-xsmall-v1` via
+  `@huggingface/transformers` (WASM, WebGPU where available), and blends
+  cosine similarity into the lexical ranking; a semantic hit can name the
+  corpus line it matched, in lexical's own reason vocabulary. Model state is
+  exposed (`off | loading | ready | failed`); search never waits for it.
 - **Confidence policy:** a confident single result needs a clear top score and
   a margin over the runner-up. Otherwise, show the top 3–5 with their reasons,
   and keep "browse all tools" attached. Detection is a suggestion, never a
@@ -166,9 +168,14 @@ and Start screen integration; telemetry events; eval harness v1; component
 tests and e2e for ⌘K → intent → open.
 
 **P2 — Semantic layer.** Embedding precompute script
-(`scripts/generate-tool-embeddings.mjs`, Node, same model as runtime), vector
-asset + staleness test, lazy runtime reranker, Settings toggle, palette
-affordance, eval v2 with tuned thresholds.
+(`scripts/generate-tool-embeddings.ts`, run with `npm run embeddings:generate`;
+tsx, same model and dtype as runtime), vector asset
+(`public/embeddings/tool-capabilities.v1.json`, int8, one vector per corpus
+line) + staleness test against `capabilityCorpusHash()`, lazy runtime reranker
+(`semantic.ts` + the `useSemanticHits` binding), Settings toggle with model
+status, palette affordance, eval v2 (`npm run eval:intent`) — the current
+asset lifts both lexical top-spot misses while off-catalogue asks stay
+unconfident.
 
 **P3 — Next Useful Action.** Result-chrome strip (≤2 actions) from `related`,
 multi-suggestion paste flow with graph expansion, handoff carries the payload,

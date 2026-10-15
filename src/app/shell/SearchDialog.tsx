@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IconArrowRight, IconClock, IconCornerDownLeft, IconSearch } from '@tabler/icons-react';
 import { TOOLS, RESEARCH_CATEGORIES } from '@/content/tools.config';
 import { resolveIntent } from '@/core/intent/resolver';
+import { useSemanticEnabled, useSemanticHits } from '@/core/intent/use-semantic';
 import { useRecentTools } from '@/core/recent-tools';
 import { track } from '@/core/telemetry';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
@@ -27,7 +28,8 @@ interface PaletteItem {
  * Queries match by name *and* by task — "make json readable" finds the JSON
  * formatter — with each result carrying the reason it is shown. Name matches
  * still rank first, and the whole list is drivable with ↑ ↓ ⏎ — a palette that
- * needs the mouse is a menu.
+ * needs the mouse is a menu. When the opt-in on-device model is ready its
+ * semantic scores rerank the same list; until then, lexical carries it.
  */
 export function SearchDialog({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState('');
@@ -47,9 +49,16 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
 
   const trimmed = query.trim().toLowerCase();
 
+  // The semantic reranker is opt-in and fire-and-forget: `useSemanticHits`
+  // returns whatever the model has finished, and lexical carries the list
+  // until then. Search never waits on a download.
+  const { enabled: semanticEnabled, status: semanticState } = useSemanticEnabled();
+  const semanticHits = useSemanticHits(trimmed, semanticEnabled, semanticState);
+
   const resolution = useMemo(
-    () => (trimmed ? resolveIntent(trimmed, { limit: 8 }) : null),
-    [trimmed],
+    () =>
+      trimmed ? resolveIntent(trimmed, { limit: 8, semantic: semanticHits ?? undefined }) : null,
+    [trimmed, semanticHits],
   );
 
   const openToolAction = useCallback(
@@ -233,6 +242,27 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
               <p className="mt-1 text-xs text-ink-faint">
                 Try the task instead of the name — “make json readable”.
               </p>
+              {semanticEnabled ? (
+                semanticState === 'failed' && (
+                  <p className="mt-2 text-xs text-ink-faint">
+                    On-device search couldn’t load — keyword matching still works.
+                  </p>
+                )
+              ) : (
+                <p className="mt-2 text-xs text-ink-faint">
+                  <button
+                    type="button"
+                    className="underline decoration-dotted underline-offset-2 hover:text-ink"
+                    onClick={() => {
+                      onClose();
+                      navigate('/settings');
+                    }}
+                  >
+                    Turn on smarter search
+                  </button>{' '}
+                  to match tasks by meaning, on your device.
+                </p>
+              )}
             </div>
           )}
 
@@ -282,7 +312,11 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
             <IconCornerDownLeft size={12} aria-hidden="true" />
             open
           </span>
-          <span className="ml-auto">Everything runs locally</span>
+          <span className="ml-auto">
+            {semanticEnabled && semanticState === 'loading'
+              ? 'Loading on-device search…'
+              : 'Everything runs locally'}
+          </span>
         </div>
       </DialogContent>
     </Dialog>

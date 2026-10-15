@@ -73,8 +73,11 @@ export function taskClusters(): ReadonlyArray<{ id: string; title: string; toolI
 }
 
 /**
- * The exact lines embedded into vectors for a tool. The embedding generator
- * and `capabilityCorpusHash()` must agree on this; change one, change both.
+ * The exact lines embedded into vectors for a tool, in order: the name and
+ * description, then each intent, then each keyword. One meaning per line, so
+ * the semantic reranker can name the line it matched — the same way lexical
+ * reasons do. The embedding generator and `capabilityCorpusHash()` must agree
+ * on this; change one, change both.
  */
 export function capabilityCorpusLines(toolId: string): readonly string[] {
   const tool = TOOLS.find((entry) => entry.id === toolId);
@@ -82,8 +85,22 @@ export function capabilityCorpusLines(toolId: string): readonly string[] {
   const capability = CAPABILITIES[toolId];
   const lines = [`${tool.name}: ${tool.description}`];
   for (const intent of capability?.intents ?? []) lines.push(intent);
-  if (tool.keywords?.length) lines.push(tool.keywords.join(', '));
+  for (const keyword of tool.keywords ?? []) lines.push(keyword);
   return lines;
+}
+
+/** What each corpus line is, by position. Aligns with `capabilityCorpusLines`. */
+export type CorpusLineKind = 'name' | 'intent' | 'keyword';
+
+export function capabilityCorpusLineKinds(toolId: string): readonly CorpusLineKind[] {
+  const tool = TOOLS.find((entry) => entry.id === toolId);
+  if (!tool) return [];
+  const capability = CAPABILITIES[toolId];
+  return [
+    'name',
+    ...Array<'intent'>((capability?.intents ?? []).length).fill('intent'),
+    ...Array<'keyword'>((tool.keywords ?? []).length).fill('keyword'),
+  ];
 }
 
 /** FNV-1a over every corpus line, in catalogue order. Detects stale vectors. */

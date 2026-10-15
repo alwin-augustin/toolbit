@@ -39,7 +39,15 @@ export const usePreferences = create<{
   analytics: boolean;
   history: boolean;
   retentionDays: number;
-  update: (patch: Partial<{ analytics: boolean; history: boolean; retentionDays: number }>) => void;
+  semanticSearch: boolean;
+  update: (
+    patch: Partial<{
+      analytics: boolean;
+      history: boolean;
+      retentionDays: number;
+      semanticSearch: boolean;
+    }>,
+  ) => void;
 }>()(
   persist(
     // Analytics is opt-in. A local-first product that says nothing leaves the
@@ -51,6 +59,8 @@ export const usePreferences = create<{
       analytics: false,
       history: true,
       retentionDays: 30,
+      // Semantic search downloads a model on first use; off until asked.
+      semanticSearch: false,
       update: (patch) => set(patch),
     }),
     {
@@ -69,6 +79,8 @@ export const usePreferences = create<{
             p.retentionDays <= 365
               ? Math.floor(p.retentionDays)
               : current.retentionDays,
+          semanticSearch:
+            typeof p.semanticSearch === 'boolean' ? p.semanticSearch : current.semanticSearch,
         };
       },
     },

@@ -45,3 +45,14 @@ test('the palette tolerates a typo and names what it recognised', async ({ page 
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
 });
+
+test('an empty palette offers the opt-in on-device model', async ({ page }) => {
+  await page.goto('/');
+
+  await page.getByRole('button', { name: 'Search tools or actions...', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Search tools', exact: true }).fill('zingzang zong');
+
+  await page.getByRole('button', { name: 'Turn on smarter search' }).click();
+  await expect(page).toHaveURL(/settings/);
+  await expect(page.getByRole('checkbox', { name: /Smarter search/ })).not.toBeChecked();
+});

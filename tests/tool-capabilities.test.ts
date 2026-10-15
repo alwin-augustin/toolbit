@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   capabilityCorpusHash,
+  capabilityCorpusLineKinds,
   capabilityCorpusLines,
   capabilityOf,
   nextActionsFor,
@@ -76,12 +77,19 @@ describe('embedding corpus', () => {
     const lines = capabilityCorpusLines('json-formatter');
     expect(lines[0]).toBe('JSON Formatter: Format, minify, and validate JSON data');
     expect(lines).toContain('make json readable');
-    expect(lines.at(-1)).toContain('pretty print');
+    expect(lines.at(-1)).toBe('pretty print');
 
     const tool = TOOLS.find((entry) => entry.id === 'lorem-ipsum-generator');
-    expect(capabilityCorpusLines('lorem-ipsum-generator').at(-1)).toBe(
-      `${tool?.keywords?.join(', ')}`,
-    );
+    expect(capabilityCorpusLines('lorem-ipsum-generator').at(-1)).toBe(tool?.keywords?.at(-1));
+  });
+
+  it('names each corpus line position', () => {
+    const kinds = capabilityCorpusLineKinds('json-formatter');
+    expect(kinds.length).toBe(capabilityCorpusLines('json-formatter').length);
+    expect(kinds[0]).toBe('name');
+    expect(kinds[kinds.length - 1]).toBe('keyword');
+    expect(kinds.filter((kind) => kind === 'intent').length).toBe(6);
+    expect(capabilityCorpusLineKinds('not-a-tool')).toEqual([]);
   });
 
   it('fingerprints the corpus deterministically', () => {
