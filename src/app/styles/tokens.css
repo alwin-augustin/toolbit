@@ -209,9 +209,9 @@
 :root {
   --tb-rail-w: 52px;
   --tb-panel-w: 264px;
-  --tb-topbar-h: 44px;
-  --tb-statusbar-h: 26px;
-  --tb-head-h: 40px;
+  --tb-topbar-h: 40px;
+  --tb-statusbar-h: 24px;
+  --tb-head-h: 36px;
 
   /* Control heights. Anything interactive picks one of these three. */
   --tb-control-xs: 22px;

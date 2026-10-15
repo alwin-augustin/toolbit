@@ -67,7 +67,8 @@ describe('tool languages', () => {
       ['json-formatter', 'format', 'json', 'json'],
       ['yaml-formatter', 'format', 'yaml', 'yaml'],
       ['yaml-formatter', 'to-json', 'yaml', 'json'],
-      ['yaml-formatter', 'from-json', 'yaml', 'yaml'],
+      // "JSON to YAML" reads JSON, so the input pane is JSON and the result YAML.
+      ['yaml-formatter', 'from-json', 'json', 'yaml'],
       // The input is CSV, which has no grammar here; the result is JSON.
       ['csv-to-json', 'convert', 'text', 'json'],
       ['sql-formatter', 'format', 'sql', 'sql'],
@@ -91,7 +92,16 @@ describe('tool languages', () => {
 
   it('only declares languages the editor can load', () => {
     for (const spec of Object.values(ALL_SPECS)) {
-      expect(isEditorLanguage(spec.language ?? 'text'), spec.id).toBe(true);
+      // A tool declares either one language for both panes or one per mode, so
+      // both shapes must name grammars the editor can actually load.
+      const input = spec.language;
+      if (typeof input === 'string') {
+        expect(isEditorLanguage(input), spec.id).toBe(true);
+      } else if (input) {
+        for (const [mode, language] of Object.entries(input)) {
+          expect(isEditorLanguage(language), `${spec.id} · ${mode}`).toBe(true);
+        }
+      }
       const result = spec.resultLanguage;
       if (typeof result === 'string') {
         expect(isEditorLanguage(result), spec.id).toBe(true);

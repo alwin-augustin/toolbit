@@ -10,6 +10,7 @@ import {
 } from '@tabler/icons-react';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useSessionDocumentState } from '@/shared/document-state';
+import { usePublishedResult } from '@/shared/result-store';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -135,6 +136,8 @@ export function DockerScreen() {
     [image, containerName, ports, volumes, envVars, network, restart, flags],
   );
 
+  usePublishedResult(output, 'Docker command', 'sh');
+
   const copyCommand = async () => {
     try {
       await navigator.clipboard.writeText(output);
@@ -198,7 +201,7 @@ export function DockerScreen() {
           Copy command
         </Button>
       </div>
-      <p>
+      <p className="wb-note">
         Generated-command scope only: this builds a command string for review. Nothing here runs or
         manages containers. Copy the command and run it yourself.
       </p>

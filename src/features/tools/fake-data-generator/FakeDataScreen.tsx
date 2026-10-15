@@ -7,6 +7,7 @@ import {
 } from '@tabler/icons-react';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useSessionDocumentState } from '@/shared/document-state';
+import { usePublishedResult } from '@/shared/result-store';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -296,6 +297,10 @@ export function FakeDataScreen() {
   const [error, setError] = useState('');
   const wrap = useWorkbenchMemory((s) => s.wrap);
   const notify = useWorkbenchMemory((s) => s.notify);
+
+  // The generated fixtures are this screen's result; the active output format
+  // is also the right extension for the saved file.
+  usePublishedResult(output, 'Generated data', format);
 
   const toggleField = (field: FakeFieldKey) => {
     setFields((prev) =>

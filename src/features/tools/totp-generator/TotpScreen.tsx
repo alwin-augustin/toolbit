@@ -8,6 +8,7 @@ import {
   IconTrash,
 } from '@tabler/icons-react';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
+import { usePublishedResult } from '@/shared/result-store';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
@@ -170,6 +171,9 @@ export function TotpScreen() {
       notify('Clipboard unavailable. Select the code and copy it.');
     }
   };
+
+  // The current code is what "Save Result…" writes for this tool.
+  usePublishedResult(code, 'TOTP code', 'txt');
 
   return (
     <>

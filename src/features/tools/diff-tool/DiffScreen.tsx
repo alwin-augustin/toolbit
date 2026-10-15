@@ -4,6 +4,7 @@ import * as Diff from 'diff';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -180,6 +181,9 @@ export function DiffScreen() {
     if (viewMode === 'side-by-side') return formatSideBySideText(pairDiffLines(lines));
     return formatUnifiedText(lines);
   }, [lines, viewMode]);
+
+  // The visible diff is what "Save Result…" writes, in whichever view is shown.
+  usePublishedResult(output, 'Diff result', 'diff');
 
   const loadSample = () => {
     setOriginal(SAMPLE_ORIGINAL);

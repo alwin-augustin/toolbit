@@ -11,6 +11,7 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { Button } from '@/components/ui/button';
 
 export interface NginxIssue {
@@ -315,6 +316,15 @@ export function NginxScreen() {
   const errors = issues.filter((issue) => issue.severity === 'error');
   const warnings = issues.filter((issue) => issue.severity === 'warning');
 
+  // The static-check findings are the result, including the clean bill of
+  // health, which is itself worth saving next to the config.
+  const report = !input.trim()
+    ? ''
+    : issues.length === 0
+      ? 'No findings. Limited static checks only — verify with nginx -t.'
+      : issues.map((issue) => `L${issue.line} · ${issue.severity}: ${issue.message}`).join('\n');
+  usePublishedResult(report, 'Validation report', 'txt');
+
   return (
     <>
       <div className="wb-workspace-heading">
@@ -367,7 +377,7 @@ export function NginxScreen() {
           Clear
         </Button>
       </div>
-      <p>
+      <p className="wb-note">
         Limited static checks only: brace balance, missing semicolons, and known directives. Passing
         checks does not prove the config runs. Always verify with nginx -t on the target machine.
       </p>
@@ -405,7 +415,7 @@ export function NginxScreen() {
                     : 'Checks passed (not proof it runs)'}
             </span>
           </div>
-          <div>
+          <div className="wb-pane-body">
             {!input.trim() ? (
               <div className="wb-empty">
                 <h2>No checks yet</h2>

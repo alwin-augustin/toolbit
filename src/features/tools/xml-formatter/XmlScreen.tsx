@@ -8,6 +8,7 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -283,6 +284,10 @@ export function XmlScreen() {
         : mode === 'validate'
           ? 'Validation'
           : 'Output';
+
+  // The pane's own output is what a save would write, named after the mode that
+  // produced it. An error withdraws the slot rather than saving a message.
+  usePublishedResult(outcome.error ? '' : outcome.output, resultTitle, mode === 'json' ? 'json' : 'xml');
 
   return (
     <>

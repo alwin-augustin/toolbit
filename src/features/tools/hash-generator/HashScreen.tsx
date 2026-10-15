@@ -8,6 +8,7 @@ import {
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
+import { usePublishedResult } from '@/shared/result-store';
 import { Button } from '@/components/ui/button';
 
 export interface HashResult {
@@ -193,6 +194,8 @@ export function HashScreen() {
 
   const hasOutput = HASH_LABELS.some(({ key }) => hashes[key]);
   const allHashes = HASH_LABELS.map(({ label, key }) => `${label}: ${hashes[key]}`).join('\n');
+  // Labels alone are not a result, so an empty set withdraws the save slot.
+  usePublishedResult(hasOutput ? allHashes : '', 'Hash result', 'txt');
 
   return (
     <>
@@ -267,12 +270,14 @@ export function HashScreen() {
             </div>
           </div>
           {hasOutput ? (
-            <div>
+            <div className="wb-pane-body">
               {HASH_LABELS.map(({ key, label }) => (
                 <div key={key} className="wb-setting-row">
                   <span>
                     <strong>{label}</strong>
-                    <small data-testid={`output-${key}`}>{hashes[key]}</small>
+                    <small className="font-mono break-all" data-testid={`output-${key}`}>
+                      {hashes[key]}
+                    </small>
                   </span>
                   <Button
                     type="button"

@@ -10,6 +10,7 @@ import {
 } from '@tabler/icons-react';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
+import { usePublishedResult } from '@/shared/result-store';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -76,6 +77,13 @@ export function WsScreen() {
   const logRef = useRef<HTMLDivElement | null>(null);
   const wrap = useWorkbenchMemory((s) => s.wrap);
   const notify = useWorkbenchMemory((s) => s.notify);
+
+  // The conversation log is this screen's result, so Save Result writes it as
+  // one timestamped transcript rather than a single message.
+  const logText = messages
+    .map((message) => `[${message.time}] ${message.direction.toUpperCase()} ${message.content}`)
+    .join('\n');
+  usePublishedResult(logText, 'Message log', 'txt');
 
   const addMessage = (direction: WsDirection, content: string) => {
     const truncated =
@@ -308,7 +316,13 @@ export function WsScreen() {
               Clear
             </Button>
           </div>
-          <div ref={logRef} role="log" aria-live="polite" aria-label="WebSocket message log">
+          <div
+            ref={logRef}
+            role="log"
+            aria-live="polite"
+            aria-label="WebSocket message log"
+            className="wb-pane-body"
+          >
             {messages.length === 0 ? (
               <div className="wb-empty">
                 <h2>No messages yet</h2>

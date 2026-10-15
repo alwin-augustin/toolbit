@@ -19,6 +19,8 @@ const THEMES: Array<{ id: Theme; label: string }> = [
 
 const SHORTCUTS: Array<{ keys: string[]; label: string }> = [
   { keys: ['⌘', 'K'], label: 'Search tools and actions' },
+  { keys: ['⌘', 'Enter'], label: 'Run the active tool action' },
+  { keys: ['⌘', 'S'], label: 'Save session or result' },
   { keys: ['⌘', 'B'], label: 'Show or hide the navigator' },
   { keys: ['⌘', '1…9'], label: 'Jump to an open document' },
   { keys: ['⌥', 'W'], label: 'Close the current document' },

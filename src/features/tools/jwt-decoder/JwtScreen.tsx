@@ -8,6 +8,7 @@ import {
 } from '@tabler/icons-react';
 import { CodeEditor } from '@/shared/CodeEditor';
 import { useDocumentField, useSessionDocumentState } from '@/shared/document-state';
+import { usePublishedResult } from '@/shared/result-store';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -103,6 +104,8 @@ export function JwtScreen() {
       ? JSON.stringify({ header: decoded.header, payload: decoded.payload }, null, 2)
       : JSON.stringify({ header: decoded.header, payload: decoded.payload })
     : '';
+  // The decoded claims are what "Save Result…" writes for this tool.
+  usePublishedResult(claimsJson, 'Decoded token', 'json');
 
   const copyClaims = async () => {
     if (!claimsJson) return;

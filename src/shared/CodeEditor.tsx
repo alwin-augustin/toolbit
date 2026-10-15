@@ -4,6 +4,8 @@ import {
   EditorView,
   keymap,
   lineNumbers,
+  highlightActiveLine,
+  highlightActiveLineGutter,
   placeholder as cmPlaceholder,
   Decoration,
 } from '@codemirror/view';
@@ -172,7 +174,18 @@ const toolbitTheme = EditorView.theme({
     fontFamily: 'var(--font-mono)',
     fontSize: '0.75rem',
   },
-  '.cm-activeLineGutter': { backgroundColor: 'transparent', color: 'var(--muted-foreground)' },
+  '.cm-activeLineGutter': {
+    backgroundColor: 'transparent',
+    color: 'var(--foreground)',
+    fontWeight: '500',
+  },
+  '.cm-activeLine': {
+    backgroundColor: 'color-mix(in srgb, var(--muted) 45%, transparent)',
+  },
+  '.cm-matchingBracket, &.cm-focused .cm-matchingBracket': {
+    backgroundColor: 'color-mix(in srgb, var(--primary) 22%, transparent)',
+    outline: '1px solid color-mix(in srgb, var(--primary) 50%, transparent)',
+  },
   '.cm-cursor': { borderLeftColor: 'var(--foreground)' },
   '.cm-selectionBackground, &.cm-focused .cm-selectionBackground': {
     backgroundColor: 'color-mix(in srgb, var(--primary) 25%, transparent)',
@@ -237,6 +250,7 @@ export function CodeEditor({
       history(),
       keymap.of([...defaultKeymap, ...historyKeymap]),
       bracketMatching(),
+      ...(readOnly ? [] : [highlightActiveLine(), highlightActiveLineGutter()]),
       syntaxHighlighting(toolbitHighlight),
       toolbitTheme,
       ...(wrap && !large ? [EditorView.lineWrapping] : []),

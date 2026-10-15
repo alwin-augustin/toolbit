@@ -8,9 +8,11 @@ import {
   defaultDocState,
   getSpec,
   isWorkbenchToolId,
+  readDoc,
   runExamplePipeline,
   type WorkbenchToolId,
 } from '@/features/tools/specs';
+import { useActiveResult } from '@/shared/result-store';
 import type { WorkbenchDocState } from '@/shared/workbench';
 import type { SavedKind } from '@/shared/workbench-memory';
 
@@ -110,6 +112,26 @@ export function useWorkbenchActions() {
   );
 
   return { openTool, activateExistingOrOpen, restore, navigate, notify, addSaved };
+}
+
+/**
+ * What "Save Result…" would write for the visible document, or null when there
+ * is nothing to save yet.
+ *
+ * A workbench tool keeps its result in the document. A bespoke screen has no
+ * document of its own and publishes its result through `usePublishedResult`,
+ * so both architectures reach this one answer.
+ */
+export function activeSaveableResult(): { text: string; ext: string | null } | null {
+  const state = useWorkspace.getState();
+  const active = state.tabs.find((tab) => tab.id === state.activeTabId);
+  if (active && isWorkbenchToolId(active.toolId)) {
+    const output = readDoc(active).output;
+    return output ? { text: output, ext: getSpec(active.toolId)?.fileExt ?? 'txt' } : null;
+  }
+  const published = useActiveResult.getState();
+  if (!published.text.trim()) return null;
+  return { text: published.text, ext: published.ext };
 }
 
 /** Reactive Tab list for components that actually render Tabs. */
