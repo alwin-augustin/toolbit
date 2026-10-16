@@ -16,7 +16,15 @@
 # so this file never needs a release bump. A redirect rather than a
 # rewrite, because the binaries live on another origin (Pages rejects files
 # over 25 MiB, and the installers are bigger).
-/download            /about#download   302
+#
+# There is deliberately no rule for `/download` itself. It is a page
+# (`download.html`), because only the browser can say which build to hand
+# over: this table matches paths, not clients, and the site ships no Function
+# (PRIVACY.md §4.9). It was a 302 to the about page until 2026-10-16, which
+# meant every link outside the app — a README, the docs, a shared URL — landed
+# on prose instead of a download. The platform decision lives in
+# src/platform/downloads.ts, the page in download.html, and
+# tests/downloads.test.ts fails the build if this table and that table drift.
 /download/mac        https://downloads.toolbit.app/Toolbit-macos-aarch64.dmg   302
 /download/mac-intel  https://downloads.toolbit.app/Toolbit-macos-x64.dmg   302
 /download/windows    https://downloads.toolbit.app/Toolbit-windows-x64-setup.exe   302

@@ -184,7 +184,9 @@ export function LandingPage() {
         {/* The desktop app. The URLs carry no version on purpose: Cloudflare
             Pages resolves each `/download/<platform>` to a stable-named object
             in the toolbit-downloads R2 bucket (public/_redirects), so this
-            section never changes when a release does. */}
+            section never changes when a release does. These four stay explicit
+            choices — `/download` alone starts whichever build the visitor's
+            machine needs, and someone who wants a different one comes here. */}
         <section
           id="download"
           aria-labelledby="landing-download"

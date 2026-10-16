@@ -66,8 +66,8 @@ export function NavRail({
       <div className="mt-auto" />
 
       {/* The desktop app lives outside the SPA, so this is a plain anchor: the
-          full page load is what lets Pages resolve `/download` (public/_redirects)
-          to the right installer for the visitor's platform. */}
+          full page load is what reaches `/download`, the page that starts the
+          right installer (download.html → src/platform/downloads.ts). */}
       <a
         href="/download"
         className="wb-rail-item"

@@ -1308,7 +1308,7 @@ function injectFontPreload() {
   const tag = `<link rel="preload" href="/assets/${geist}" as="font" type="font/woff2" crossorigin />`;
   let patched = 0;
 
-  for (const entry of ['index.html', 'about.html']) {
+  for (const entry of ['index.html', 'about.html', 'download.html']) {
     const target = path.join(outDir, entry);
     if (!existsSync(target)) continue;
 

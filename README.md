@@ -44,6 +44,11 @@ Cloudflare Pages serves `dist/`. The desktop installers are served from the
 `toolbit-downloads` R2 bucket at `downloads.toolbit.app`. There is no backend
 for transforms — the built site is static.
 
+`/download` is a static page (`download.html`) whose script starts the build the
+visitor's machine needs: `public/_redirects` matches paths, not clients, so the
+platform decision is made in the browser (`src/platform/downloads.ts`) and
+`tests/downloads.test.ts` keeps the table, the redirects and the page in step.
+
 ## Architecture
 
 - `src/app/` — router, workbench shell, screens, dialogs, legal pages.

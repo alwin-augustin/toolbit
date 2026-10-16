@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, type Plugin, type PreviewServer, type ViteDevServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath, URL } from 'node:url';
@@ -23,12 +23,38 @@ function dropUnusedOrtWasm(): Plugin {
 }
 
 /**
+ * Cloudflare Pages serves `/download` from `download.html` — the same mapping
+ * that answers `/about` from `about.html` (verified against production
+ * 2026-10-16: `/about` is 200 from the file, `/about.html` 308s to it). The dev
+ * server and `vite preview` have no such mapping, so that page would be
+ * reachable only after a deploy: `/download` falls through to the app shell and
+ * its in-app 404. This mirrors the one mapping the download page depends on.
+ * The other prerendered pages keep their SPA routes in dev; the SEO generator
+ * writes them into `dist` for everything else.
+ */
+function serveDownloadPage(): Plugin {
+  const map = (url: string | undefined) =>
+    url && /^\/download(?:\?|$)/.test(url) ? url.replace('/download', '/download.html') : url;
+  const rewrite = (server: ViteDevServer | PreviewServer) => {
+    server.middlewares.use((req, _res, next) => {
+      req.url = map(req.url);
+      next();
+    });
+  };
+  return {
+    name: 'toolbit:download-page',
+    configureServer: rewrite,
+    configurePreviewServer: rewrite,
+  };
+}
+
+/**
  * `mode === 'desktop'` is the installed app's build (`vite build --mode desktop`,
  * driven by the Tauri host in `Desktop/desktop-tauri`). It drops the marketing
- * entry point, which the desktop route table does not serve.
+ * entry points, which the desktop route table does not serve.
  */
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss(), dropUnusedOrtWasm()],
+  plugins: [react(), tailwindcss(), dropUnusedOrtWasm(), serveDownloadPage()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   // Node-isms referenced by bundled CJS helpers (e.g. core-js inside terser's
   // tree) resolve to the browser global instead of throwing at startup.
@@ -46,7 +72,12 @@ export default defineConfig(({ mode }) => ({
         // route, so it ships without the entry point that renders it.
         ...(mode === 'desktop'
           ? {}
-          : { about: fileURLToPath(new URL('./about.html', import.meta.url)) }),
+          : {
+              about: fileURLToPath(new URL('./about.html', import.meta.url)),
+              // The version-free download address: a standalone page whose
+              // script hands over the build for this machine.
+              download: fileURLToPath(new URL('./download.html', import.meta.url)),
+            }),
       },
       output: {
         manualChunks: (id) => {

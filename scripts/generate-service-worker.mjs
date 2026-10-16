@@ -13,23 +13,30 @@ function walk(dir) {
 const pages = walk(dist).filter((file) => file.endsWith('/index.html'));
 
 /**
- * Paths `public/_redirects` answers with a redirect. A navigation to one of
- * these must reach the network: the navigation fallback below would otherwise
- * serve the precached app shell instead, so Cloudflare never sees the request
- * and the visitor gets the in-app 404. That silently broke the installer links
- * (`/download/<platform>`) and the legacy `/app` + `/tools` 301s for every
- * returning visitor. Keep this list in step with `public/_redirects` — the
- * check below fails the build if a redirect source is not covered.
+ * Paths that must reach the network instead of the precached app shell.
+ *
+ * Two kinds live here. Every source in `public/_redirects` — the installer 302s
+ * and the legacy `/app` + `/tools` 301s: a navigation to one of those has to be
+ * answered by the edge, and the fallback below would otherwise serve the app
+ * shell instead, so Cloudflare never sees the request and the visitor gets the
+ * in-app 404. That is how the installer links quietly broke once. And
+ * `/download` itself, which is not a redirect but the download page: the
+ * manifest holds it as `/download.html`, so the precache never answers a bare
+ * `/download`, and without this entry the fallback would serve the app shell
+ * there too.
+ *
+ * Keep the list in step with `public/_redirects` — the check below fails the
+ * build if a redirect source is not covered.
  */
-const redirectPaths = ['/download', '/app', '/tools'];
+const networkPaths = ['/download', '/app', '/tools'];
 
 for (const line of readFileSync(path.resolve('public/_redirects'), 'utf8').split('\n')) {
   const source = line.trim().split(/\s+/)[0];
   if (!source || source.startsWith('#') || !source.startsWith('/')) continue;
   const root = `/${source.split('/')[1]}`;
-  if (!redirectPaths.includes(root))
+  if (!networkPaths.includes(root))
     throw new Error(
-      `public/_redirects answers ${source}, but the service worker would swallow it: add ${root} to redirectPaths.`,
+      `public/_redirects answers ${source}, but the service worker would swallow it: add ${root} to networkPaths.`,
     );
 }
 const { count, warnings } = await generateSW({
@@ -62,7 +69,7 @@ const { count, warnings } = await generateSW({
   navigateFallback: '/index.html',
   navigateFallbackDenylist: [
     /^\/(?:assets|og|screenshots)\//,
-    new RegExp(`^(?:${redirectPaths.join('|')})(?:/|$)`),
+    new RegExp(`^(?:${networkPaths.join('|')})(?:/|$)`),
   ],
 });
 for (const warning of warnings) console.warn(warning);

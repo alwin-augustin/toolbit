@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en" class="dark" data-density="comfortable">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Download Toolbit for desktop — macOS, Windows, Linux</title>
+    <meta
+      name="description"
+      content="Download the Toolbit desktop app for macOS, Windows or Linux: the same local-first workspace, with native file panels and the on-device search model bundled in."
+    />
+    <!-- A page whose job is to start a download has nothing to index; `follow`
+         keeps the four builds and the about page discoverable. -->
+    <meta name="robots" content="noindex, follow" />
+    <link rel="canonical" href="https://toolbit.app/download" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://toolbit.app/download" />
+    <meta property="og:site_name" content="Toolbit" />
+    <meta property="og:title" content="Download Toolbit for desktop" />
+    <meta
+      property="og:description"
+      content="The local-first developer workspace as a desktop app, for macOS, Windows and Linux."
+    />
+    <meta property="og:image" content="https://toolbit.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Download Toolbit for desktop" />
+    <meta
+      name="twitter:description"
+      content="The local-first developer workspace as a desktop app, for macOS, Windows and Linux."
+    />
+    <meta name="twitter:image" content="https://toolbit.app/og-image.png" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg?v=3" />
+    <link rel="mask-icon" href="/mask-icon.svg" color="#6241dd" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#6241dd" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#06070a" />
+    <link rel="manifest" href="/manifest.json" />
+    <script src="/theme-init.js"></script>
+    <!-- This page is not the app: it is a static document that hands over a
+         file, so it carries its own styles and loads no app bundle. The tokens
+         are the design system's, so it still looks like Toolbit. -->
+    <style>
+      :root {
+        color-scheme: light;
+        --tb-canvas: oklch(0.991 0.002 265);
+        --tb-surface: oklch(1 0 0);
+        --tb-line: oklch(0.936 0.005 265);
+        --tb-ink: oklch(0.183 0.011 265);
+        --tb-ink-muted: oklch(0.502 0.016 265);
+        --tb-ink-faint: oklch(0.596 0.014 265);
+        --tb-brand: oklch(0.511 0.222 285);
+        --tb-brand-ink: oklch(0.446 0.208 285);
+      }
+      html.dark {
+        color-scheme: dark;
+        --tb-canvas: oklch(0.128 0.009 265);
+        --tb-surface: oklch(0.152 0.01 265);
+        --tb-line: oklch(0.222 0.013 265);
+        --tb-ink: oklch(0.978 0.003 265);
+        --tb-ink-muted: oklch(0.706 0.012 265);
+        --tb-ink-faint: oklch(0.596 0.014 265);
+        --tb-brand: oklch(0.68 0.17 285);
+        --tb-brand-ink: oklch(0.8 0.13 285);
+      }
+      body {
+        margin: 0;
+        background: var(--tb-canvas);
+        color: var(--tb-ink);
+        font-family:
+          Geist,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: var(--tb-brand-ink);
+      }
+      .wrap {
+        max-width: 44rem;
+        margin: 0 auto;
+        padding: 3.5rem 1.5rem 4rem;
+      }
+      h1 {
+        font-size: 1.875rem;
+        font-weight: 600;
+        letter-spacing: -0.011em;
+        line-height: 1.2;
+        margin: 0 0 1rem;
+      }
+      p {
+        color: var(--tb-ink-muted);
+        margin: 0 0 1rem;
+      }
+      .builds {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.625rem;
+        margin: 1.5rem 0 1rem;
+      }
+      .builds a {
+        border: 1px solid var(--tb-line);
+        border-radius: 0.5rem;
+        background: var(--tb-surface);
+        color: var(--tb-ink);
+        font-size: 0.875rem;
+        font-weight: 500;
+        padding: 0.6rem 1rem;
+        text-decoration: none;
+      }
+      .builds a:first-child {
+        background: var(--tb-brand);
+        border-color: var(--tb-brand);
+        color: oklch(0.99 0 0);
+      }
+      .builds a:hover {
+        border-color: var(--tb-brand);
+      }
+      .fine {
+        border-top: 1px solid var(--tb-line);
+        color: var(--tb-ink-faint);
+        font-size: 0.8125rem;
+        margin-top: 2rem;
+        padding-top: 1.25rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Download Toolbit for desktop</h1>
+      <p>
+        The same workspace, installed: native menus and file panels, and the on-device search model
+        bundled in, so the smarter search works with no connection at all. The two live-network
+        tools (API Request Builder, WebSocket Tester) stay in the browser — the app sends nothing.
+      </p>
+
+      <!-- The script below starts the build for this machine. The four links
+           stay in the markup on purpose: a browser that reports no platform —
+           a phone, an unrecognised agent — or one with scripts off still gets a
+           working page instead of a blank one. -->
+      <p>Your download should start on its own. If it does not, pick your build:</p>
+      <div class="builds">
+        <a href="/download/mac">macOS (Apple silicon)</a>
+        <a href="/download/mac-intel">macOS (Intel)</a>
+        <a href="/download/windows">Windows</a>
+        <a href="/download/linux">Linux</a>
+      </div>
+
+      <p class="fine">
+        Unsigned builds, so the OS asks you to confirm the first launch. Every release is on
+        <a href="https://github.com/alwin-augustin/toolbit-desktop/releases">GitHub</a>
+        and served from Cloudflare R2. Prefer nothing installed?
+        <a href="/">Open the workspace in this tab</a>.
+      </p>
+    </main>
+    <script type="module" src="/src/app/download.ts"></script>
+  </body>
+</html>
