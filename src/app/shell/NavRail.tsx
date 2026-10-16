@@ -1,4 +1,4 @@
-import { IconMoon, IconSun } from '@tabler/icons-react';
+import { IconDownload, IconMoon, IconSun } from '@tabler/icons-react';
 import { useLocation } from 'wouter';
 import logoMark from '@/shared/ds/assets/logo-mark.svg';
 import { setTheme, useResolvedTheme } from '@/shared/theme';
@@ -64,6 +64,18 @@ export function NavRail({
       })}
 
       <div className="mt-auto" />
+
+      {/* The desktop app lives outside the SPA, so this is a plain anchor: the
+          full page load is what lets Pages resolve `/download` (public/_redirects)
+          to the right installer for the visitor's platform. */}
+      <a
+        href="/download"
+        className="wb-rail-item"
+        aria-label="Download the desktop app"
+        data-tip="Desktop app"
+      >
+        <IconDownload size={19} />
+      </a>
 
       <button
         type="button"

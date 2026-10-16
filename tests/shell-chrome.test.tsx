@@ -74,7 +74,7 @@ beforeEach(() => {
 });
 
 describe('navigator shell', () => {
-  it('carries the four destinations, settings, search and the local-only assurance', () => {
+  it('carries the four destinations, settings, the desktop download, search and the local-only assurance', () => {
     renderShell('/');
 
     expect(rail().getByRole('button', { name: 'Home' })).toBeInTheDocument();
@@ -82,6 +82,12 @@ describe('navigator shell', () => {
     expect(rail().getByRole('button', { name: 'Saved' })).toBeInTheDocument();
     expect(rail().getByRole('button', { name: 'History' })).toBeInTheDocument();
     expect(rail().getByRole('button', { name: 'Settings' })).toBeInTheDocument();
+    // The desktop app is off-site for the SPA, so the rail points at the
+    // stable `/download` path the redirect table resolves per platform.
+    expect(rail().getByRole('link', { name: 'Download the desktop app' })).toHaveAttribute(
+      'href',
+      '/download',
+    );
     expect(screen.getByRole('button', { name: 'Search tools or actions...' })).toBeInTheDocument();
     expect(screen.getAllByText('Local only').length).toBeGreaterThan(0);
   });
