@@ -31,6 +31,11 @@ const openDb = createDatabaseOpener({
   },
 });
 
+/** Release the cached connection so "delete all local data" can remove the DB. */
+export function closeHistoryDb(): Promise<void> {
+  return openDb.close();
+}
+
 async function pruneByToolId(db: IDBDatabase, toolId: string) {
   const tx = db.transaction(STORE_NAME, 'readwrite');
   const store = tx.objectStore(STORE_NAME);

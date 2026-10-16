@@ -5,7 +5,6 @@
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Link } from 'wouter';
-import { reportError } from '@/core/telemetry';
 import { Button } from '@/components/ui/button';
 import {
   IconAlertCircle as AlertCircle,
@@ -42,9 +41,6 @@ export class ToolErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error for debugging
-    reportError(error, 'tool');
-
     this.setState({
       error,
       errorInfo,

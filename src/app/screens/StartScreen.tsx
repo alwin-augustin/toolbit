@@ -11,7 +11,6 @@ import {
 } from '@tabler/icons-react';
 import { useLocation } from 'wouter';
 import { detectPasteSuggestions, type PasteSuggestion } from '@/core/intent/detect';
-import { track } from '@/core/telemetry';
 import { TOOLS, RESEARCH_CATEGORIES } from '@/content/tools.config';
 import { useFavorites } from '@/core/favorites-store';
 import { useRecentTools } from '@/core/recent-tools';
@@ -76,11 +75,6 @@ export function StartScreen() {
   const runSuggestion = (suggestion: PasteSuggestion) => {
     const payload = text;
     setText('');
-    track('discovery_suggestion_accepted', {
-      tool_id: suggestion.toolId,
-      discovery_source: 'start',
-      resolved_by: suggestion.anchor ? 'detect' : 'type',
-    });
     // The unified handoff path: it seeds a document for tools that own one
     // (including Notes) and stages the pending paste for those that do not.
     openWithPayload(suggestion.toolId, payload);

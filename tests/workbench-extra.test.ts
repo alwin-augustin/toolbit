@@ -34,9 +34,19 @@ describe('markdown XSS boundary', () => {
     '[x](javascript:alert(1))',
     'hello<script>alert(1)</script>',
     '<iframe src="https://evil.invalid">',
+    // Attribute entities, data: URLs, and nested-parser (mXSS) shapes.
+    '<a href="javascript&colon;alert(1)">x</a>',
+    '<a href="data:text/html,<script>alert(1)</script>">click</a>',
+    '[x](vbscript:msgbox(1))',
+    '<object data="javascript:alert(1)"></object>',
+    '<embed src="data:text/html,<script>alert(1)</script>">',
+    '<iframe srcdoc="<script>alert(1)</script>"></iframe>',
+    '<math><mtext><table><mglyph><style><!--</style><img src=x onerror=alert(1)>',
   ])('sanitizes %s', async (input) => {
     const html = await renderMarkdownToHtml(input);
-    expect(html).not.toMatch(/<script|onerror|onload|javascript:|iframe/i);
+    expect(html).not.toMatch(
+      /<script|onerror|onload|javascript:|vbscript:|data:text\/html|srcdoc|<iframe|<object|<embed/i,
+    );
   });
 
   it('keeps legitimate formatting', async () => {

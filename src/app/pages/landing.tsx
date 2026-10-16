@@ -32,7 +32,7 @@ const WHY = [
   {
     icon: IconShieldLock,
     title: 'Nothing is uploaded',
-    body: 'Formatting, decoding, hashing and conversion run in this tab. Analytics is off unless you turn it on, and even then it never sees your input or output.',
+    body: 'Formatting, decoding, hashing and conversion run in this tab. There is no analytics and no tracking — nothing you paste leaves the device.',
   },
   {
     icon: IconWifiOff,

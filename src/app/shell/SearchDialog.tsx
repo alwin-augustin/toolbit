@@ -4,7 +4,6 @@ import { TOOLS, RESEARCH_CATEGORIES } from '@/content/tools.config';
 import { resolveIntent } from '@/core/intent/resolver';
 import { useSemanticEnabled, useSemanticHits } from '@/core/intent/use-semantic';
 import { useRecentTools } from '@/core/recent-tools';
-import { track } from '@/core/telemetry';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
 import { isWorkbenchToolId, ownsDocument, specIcon } from '@/features/tools/specs';
 import { CATEGORY_ICONS, CATEGORY_ORDER, DESTINATIONS, TOOL_INDEX } from '@/app/shell/navigation';
@@ -37,7 +36,6 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
   const { recents } = useRecentTools();
   const { openTool, navigate } = useWorkbenchActions();
   const listRef = useRef<HTMLDivElement>(null);
-  const reportedQueries = useRef(new Set<string>());
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -64,34 +62,11 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
   const openToolAction = useCallback(
     (tool: Pick<ToolMetadata, 'id' | 'path'>) => {
       onClose();
-      if (resolution && trimmed.length >= 2) {
-        track('discovery_suggestion_accepted', {
-          tool_id: tool.id,
-          discovery_source: 'palette',
-          resolved_by: resolution.resolvedBy,
-        });
-      }
       if (ownsDocument(tool.id)) openTool(tool.id);
       else navigate(tool.path);
     },
-    [onClose, openTool, navigate, resolution, trimmed],
+    [onClose, openTool, navigate],
   );
-
-  // One `discovery_query` per distinct query the user actually types.
-  useEffect(() => {
-    if (trimmed.length < 2 || reportedQueries.current.has(trimmed)) return;
-    const handle = setTimeout(() => {
-      if (reportedQueries.current.has(trimmed)) return;
-      reportedQueries.current.add(trimmed);
-      const count = resolution?.suggestions.length ?? 0;
-      track('discovery_query', {
-        discovery_source: 'palette',
-        resolved_by: resolution?.resolvedBy ?? 'none',
-        result_count_bucket: count === 0 ? 'none' : count <= 3 ? 'few' : 'many',
-      });
-    }, 600);
-    return () => clearTimeout(handle);
-  }, [trimmed, resolution]);
 
   const browseCatalogue = useCallback(() => {
     onClose();

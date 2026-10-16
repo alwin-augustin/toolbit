@@ -2,14 +2,6 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import path from 'node:path';
 
-test.beforeEach(async ({ page }) => {
-  if (process.env.TOOLBIT_BLOCK_ANALYTICS)
-    await page.route(
-      (url) => url.hostname === 'us.i.posthog.com',
-      (route) => route.abort(),
-    );
-});
-
 const INPUT = 'Input code';
 const OUTPUT = 'Result code';
 

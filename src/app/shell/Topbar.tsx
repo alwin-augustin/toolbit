@@ -1,5 +1,4 @@
 import {
-  IconChartDots,
   IconChevronRight,
   IconLayoutSidebar,
   IconMenu2,
@@ -7,10 +6,7 @@ import {
   IconShieldLock,
 } from '@tabler/icons-react';
 import { TOOL_BY_PATH, type Section } from '@/app/shell/navigation';
-import { isDesktopHost } from '@/platform/desktop';
 import { RESEARCH_CATEGORIES } from '@/content/tools.config';
-import { usePreferences } from '@/core/preferences';
-import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
 
@@ -27,9 +23,9 @@ const SECTION_LABELS: Record<Section, string> = {
  * am I, and what global actions exist. Everything tool-specific lives in the
  * tool's own header, so this bar never competes with the work.
  *
- * The strip also carries the two privacy controls, because they are the two
- * facts a developer wants to confirm at a glance from any screen: nothing is
- * uploaded, and analytics can be switched off without leaving the work.
+ * The strip also carries the local-only badge, because that is the one fact a
+ * developer wants to confirm at a glance from any screen: nothing is uploaded,
+ * and there is no background collection to switch off.
  */
 export function Topbar({
   section,
@@ -48,19 +44,6 @@ export function Topbar({
 }) {
   const tool = TOOL_BY_PATH.get(path);
   const category = tool ? RESEARCH_CATEGORIES[tool.researchCategory].name : null;
-  const analytics = usePreferences((s) => s.analytics);
-  const update = usePreferences((s) => s.update);
-  const notify = useWorkbenchMemory((s) => s.notify);
-
-  const toggleAnalytics = () => {
-    const next = !analytics;
-    update({ analytics: next });
-    notify(
-      next
-        ? 'Analytics on. Anonymous usage events only — never tool input or output.'
-        : 'Analytics off. Nothing is collected from this device.',
-    );
-  };
 
   return (
     <header className="wb-topbar">
@@ -115,38 +98,6 @@ export function Topbar({
           <IconShieldLock size={11} aria-hidden="true" />
           Local only
         </span>
-
-        {/* The consent control, one click from anywhere. It writes the same
-            preference the Settings switch does, so the two can never disagree.
-            Pressed means analytics is collecting.
-
-            The installed app collects nothing, so it shows no control: a switch
-            that cannot turn anything on is worse than no switch. */}
-        {isDesktopHost() ? null : (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className={
-              analytics
-                ? 'gap-1.5 bg-state-selected text-state-selected-ink'
-                : 'gap-1.5 text-ink-faint'
-            }
-            aria-pressed={analytics}
-            aria-label={`Product analytics is ${analytics ? 'on' : 'off'}. ${
-              analytics ? 'Turn it off' : 'Turn it on'
-            }.`}
-            title={
-              analytics
-                ? 'Product analytics is on: anonymous usage events only, never tool input or output. Click to turn it off.'
-                : 'Product analytics is off. Nothing is collected from this device.'
-            }
-            onClick={toggleAnalytics}
-          >
-            <IconChartDots size={14} />
-            <span className="hidden md:inline">Analytics</span>
-          </Button>
-        )}
 
         <Button
           type="button"

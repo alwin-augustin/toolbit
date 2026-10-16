@@ -54,7 +54,7 @@ _Avoid_: recipe
 A record of one transform execution, kept while the History switch is on and expiring on the retention setting. Secret tools never record.
 
 **Secret tool**:
-A tool whose content must never be recorded, shared, or telemetered: credentials and tokens (password, TOTP, JWT, certificate, API builder, WebSocket), and private user content such as Notes. Excluded from history, share/export, and telemetry — no event may carry its `toolId` at all.
+A tool whose content must never be recorded or shared: credentials and tokens (password, TOTP, JWT, certificate, API builder, WebSocket), and private user content such as Notes. Excluded from history and share/export.
 
 **Smart paste**:
 Pasting raw data to get tool suggestions and carrying the pasted text into the opened tool. The detector's own answer comes first; the capability graph adds the useful operations for that data (format / validate / compare / convert).

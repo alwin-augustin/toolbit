@@ -5,15 +5,7 @@ import { Router } from 'wouter';
 import { useState } from 'react';
 import { NextActions } from '@/app/components/NextActions';
 import { AppRouter } from '@/app/router';
-import { track } from '@/core/telemetry';
 import { useWorkspace } from '@/shared/workspace-store';
-
-// Handoffs report discovery events through `track`; mocking keeps assertions
-// on the event shape without exercising the analytics client.
-vi.mock('@/core/telemetry', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/core/telemetry')>();
-  return { ...actual, track: vi.fn() };
-});
 
 beforeEach(() => {
   useWorkspace.setState({ tabs: [], activeTabId: null, closed: [] });
@@ -75,10 +67,6 @@ describe('next useful actions', () => {
 
     expect(pushes).toContain('/json-validator');
     expect(sessionStorage.getItem('toolbit:smart-paste')).toBe('{"a":1}');
-    expect(track).toHaveBeenCalledWith('discovery_handoff', {
-      from_tool_id: 'json-formatter',
-      to_tool_id: 'json-validator',
-    });
   });
 
   it('opens a workbench handoff as a new document seeded with the payload', async () => {
@@ -91,10 +79,6 @@ describe('next useful actions', () => {
     expect(pushes).toContain('/timestamp-converter');
     const tab = useWorkspace.getState().tabs.find((t) => t.toolId === 'timestamp-converter');
     expect(tab?.payload).toMatchObject({ input: '{"sub":"1"}' });
-    expect(track).toHaveBeenCalledWith('discovery_handoff', {
-      from_tool_id: 'jwt-decoder',
-      to_tool_id: 'timestamp-converter',
-    });
   });
 });
 

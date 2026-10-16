@@ -15,7 +15,6 @@ import { CodeEditor } from '@/shared/CodeEditor';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { useEditorStatus, type WorkspaceTab } from '@/shared/workspace-store';
 import { openDialog } from '@/shared/dialog';
-import { track } from '@/core/telemetry';
 import { useFavorites } from '@/core/favorites-store';
 import { useRecentTools } from '@/core/recent-tools';
 import { NextActions } from '@/app/components/NextActions';
@@ -110,13 +109,11 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
         const { output, error, warning } = await spec.run(doc.input, params, mode);
         if (error) {
           update({ error, warning: '', dirty: true });
-          track('transform_failed', { tool_id: spec.id, error_code: 'INVALID_INPUT' });
           return;
         }
         const next = { ...doc, output, mode, error: '', warning: warning ?? '', dirty: false };
         update({ output, mode, error: '', warning: warning ?? '', dirty: false });
         setRunKey((key) => key + 1);
-        track('transform_succeeded', { tool_id: spec.id });
         if (remember) {
           addRun({
             id: crypto.randomUUID(),
@@ -164,7 +161,6 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(doc.output);
-      track('output_copied', { tool_id: spec.id });
       notify('Result copied');
     } catch {
       notify('Clipboard unavailable. Select the result and copy it.');

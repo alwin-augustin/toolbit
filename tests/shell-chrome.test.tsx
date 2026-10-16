@@ -6,7 +6,6 @@ import { AppRouter } from '@/app/router';
 import { WorkspaceShell } from '@/app/shell/WorkspaceShell';
 import { OfflineIndicator } from '@/app/components/OfflineIndicator';
 import { useWorkspace } from '@/shared/workspace-store';
-import { usePreferences } from '@/core/preferences';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { defaultDocState } from '@/features/tools/specs';
 import { applyTheme } from '@/shared/theme';
@@ -413,23 +412,10 @@ describe('context strip controls', () => {
     expect(panelState()).toBe('open');
   });
 
-  it('switches product analytics consent from the topbar', async () => {
-    const user = userEvent.setup();
-    usePreferences.setState({ analytics: true });
+  it('shows the local-only badge and no analytics control', () => {
     renderShell('/');
-
-    const on = screen.getByRole('button', { name: /Product analytics is on/ });
-    expect(on).toHaveAttribute('aria-pressed', 'true');
-
-    await user.click(on);
-
-    expect(usePreferences.getState().analytics).toBe(false);
-    expect(screen.getByRole('button', { name: /Product analytics is off/ })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    );
-    expect(useWorkbenchMemory.getState().toast).toMatch(/Analytics off/);
-
-    usePreferences.setState({ analytics: true });
+    const topbar = document.querySelector('.wb-topbar') as HTMLElement;
+    expect(within(topbar).getByText('Local only')).toBeInTheDocument();
+    expect(within(topbar).queryByRole('button', { name: /analytics/i })).toBeNull();
   });
 });

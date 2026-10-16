@@ -8,7 +8,6 @@ import { LoadingFallback } from '@/app/components/LoadingFallback';
 import { DesktopHost } from '@/app/components/DesktopHost';
 import { isDesktopHost } from '@/platform/desktop';
 import { TOOLS } from '@/content/tools.config';
-import { PostHogPageView } from '@/app/components/PostHogPageView';
 
 /**
  * Tools live at the root: /json-formatter, not /app/json-formatter.
@@ -31,7 +30,6 @@ const LandingPage = lazy(() =>
 function App() {
   return (
     <Router>
-      <PostHogPageView />
       <DesktopHost />
       <AppShell />
     </Router>

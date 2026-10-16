@@ -13,9 +13,9 @@ export const SITE = {
   name: 'Toolbit',
   title: 'Toolbit | Local-First Developer Tools, JSON Formatter & API Utilities',
   description:
-    'Toolbit is a local-first developer workspace with 40+ offline tools including JSON formatter, JWT decoder, Base64 encoder, Regex tester, SQL formatter, UUID generator and more. Local processing. Optional product analytics.',
+    'Toolbit is a local-first developer workspace with 40+ offline tools including JSON formatter, JWT decoder, Base64 encoder, Regex tester, SQL formatter, UUID generator and more. Local processing. No analytics, no tracking.',
   shortDescription:
-    'A local-first developer workspace with 40+ offline tools. Local processing. Optional product analytics.',
+    'A local-first developer workspace with 40+ offline tools. Local processing. No analytics, no tracking.',
   ogImage: '/og-image.png',
   logo: '/pwa-512x512.png',
   github: 'https://github.com/alwin-augustin/toolbit',
@@ -62,7 +62,7 @@ export const CATEGORY_GROUPS = [
 ];
 
 const privacyAnswer =
-  'Local transformations process input in your browser. HTTP and WebSocket tools send user-initiated requests. Optional product analytics is off by default, excludes tool input and output, and stays off when your browser signals Do Not Track or Global Privacy Control.';
+  'Local transformations process input in your browser. HTTP and WebSocket tools send user-initiated requests. Nothing else leaves the device: there is no analytics, no tracking, and tool input and output are never uploaded.';
 
 const offlineAnswer =
   'Toolbit installs as a PWA in supported browsers. Cached local tools can work without a connection; network tools still require their endpoints.';
@@ -836,7 +836,7 @@ export const TOOL_PAGES = [
     description:
       'Send HTTP requests and inspect status, headers, timing, and body. A fast, local Postman alternative that runs in your browser.',
     h1: 'API Request Builder and HTTP Client',
-    lede: 'Fire a GET, POST, PUT, PATCH, or DELETE, set headers and a body, and read the response with formatting and timing. No account, no workspace sync, optional minimized analytics.',
+    lede: 'Fire a GET, POST, PUT, PATCH, or DELETE, set headers and a body, and read the response with formatting and timing. No account, no workspace sync, and no analytics — the request is the only thing that leaves your machine.',
     bullets: [
       'All common HTTP verbs with custom headers and request bodies.',
       'Response viewer with status, headers, timing, and pretty-printed JSON.',
@@ -1834,7 +1834,7 @@ export const SITE_FAQ = [
   },
   {
     q: 'Does Toolbit track me?',
-    a: 'Toolbit uses privacy-preserving product analytics to understand aggregate feature use and errors. Tool inputs and outputs are never collected. Apart from analytics and requests you explicitly send with the API and WebSocket tools, processing happens locally in your browser.',
+    a: 'No. Toolbit has no analytics and no tracking. Tool inputs and outputs are never collected, and apart from the requests you explicitly send with the API and WebSocket tools, processing happens locally in your browser.',
   },
   {
     q: 'Is there a desktop version?',
@@ -1955,7 +1955,7 @@ export const COMPARISON_PAGES = [
     slug: 'toolbit-vs-postman',
     title: 'Toolbit vs Postman — Lightweight API Testing | Toolbit',
     description:
-      "Compare Toolbit's built-in API request builder with Postman. No account, no cloud sync, optional minimized analytics — plus 40+ other developer tools.",
+      "Compare Toolbit's built-in API request builder with Postman. No account, no cloud sync, no analytics — plus 40+ other developer tools.",
     h1: 'Toolbit vs Postman',
     competitor: 'Postman',
     lede: "Postman is a full API development platform: collections, environments, mock servers, monitors, and team collaboration. Toolbit's API request builder covers the part most developers use most days — send a request, read the response — without an account or a cloud workspace.",
@@ -2018,7 +2018,7 @@ export const GUIDE_PAGES = [
       },
       {
         h2: 'Installing for offline use',
-        body: 'In a Chromium or Edge browser, use the install icon in the address bar. On iOS, use Share then Add to Home Screen. Cached local tools can then work without a connection. Network tools and analytics require a connection.',
+        body: 'In a Chromium or Edge browser, use the install icon in the address bar. On iOS, use Share then Add to Home Screen. Cached local tools can then work without a connection. Only the network tools need a connection.',
       },
     ],
     faq: [
@@ -2028,7 +2028,7 @@ export const GUIDE_PAGES = [
       },
       {
         q: 'Is an offline web app as private as a native one?',
-        a: 'In this case yes — local transformations do not upload input. Network tools send requested traffic, and optional analytics sends minimized usage events.',
+        a: 'In this case yes — local transformations do not upload input, and there is no analytics or tracking to send anything at all. Only the network tools you run send traffic.',
       },
       {
         q: 'Which tools need a connection?',
@@ -2114,7 +2114,7 @@ export const GUIDE_PAGES = [
       },
       {
         h2: 'Free, open source, and private',
-        body: 'No account, no paid tier, and no advertising. Toolbit uses privacy-preserving analytics for product improvement, while all tool processing remains client-side and tool content is never collected.',
+        body: 'No account, no paid tier, no advertising, and no analytics. All tool processing stays client-side and tool content is never collected.',
       },
     ],
     faq: [
@@ -2183,7 +2183,7 @@ export const BLOG_POSTS = [
       {
         h2: 'What to do instead',
         paragraphs: [
-          'Prefer tools that do the work in the browser and can prove it. Toolbit performs transformations locally. Network tools contact chosen endpoints and optional minimized analytics can be disabled. The source is open so this behavior can be reviewed.',
+          'Prefer tools that do the work in the browser and can prove it. Toolbit performs transformations locally and ships no analytics; the only requests are the network tools you run yourself. The source is open so this behavior can be reviewed.',
           'Where you cannot verify a tool, use a throwaway token or redact the payload first. And if a token has already been through a service you do not control, treat it as compromised: revoke it, rotate the signing key if the token was signed with a shared secret, and move on. Rotation is cheap. Explaining an incident is not.',
         ],
       },
@@ -2191,7 +2191,7 @@ export const BLOG_POSTS = [
     faq: [
       {
         q: 'Is it safe to decode a JWT in Toolbit?',
-        a: 'Yes. The JWT decoder runs entirely in your browser and does not send your token over the network. Optional usage analytics can be disabled in settings. It is still good practice to use a test token where one will do.',
+        a: 'Yes. The JWT decoder runs entirely in your browser and does not send your token over the network — there is no analytics or tracking at all. It is still good practice to use a test token where one will do.',
       },
       {
         q: 'Does decoding a JWT reveal the signing key?',
@@ -2377,10 +2377,10 @@ export const LEGAL_PAGES = [
     slug: 'privacy',
     title: 'Privacy Policy — Toolbit',
     description:
-      'Toolbit processes your content locally in your browser and uses optional pseudonymous analytics to improve the app. No account required. Read the full privacy policy.',
-    updated: '2026-10-01',
+      'Toolbit processes your content locally in your browser with no analytics and no tracking. No account required. Read the full privacy policy.',
+    updated: '2026-10-16',
     h1: 'Privacy Policy',
-    lede: 'The short version: Toolbit processes transformations locally in your browser. Network tools send requests only when you choose to run them. Optional product analytics collects minimized usage events; tool input and output are excluded.',
+    lede: 'The short version: Toolbit processes transformations locally in your browser. Network tools send requests only when you choose to run them. There is no analytics, no tracking, and no account; tool input and output never leave the device.',
     contactEmail: 'alwinaugustin@gmail.com',
     sections: [
       {
@@ -2405,7 +2405,7 @@ export const LEGAL_PAGES = [
         h2: 'Local Storage',
         paragraphs: [
           "Toolbit uses your browser's local storage and IndexedDB to save preferences and convenience data:",
-          'This data is stored only on your device and is never transmitted anywhere. You can clear this data through the Privacy and storage settings or browser settings. History retention defaults to 30 days; applying retention removes expired entries only when you request it. Workspace payloads require an explicit Include data choice. Recipe files contain settings only.',
+          'This data is stored only on your device and is never transmitted anywhere. "Delete all local data" in Privacy and storage removes every store in one step; individual controls and browser settings also work. History retention defaults to 30 days; applying retention removes expired entries only when you request it. Workspace payloads require an explicit Include data choice. Recipe files contain settings only.',
         ],
         bullets: [
           'Theme preference: Whether you prefer light or dark mode',
@@ -2426,9 +2426,9 @@ export const LEGAL_PAGES = [
         ],
       },
       {
-        h2: 'Analytics',
+        h2: 'No Analytics or Tracking',
         paragraphs: [
-          'Toolbit uses PostHog to measure pseudonymous product usage, diagnose errors, and improve the application. Analytics is off until you turn it on in Privacy and storage, and a browser that signals Do Not Track or Global Privacy Control is never tracked. When enabled, we collect a random device identifier, known route/tool identifiers, bounded counts, and error codes; turning it off removes the stored device identity immediately. We do not send the text, files, tokens, snippets, or other content you process with Toolbit.',
+          'Toolbit does not use analytics, telemetry, or tracking of any kind. No usage events are sent, no device or pseudonymous identifiers are created, and there is no crash reporting or remote configuration. The only network requests the app makes are the ones you explicitly run with the API Request Builder and the WebSocket Tester; everything else stays on this device.',
         ],
       },
       {

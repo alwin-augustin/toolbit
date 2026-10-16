@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { IconArrowRight } from '@tabler/icons-react';
 import { capabilityReason, nextActionsFor } from '@/core/capability-graph';
-import { track } from '@/core/telemetry';
 import { TOOL_INDEX } from '@/app/shell/navigation';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ import { Button } from '@/components/ui/button';
  * the tool's curated `related` edges — never a wall of recommendations. Each
  * action says why it is shown in the tool's own intent phrasing ("validate
  * json against a schema"), carries the current result forward as the next
- * tool's input, and reports the handoff. When no payload or no edge exists,
+ * tool's input. When no payload or no edge exists,
  * nothing renders: a fabricated next step is worse than none.
  *
  * One component serves both architectures: the generic workbench renders it
@@ -58,10 +57,7 @@ export function NextActions({
           size="sm"
           className="gap-1.5"
           title={`Open ${action.name}`}
-          onClick={() => {
-            track('discovery_handoff', { from_tool_id: toolId, to_tool_id: action.id });
-            openWithPayload(action.id, payload);
-          }}
+          onClick={() => openWithPayload(action.id, payload)}
         >
           {label(action.reason)}
           <IconArrowRight size={13} aria-hidden="true" />

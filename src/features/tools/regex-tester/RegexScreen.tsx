@@ -32,6 +32,20 @@ function isValidFlags(flags: string): boolean {
   return /^[gimsuy]*$/.test(flags);
 }
 
+/**
+ * Nested quantifiers (`(a+)+`) can make a single `exec` or `replace` run for
+ * minutes, and a time budget cannot interrupt one call — so the pattern is
+ * refused up front. Short inputs cannot backtrack far enough to matter.
+ */
+const CATASTROPHIC_QUANTIFIERS = /\([^)]*[*+?][^)]*\)[*+?]/;
+const CATASTROPHIC_TEXT_THRESHOLD = 50;
+const CATASTROPHIC_MESSAGE =
+  'Potential catastrophic backtracking pattern detected — simplify nested quantifiers.';
+
+function rejectsBacktracking(pattern: string, text: string): boolean {
+  return text.length > CATASTROPHIC_TEXT_THRESHOLD && CATASTROPHIC_QUANTIFIERS.test(pattern);
+}
+
 /** Sync port of the legacy regex-evaluate worker (same match shape). */
 export function findRegexMatches(pattern: string, flags: string, text: string): RegexEvaluation {
   if (!pattern) return { matches: [], error: null };
@@ -41,12 +55,7 @@ export function findRegexMatches(pattern: string, flags: string, text: string): 
     return { matches: [], error: `Test text too large (max ${MAX_REGEX_TEXT} characters).` };
   if (!isValidFlags(flags))
     return { matches: [], error: 'Invalid flags. Use only g, i, m, s, u, y.' };
-  if (/\([^)]*[*+?][^)]*\)[*+?]/.test(pattern) && text.length > 50) {
-    return {
-      matches: [],
-      error: 'Potential catastrophic backtracking pattern detected — simplify nested quantifiers.',
-    };
-  }
+  if (rejectsBacktracking(pattern, text)) return { matches: [], error: CATASTROPHIC_MESSAGE };
   let re: RegExp;
   try {
     re = new RegExp(pattern, flags);
@@ -90,6 +99,7 @@ export function applyRegexReplace(
   if (pattern.length > MAX_REGEX_PATTERN || text.length > MAX_REGEX_TEXT)
     return { result: '', error: 'Input exceeds evaluation budget.' };
   if (!isValidFlags(flags)) return { result: '', error: 'Invalid flags.' };
+  if (rejectsBacktracking(pattern, text)) return { result: '', error: CATASTROPHIC_MESSAGE };
   try {
     return { result: text.replace(new RegExp(pattern, flags), replacement), error: null };
   } catch (error) {

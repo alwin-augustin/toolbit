@@ -1,13 +1,5 @@
 import { test, expect } from './fixtures/axe';
 
-test.beforeEach(async ({ page }) => {
-  if (process.env.TOOLBIT_BLOCK_ANALYTICS)
-    await page.route(
-      (url) => url.hostname === 'us.i.posthog.com',
-      (route) => route.abort(),
-    );
-});
-
 // All 43 catalog routes. Mirrors src/content/tools.config.ts paths.
 const TOOL_PATHS = [
   '/json-formatter',

@@ -6,8 +6,7 @@ JSON, YAML, SQL, JWT, regex, diffs, hashes, certificates, QR codes and more —
 all transforming locally in the tab. The only tools that touch the network are
 the API Request Builder and the WebSocket Tester, and they contact only the
 endpoint you explicitly run. Preferences and workspace structure stay on this
-device; payloads are never stored, never put in a URL, and never sent to
-analytics.
+device; payloads are never stored, never put in a URL, and never sent anywhere.
 
 ## Using it
 
@@ -35,7 +34,7 @@ npm run dev
 npm run check        # tsc
 npm run lint         # eslint, zero warnings tolerated
 npm run format:check # prettier
-npm run test:run     # vitest, 33 files
+npm run test:run     # vitest, 39 files
 npm run build        # vite build + prerendered SEO pages + service worker
 npx playwright install chromium firefox webkit
 npm run test:e2e     # Playwright (not run in CI)
@@ -52,14 +51,14 @@ for transforms — the built site is static.
 - `src/app/shell/` — rail, navigator, topbar, document tabs, command palette, navigation model.
 - `src/features/tools/` — one folder per tool: chrome, behaviour, tests. `specs.ts` declares the generic workbench chrome.
 - `src/shared/` — document state, code editor, stores, clipboard, workbench actions.
-- `src/core/` — canonical tool contracts, policy, workers, persistence, telemetry, content detection.
+- `src/core/` — canonical tool contracts, policy, workers, persistence, deletion, content detection.
 - `src/content/` — the tool catalogue and SEO copy.
-- `src/platform/` — PWA, analytics, storage helpers.
+- `src/platform/` — PWA and storage helpers.
 
 Rules: transforms go through the canonical contract (`core/tool-contract`) so the
 UI, workers and recipes share semantics; saved work is sessions or snippets;
-secrets are excluded from history and telemetry by default; no payload in a URL,
-a log or an analytics event.
+secrets are never persisted or shared by default; no payload in a URL, a log, or
+an outbound request.
 
 ## Documentation
 

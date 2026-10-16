@@ -1,12 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-test.beforeEach(async ({ page }) => {
-  await page.route(
-    (url) => url.hostname === 'us.i.posthog.com',
-    (route) => route.abort(),
-  );
-});
-
 function collectErrors(page: import('@playwright/test').Page): string[] {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
