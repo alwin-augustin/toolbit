@@ -7,3 +7,15 @@
 # An earlier revision of this branch served per-tool landing pages under
 # /tools/<slug>; those are now the tool pages themselves.
 /tools/:slug  /:slug    301
+
+# Installers for the desktop app. The paths stay version-free: each one
+# resolves to the newest GitHub release asset, and the desktop workflow
+# publishes a stable copy next to every versioned name, so this file never
+# needs a release bump. A redirect rather than a rewrite, because the
+# binaries live on another origin (Pages rejects files over 25 MiB, and the
+# installers are bigger).
+/download            /about#download   302
+/download/mac        https://github.com/alwin-augustin/toolbit-desktop/releases/latest/download/Toolbit-macos-aarch64.dmg   302
+/download/mac-intel  https://github.com/alwin-augustin/toolbit-desktop/releases/latest/download/Toolbit-macos-x64.dmg   302
+/download/windows    https://github.com/alwin-augustin/toolbit-desktop/releases/latest/download/Toolbit-windows-x64-setup.exe   302
+/download/linux      https://github.com/alwin-augustin/toolbit-desktop/releases/latest/download/Toolbit-linux-x86_64.AppImage   302

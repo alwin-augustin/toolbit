@@ -4,6 +4,7 @@ import {
   IconArrowRight,
   IconBolt,
   IconCircleCheck,
+  IconDownload,
   IconKeyboard,
   IconShieldLock,
   IconWifiOff,
@@ -178,6 +179,61 @@ export function LandingPage() {
               </div>
             ))}
           </div>
+        </section>
+
+        {/* The desktop app. The URLs carry no version on purpose: Cloudflare
+            Pages resolves each `/download/<platform>` to the newest GitHub
+            release asset (public/_redirects), so this section never changes
+            when a release does. */}
+        <section
+          id="download"
+          aria-labelledby="landing-download"
+          className="scroll-mt-20 border-t border-line py-12"
+        >
+          <h2 id="landing-download" className="text-xl font-semibold tracking-tight text-ink">
+            The same workspace, as a desktop app
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-ink-muted">
+            Native menus and file panels, and the on-device search model bundled in — so the smarter
+            search works with no connection at all. The two live-network tools (API Request Builder,
+            WebSocket Tester) stay in the browser: the app sends nothing.
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-2.5">
+            <a href="/download/mac" className={buttonVariants({ size: 'lg', className: 'gap-2' })}>
+              <IconDownload size={16} aria-hidden="true" />
+              macOS (Apple silicon)
+            </a>
+            <a
+              href="/download/mac-intel"
+              className={buttonVariants({ size: 'lg', variant: 'outline' })}
+            >
+              macOS (Intel)
+            </a>
+            <a
+              href="/download/windows"
+              className={buttonVariants({ size: 'lg', variant: 'outline' })}
+            >
+              Windows
+            </a>
+            <a
+              href="/download/linux"
+              className={buttonVariants({ size: 'lg', variant: 'outline' })}
+            >
+              Linux
+            </a>
+          </div>
+          <p className="mt-3 text-xs text-ink-faint">
+            Unsigned builds, so the OS asks you to confirm the first launch. Every release is on{' '}
+            <a
+              href="https://github.com/alwin-augustin/toolbit-desktop/releases"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-brand-ink hover:underline"
+            >
+              GitHub
+            </a>
+            .
+          </p>
         </section>
 
         {/* The catalogue, grouped exactly as the app groups it ------------- */}
