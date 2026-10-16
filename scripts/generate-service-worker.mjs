@@ -11,6 +11,27 @@ function walk(dir) {
   );
 }
 const pages = walk(dist).filter((file) => file.endsWith('/index.html'));
+
+/**
+ * Paths `public/_redirects` answers with a redirect. A navigation to one of
+ * these must reach the network: the navigation fallback below would otherwise
+ * serve the precached app shell instead, so Cloudflare never sees the request
+ * and the visitor gets the in-app 404. That silently broke the installer links
+ * (`/download/<platform>`) and the legacy `/app` + `/tools` 301s for every
+ * returning visitor. Keep this list in step with `public/_redirects` — the
+ * check below fails the build if a redirect source is not covered.
+ */
+const redirectPaths = ['/download', '/app', '/tools'];
+
+for (const line of readFileSync(path.resolve('public/_redirects'), 'utf8').split('\n')) {
+  const source = line.trim().split(/\s+/)[0];
+  if (!source || source.startsWith('#') || !source.startsWith('/')) continue;
+  const root = `/${source.split('/')[1]}`;
+  if (!redirectPaths.includes(root))
+    throw new Error(
+      `public/_redirects answers ${source}, but the service worker would swallow it: add ${root} to redirectPaths.`,
+    );
+}
 const { count, warnings } = await generateSW({
   globDirectory: dist,
   swDest: path.join(dist, 'sw.js'),
@@ -39,7 +60,10 @@ const { count, warnings } = await generateSW({
   clientsClaim: true,
   skipWaiting: false,
   navigateFallback: '/index.html',
-  navigateFallbackDenylist: [/^\/(?:assets|og|screenshots)\//],
+  navigateFallbackDenylist: [
+    /^\/(?:assets|og|screenshots)\//,
+    new RegExp(`^(?:${redirectPaths.join('|')})(?:/|$)`),
+  ],
 });
 for (const warning of warnings) console.warn(warning);
 console.log(`PWA: precached final site (${count} entries), including generated deep links.`);
