@@ -4,19 +4,55 @@
  * Loads the precomputed tool vectors and the `mixedbread-ai/mxbai-embed-xsmall-v1`
  * embedding model, both lazily and only when the user opts in. Nothing here
  * ever blocks a search: the palette asks for whatever is ready, and lexical
- * carries the surface until the model answers. Everything runs in the browser
- * tab — the model weights come from the Hugging Face CDN once and are cached
- * by the browser, queries never leave the device.
+ * carries the surface until the model answers. Everything runs on the device:
+ * browsers fetch the weights from the Hugging Face CDN once and let the HTTP
+ * cache hold them, while the packaged desktop app ships them in its bundle
+ * (`semanticModelSource`); queries never leave the device either way.
  *
  * Vectors are build artifacts: `scripts/generate-tool-embeddings.ts` writes
  * them and `tests/embeddings.test.ts` fails when the corpus outgrows them.
  */
 import { capabilityCorpusHash } from '@/core/capability-graph';
 import type { SemanticHit, SemanticVectorAsset } from '@/core/intent/types';
+import { isDesktopBuild, isDevBuild } from '@/platform/desktop';
 
 export const SEMANTIC_MODEL = 'mixedbread-ai/mxbai-embed-xsmall-v1';
 export const SEMANTIC_DTYPE = 'q8';
 export const SEMANTIC_ASSET_URL = '/embeddings/tool-capabilities.v1.json';
+/** Same-origin prefix the desktop build stages the model under (dist/models/). */
+export const SEMANTIC_LOCAL_MODEL_PATH = '/models/';
+/** Same-origin prefix the desktop build stages the ONNX WASM runtime under. */
+export const SEMANTIC_ORT_PATH = '/ort/';
+
+/** The CDN transformers.js resolves its ONNX WASM runtime from by default. */
+const SEMANTIC_ORT_CDN = /^https:\/\/cdn\.jsdelivr\.net\/npm\/onnxruntime-web@[^/]+\/dist\//;
+
+/**
+ * Rewrite transformers.js's ONNX runtime URLs to the staged copy under
+ * `/ort/`. It picked the file names for this engine (asyncify for WebKit and
+ * Chromium, the plain build for Safari below 26 without WebGPU); only the
+ * origin changes. Mutates `paths` in place.
+ */
+export function localizeOrtWasmPaths(paths: { mjs?: URL | string; wasm?: URL | string }): void {
+  for (const key of ['mjs', 'wasm'] as const) {
+    const url = paths[key];
+    const text = typeof url === 'string' ? url : url?.href;
+    if (!text) continue;
+    const localized = text.replace(SEMANTIC_ORT_CDN, SEMANTIC_ORT_PATH);
+    if (localized !== text) paths[key] = localized;
+  }
+}
+
+/**
+ * Where the weights come from. Packaged desktop builds load the staged copy
+ * from the bundle — the app's CSP allows no remote origin and the app is
+ * local-only. Everything else (browsers, and `tauri dev`, which runs without
+ * the app CSP) downloads from the Hub once and lets the HTTP cache hold it.
+ * Pure so both decisions are unit-testable.
+ */
+export function semanticModelSource(target: 'web' | 'desktop', dev: boolean): 'remote' | 'local' {
+  return target === 'desktop' && !dev ? 'local' : 'remote';
+}
 
 /** `off` until the preference is on; `failed` keeps the quiet lexical fallback. */
 export type SemanticStatus = 'off' | 'loading' | 'ready' | 'failed';
@@ -130,8 +166,25 @@ async function load(): Promise<void> {
     vectors = dequantizeVectors(asset);
   }
   if (!extractor) {
-    const { pipeline } = await import('@huggingface/transformers');
-    extractor = (await pipeline('feature-extraction', SEMANTIC_MODEL, {
+    const transformers = await import('@huggingface/transformers');
+    if (semanticModelSource(isDesktopBuild ? 'desktop' : 'web', isDevBuild) === 'local') {
+      // `allowLocalModels` is false by default in browsers; the staged files
+      // under `/models/` are same-origin, which the app's CSP allows. `env` is
+      // read lazily so the remote path never touches it.
+      const { env } = transformers;
+      env.allowRemoteModels = false;
+      env.allowLocalModels = true;
+      env.localModelPath = SEMANTIC_LOCAL_MODEL_PATH;
+      // The WASM runtime defaults to a jsdelivr CDN, and `useWasmCache` would
+      // pre-load the factory as a `blob:` module — the app CSP allows neither.
+      // Point both at the staged copy and let ORT import them directly.
+      env.useWasmCache = false;
+      const wasm = env.backends.onnx.wasm;
+      if (wasm && wasm.wasmPaths && typeof wasm.wasmPaths === 'object') {
+        localizeOrtWasmPaths(wasm.wasmPaths);
+      }
+    }
+    extractor = (await transformers.pipeline('feature-extraction', SEMANTIC_MODEL, {
       dtype: SEMANTIC_DTYPE,
     })) as unknown as Extractor;
   }

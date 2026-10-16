@@ -101,7 +101,11 @@ query text / pasted data
   `@huggingface/transformers` (WASM, WebGPU where available), and blends
   cosine similarity into the lexical ranking; a semantic hit can name the
   corpus line it matched, in lexical's own reason vocabulary. Model state is
-  exposed (`off | loading | ready | failed`); search never waits for it.
+  exposed (`off | loading | ready | failed`); search never waits for it. In the
+  packaged desktop app the weights ship inside the bundle (the app's CSP allows
+  no remote origin; `Desktop/desktop-tauri` stages them into `dist/models/` —
+  with the ONNX WASM runtime under `dist/ort/` — at build time) and
+  `semanticModelSource` picks local vs remote.
 - **Confidence policy:** a confident single result needs a clear top score and
   a margin over the runner-up. Otherwise, show the top 3–5 with their reasons,
   and keep "browse all tools" attached. Detection is a suggestion, never a

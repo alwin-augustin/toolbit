@@ -35,8 +35,19 @@ export const DESKTOP_EVENT = {
 
 export type DesktopEventName = (typeof DESKTOP_EVENT)[keyof typeof DESKTOP_EVENT];
 
+/**
+ * Build-time target flags. `import.meta.env` is a Vite injection; node-side
+ * scripts (tsx: the embedding generator, the intent eval) import this module
+ * through the tool catalogue and have no such object, so the read has to
+ * survive `undefined` — there it is always the web target.
+ */
+const viteEnv = import.meta.env as ImportMetaEnv | undefined;
+
 /** Build-time desktop target. Gates code that has no meaning in a browser. */
-export const isDesktopBuild = import.meta.env.VITE_TARGET === 'desktop';
+export const isDesktopBuild = viteEnv?.VITE_TARGET === 'desktop';
+
+/** Vite's dev flag — false in every bundle, and outside Vite entirely. */
+export const isDevBuild = viteEnv?.DEV === true;
 
 interface TauriCore {
   invoke<T>(command: string, args?: Record<string, unknown>): Promise<T>;

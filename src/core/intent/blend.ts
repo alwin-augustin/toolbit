@@ -43,6 +43,9 @@ export function semanticStrength(cosine: number): number {
 
 const NAME_BY_ID: ReadonlyMap<string, string> = new Map(TOOLS.map((tool) => [tool.id, tool.name]));
 
+/** Tools this build shows; semantic hits for hidden ids are dropped. */
+const VISIBLE_TOOL_IDS: ReadonlySet<string> = new Set(TOOLS.map((tool) => tool.id));
+
 /** The reason a semantic hit can state, in the vocabulary lexical uses. */
 export function semanticReason(toolId: string, lineIndex: number): string {
   const kind = capabilityCorpusLineKinds(toolId)[lineIndex];
@@ -71,7 +74,11 @@ export function blendSemantic(
   semantic: ReadonlyMap<string, SemanticHit>,
   limit: number,
 ): IntentResolution {
-  if (semantic.size === 0) return lexical;
+  // The vectors cover the full catalogue. A build that hides tools (the
+  // desktop build hides the two network ones) must not let them back in
+  // through the model.
+  const visible = new Map([...semantic].filter(([toolId]) => VISIBLE_TOOL_IDS.has(toolId)));
+  if (visible.size === 0) return lexical;
 
   const candidates = new Map<string, Candidate>();
   let order = 0;
@@ -85,7 +92,7 @@ export function blendSemantic(
       order: order++,
     });
   }
-  const entrants = [...semantic.values()]
+  const entrants = [...visible.values()]
     .filter((hit) => !candidates.has(hit.toolId) && hit.score >= SEMANTIC_BLEND.entrantFloor)
     .sort((a, b) => b.score - a.score)
     .slice(0, SEMANTIC_BLEND.maxEntrants);
@@ -101,7 +108,7 @@ export function blendSemantic(
   }
 
   for (const candidate of candidates.values()) {
-    candidate.semantic = semantic.get(candidate.toolId) ?? null;
+    candidate.semantic = visible.get(candidate.toolId) ?? null;
     const lex = clamp01(candidate.lexScore / SEMANTIC_BLEND.lexicalFullCredit);
     const sem = candidate.semantic ? semanticStrength(candidate.semantic.score) : 0;
     candidate.compound = SEMANTIC_BLEND.lexicalWeight * lex + SEMANTIC_BLEND.semanticWeight * sem;

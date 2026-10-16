@@ -17,9 +17,18 @@ import {
   type ToolDataType,
   type ToolOperation,
 } from '@/content/tool-capabilities';
-import { TOOLS } from '@/content/tools.config';
+import { ALL_TOOLS, TOOLS } from '@/content/tools.config';
 
+/** What this build shows; accessors, edges and clusters are pruned to it. */
 const TOOL_IDS: ReadonlySet<string> = new Set(TOOLS.map((tool) => tool.id));
+
+/**
+ * The full catalogue. Corpus lines, the staleness hash and validation read
+ * this, never `TOOL_IDS`: the vector asset and the capability records are
+ * data that must compare equal in every target (the desktop build hides two
+ * tools from the view; it does not shrink the corpus).
+ */
+const ALL_TOOL_IDS: ReadonlySet<string> = new Set(ALL_TOOLS.map((tool) => tool.id));
 
 const BY_INPUT_TYPE: ReadonlyMap<ToolDataType, readonly string[]> = (() => {
   const map = new Map<ToolDataType, string[]>();
@@ -84,13 +93,17 @@ export function capabilityReason(toolId: string): string | null {
   return CAPABILITIES[toolId]?.intents[0] ?? null;
 }
 
-/** Task clusters with any unknown ids pruned (validation reports them). */
+/**
+ * Task clusters with any unknown ids pruned (validation reports them), and
+ * clusters that end up empty in this build dropped — a target that hides
+ * tools must not render a heading with nothing under it.
+ */
 export function taskClusters(): ReadonlyArray<{ id: string; title: string; toolIds: string[] }> {
   return TASK_CLUSTERS.map((cluster) => ({
     id: cluster.id,
     title: cluster.title,
     toolIds: cluster.toolIds.filter((id) => TOOL_IDS.has(id)),
-  }));
+  })).filter((cluster) => cluster.toolIds.length > 0);
 }
 
 /**
@@ -101,7 +114,7 @@ export function taskClusters(): ReadonlyArray<{ id: string; title: string; toolI
  * on this; change one, change both.
  */
 export function capabilityCorpusLines(toolId: string): readonly string[] {
-  const tool = TOOLS.find((entry) => entry.id === toolId);
+  const tool = ALL_TOOLS.find((entry) => entry.id === toolId);
   if (!tool) return [];
   const capability = CAPABILITIES[toolId];
   const lines = [`${tool.name}: ${tool.description}`];
@@ -114,7 +127,7 @@ export function capabilityCorpusLines(toolId: string): readonly string[] {
 export type CorpusLineKind = 'name' | 'intent' | 'keyword';
 
 export function capabilityCorpusLineKinds(toolId: string): readonly CorpusLineKind[] {
-  const tool = TOOLS.find((entry) => entry.id === toolId);
+  const tool = ALL_TOOLS.find((entry) => entry.id === toolId);
   if (!tool) return [];
   const capability = CAPABILITIES[toolId];
   return [
@@ -127,9 +140,9 @@ export function capabilityCorpusLineKinds(toolId: string): readonly CorpusLineKi
 /** FNV-1a over every corpus line, in catalogue order. Detects stale vectors. */
 export function capabilityCorpusHash(): string {
   let hash = 0x811c9dc5;
-  const text = TOOLS.map((tool) => `${tool.id}\n${capabilityCorpusLines(tool.id).join('\n')}`).join(
-    '\n---\n',
-  );
+  const text = ALL_TOOLS.map(
+    (tool) => `${tool.id}\n${capabilityCorpusLines(tool.id).join('\n')}`,
+  ).join('\n---\n');
   for (let i = 0; i < text.length; i++) {
     hash ^= text.charCodeAt(i);
     hash = Math.imul(hash, 0x01000193) >>> 0;
@@ -143,7 +156,7 @@ export function validateCapabilities(): string[] {
   const knownTypes = new Set<string>(TOOL_DATA_TYPES);
   const knownOps = new Set<string>(TOOL_OPERATIONS);
 
-  for (const tool of TOOLS) {
+  for (const tool of ALL_TOOLS) {
     const capability = CAPABILITIES[tool.id];
     if (!capability) {
       errors.push(`Tool ${tool.id} has no capability record.`);
@@ -160,7 +173,7 @@ export function validateCapabilities(): string[] {
     const seen = new Set<string>();
     for (const related of capability.related) {
       if (related === tool.id) errors.push(`Tool ${tool.id} lists itself in related.`);
-      else if (!TOOL_IDS.has(related))
+      else if (!ALL_TOOL_IDS.has(related))
         errors.push(`Tool ${tool.id} references unknown tool "${related}".`);
       if (seen.has(related)) errors.push(`Tool ${tool.id} lists "${related}" twice in related.`);
       seen.add(related);
@@ -168,7 +181,7 @@ export function validateCapabilities(): string[] {
   }
 
   for (const id of Object.keys(CAPABILITIES))
-    if (!TOOL_IDS.has(id)) errors.push(`Capability record "${id}" matches no tool.`);
+    if (!ALL_TOOL_IDS.has(id)) errors.push(`Capability record "${id}" matches no tool.`);
 
   const clusterIds = new Set<string>();
   for (const cluster of TASK_CLUSTERS) {
@@ -177,7 +190,7 @@ export function validateCapabilities(): string[] {
     if (cluster.toolIds.length === 0) errors.push(`Task cluster "${cluster.id}" is empty.`);
     const seen = new Set<string>();
     for (const toolId of cluster.toolIds) {
-      if (!TOOL_IDS.has(toolId))
+      if (!ALL_TOOL_IDS.has(toolId))
         errors.push(`Task cluster "${cluster.id}" references unknown tool "${toolId}".`);
       if (seen.has(toolId)) errors.push(`Task cluster "${cluster.id}" lists "${toolId}" twice.`);
       seen.add(toolId);
