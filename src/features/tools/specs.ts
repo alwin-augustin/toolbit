@@ -1,5 +1,7 @@
 import {
+  IconBinary,
   IconBraces,
+  IconBrandTypescript,
   IconBrush,
   IconBrandJavascript,
   IconClock,
@@ -7,6 +9,7 @@ import {
   IconDatabase,
   IconEraser,
   IconFileCode,
+  IconFileDigit,
   IconFileText,
   IconHtml,
   IconLink,
@@ -14,18 +17,25 @@ import {
 } from '@tabler/icons-react';
 import {
   DEFINITIONS,
+  SQL_DIALECTS,
+  base32Transform,
   base64Transform,
   convertTimestamp,
   cssTransform,
   formatJson,
   graphqlTransform,
+  hexTransform,
   htmlTransform,
   jsMinifyTransform,
+  jsonToTypeScript,
   normalizeText,
   sqlTransform,
+  unicodeTransform,
   urlTransform,
   yamlTransform,
+  type JsonValue,
 } from '@/core/tool-contract';
+import { queryJsonPath } from '@/core/json-path';
 import {
   jsonErrorMessage,
   INVOICE_SAMPLE,
@@ -49,6 +59,16 @@ const CSS_SAMPLE = 'body {\n  margin: 0;\n  color: #333;\n}';
 const GRAPHQL_SAMPLE = 'query GetUser {\n  user(id: 1) {\n    name\n  }\n}';
 const JS_SAMPLE = 'function greet(name) {\n  return "Hello, " + name;\n}';
 const HTML_SAMPLE = '<p class="greeting">Hello & welcome</p>';
+const TYPES_SAMPLE = `{
+  "id": "inv_1042",
+  "paid": true,
+  "total": 24900,
+  "customer": { "id": "cus_018", "name": "Ada", "vip": true },
+  "lines": [
+    { "sku": "A-1", "qty": 2, "price": 12450 },
+    { "sku": "B-2", "qty": 1 }
+  ]
+}`;
 
 function jsonRun(
   input: string,
@@ -59,6 +79,23 @@ function jsonRun(
   if (empty) return empty;
   const indent =
     mode === 'minify' ? 0 : params.indent === 'tab' ? '\t' : Number(params.indent ?? 2);
+  if (mode === 'query') {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(input);
+    } catch {
+      return { output: '', error: jsonErrorMessage(input) };
+    }
+    const path = String(params.path ?? '').trim() || '$';
+    const result = queryJsonPath(parsed, path);
+    if (!result.ok) return { output: '', error: result.error };
+    if (result.matches.length === 0) return { output: 'No matches.', error: '' };
+    const matched =
+      result.matches.length === 1
+        ? result.matches[0].value
+        : result.matches.map((match) => match.value);
+    return { output: JSON.stringify(matched, null, indent === 0 ? 2 : indent), error: '' };
+  }
   const result = formatJson(input, indent, params.sortKeys === true);
   if (!result.ok) return { output: '', error: jsonErrorMessage(input) };
   return {
@@ -79,6 +116,7 @@ export const ALL_SPECS: Record<string, Spec> = {
     actions: [
       { mode: 'format', label: 'Format' },
       { mode: 'minify', label: 'Minify' },
+      { mode: 'query', label: 'Query' },
     ],
     options: [
       {
@@ -93,12 +131,20 @@ export const ALL_SPECS: Record<string, Spec> = {
         ],
       },
       { key: 'sortKeys', label: 'Sort object keys', type: 'checkbox' },
+      {
+        key: 'path',
+        label: 'Path:',
+        type: 'text',
+        inline: true,
+        placeholder: '$.orders[*].id',
+      },
     ],
-    defaults: { indent: '2', sortKeys: false },
+    defaults: { indent: '2', sortKeys: false, path: '$' },
     run: jsonRun,
     resultLabel: 'Valid JSON',
     fileExt: 'json',
     language: 'json',
+    note: 'Query accepts .key, [0], [*], slices, and ..key recursion. One match prints the value; several print an array.',
   },
   'base64-encoder': {
     id: 'base64-encoder',
@@ -126,6 +172,71 @@ export const ALL_SPECS: Record<string, Spec> = {
               : 'Could not encode this input as Base64.',
         };
       return { output: result.value, error: '' };
+    },
+    fileExt: 'txt',
+  },
+  'base32-encoder': {
+    id: 'base32-encoder',
+    title: 'Base32',
+    description: 'Encode or decode Base32 text',
+    icon: IconFileDigit,
+    sampleInput: '',
+    defaultMode: 'encode',
+    actions: [
+      { mode: 'encode', label: 'Encode' },
+      { mode: 'decode', label: 'Decode' },
+    ],
+    run(input, _params, mode) {
+      const empty = emptyOk(input);
+      if (empty) return empty;
+      const result = base32Transform(input, mode);
+      if (!result.ok)
+        return {
+          output: '',
+          error:
+            mode === 'decode'
+              ? 'Enter valid Base32 text (A–Z and 2–7). Case and padding are optional.'
+              : 'Could not encode this input as Base32.',
+        };
+      return { output: result.value, error: '' };
+    },
+    fileExt: 'txt',
+  },
+  'hex-encoder': {
+    id: 'hex-encoder',
+    title: 'Hex',
+    description: 'Hex and Unicode escape conversion',
+    icon: IconBinary,
+    sampleInput: 'Hello, 世界 👋',
+    defaultMode: 'to-hex',
+    actions: [
+      { mode: 'to-hex', label: 'Text to hex' },
+      { mode: 'from-hex', label: 'Hex to text' },
+      { mode: 'unicode-escape', label: 'Escape Unicode' },
+      { mode: 'unicode-unescape', label: 'Unescape' },
+    ],
+    run(input, _params, mode) {
+      const empty = emptyOk(input);
+      if (empty) return empty;
+      const result =
+        mode === 'unicode-escape'
+          ? unicodeTransform(input, 'escape')
+          : mode === 'unicode-unescape'
+            ? unicodeTransform(input, 'unescape')
+            : hexTransform(input, mode === 'from-hex' ? 'from-hex' : 'to-hex');
+      if (!result.ok)
+        return {
+          output: '',
+          error:
+            mode === 'from-hex'
+              ? 'Enter an even number of hex digits (spaces, 0x, and separators are fine).'
+              : 'Could not process this input.',
+        };
+      return {
+        output: result.value,
+        error: '',
+        ...(result.warning ? { warning: result.warning } : {}),
+      };
     },
     fileExt: 'txt',
   },
@@ -225,22 +336,82 @@ export const ALL_SPECS: Record<string, Spec> = {
   },
   'csv-to-json': {
     id: 'csv-to-json',
-    title: 'CSV to JSON',
-    description: 'Convert CSV data to JSON',
+    title: 'CSV ↔ JSON',
+    description: 'Convert between CSV and JSON',
     icon: IconTable,
     sampleInput: CSV_SAMPLE,
     defaultMode: 'convert',
-    actions: [{ mode: 'convert', label: 'Convert' }],
-    run: async (input) => {
+    actions: [
+      { mode: 'convert', label: 'CSV to JSON' },
+      { mode: 'to-csv', label: 'JSON to CSV' },
+    ],
+    options: [
+      {
+        key: 'delimiter',
+        label: 'Delimiter:',
+        type: 'select',
+        inline: true,
+        choices: [
+          { value: 'auto', label: 'Auto-detect' },
+          { value: 'comma', label: 'Comma' },
+          { value: 'tab', label: 'Tab' },
+          { value: 'semicolon', label: 'Semicolon' },
+        ],
+      },
+      { key: 'header', label: 'First row is a header', type: 'checkbox' },
+    ],
+    defaults: { delimiter: 'auto', header: true },
+    run: async (input, params, mode) => {
       const empty = emptyOk(input);
       if (empty) return empty;
-      const result = await DEFINITIONS['csv-to-json'].transform(input, { header: true });
-      if (!result.ok) return { output: '', error: 'Enter valid CSV with a header row.' };
+      const toCsv = mode === 'to-csv';
+      const result = await DEFINITIONS['csv-to-json'].transform(input, {
+        header: params.header !== false,
+        mode: toCsv ? 'to-csv' : 'from-csv',
+        delimiter: String(params.delimiter ?? 'auto'),
+      });
+      if (!result.ok)
+        return {
+          output: '',
+          error: toCsv
+            ? 'Enter a JSON array of flat objects.'
+            : 'Enter valid CSV with a header row.',
+        };
       return { output: result.value, error: '' };
     },
-    // The input is CSV, which has no grammar here; the result is JSON.
     fileExt: 'json',
-    resultLanguage: 'json',
+    language: { convert: 'text', 'to-csv': 'json' },
+    resultLanguage: { convert: 'json', 'to-csv': 'text' },
+  },
+  'json-to-typescript': {
+    id: 'json-to-typescript',
+    title: 'JSON to TypeScript',
+    description: 'Generate interfaces from JSON',
+    icon: IconBrandTypescript,
+    sampleInput: TYPES_SAMPLE,
+    defaultMode: 'interface',
+    actions: [
+      { mode: 'interface', label: 'Interfaces' },
+      { mode: 'type', label: 'Type aliases' },
+    ],
+    options: [
+      { key: 'rootName', label: 'Root name:', type: 'text', inline: true, placeholder: 'Root' },
+    ],
+    defaults: { rootName: 'Root' },
+    run(input, params, mode) {
+      const empty = emptyOk(input);
+      if (empty) return empty;
+      const result = jsonToTypeScript(input, {
+        rootName: String(params.rootName ?? 'Root'),
+        mode: mode === 'type' ? 'type' : 'interface',
+      });
+      if (!result.ok) return { output: '', error: jsonErrorMessage(input) };
+      return { output: result.value, error: '' };
+    },
+    fileExt: 'ts',
+    language: 'json',
+    resultLanguage: 'typescript',
+    note: 'Keys missing from some array elements become optional; nested objects become separate declarations.',
   },
   'sql-formatter': {
     id: 'sql-formatter',
@@ -254,16 +425,26 @@ export const ALL_SPECS: Record<string, Spec> = {
       { mode: 'minify', label: 'Minify' },
       { mode: 'uppercase', label: 'Uppercase' },
     ],
-    run(input, _params, mode) {
+    options: [
+      {
+        key: 'dialect',
+        label: 'Dialect:',
+        type: 'select',
+        inline: true,
+        choices: SQL_DIALECTS.map((dialect) => ({ value: dialect.value, label: dialect.label })),
+      },
+    ],
+    defaults: { dialect: 'sql' },
+    run(input, params, mode) {
       const empty = emptyOk(input);
       if (empty) return empty;
-      const result = sqlTransform(input, mode);
-      if (!result.ok) return { output: '', error: 'Add some input to continue.' };
+      const result = sqlTransform(input, mode, String(params.dialect ?? 'sql'));
+      if (!result.ok) return { output: '', error: 'Check the statement for syntax errors.' };
       return { output: result.value, error: '' };
     },
     fileExt: 'sql',
     language: 'sql',
-    note: 'Heuristic formatting; verify quoted literals in the output before running statements.',
+    note: 'Tokenized by sql-formatter, so quoted literals and identifiers are preserved exactly.',
   },
   'css-formatter': {
     id: 'css-formatter',
@@ -383,6 +564,77 @@ export function runExamplePipeline(input: string): { output: string; error: stri
 
 export function getSpec(id: string): Spec | undefined {
   return ALL_SPECS[id];
+}
+
+/**
+ * Map a workbench spec's mode + params onto its canonical contract, so large
+ * inputs can run off the main thread through `executeTool`. Modes without a
+ * contract entry (JSON Query) and tools without a definition return null and
+ * stay on `spec.run`.
+ */
+export function specContractRoute(
+  spec: Spec,
+  params: Record<string, string | boolean>,
+  mode: string,
+): { id: string; options: Record<string, JsonValue> } | null {
+  if (!DEFINITIONS[spec.id]) return null;
+  switch (spec.id) {
+    case 'json-formatter':
+      if (mode === 'query') return null;
+      return {
+        id: spec.id,
+        options: {
+          indent:
+            mode === 'minify' ? 0 : params.indent === 'tab' ? 'tab' : Number(params.indent ?? 2),
+          sortKeys: params.sortKeys === true,
+        },
+      };
+    case 'base64-encoder':
+      return { id: spec.id, options: { mode, urlSafe: params.urlSafe === true } };
+    case 'base32-encoder':
+      return { id: spec.id, options: { mode } };
+    case 'hex-encoder':
+      return { id: spec.id, options: { mode } };
+    case 'timestamp-converter':
+      return {
+        id: spec.id,
+        options: { unit: String(params.unit ?? 'auto'), zone: String(params.zone ?? 'utc') },
+      };
+    case 'url-encoder':
+      return { id: spec.id, options: { mode } };
+    case 'yaml-formatter':
+      return { id: spec.id, options: { mode } };
+    case 'csv-to-json':
+      return {
+        id: spec.id,
+        options: {
+          mode: mode === 'to-csv' ? 'to-csv' : 'from-csv',
+          header: params.header !== false,
+          delimiter: String(params.delimiter ?? 'auto'),
+        },
+      };
+    case 'json-to-typescript':
+      return {
+        id: spec.id,
+        options: {
+          rootName: String(params.rootName ?? 'Root'),
+          mode: mode === 'type' ? 'type' : 'interface',
+        },
+      };
+    case 'sql-formatter':
+      return { id: spec.id, options: { mode, dialect: String(params.dialect ?? 'sql') } };
+    case 'css-formatter':
+    case 'graphql-formatter':
+      return { id: spec.id, options: { mode } };
+    case 'js-json-minifier':
+      return { id: spec.id, options: { mode: 'minify' } };
+    case 'html-escape':
+      return { id: spec.id, options: { mode } };
+    case 'strip-whitespace':
+      return { id: spec.id, options: { action: mode } };
+    default:
+      return null;
+  }
 }
 
 /**

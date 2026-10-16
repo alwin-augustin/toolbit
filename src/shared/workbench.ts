@@ -41,7 +41,7 @@ export function jsonErrorMessage(raw: string): string {
 
 /** Decode-then-format example recipe, executed through the canonical contracts. */
 
-export type SpecOptionType = 'select' | 'checkbox';
+export type SpecOptionType = 'select' | 'checkbox' | 'text';
 
 export interface SpecOption {
   key: string;
@@ -49,6 +49,8 @@ export interface SpecOption {
   type: SpecOptionType;
   /** Select-only choices. */
   choices?: Array<{ value: string; label: string }>;
+  /** Text-only placeholder. */
+  placeholder?: string;
   /** True renders in the toolbar; otherwise lives in the Options popover. */
   inline?: boolean;
 }

@@ -9,6 +9,7 @@ import {
   IconEraser,
   IconStar,
   IconStarFilled,
+  IconUpload,
   IconX,
 } from '@tabler/icons-react';
 import { CodeEditor } from '@/shared/CodeEditor';
@@ -28,9 +29,12 @@ import {
   getSpec,
   patchWorkbenchDoc,
   readDoc,
+  specContractRoute,
   specLanguages,
   specParams,
 } from '@/features/tools/specs';
+import { WORKER_THRESHOLD, executeTool } from '@/core/execute-tool';
+import { FileDropOverlay, useFileDrop } from '@/shared/file-drop';
 import { languageLabel, type EditorLanguage } from '@/shared/editor-language';
 import { isDesktopHost } from '@/platform/desktop';
 import type { WorkbenchDocState } from '@/shared/workbench';
@@ -64,8 +68,7 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
   const { addRecent } = useRecentTools();
   const ln = useEditorStatus((s) => s.ln);
   const col = useEditorStatus((s) => s.col);
-  const resetEditorStatus = useEditorStatus((s) => s.reset);
-  const [optionsOpen, setOptionsOpen] = useState(false);
+  const resetEditorStatus = useEditorStatus((s) => s.reset);  const [optionsOpen, setOptionsOpen] = useState(false);
   const optionsRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
   // Bumped on every successful run. It re-keys the result badge below so a
@@ -107,16 +110,43 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
       if (!spec) return;
       setBusy(true);
       try {
-        const { output, error, warning } = await spec.run(doc.input, params, mode);
+        const route = specContractRoute(spec, params, mode);
+        let output = '';
+        let error = '';
+        let warning: string | undefined;
+        // Requests above a third of the worker threshold run through the
+        // canonical contract (off the main thread when the input is heavy);
+        // an invalid input falls back to spec.run for the located message.
+        const offThread = route !== null && doc.input.length >= WORKER_THRESHOLD / 3;
+        if (route && offThread) {
+          const result = await executeTool(route.id, doc.input, route.options);
+          if (result.ok) {
+            output = result.value;
+            warning = result.warning;
+          } else if (result.code === 'INVALID_INPUT') {
+            const fallback = await spec.run(doc.input, params, mode);
+            output = fallback.output;
+            error = fallback.error;
+            warning = fallback.warning;
+          } else {
+            error = 'This input could not be processed. Try a smaller excerpt.';
+          }
+        } else {
+          const outcome = await spec.run(doc.input, params, mode);
+          output = outcome.output;
+          error = outcome.error;
+          warning = outcome.warning;
+        }
         if (error) {
           update({ error, warning: '', dirty: true });
-          track('transform_failed', { tool_id: spec.id, error_code: 'INVALID_INPUT' });
+          if (!offThread) track('transform_failed', { tool_id: spec.id, error_code: 'INVALID_INPUT' });
           return;
         }
         const next = { ...doc, output, mode, error: '', warning: warning ?? '', dirty: false };
         update({ output, mode, error: '', warning: warning ?? '', dirty: false });
         setRunKey((key) => key + 1);
-        track('transform_succeeded', { tool_id: spec.id });
+        // executeTool already reports its own transform event.
+        if (!offThread) track('transform_succeeded', { tool_id: spec.id });
         if (remember) {
           addRun({
             id: crypto.randomUUID(),
@@ -149,6 +179,13 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [transform, doc.mode]);
+
+  // Files dropped onto the tool, or chosen from the input pane's Open button,
+  // land in the input document.
+  const { dragging, dropHandlers, pickFile } = useFileDrop((text, file) => {
+    update({ input: text, dirty: true, error: '' });
+    notify(`Loaded ${file.name}`);
+  }, notify);
 
   if (!spec) return null;
 
@@ -189,7 +226,7 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
   const stateLabel = valid ? 'Up to date' : doc.error ? 'Error' : 'Needs run';
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 p-4">
+    <div className="relative flex min-h-0 flex-1 flex-col gap-3 p-4" {...dropHandlers}>
       {/* Tool identity + document actions */}
       <div className="wb-workspace-heading">
         <div className="min-w-0">
@@ -237,27 +274,37 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
           ))}
         </div>
 
-        {inlineOptions.map(
-          (option) =>
-            option.type === 'select' && (
-              <Label key={option.key} className="wb-toolbar-label">
-                {option.label}
-                {/* `sm` keeps the control the same height as the toolbar's
-                    action buttons; mixing control heights in one row is a defect. */}
-                <NativeSelect
-                  size="sm"
-                  aria-label={option.label.replace(/:$/, '')}
-                  value={String(params[option.key] ?? '')}
-                  onChange={(event) => setParam(option.key, event.target.value)}
-                >
-                  {option.choices?.map((choice) => (
-                    <NativeSelectOption key={choice.value} value={choice.value}>
-                      {choice.label}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-              </Label>
-            ),
+        {inlineOptions.map((option) =>
+          option.type === 'select' ? (
+            <Label key={option.key} className="wb-toolbar-label">
+              {option.label}
+              {/* `sm` keeps the control the same height as the toolbar's
+                  action buttons; mixing control heights in one row is a defect. */}
+              <NativeSelect
+                size="sm"
+                aria-label={option.label.replace(/:$/, '')}
+                value={String(params[option.key] ?? '')}
+                onChange={(event) => setParam(option.key, event.target.value)}
+              >
+                {option.choices?.map((choice) => (
+                  <NativeSelectOption key={choice.value} value={choice.value}>
+                    {choice.label}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </Label>
+          ) : option.type === 'text' ? (
+            <Label key={option.key} className="wb-toolbar-label">
+              {option.label}
+              <Input
+                className="w-44"
+                aria-label={option.label.replace(/:$/, '')}
+                value={String(params[option.key] ?? '')}
+                placeholder={option.placeholder}
+                onChange={(event) => setParam(option.key, event.target.value)}
+              />
+            </Label>
+          ) : null,
         )}
 
         <div ref={optionsRef} className="relative ml-auto">
@@ -337,16 +384,28 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
         <section className="wb-editor-pane" aria-label="Input panel">
           <div className="wb-pane-header">
             <h2>Input</h2>
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              className="ml-auto gap-1.5 text-ink-muted"
-              onClick={() => update({ input: '', error: '', warning: '', dirty: true })}
-            >
-              <IconEraser size={13} />
-              Clear
-            </Button>
+            <div className="ml-auto flex items-center gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                className="gap-1.5 text-ink-muted"
+                onClick={pickFile}
+              >
+                <IconUpload size={13} />
+                Load file
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                className="gap-1.5 text-ink-muted"
+                onClick={() => update({ input: '', error: '', warning: '', dirty: true })}
+              >
+                <IconEraser size={13} />
+                Clear
+              </Button>
+            </div>
           </div>
           <CodeEditor
             key={`${tab.id}-input`}
@@ -442,6 +501,7 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
       </div>
 
       <SaveDialog tab={tab} />
+      <FileDropOverlay visible={dragging} />
     </div>
   );
 }

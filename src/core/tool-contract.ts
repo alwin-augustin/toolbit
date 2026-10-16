@@ -3,6 +3,7 @@ import * as yaml from 'js-yaml';
 import cssbeautify from 'cssbeautify';
 import { minify as minifyCss } from 'csso';
 import { parse as parseGraphql, print as printGraphql } from 'graphql';
+import { format as formatSqlText, supportedDialects, type SqlLanguage } from 'sql-formatter';
 import { getToolPolicy, type ToolPolicy } from '@/core/tool-policy';
 export type JsonValue =
   null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
@@ -96,6 +97,321 @@ export function base64Transform(input: string, mode: string, urlSafe: boolean): 
     return { ok: false, code: 'INVALID_INPUT' };
   }
 }
+
+export type TypeScriptDeclarationMode = 'interface' | 'type';
+
+export interface JsonToTypeScriptOptions {
+  rootName?: string;
+  mode?: TypeScriptDeclarationMode;
+}
+
+interface TsField {
+  key: string;
+  type: string;
+  optional: boolean;
+}
+
+interface TsContext {
+  rootName: string;
+  /** Declaration name → fields, in emission order (root first). */
+  interfaces: Map<string, Map<string, TsField>>;
+  /** Declaration name → canonical path, so different shapes cannot collide. */
+  names: Map<string, string>;
+}
+
+const TS_IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
+
+function tsNameSegment(segment: string): string {
+  const words = segment.split(/[^A-Za-z0-9]+/).filter(Boolean);
+  if (words.length === 0) return 'Item';
+  return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+}
+
+function tsTypeNameFor(context: TsContext, path: string[]): string {
+  const base = [context.rootName, ...path.map(tsNameSegment)].join('');
+  const canonical = path.join('\u0000');
+  const existing = context.names.get(base);
+  if (existing === undefined) {
+    context.names.set(base, canonical);
+    return base;
+  }
+  if (existing === canonical) return base;
+  let suffix = 2;
+  while (context.names.has(`${base}${suffix}`)) suffix++;
+  context.names.set(`${base}${suffix}`, canonical);
+  return `${base}${suffix}`;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function describeObjectValue(
+  objects: Record<string, unknown>[],
+  path: string[],
+  context: TsContext,
+): string {
+  const name = tsTypeNameFor(context, path);
+  let fields = context.interfaces.get(name);
+  if (!fields) {
+    fields = new Map();
+    context.interfaces.set(name, fields);
+  }
+  const keys: string[] = [];
+  for (const object of objects) {
+    for (const key of Object.keys(object)) if (!keys.includes(key)) keys.push(key);
+  }
+  for (const key of keys) {
+    const present = objects.filter((object) => Object.prototype.hasOwnProperty.call(object, key));
+    const type = describeJsonValue(
+      present.map((object) => object[key]),
+      [...path, key],
+      context,
+    );
+    const existing = fields.get(key);
+    fields.set(key, {
+      key,
+      type: existing && existing.type !== type ? `${existing.type} | ${type}` : type,
+      optional: (existing?.optional ?? false) || present.length < objects.length,
+    });
+  }
+  return name;
+}
+
+/**
+ * Infer a TypeScript type for one or more sample values at the same location.
+ * Multiple values merge: array elements with differing shapes widen to a union
+ * and keys missing from some elements become optional.
+ */
+function describeJsonValue(values: unknown[], path: string[], context: TsContext): string {
+  const kinds = new Set<'string' | 'number' | 'boolean' | 'null' | 'array' | 'object'>();
+  for (const value of values) {
+    if (value === null) kinds.add('null');
+    else if (Array.isArray(value)) kinds.add('array');
+    else if (typeof value === 'object') kinds.add('object');
+    else if (typeof value === 'string') kinds.add('string');
+    else if (typeof value === 'number') kinds.add('number');
+    else if (typeof value === 'boolean') kinds.add('boolean');
+  }
+  const members: string[] = [];
+  if (kinds.has('string')) members.push('string');
+  if (kinds.has('number')) members.push('number');
+  if (kinds.has('boolean')) members.push('boolean');
+  if (kinds.has('null')) members.push('null');
+  if (kinds.has('array')) {
+    const items = values.filter(Array.isArray).flat();
+    if (items.length === 0) {
+      members.push('unknown[]');
+    } else {
+      const itemType = describeJsonValue(items, [...path, 'Item'], context);
+      members.push(itemType.includes(' | ') ? `(${itemType})[]` : `${itemType}[]`);
+    }
+  }
+  if (kinds.has('object')) {
+    members.push(describeObjectValue(values.filter(isPlainObject), path, context));
+  }
+  return members.length ? members.join(' | ') : 'unknown';
+}
+
+function emitTsDeclaration(
+  name: string,
+  fields: Map<string, TsField>,
+  mode: TypeScriptDeclarationMode,
+): string {
+  const members = [...fields.values()].map((field) => {
+    const key = TS_IDENTIFIER.test(field.key) ? field.key : JSON.stringify(field.key);
+    return `  ${key}${field.optional ? '?' : ''}: ${field.type};`;
+  });
+  if (mode === 'interface')
+    return members.length
+      ? `export interface ${name} {\n${members.join('\n')}\n}`
+      : `export interface ${name} {}`;
+  return members.length
+    ? `export type ${name} = {\n${members.join('\n')}\n};`
+    : `export type ${name} = Record<string, never>;`;
+}
+
+/**
+ * Generate TypeScript declarations from a JSON sample. Nested objects become
+ * their own declarations, named after the path that reached them
+ * (`Root`, `RootInvoice`, `RootOrdersItem`), so the result compiles as-is.
+ */
+export function jsonToTypeScript(raw: string, options: JsonToTypeScriptOptions = {}): Result<string> {
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    return { ok: false, code: 'INVALID_INPUT' };
+  }
+  const rootName = tsNameSegment(options.rootName?.trim() || 'Root');
+  const context: TsContext = { rootName, interfaces: new Map(), names: new Map() };
+  const rootType = describeJsonValue([value], [], context);
+  const mode: TypeScriptDeclarationMode = options.mode === 'type' ? 'type' : 'interface';
+  const blocks: string[] = [];
+  if (!context.interfaces.has(rootName)) {
+    blocks.push(`export type ${rootName} = ${rootType};`);
+  }
+  for (const [name, fields] of context.interfaces) {
+    blocks.push(emitTsDeclaration(name, fields, mode));
+  }
+  return { ok: true, value: blocks.join('\n\n') };
+}
+
+const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+/** RFC 4648 Base32, with mandatory padding on encode and optional on decode. */
+export function base32Transform(input: string, mode: string): Result<string> {
+  if (mode === 'decode') {
+    const cleaned = input
+      .trim()
+      .replace(/[\s-]/g, '')
+      .replace(/=+$/, '')
+      .toUpperCase();
+    if (!/^[A-Z2-7]*$/.test(cleaned)) return { ok: false, code: 'INVALID_INPUT' };
+    const bytes: number[] = [];
+    let bits = 0;
+    let buffer = 0;
+    for (const char of cleaned) {
+      buffer = (buffer << 5) | BASE32_ALPHABET.indexOf(char);
+      bits += 5;
+      if (bits >= 8) {
+        bytes.push((buffer >>> (bits - 8)) & 0xff);
+        bits -= 8;
+      }
+    }
+    // The leftover bits of a well-formed encoding are zero padding.
+    if (bits > 0 && (buffer & ((1 << bits) - 1)) !== 0) return { ok: false, code: 'INVALID_INPUT' };
+    try {
+      return {
+        ok: true,
+        value: new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(bytes)),
+      };
+    } catch {
+      return { ok: false, code: 'INVALID_INPUT' };
+    }
+  }
+  const bytes = new TextEncoder().encode(input);
+  let value = '';
+  let bits = 0;
+  let buffer = 0;
+  for (const byte of bytes) {
+    buffer = (buffer << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      value += BASE32_ALPHABET[(buffer >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+  if (bits > 0) value += BASE32_ALPHABET[(buffer << (5 - bits)) & 31];
+  while (value.length % 8 !== 0) value += '=';
+  return { ok: true, value };
+}
+
+/** UTF-8 text ↔ hex, tolerating 0x prefixes and common separators on decode. */
+export function hexTransform(input: string, mode: string): Result<string> {
+  if (mode === 'to-hex') {
+    return {
+      ok: true,
+      value: Array.from(new TextEncoder().encode(input), (byte) =>
+        byte.toString(16).padStart(2, '0'),
+      ).join(''),
+    };
+  }
+  const cleaned = input
+    .trim()
+    .replace(/^0x/i, '')
+    .replace(/[\s:_-]/g, '');
+  if (!/^[0-9a-fA-F]*$/.test(cleaned) || cleaned.length % 2 !== 0)
+    return { ok: false, code: 'INVALID_INPUT' };
+  const bytes = new Uint8Array(cleaned.length / 2);
+  for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(cleaned.slice(i * 2, i * 2 + 2), 16);
+  try {
+    return {
+      ok: true,
+      value: new TextDecoder('utf-8', { fatal: true }).decode(bytes),
+    };
+  } catch {
+    return { ok: false, code: 'INVALID_INPUT' };
+  }
+}
+
+const SIMPLE_ESCAPES: Record<string, string> = { n: '\n', r: '\r', t: '\t', '0': '\0', '\\': '\\' };
+
+/**
+ * Escape non-ASCII and control characters as `\uXXXX` (astral characters use
+ * `\u{...}`), or decode `\uXXXX`, `\u{...}`, `\xXX`, and the common short
+ * escapes. Invalid sequences are left as written and reported as a warning.
+ */
+export function unicodeTransform(input: string, mode: string): Result<string> {
+  if (mode === 'escape') {
+    let value = '';
+    for (const char of input) {
+      const code = char.codePointAt(0) ?? 0;
+      if (code > 0xffff) value += `\\u{${code.toString(16)}}`;
+      else if (code > 126 || (code < 32 && char !== '\n' && char !== '\r' && char !== '\t'))
+        value += `\\u${code.toString(16).padStart(4, '0')}`;
+      else value += char;
+    }
+    return { ok: true, value };
+  }
+  let invalid = false;
+  const value = input.replace(
+    /\\u\{([0-9a-fA-F]{1,6})\}|\\u([0-9a-fA-F]{4})|\\x([0-9a-fA-F]{2})|\\([nrt0\\])|\\u|\\x/g,
+    (
+      match,
+      braced: string | undefined,
+      quad: string | undefined,
+      hex: string | undefined,
+      simple: string | undefined,
+    ) => {
+      if (braced) return String.fromCodePoint(parseInt(braced, 16));
+      if (quad) return String.fromCharCode(parseInt(quad, 16));
+      if (hex) return String.fromCharCode(parseInt(hex, 16));
+      if (simple) return SIMPLE_ESCAPES[simple] ?? simple;
+      invalid = true;
+      return match;
+    },
+  );
+  return invalid
+    ? { ok: true, value, warning: 'Invalid escape sequences were left as written.' }
+    : { ok: true, value };
+}
+
+function csvDelimiter(name: string): string | undefined {
+  if (name === 'comma') return ',';
+  if (name === 'tab') return '\t';
+  if (name === 'semicolon') return ';';
+  return undefined;
+}
+
+function csvCell(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
+/**
+ * JSON → CSV/TSV. The input must be an array of flat objects (or one object);
+ * columns are the union of keys in first-seen order. Nested values are
+ * serialized as JSON text rather than flattened.
+ */
+export function jsonToCsv(raw: string, delimiter = ','): Result<string> {
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    return { ok: false, code: 'INVALID_INPUT' };
+  }
+  const rows: unknown[] = Array.isArray(value) ? value : [value];
+  if (rows.length === 0 || !rows.every(isPlainObject)) return { ok: false, code: 'INVALID_INPUT' };
+  const fields: string[] = [];
+  for (const row of rows) {
+    for (const key of Object.keys(row)) if (!fields.includes(key)) fields.push(key);
+  }
+  const data = rows.map((row) => fields.map((field) => csvCell(row[field])));
+  return { ok: true, value: Papa.unparse({ fields, data }, { delimiter }) };
+}
+
 export function normalizeText(input: string, action = 'normalize') {
   if (action === 'strip-all') return input.replace(/\s+/g, ' ').trim();
   return input
@@ -187,172 +503,120 @@ export function yamlTransform(input: string, mode: string): Result<string> {
   }
 }
 
-const SQL_KEYWORDS = [
-  'SELECT',
-  'FROM',
-  'WHERE',
-  'AND',
-  'OR',
-  'NOT',
-  'IN',
-  'ON',
-  'AS',
-  'JOIN',
-  'LEFT',
-  'RIGHT',
-  'INNER',
-  'OUTER',
-  'FULL',
-  'CROSS',
-  'INSERT',
-  'INTO',
-  'VALUES',
-  'UPDATE',
-  'SET',
-  'DELETE',
-  'CREATE',
-  'TABLE',
-  'ALTER',
-  'DROP',
-  'INDEX',
-  'VIEW',
-  'GROUP BY',
-  'ORDER BY',
-  'HAVING',
-  'LIMIT',
-  'OFFSET',
-  'UNION',
-  'ALL',
-  'DISTINCT',
-  'BETWEEN',
-  'LIKE',
-  'IS',
-  'NULL',
-  'EXISTS',
-  'CASE',
-  'WHEN',
-  'THEN',
-  'ELSE',
-  'END',
-  'ASC',
-  'DESC',
-  'COUNT',
-  'SUM',
-  'AVG',
-  'MIN',
-  'MAX',
-  'PRIMARY',
-  'KEY',
-  'FOREIGN',
-  'REFERENCES',
-  'CONSTRAINT',
-  'IF',
-  'BEGIN',
-  'COMMIT',
-  'ROLLBACK',
-  'TRANSACTION',
-  'WITH',
-  'RECURSIVE',
-  'EXCEPT',
-  'INTERSECT',
-];
-
-// Major clauses that get their own line
-const MAJOR_CLAUSES = [
-  'SELECT',
-  'FROM',
-  'WHERE',
-  'AND',
-  'OR',
-  'JOIN',
-  'LEFT JOIN',
-  'RIGHT JOIN',
-  'INNER JOIN',
-  'OUTER JOIN',
-  'FULL JOIN',
-  'CROSS JOIN',
-  'ON',
-  'GROUP BY',
-  'ORDER BY',
-  'HAVING',
-  'LIMIT',
-  'OFFSET',
-  'INSERT INTO',
-  'VALUES',
-  'UPDATE',
-  'SET',
-  'DELETE FROM',
-  'CREATE TABLE',
-  'ALTER TABLE',
-  'DROP TABLE',
-  'UNION',
-  'UNION ALL',
-  'EXCEPT',
-  'INTERSECT',
-  'WITH',
-  'CASE',
-  'WHEN',
-  'THEN',
-  'ELSE',
-  'END',
-];
-
-function uppercaseSqlKeywords(sql: string): string {
-  let result = sql;
-  for (const keyword of SQL_KEYWORDS) {
-    result = result.replace(new RegExp(`\\b${keyword}\\b`, 'gi'), keyword.toUpperCase());
+/**
+ * Strip comments and collapse whitespace outside string literals and quoted
+ * identifiers. A naive `.replace(/\s+/g, ' ')` would corrupt literals, so the
+ * scanner tracks single/double quotes, backticks, brackets, and both comment
+ * forms, and copies quoted spans verbatim.
+ */
+export function minifySql(sql: string): string {
+  let out = '';
+  let i = 0;
+  while (i < sql.length) {
+    const char = sql[i];
+    const next = sql[i + 1];
+    if (char === '-' && next === '-') {
+      while (i < sql.length && sql[i] !== '\n') i++;
+      continue;
+    }
+    if (char === '/' && next === '*') {
+      i += 2;
+      while (i < sql.length && !(sql[i] === '*' && sql[i + 1] === '/')) i++;
+      i += 2;
+      continue;
+    }
+    if (char === "'" || char === '"' || char === '`') {
+      out += char;
+      i++;
+      while (i < sql.length) {
+        out += sql[i];
+        if (sql[i] === '\\' && i + 1 < sql.length) {
+          i++;
+          out += sql[i];
+          i++;
+          continue;
+        }
+        if (sql[i] === char) {
+          // A doubled quote is an escaped quote, not a terminator.
+          if (sql[i + 1] === char) {
+            out += sql[i + 1];
+            i += 2;
+            continue;
+          }
+          i++;
+          break;
+        }
+        i++;
+      }
+      continue;
+    }
+    if (char === '[') {
+      const close = sql.indexOf(']', i);
+      const end = close === -1 ? sql.length : close + 1;
+      out += sql.slice(i, end);
+      i = end;
+      continue;
+    }
+    if (/\s/.test(char)) {
+      if (out.length > 0 && !out.endsWith(' ')) out += ' ';
+      i++;
+      continue;
+    }
+    out += char;
+    i++;
   }
-  return result;
+  return out.trim();
 }
 
-function formatSql(sql: string): string {
-  let formatted = sql.trim().replace(/\s+/g, ' ');
-  for (const clause of [...MAJOR_CLAUSES].sort((a, b) => b.length - a.length)) {
-    formatted = formatted.replace(
-      new RegExp(`\\b(${clause})\\b`, 'gi'),
-      `\n${clause.toUpperCase()}`,
-    );
-  }
-  const lines = formatted.split('\n').filter((l) => l.trim());
-  const result: string[] = [];
-  let indent = 0;
-  for (const line of lines) {
-    const trimmed = line.trim();
-    const upper = trimmed.toUpperCase();
-    if (upper.startsWith('END')) indent = Math.max(0, indent - 1);
-    const isSubClause =
-      upper.startsWith('AND ') ||
-      upper.startsWith('OR ') ||
-      upper.startsWith('ON ') ||
-      upper.startsWith('WHEN ') ||
-      upper.startsWith('THEN ') ||
-      upper.startsWith('ELSE ');
-    result.push('  '.repeat(isSubClause ? indent + 1 : indent) + trimmed);
-    if (upper.startsWith('CASE')) indent++;
-  }
-  return result.join('\n');
-}
-
-function minifySql(sql: string): string {
-  return sql
-    .replace(/--[^\n]*/g, '')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+function resolveSqlDialect(dialect: string): SqlLanguage {
+  return (supportedDialects as readonly string[]).includes(dialect)
+    ? (dialect as SqlLanguage)
+    : 'sql';
 }
 
 /**
- * Heuristic regex-based SQL formatting, ported from the legacy formatter.
- * Known limitation: keyword matching runs over the whole string, so quoted
- * string literals containing keywords can be rewritten. Verify literals in
- * the output before running statements.
+ * Format, minify, or keyword-case SQL via the `sql-formatter` library, which
+ * tokenizes statements so quoted literals and identifiers are never rewritten.
+ * `minify` is the local scanner above; the library has no compact mode.
  */
-export function sqlTransform(input: string, mode: string): Result<string> {
+export function sqlTransform(input: string, mode: string, dialect = 'sql'): Result<string> {
   if (!input.trim()) return { ok: false, code: 'INVALID_INPUT' };
   if (mode === 'minify') return { ok: true, value: minifySql(input) };
-  if (mode === 'uppercase') return { ok: true, value: uppercaseSqlKeywords(input) };
-  return { ok: true, value: formatSql(uppercaseSqlKeywords(input)) };
+  try {
+    const language = resolveSqlDialect(dialect);
+    if (mode === 'uppercase')
+      return { ok: true, value: formatSqlText(input, { language, keywordCase: 'upper' }) };
+    // Format preserves the author's keyword casing; `uppercase` is opt-in.
+    return {
+      ok: true,
+      value: formatSqlText(input, {
+        language,
+        keywordCase: 'preserve',
+        tabWidth: 2,
+        linesBetweenQueries: 1,
+      }),
+    };
+  } catch {
+    return { ok: false, code: 'INVALID_INPUT' };
+  }
 }
+
+/** Dialect choices for the SQL formatter's options select. */
+export const SQL_DIALECTS = [
+  { value: 'sql', label: 'Standard SQL' },
+  { value: 'postgresql', label: 'PostgreSQL' },
+  { value: 'mysql', label: 'MySQL' },
+  { value: 'mariadb', label: 'MariaDB' },
+  { value: 'sqlite', label: 'SQLite' },
+  { value: 'transactsql', label: 'SQL Server (T-SQL)' },
+  { value: 'plsql', label: 'Oracle (PL/SQL)' },
+  { value: 'bigquery', label: 'BigQuery' },
+  { value: 'snowflake', label: 'Snowflake' },
+  { value: 'duckdb', label: 'DuckDB' },
+  { value: 'trino', label: 'Trino' },
+  { value: 'redshift', label: 'Redshift' },
+] as const;
+
 
 export function cssTransform(input: string, mode: string): Result<string> {
   try {
@@ -460,7 +724,11 @@ export const DEFINITIONS: Record<string, ToolDefinition> = {
     'text',
     'json',
     { indent: 2, sortKeys: false, validateWhileTyping: true },
-    (raw, o) => formatJson(raw, Number(o.indent), Boolean(o.sortKeys)),
+    (raw, o) => {
+      const numeric = Number(o.indent);
+      const indent = o.indent === 'tab' ? '\t' : Number.isFinite(numeric) ? numeric : 2;
+      return formatJson(raw, indent, Boolean(o.sortKeys));
+    },
   ),
   'json-validator': define('json-validator', 'json', 'json', {}, (raw) => formatJson(raw)),
   'base64-encoder': define(
@@ -483,8 +751,12 @@ export const DEFINITIONS: Record<string, ToolDefinition> = {
   'yaml-formatter': define('yaml-formatter', 'text', 'text', { mode: 'format' }, (raw, o) =>
     yamlTransform(raw, String(o.mode)),
   ),
-  'sql-formatter': define('sql-formatter', 'text', 'text', { mode: 'format' }, (raw, o) =>
-    sqlTransform(raw, String(o.mode)),
+  'sql-formatter': define(
+    'sql-formatter',
+    'text',
+    'text',
+    { mode: 'format', dialect: 'sql' },
+    (raw, o) => sqlTransform(raw, String(o.mode), String(o.dialect)),
   ),
   'css-formatter': define('css-formatter', 'text', 'text', { mode: 'format' }, (raw, o) =>
     cssTransform(raw, String(o.mode)),
@@ -505,11 +777,44 @@ export const DEFINITIONS: Record<string, ToolDefinition> = {
     { action: 'normalize' },
     (raw, o) => ({ ok: true, value: normalizeText(raw, String(o.action)) }),
   ),
-  'csv-to-json': define('csv-to-json', 'csv', 'json', { header: true }, (raw) => {
-    const parsed = Papa.parse(raw, { header: true, skipEmptyLines: true });
-    return parsed.errors.length
-      ? { ok: false, code: 'INVALID_INPUT' }
-      : { ok: true, value: JSON.stringify(parsed.data, null, 2) };
+  'csv-to-json': define(
+    'csv-to-json',
+    'csv',
+    'json',
+    { header: true, mode: 'from-csv', delimiter: 'auto' },
+    (raw, o) => {
+      if (String(o.mode) === 'to-csv') return jsonToCsv(raw, csvDelimiter(String(o.delimiter)) ?? ',');
+      const parsed = Papa.parse(raw, {
+        header: o.header !== false,
+        skipEmptyLines: true,
+        delimiter: csvDelimiter(String(o.delimiter)),
+      });
+      return parsed.errors.length
+        ? { ok: false, code: 'INVALID_INPUT' }
+        : { ok: true, value: JSON.stringify(parsed.data, null, 2) };
+    },
+  ),
+  'json-to-typescript': define(
+    'json-to-typescript',
+    'json',
+    'text',
+    { rootName: 'Root', mode: 'interface' },
+    (raw, o) =>
+      jsonToTypeScript(raw, {
+        rootName: String(o.rootName),
+        mode: String(o.mode) === 'type' ? 'type' : 'interface',
+      }),
+  ),
+  'base32-encoder': define('base32-encoder', 'text', 'text', { mode: 'encode' }, (raw, o) =>
+    base32Transform(raw, String(o.mode)),
+  ),
+  'hex-encoder': define('hex-encoder', 'text', 'text', { mode: 'to-hex' }, (raw, o) => {
+    const mode = String(o.mode);
+    return mode === 'unicode-escape'
+      ? unicodeTransform(raw, 'escape')
+      : mode === 'unicode-unescape'
+        ? unicodeTransform(raw, 'unescape')
+        : hexTransform(raw, mode === 'from-hex' ? 'from-hex' : 'to-hex');
   }),
   'hash-generator': define(
     'hash-generator',
