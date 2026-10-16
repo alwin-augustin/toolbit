@@ -40,3 +40,13 @@
 
 /sw.js
   Cache-Control: public, max-age=0, must-revalidate
+
+# Note on the rule above (verified against production 2026-10-16). It governs
+# the edge — `cf-cache-status: REVALIDATED` — but it does NOT reach the browser:
+# the `toolbit.app` zone sets a Browser Cache TTL of 14400 s, which Cloudflare
+# applies to this cached asset's browser-facing Cache-Control, so `/sw.js` is
+# served as `max-age=14400` while every `/*` security header still arrives. The
+# worker is therefore kept fresh from the client side instead —
+# `registerServiceWorker()` registers with `updateViaCache: 'none'`
+# (src/platform/service-worker.ts, tests/service-worker.test.ts). Keep this rule
+# for when the zone setting is corrected to respect origin headers.
