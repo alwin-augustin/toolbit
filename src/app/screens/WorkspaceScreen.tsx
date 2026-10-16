@@ -17,6 +17,7 @@ import { useEditorStatus, type WorkspaceTab } from '@/shared/workspace-store';
 import { openDialog } from '@/shared/dialog';
 import { useFavorites } from '@/core/favorites-store';
 import { useRecentTools } from '@/core/recent-tools';
+import { NextActions } from '@/app/components/NextActions';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -409,6 +410,9 @@ export function WorkspaceScreen({ tab }: { tab: WorkspaceTab }) {
           </div>
         </section>
       </div>
+
+      {/* Next Useful Action: at most two follow-ups, carrying the result. */}
+      {valid && <NextActions toolId={spec.id} payload={doc.output} />}
 
       {/* Status */}
       <div className="wb-statusbar" role="status">

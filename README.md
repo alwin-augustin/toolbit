@@ -1,6 +1,6 @@
 # Toolbit
 
-42 developer utilities in one browser workbench. [Open Toolbit](https://toolbit.app) or install it as a PWA.
+43 developer utilities in one browser workbench. [Open Toolbit](https://toolbit.app), install it as a PWA, or download the [desktop app](https://toolbit.app/download).
 
 JSON, YAML, SQL, JWT, regex, diffs, hashes, certificates, QR codes and more —
 all transforming locally in the tab. The only tools that touch the network are
@@ -40,8 +40,9 @@ npx playwright install chromium firefox webkit
 npm run test:e2e     # Playwright (not run in CI)
 ```
 
-Cloudflare Pages serves `dist/`. There is no backend for transforms — the
-built site is static.
+Cloudflare Pages serves `dist/`. The desktop installers are served from the
+`toolbit-downloads` R2 bucket at `downloads.toolbit.app`. There is no backend
+for transforms — the built site is static.
 
 ## Architecture
 

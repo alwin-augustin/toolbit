@@ -8,8 +8,10 @@ import {
   defaultDocState,
   getSpec,
   isWorkbenchToolId,
+  ownsDocument,
   readDoc,
   runExamplePipeline,
+  smartPastePayload,
   type WorkbenchToolId,
 } from '@/features/tools/specs';
 import { useActiveResult } from '@/shared/result-store';
@@ -34,17 +36,18 @@ export function useWorkbenchActions() {
    */
   const openTool = useCallback(
     (toolId: string, input?: string) => {
-      if (!isWorkbenchToolId(toolId)) {
+      if (!ownsDocument(toolId)) {
         navigate(toolPath(toolId));
         return;
       }
-      const meta = getSpec(toolId);
-      const title = meta?.title ?? toolId;
+      const title = getSpec(toolId)?.title ?? TOOLS.find((t) => t.id === toolId)?.name ?? toolId;
       const alreadyOpen = useWorkspace.getState().tabs.filter((d) => d.toolId === toolId).length;
-      const seed = {
-        ...defaultDocState(toolId, input),
-        label: alreadyOpen === 0 ? title : `${title} ${alreadyOpen + 1}`,
-      };
+      const label = alreadyOpen === 0 ? title : `${title} ${alreadyOpen + 1}`;
+      // A workbench tool seeds its full document; a document-backed custom
+      // screen seeds only its primary field (via the smart-paste field map).
+      const seed = isWorkbenchToolId(toolId)
+        ? { ...defaultDocState(toolId, input), label }
+        : { ...(input ? (smartPastePayload(toolId, input) ?? {}) : {}), label };
       useWorkspace.getState().openDocument(toolId, seed);
       navigate(toolPath(toolId));
     },
@@ -68,6 +71,31 @@ export function useWorkbenchActions() {
         return;
       }
       openTool(toolId, input);
+    },
+    [navigate, openTool],
+  );
+
+  /**
+   * Hand a text payload to a tool: discovery's one handoff path, used by Smart
+   * paste, paste expansion, and Next Useful Action. A tool that owns a document
+   * (a workbench tool, or a document-backed screen such as Notes) opens as a
+   * fresh document seeded with the payload; a screen with no document cannot
+   * take one, so the text is staged in the pending-paste channel the router
+   * already drains into its primary field. Always a new document — a handoff
+   * must never overwrite work in progress.
+   */
+  const openWithPayload = useCallback(
+    (toolId: string, payload: string) => {
+      if (ownsDocument(toolId)) {
+        openTool(toolId, payload);
+        return;
+      }
+      try {
+        sessionStorage.setItem('toolbit:smart-paste', payload);
+      } catch {
+        /* storage denied: the tool opens empty rather than not at all */
+      }
+      navigate(toolPath(toolId));
     },
     [navigate, openTool],
   );
@@ -111,7 +139,7 @@ export function useWorkbenchActions() {
     [navigate, notify, openTool],
   );
 
-  return { openTool, activateExistingOrOpen, restore, navigate, notify, addSaved };
+  return { openTool, activateExistingOrOpen, openWithPayload, restore, navigate, notify, addSaved };
 }
 
 /**

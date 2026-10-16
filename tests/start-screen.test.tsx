@@ -49,12 +49,34 @@ describe('start screen', () => {
     await user.click(screen.getByRole('textbox', { name: 'Paste data to find a tool' }));
     await user.paste('{"b":2,"a":1}');
 
+    // Detection stays first; the graph adds the operation set for the data.
+    await screen.findByRole('button', { name: /Open JSON Formatter/ });
+    expect(
+      screen.getByRole('button', { name: 'Validate json against a schema' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Compare two texts' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Format yaml' })).toBeInTheDocument();
+
     const suggestion = await screen.findByRole('button', { name: /Open JSON Formatter/ });
     await user.click(suggestion);
 
     expect(pushes).toContain('/json-formatter');
     const tab = useWorkspace.getState().tabs.find((t) => t.toolId === 'json-formatter');
     expect(tab?.payload).toMatchObject({ input: '{"b":2,"a":1}' });
+  });
+
+  it('hands the paste to a graph-expanded tool when its operation is chosen', async () => {
+    const user = userEvent.setup();
+    const pushes: string[] = [];
+    renderStart(pushes);
+
+    await user.click(screen.getByRole('textbox', { name: 'Paste data to find a tool' }));
+    await user.paste('{"b":2,"a":1}');
+
+    await user.click(await screen.findByRole('button', { name: 'Validate json against a schema' }));
+
+    expect(pushes).toContain('/json-validator');
+    expect(sessionStorage.getItem('toolbit:smart-paste')).toBe('{"b":2,"a":1}');
   });
 
   it('carries a paste for a custom screen through the pending-paste channel', async () => {
@@ -65,11 +87,46 @@ describe('start screen', () => {
     await user.paste('eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.sig');
 
     const suggestion = await screen.findByRole('button', { name: /Open JWT Decoder/ });
+    // The JWT's handoff edges join the set: expiry checking and claims formatting.
+    expect(
+      screen.getByRole('button', { name: 'Convert a unix timestamp to a date' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Make json readable' })).toBeInTheDocument();
     await user.click(suggestion);
 
     expect(sessionStorage.getItem('toolbit:smart-paste')).toBe(
       'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.sig',
     );
+  });
+});
+
+describe('common task clusters', () => {
+  it('expands a cluster by task and opens a tool from it', async () => {
+    const user = userEvent.setup();
+    const pushes: string[] = [];
+    renderStart(pushes);
+
+    const cluster = screen.getByRole('button', { name: /Inspect & debug API data/ });
+    expect(cluster).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(cluster);
+    expect(cluster).toHaveAttribute('aria-expanded', 'true');
+
+    await user.click(screen.getByRole('button', { name: 'JWT Decoder' }));
+    expect(pushes).toContain('/jwt-decoder');
+  });
+
+  it('collapses again on a second click', async () => {
+    const user = userEvent.setup();
+    renderStart();
+
+    const cluster = screen.getByRole('button', { name: /Validate configuration/ });
+    await user.click(cluster);
+    expect(screen.getByRole('button', { name: 'GraphQL Formatter' })).toBeInTheDocument();
+
+    await user.click(cluster);
+    expect(cluster).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: 'GraphQL Formatter' })).not.toBeInTheDocument();
   });
 });
 

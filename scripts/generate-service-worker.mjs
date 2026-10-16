@@ -22,6 +22,9 @@ const { count, warnings } = await generateSW({
     'og-image.png',
     'screenshots/**',
     'structured-data.json',
+    // Opt-in semantic search asset (~0.7 MB): fetched on demand by the users
+    // who enable it, never precached for everyone.
+    'embeddings/**',
   ],
   maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
   additionalManifestEntries: pages.flatMap((file) => [

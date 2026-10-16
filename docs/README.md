@@ -1,13 +1,15 @@
 # Toolbit documentation
 
-Three documents, each with one job. Read the first if you are about to write
-interface code; read the second if you are about to change what the product does.
+Four documents, each with one job. Read design-system.md if you are about to
+write interface code; read ux.md if you are about to change what the product
+does; read intent-discovery.md before touching search or suggestions.
 
-| Document                               | Answers                                                                                                                  |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| [design-system.md](./design-system.md) | How does Toolbit look and behave? Tokens, type, colour, components, accessibility, contributor rules.                    |
-| [ux.md](./ux.md)                       | How is the product organised and why? Personas, jobs, journeys, information architecture, screens, keyboard map, states. |
-| [../GLOSSARY.md](../GLOSSARY.md)       | What do the domain words mean? Tool, document, tab, session, snippet, history run.                                       |
+| Document                                     | Answers                                                                                                                  |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| [design-system.md](./design-system.md)       | How does Toolbit look and behave? Tokens, type, colour, components, accessibility, contributor rules.                    |
+| [ux.md](./ux.md)                             | How is the product organised and why? Personas, jobs, journeys, information architecture, screens, keyboard map, states. |
+| [intent-discovery.md](./intent-discovery.md) | How does Toolbit find a tool when the user knows the task but not the name? Capability model, resolver pipeline, phases. |
+| [../GLOSSARY.md](../GLOSSARY.md)             | What do the domain words mean? Tool, document, tab, session, snippet, history run.                                       |
 
 ## Where the truth lives
 

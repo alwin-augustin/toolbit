@@ -10,13 +10,19 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { useLocation } from 'wouter';
-import { detectContentType } from '@/core/smart-detect';
+import { detectPasteSuggestions, type PasteSuggestion } from '@/core/intent/detect';
 import { TOOLS, RESEARCH_CATEGORIES } from '@/content/tools.config';
 import { useFavorites } from '@/core/favorites-store';
 import { useRecentTools } from '@/core/recent-tools';
 import { useWorkspace, type WorkspaceTab } from '@/shared/workspace-store';
 import { toolPath, useWorkbenchActions } from '@/shared/workbench-actions';
-import { isWorkbenchToolId, readDoc, specIcon, specTitle } from '@/features/tools/specs';
+import {
+  isWorkbenchToolId,
+  ownsDocument,
+  readDoc,
+  specIcon,
+  specTitle,
+} from '@/features/tools/specs';
 import {
   CATEGORY_ICONS,
   CATEGORY_ORDER,
@@ -25,6 +31,7 @@ import {
 } from '@/app/shell/navigation';
 import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
+import { TaskClusters } from '@/app/components/TaskClusters';
 
 const PASTE_FIELD = 'Paste data to find a tool';
 
@@ -49,11 +56,11 @@ export function StartScreen() {
   const activeTabId = useWorkspace((s) => s.activeTabId);
   const setActiveTab = useWorkspace((s) => s.setActiveTab);
   const closeTab = useWorkspace((s) => s.closeTab);
-  const { openTool, activateExistingOrOpen } = useWorkbenchActions();
+  const { openWithPayload, activateExistingOrOpen } = useWorkbenchActions();
   const { favorites } = useFavorites();
   const { recents } = useRecentTools();
 
-  const suggestions = useMemo(() => (text.trim() ? detectContentType(text) : []), [text]);
+  const suggestions = useMemo(() => (text.trim() ? detectPasteSuggestions(text) : []), [text]);
 
   const pinned = favorites.map((id) => TOOL_INDEX.get(id)).filter((tool) => tool != null);
 
@@ -65,19 +72,12 @@ export function StartScreen() {
   const openSearch = () => window.dispatchEvent(new CustomEvent('wb:open-search'));
 
   /** Hand the pasted payload to the suggested tool, then clear the field. */
-  const runSuggestion = (toolId: string) => {
+  const runSuggestion = (suggestion: PasteSuggestion) => {
     const payload = text;
     setText('');
-    if (isWorkbenchToolId(toolId)) {
-      openTool(toolId, payload);
-      return;
-    }
-    try {
-      sessionStorage.setItem('toolbit:smart-paste', payload);
-    } catch {
-      /* storage denied: the tool opens empty rather than not at all */
-    }
-    navigate(TOOL_INDEX.get(toolId)?.path ?? toolPath(toolId));
+    // The unified handoff path: it seeds a document for tools that own one
+    // (including Notes) and stages the pending paste for those that do not.
+    openWithPayload(suggestion.toolId, payload);
   };
 
   const resume = (tab: WorkspaceTab) => {
@@ -111,7 +111,7 @@ export function StartScreen() {
             onKeyDown={(event) => {
               if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
                 event.preventDefault();
-                if (suggestions[0]) runSuggestion(suggestions[0].toolId);
+                if (suggestions[0]) runSuggestion(suggestions[0]);
               }
             }}
             spellCheck={false}
@@ -159,19 +159,25 @@ export function StartScreen() {
               {suggestions[0].reason}
             </p>
             <div className="flex flex-wrap gap-2">
-              {suggestions.map((suggestion) => (
-                <Button
-                  key={suggestion.toolId}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={() => runSuggestion(suggestion.toolId)}
-                >
-                  Open {suggestion.toolName}
-                  <IconArrowRight size={13} />
-                </Button>
-              ))}
+              {suggestions.map((suggestion) => {
+                const name = TOOL_INDEX.get(suggestion.toolId)?.name ?? suggestion.toolId;
+                return (
+                  <Button
+                    key={suggestion.toolId}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    title={`Open ${name}`}
+                    onClick={() => runSuggestion(suggestion)}
+                  >
+                    {suggestion.anchor
+                      ? `Open ${name}`
+                      : suggestion.reason.charAt(0).toUpperCase() + suggestion.reason.slice(1)}
+                    <IconArrowRight size={13} aria-hidden="true" />
+                  </Button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -212,7 +218,7 @@ export function StartScreen() {
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-medium text-ink">{title}</span>
                       <span className="block truncate text-xs text-ink-faint">
-                        {isWorkbenchToolId(tab.toolId) ? 'Document' : 'Tool'} ·{' '}
+                        {ownsDocument(tab.toolId) ? 'Document' : 'Tool'} ·{' '}
                         {TOOL_INDEX.get(tab.toolId)?.name ?? tab.toolId}
                       </span>
                     </span>
@@ -281,6 +287,9 @@ export function StartScreen() {
           </div>
         </section>
       )}
+
+      {/* Common tasks ------------------------------------------------------ */}
+      <TaskClusters />
 
       {/* Browse ----------------------------------------------------------- */}
       <section aria-labelledby="wb-home-browse">

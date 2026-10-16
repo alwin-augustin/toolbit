@@ -5,6 +5,7 @@
 
 import type { ComponentType } from 'react';
 import { getToolPolicy, type ToolPolicy } from '@/core/tool-policy';
+import { isDesktopBuild } from '@/platform/desktop';
 
 export type ToolCategory =
   'format' | 'encode' | 'generate' | 'transform' | 'analyze' | 'build' | 'text';
@@ -307,6 +308,15 @@ const TOOL_CATALOG: Omit<ToolMetadata, keyof ToolPolicy>[] = [
     keywords: ['markdown', 'preview', 'md', 'render'],
   },
   {
+    id: 'notes',
+    name: 'Notes',
+    description: 'A private scratchpad for pasting and previewing text',
+    category: 'text',
+    researchCategory: 'text',
+    path: '/notes',
+    keywords: ['notes', 'notepad', 'scratchpad', 'markdown', 'paste', 'text', 'draft'],
+  },
+  {
     id: 'lorem-ipsum-generator',
     name: 'Lorem Ipsum Generator',
     description: 'Generate placeholder text for designs and mockups',
@@ -477,7 +487,37 @@ const TOOL_CATALOG: Omit<ToolMetadata, keyof ToolPolicy>[] = [
   },
 ];
 
-export const TOOLS: ToolMetadata[] = TOOL_CATALOG.map((tool) => ({
+/**
+ * Tools that only work where a page may reach the network. The installed app
+ * runs under a CSP that allows bundled assets and the Tauri IPC channel only,
+ * so these two can never complete a connection — they are hidden from every
+ * desktop surface (rail, palette, paste detection, capability graph) rather
+ * than offered and always failing. The web build keeps them.
+ */
+export const DESKTOP_HIDDEN_TOOL_IDS: readonly string[] = [
+  'api-request-builder',
+  'websocket-tester',
+];
+
+/** The catalogue minus the tools the target cannot run. Pure; test both. */
+export function toolsForTarget<T extends { id: string }>(
+  tools: readonly T[],
+  target: 'web' | 'desktop',
+): T[] {
+  if (target === 'web') return [...tools];
+  const hidden = new Set(DESKTOP_HIDDEN_TOOL_IDS);
+  return tools.filter((tool) => !hidden.has(tool.id));
+}
+
+/** The full catalogue, with policies — the capability corpus and validation use it. */
+export const ALL_TOOLS: ToolMetadata[] = TOOL_CATALOG.map((tool) => ({
   ...tool,
   ...getToolPolicy(tool.id),
 }));
+
+/**
+ * The tools this build can run: what routes, the rail, search and the
+ * capability graph are built from. Data that must stay stable across targets
+ * (the embedding corpus, validation) reads `ALL_TOOLS` instead.
+ */
+export const TOOLS: ToolMetadata[] = toolsForTarget(ALL_TOOLS, isDesktopBuild ? 'desktop' : 'web');

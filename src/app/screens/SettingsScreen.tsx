@@ -4,6 +4,7 @@ import { isDesktopHost } from '@/platform/desktop';
 import { useWorkbenchMemory } from '@/shared/workbench-memory';
 import { usePreferences } from '@/core/preferences';
 import { deleteAllLocalData } from '@/core/privacy';
+import { useSemanticEnabled } from '@/core/intent/use-semantic';
 import { clearAllHistory, pruneExpiredHistory } from '@/core/history-db';
 import { setTheme, useTheme, type Theme } from '@/shared/theme';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,8 @@ export function SettingsScreen() {
   const theme = useTheme();
   const history = usePreferences((s) => s.history);
   const retentionDays = usePreferences((s) => s.retentionDays);
+  const semanticSearch = usePreferences((s) => s.semanticSearch);
+  const { status: semanticStatus } = useSemanticEnabled();
   const desktop = isDesktopHost();
   const [, navigate] = useLocation();
   const update = usePreferences((s) => s.update);
@@ -120,6 +123,41 @@ export function SettingsScreen() {
           </span>
           <Checkbox checked={wrap} onCheckedChange={(checked) => setWrap(Boolean(checked))} />
         </Label>
+      </section>
+
+      {/* Search */}
+      <section className="wb-card" aria-labelledby="wb-set-search">
+        <div className="wb-card-head">
+          <h2 id="wb-set-search">Search</h2>
+        </div>
+        <Label className="wb-setting-row cursor-pointer">
+          <span>
+            <strong>Smarter search</strong>
+            <small>
+              Matches tasks by meaning — “make json readable” finds the JSON formatter — with a
+              small on-device model (~25 MB, downloaded once). Search never waits for it.
+            </small>
+          </span>
+          <Checkbox
+            checked={semanticSearch}
+            onCheckedChange={(checked) => update({ semanticSearch: Boolean(checked) })}
+          />
+        </Label>
+        {semanticSearch && semanticStatus === 'loading' && (
+          <p className="border-t border-line px-3 py-2 text-xs text-ink-muted" role="status">
+            Downloading the on-device model. Keyword search works meanwhile.
+          </p>
+        )}
+        {semanticSearch && semanticStatus === 'ready' && (
+          <p className="border-t border-line px-3 py-2 text-xs text-ink-muted" role="status">
+            On-device model ready.
+          </p>
+        )}
+        {semanticSearch && semanticStatus === 'failed' && (
+          <p className="border-t border-line px-3 py-2 text-xs text-ink-muted" role="status">
+            The model could not load. Keyword search still works.
+          </p>
+        )}
       </section>
 
       {/* Session */}

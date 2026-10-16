@@ -15,8 +15,12 @@ lpTest('start smart-paste suggests JSON and opens it', async ({ lpPage: page }) 
 lpTest('command search opens the timestamp tool', async ({ lpPage: page }) => {
   const errors = trackPageErrors(page);
   await page.goto('/');
-  await lpActivate(page, 'button', 'Search tools or actions...');
-  await lpTypeNative(page, 'Search tools and saved work', 'timestamp');
+  // Two controls answer to this label — the topbar trigger (an aria-label) and
+  // the start screen's paste prompt, whose name carries the ⌘K hint. The
+  // anchors pick the topbar trigger, whose accessible name is exactly the
+  // label.
+  await lpActivate(page, 'button', /^Search tools or actions\.\.\.$/);
+  await lpTypeNative(page, /^Search tools$/, 'timestamp');
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/timestamp-converter/);
   expect(errors).toEqual([]);

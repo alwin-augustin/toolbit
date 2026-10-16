@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { TOOLS } from '@/content/tools.config';
+import { validateCapabilities } from '@/core/capability-graph';
 import { DEFINITIONS } from '@/core/tool-contract';
 import { CUSTOM_SCREENS, isCustomToolId } from '@/features/tools/custom-screens';
 import { isWorkbenchToolId } from '@/features/tools/specs';
@@ -41,5 +42,7 @@ export function validateToolRegistry(): string[] {
       errors.push(`Tool ${entry.id} has no component (workbench/custom/catalog).`);
   }
   // Contract coverage is optional during migration but must not diverge when present.
+  // Capability coverage is required: discovery is only as good as this data.
+  errors.push(...validateCapabilities());
   return errors;
 }

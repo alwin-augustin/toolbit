@@ -1,13 +1,13 @@
 # Toolbit Workbench
 
-The local-first developer workspace: 42 tools that process input in the browser, with tabs, saved work, and history you can switch off.
+The local-first developer workspace: 43 tools that process input in the browser, with tabs, saved work, and history you can switch off.
 
 ## Language
 
 ### Workbench
 
 **Tool**:
-One of the 42 utilities. Addressed by its `toolId` and routed at `/<toolId>`.
+One of the 43 utilities. Addressed by its `toolId` and routed at `/<toolId>`.
 _Avoid_: utility, app, module
 
 **Workbench tool**:
@@ -54,10 +54,25 @@ _Avoid_: recipe
 A record of one transform execution, kept while the History switch is on and expiring on the retention setting. Secret tools never record.
 
 **Secret tool**:
-A tool handling credentials or tokens (password, TOTP, JWT, certificate, API builder, WebSocket). Excluded from history and sharing by default.
+A tool whose content must never be recorded or shared: credentials and tokens (password, TOTP, JWT, certificate, API builder, WebSocket), and private user content such as Notes. Excluded from history and share/export.
 
 **Smart paste**:
-Pasting raw data to get a tool suggestion and carrying the pasted text into the opened tool.
+Pasting raw data to get tool suggestions and carrying the pasted text into the opened tool. The detector's own answer comes first; the capability graph adds the useful operations for that data (format / validate / compare / convert).
+
+### Discovery
+
+**Intent search**:
+The ⌘K palette matching a task phrasing ("make json readable") to tools by meaning, not just by name. Always on, in the browser tab.
+
+**Smarter search**:
+The opt-in on-device semantic layer under intent search. Downloads a model once, then reranks locally; when off, loading, or failed, keyword matching carries the palette unchanged.
+
+**Next Useful Action**:
+After a successful run, at most two follow-ups from the capability graph (`related`) shown in the result chrome, each carrying the current result into the next tool.
+_Avoid_: recommendation, "you might also like"
+
+**Handoff**:
+Carrying a payload — a result or a paste — into the next tool's input. Tools that own a document (workbench tools, and document-backed screens such as Notes) open a fresh document seeded with it; screens with no document take it through the pending Smart paste channel. Nothing is sent anywhere.
 
 ### Processing guarantees
 

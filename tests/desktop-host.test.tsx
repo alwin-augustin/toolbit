@@ -94,7 +94,7 @@ describe('desktop host', () => {
 
   it('opens the palette from the native Quick Open command', async () => {
     const shell = await renderInstalled();
-    const palette = () => screen.queryByPlaceholderText(/type a category/);
+    const palette = () => screen.queryByPlaceholderText(/describe a task/);
     expect(palette()).not.toBeInTheDocument();
 
     act(() => shell.emit(DESKTOP_EVENT.quickOpen));

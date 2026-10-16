@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IconArrowRight, IconClock, IconCornerDownLeft, IconSearch } from '@tabler/icons-react';
 import { TOOLS, RESEARCH_CATEGORIES } from '@/content/tools.config';
+import { resolveIntent } from '@/core/intent/resolver';
+import { useSemanticEnabled, useSemanticHits } from '@/core/intent/use-semantic';
 import { useRecentTools } from '@/core/recent-tools';
 import { useWorkbenchActions } from '@/shared/workbench-actions';
-import { isWorkbenchToolId, specIcon } from '@/features/tools/specs';
+import { isWorkbenchToolId, ownsDocument, specIcon } from '@/features/tools/specs';
 import { CATEGORY_ICONS, CATEGORY_ORDER, DESTINATIONS, TOOL_INDEX } from '@/app/shell/navigation';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Kbd } from '@/components/ui/kbd';
@@ -22,8 +24,11 @@ interface PaletteItem {
  * Command palette.
  *
  * The fastest path in the product: one keystroke from anywhere, then type.
- * Results are ranked name-first so an exact name always wins, and the whole
- * list is drivable with ↑ ↓ ⏎ — a palette that needs the mouse is a menu.
+ * Queries match by name *and* by task — "make json readable" finds the JSON
+ * formatter — with each result carrying the reason it is shown. Name matches
+ * still rank first, and the whole list is drivable with ↑ ↓ ⏎ — a palette that
+ * needs the mouse is a menu. When the opt-in on-device model is ready its
+ * semantic scores rerank the same list; until then, lexical carries it.
  */
 export function SearchDialog({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState('');
@@ -40,10 +45,24 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  const trimmed = query.trim().toLowerCase();
+
+  // The semantic reranker is opt-in and fire-and-forget: `useSemanticHits`
+  // returns whatever the model has finished, and lexical carries the list
+  // until then. Search never waits on a download.
+  const { enabled: semanticEnabled, status: semanticState } = useSemanticEnabled();
+  const semanticHits = useSemanticHits(trimmed, semanticEnabled, semanticState);
+
+  const resolution = useMemo(
+    () =>
+      trimmed ? resolveIntent(trimmed, { limit: 8, semantic: semanticHits ?? undefined }) : null,
+    [trimmed, semanticHits],
+  );
+
   const openToolAction = useCallback(
     (tool: Pick<ToolMetadata, 'id' | 'path'>) => {
       onClose();
-      if (isWorkbenchToolId(tool.id)) openTool(tool.id);
+      if (ownsDocument(tool.id)) openTool(tool.id);
       else navigate(tool.path);
     },
     [onClose, openTool, navigate],
@@ -54,10 +73,8 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
     navigate('/library');
   }, [onClose, navigate]);
 
-  const trimmed = query.trim().toLowerCase();
-
   const items = useMemo<PaletteItem[]>(() => {
-    const toolItem = (tool: ToolMetadata, group: string): PaletteItem => {
+    const toolItem = (tool: ToolMetadata, group: string, hint?: string): PaletteItem => {
       const Icon = isWorkbenchToolId(tool.id)
         ? (specIcon(tool.id) ?? CATEGORY_ICONS[tool.researchCategory])
         : CATEGORY_ICONS[tool.researchCategory];
@@ -65,7 +82,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
         key: `${group}:${tool.id}`,
         group,
         label: tool.name,
-        hint: RESEARCH_CATEGORIES[tool.researchCategory].name,
+        hint: hint ?? RESEARCH_CATEGORIES[tool.researchCategory].name,
         icon: Icon,
         run: () => openToolAction(tool),
       };
@@ -95,21 +112,13 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
       return [...recent, ...go, ...suggested];
     }
 
-    // Rank: name prefix, then name contains, then everything else.
-    const scored = TOOLS.map((tool) => {
-      const name = tool.name.toLowerCase();
-      const haystack = `${name} ${tool.description.toLowerCase()} ${(tool.keywords ?? []).join(' ').toLowerCase()}`;
-      let score = -1;
-      if (name.startsWith(trimmed)) score = 0;
-      else if (name.includes(trimmed)) score = 1;
-      else if (haystack.includes(trimmed)) score = 2;
-      else if (trimmed.includes(name)) score = 3;
-      return { tool, score };
-    })
-      .filter((entry) => entry.score >= 0)
-      .sort((a, b) => a.score - b.score);
-
-    const tools = scored.map((entry) => toolItem(entry.tool, 'Tools'));
+    const tools = (resolution?.suggestions ?? [])
+      .map((suggestion) => {
+        const tool = TOOL_INDEX.get(suggestion.toolId);
+        if (!tool) return null;
+        return toolItem(tool, 'Tools', suggestion.reasons[0]);
+      })
+      .filter((item): item is PaletteItem => item != null);
 
     const categories = CATEGORY_ORDER.filter((category) =>
       RESEARCH_CATEGORIES[category].name.toLowerCase().includes(trimmed),
@@ -123,7 +132,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
     }));
 
     return [...tools, ...categories];
-  }, [trimmed, recents, navigate, openToolAction, browseCatalogue, onClose]);
+  }, [trimmed, resolution, recents, navigate, openToolAction, browseCatalogue, onClose]);
 
   // A fresh result set always starts at the top.
   useEffect(() => {
@@ -186,7 +195,7 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
             autoFocus
             type="text"
             aria-label="Search tools"
-            placeholder="Search tools, or type a category…"
+            placeholder="Search tools, or describe a task…"
             className="flex-1 bg-transparent text-md text-ink outline-none placeholder:text-ink-faint"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -203,9 +212,33 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
 
         <div ref={listRef} className="tb-scroll max-h-[52dvh] overflow-y-auto py-1.5">
           {items.length === 0 && (
-            <p className="px-4 py-10 text-center text-sm text-ink-muted">
-              Nothing matches “{query.trim()}”.
-            </p>
+            <div className="px-4 py-10 text-center">
+              <p className="text-sm text-ink-muted">Nothing matches “{query.trim()}”.</p>
+              <p className="mt-1 text-xs text-ink-faint">
+                Try the task instead of the name — “make json readable”.
+              </p>
+              {semanticEnabled ? (
+                semanticState === 'failed' && (
+                  <p className="mt-2 text-xs text-ink-faint">
+                    On-device search couldn’t load — keyword matching still works.
+                  </p>
+                )
+              ) : (
+                <p className="mt-2 text-xs text-ink-faint">
+                  <button
+                    type="button"
+                    className="underline decoration-dotted underline-offset-2 hover:text-ink"
+                    onClick={() => {
+                      onClose();
+                      navigate('/settings');
+                    }}
+                  >
+                    Turn on smarter search
+                  </button>{' '}
+                  to match tasks by meaning, on your device.
+                </p>
+              )}
+            </div>
           )}
 
           {groups.map((group) => (
@@ -231,7 +264,9 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
                     {group.name === 'Recent' && (
                       <IconClock size={12} aria-hidden="true" className="text-ink-faint" />
                     )}
-                    <span className="shrink-0 text-2xs text-ink-faint">{item.hint}</span>
+                    <span className="max-w-[46%] shrink-0 truncate text-2xs text-ink-faint">
+                      {item.hint}
+                    </span>
                     {selected && (
                       <IconArrowRight size={13} aria-hidden="true" className="shrink-0" />
                     )}
@@ -252,7 +287,11 @@ export function SearchDialog({ onClose }: { onClose: () => void }) {
             <IconCornerDownLeft size={12} aria-hidden="true" />
             open
           </span>
-          <span className="ml-auto">Everything runs locally</span>
+          <span className="ml-auto">
+            {semanticEnabled && semanticState === 'loading'
+              ? 'Loading on-device search…'
+              : 'Everything runs locally'}
+          </span>
         </div>
       </DialogContent>
     </Dialog>

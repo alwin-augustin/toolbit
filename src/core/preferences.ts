@@ -45,12 +45,17 @@ export const safeStorage = {
 export const usePreferences = create<{
   history: boolean;
   retentionDays: number;
-  update: (patch: Partial<{ history: boolean; retentionDays: number }>) => void;
+  semanticSearch: boolean;
+  update: (
+    patch: Partial<{ history: boolean; retentionDays: number; semanticSearch: boolean }>,
+  ) => void;
 }>()(
   persist(
     (set) => ({
       history: true,
       retentionDays: 30,
+      // Semantic search downloads a model on first use; off until asked.
+      semanticSearch: false,
       update: (patch) => set(patch),
     }),
     {
@@ -68,6 +73,8 @@ export const usePreferences = create<{
             p.retentionDays <= 365
               ? Math.floor(p.retentionDays)
               : current.retentionDays,
+          semanticSearch:
+            typeof p.semanticSearch === 'boolean' ? p.semanticSearch : current.semanticSearch,
         };
       },
     },
