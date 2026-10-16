@@ -1,6 +1,7 @@
-# Site-wide security headers. The path has to stay `/*`: a bare `/` matches
-# only the root URL, and every route in this single-page app must carry the
-# policy.
+# Site-wide security headers. The path has to stay `/*`: Cloudflare Pages does
+# not apply a rule attached to a bare `/` — not even to the root URL. When this
+# block was moved to `/` on 2026-10-03, production served no CSP at all until it
+# was restored to `/*`; tests/privacy/csp-headers.test.ts locks the semantics.
 /*
   # No third-party script is loaded and there is no telemetry endpoint, so
   # `script-src` stays at `'self'`. `connect-src` carries exactly two
@@ -32,9 +33,8 @@
   Cache-Control: public, max-age=604800
 
 # The HTML entry points must stay fresh so a deploy is picked up immediately.
-/
-  Cache-Control: public, max-age=0, must-revalidate
-
+# Only the concrete asset path is listed: a bare `/` rule is never applied (see
+# the note at the top of this file).
 /index.html
   Cache-Control: public, max-age=0, must-revalidate
 

@@ -60,8 +60,30 @@ function valuesOf(name: string): string[] {
 }
 
 describe('shipped CSP (public/_headers)', () => {
-  it('attaches the policy to /* so every route carries it — a bare / only matches the root URL', () => {
+  it('attaches the policy to /* — Cloudflare Pages does not apply a rule on a bare "/", not even for the root URL', () => {
     expect(policyBlocks.map((block) => block.path)).toEqual(['/*']);
+  });
+
+  it('never attaches any rule to a bare "/" (production served no headers that way, 2026-10-03 → 16)', () => {
+    expect(parseBlocks(headersFile).map((block) => block.path)).not.toContain('/');
+  });
+
+  it('keeps every security header inside the /* block so no route can miss one', () => {
+    const securityHeaders = [
+      'content-security-policy',
+      'referrer-policy',
+      'x-content-type-options',
+      'x-frame-options',
+      'cross-origin-opener-policy',
+      'cross-origin-resource-policy',
+      'permissions-policy',
+    ];
+    const misplaced = parseBlocks(headersFile)
+      .filter((block) => block.path !== '/*')
+      .flatMap((block) =>
+        [...block.headers.keys()].filter((name) => securityHeaders.includes(name)),
+      );
+    expect(misplaced).toEqual([]);
   });
 
   it('needs no remote script', () => {
