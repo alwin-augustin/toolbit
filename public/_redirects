@@ -9,13 +9,15 @@
 /tools/:slug  /:slug    301
 
 # Installers for the desktop app. The paths stay version-free: each one
-# resolves to the newest GitHub release asset, and the desktop workflow
-# publishes a stable copy next to every versioned name, so this file never
-# needs a release bump. A redirect rather than a rewrite, because the
-# binaries live on another origin (Pages rejects files over 25 MiB, and the
-# installers are bigger).
+# resolves to a stable-named object in the toolbit-downloads R2 bucket,
+# served from https://downloads.toolbit.app. R2's free plan carries the
+# installers (10 GB storage, no egress fees), and the desktop release
+# workflow mirrors every tagged release there under the same stable names,
+# so this file never needs a release bump. A redirect rather than a
+# rewrite, because the binaries live on another origin (Pages rejects files
+# over 25 MiB, and the installers are bigger).
 /download            /about#download   302
-/download/mac        https://github.com/alwin-augustin/toolbit-desktop/releases/latest/download/Toolbit-macos-aarch64.dmg   302
-/download/mac-intel  https://github.com/alwin-augustin/toolbit-desktop/releases/latest/download/Toolbit-macos-x64.dmg   302
-/download/windows    https://github.com/alwin-augustin/toolbit-desktop/releases/latest/download/Toolbit-windows-x64-setup.exe   302
-/download/linux      https://github.com/alwin-augustin/toolbit-desktop/releases/latest/download/Toolbit-linux-x86_64.AppImage   302
+/download/mac        https://downloads.toolbit.app/Toolbit-macos-aarch64.dmg   302
+/download/mac-intel  https://downloads.toolbit.app/Toolbit-macos-x64.dmg   302
+/download/windows    https://downloads.toolbit.app/Toolbit-windows-x64-setup.exe   302
+/download/linux      https://downloads.toolbit.app/Toolbit-linux-x86_64.AppImage   302

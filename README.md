@@ -41,8 +41,9 @@ npx playwright install chromium firefox webkit
 npm run test:e2e     # Playwright (not run in CI)
 ```
 
-Cloudflare Pages serves `dist/`. There is no backend for transforms — the
-built site is static.
+Cloudflare Pages serves `dist/`. The desktop installers are served from the
+`toolbit-downloads` R2 bucket at `downloads.toolbit.app`. There is no backend
+for transforms — the built site is static.
 
 ## Architecture
 

@@ -182,9 +182,9 @@ export function LandingPage() {
         </section>
 
         {/* The desktop app. The URLs carry no version on purpose: Cloudflare
-            Pages resolves each `/download/<platform>` to the newest GitHub
-            release asset (public/_redirects), so this section never changes
-            when a release does. */}
+            Pages resolves each `/download/<platform>` to a stable-named object
+            in the toolbit-downloads R2 bucket (public/_redirects), so this
+            section never changes when a release does. */}
         <section
           id="download"
           aria-labelledby="landing-download"
@@ -231,8 +231,8 @@ export function LandingPage() {
               className="text-brand-ink hover:underline"
             >
               GitHub
-            </a>
-            .
+            </a>{' '}
+            and served from Cloudflare R2.
           </p>
         </section>
 
