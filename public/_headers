@@ -1,13 +1,17 @@
-# Site-wide security headers.
-/
+# Site-wide security headers. The path has to stay `/*`: a bare `/` matches
+# only the root URL, and every route in this single-page app must carry the
+# policy.
+/*
   # No third-party script is loaded and there is no telemetry endpoint, so
-  # `script-src` stays at `'self'` and `connect-src` needs only `'self'` — plus
-  # `wss:`, which the WebSocket tester uses for the endpoints the user opens
-  # explicitly. `object-src`/`frame-src` are closed rather than inherited, and
-  # `base-uri` is closed outright — nothing in the app uses `<base>`, and a
-  # `<base>` injected into rendered content would silently re-point every
-  # relative URL on the page.
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https:; connect-src 'self' wss:; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; manifest-src 'self'
+  # `script-src` stays at `'self'`. `connect-src` carries exactly two
+  # non-origin allowances, one per user-driven network tool against a host the
+  # user types: `https:` (API Request Builder) and `wss:` (WebSocket tester).
+  # Both are accepted in the debt register (PRIVACY.md §7); the zero-egress
+  # spec is the runtime tripwire. `object-src`/`frame-src` are closed rather
+  # than inherited, and `base-uri` is closed outright — nothing in the app uses
+  # `<base>`, and a `<base>` injected into rendered content would silently
+  # re-point every relative URL on the page.
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https:; connect-src 'self' https: wss:; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; manifest-src 'self'
   Referrer-Policy: strict-origin-when-cross-origin
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
