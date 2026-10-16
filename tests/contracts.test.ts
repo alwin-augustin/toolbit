@@ -84,6 +84,16 @@ describe('versioned documents and recipes', () => {
     expect(() => parseWorkspace('{"schemaVersion":99}')).toThrow('unsupported');
     expect(() => parseWorkspace('x'.repeat(3 * 1024 * 1024))).toThrow('too large');
   });
+  it('rejects prototype-named option keys from imported workspaces', () => {
+    const hostile =
+      '{"name":"Hostile","schemaVersion":1,"documents":[{"id":"a","toolId":"json-formatter",' +
+      '"toolVersion":1,"options":{"__proto__":{"polluted":true}},"updatedAt":1}],' +
+      '"layout":{"density":"comfortable","inspectorOpen":true}}';
+    expect(() => parseWorkspace(hostile)).toThrow('Invalid settings');
+    // Inherited names are not known settings either.
+    const inherited = hostile.replace('"__proto__"', '"toString"');
+    expect(() => parseWorkspace(inherited)).toThrow('Invalid settings');
+  });
   it('migrates legacy workspaces without removing repeated tools', () => {
     const result = parseWorkspace(
       JSON.stringify({

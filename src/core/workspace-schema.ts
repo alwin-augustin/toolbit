@@ -86,7 +86,13 @@ export function parseWorkspace(raw: string): WorkspaceV1 {
     const def = DEFINITIONS[document.toolId];
     if (def)
       for (const [key, value] of Object.entries(document.options)) {
-        if (!(key in def.defaultOptions) || typeof value !== typeof def.defaultOptions[key])
+        // `Object.hasOwn`, not `in`: an inherited name (`__proto__`, `toString`)
+        // must not count as a known setting, or an imported file could smuggle
+        // prototype-named keys into document options.
+        if (
+          !Object.hasOwn(def.defaultOptions, key) ||
+          typeof value !== typeof def.defaultOptions[key]
+        )
           throw new Error(`Invalid settings for ${document.toolId}.`);
       }
     if (document.payload !== undefined && !record(document.payload))

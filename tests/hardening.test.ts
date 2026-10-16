@@ -5,7 +5,7 @@ import {
 } from '@/features/tools/markdown-previewer/MarkdownScreen';
 import { buildWifiString, buildVCard } from '@/features/tools/qr-code-generator/QrScreen';
 import { base64UrlDecode, decodeJwt } from '@/features/tools/jwt-decoder/JwtScreen';
-import { findRegexMatches } from '@/features/tools/regex-tester/RegexScreen';
+import { applyRegexReplace, findRegexMatches } from '@/features/tools/regex-tester/RegexScreen';
 import { computeDiffLines } from '@/features/tools/diff-tool/DiffScreen';
 import { detectContentType } from '@/core/smart-detect';
 import { getUnifiedRegistry, validateToolRegistry } from '@/core/tool-registry';
@@ -54,6 +54,11 @@ describe('hardening guarantees', () => {
     expect(findRegexMatches('(a+)+$', 'g', 'a'.repeat(60)).error).toMatch(
       /catastrophic backtracking/,
     );
+    // The replace preview runs on every keystroke too, so it needs the same guard.
+    expect(applyRegexReplace('(a+)+$', 'g', 'a'.repeat(60), 'x').error).toMatch(
+      /catastrophic backtracking/,
+    );
+    expect(applyRegexReplace('a', 'g', 'aaa', 'b')).toEqual({ result: 'bbb', error: null });
     // Path-like input is not a regex literal.
     expect(detectContentType('/path/to/file/').map((s) => s.toolId)).not.toContain('regex-tester');
     expect(detectContentType('/ab+c/gi').map((s) => s.toolId)).toContain('regex-tester');
