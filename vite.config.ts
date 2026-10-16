@@ -1,7 +1,26 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath, URL } from 'node:url';
+
+/**
+ * onnxruntime-web carries a `new URL('ort-wasm-….wasm', import.meta.url)`
+ * fallback that Vite resolves at build time, emitting the ~26 MB binary as an
+ * asset. The fallback never runs: transformers.js assigns `wasmPaths` before
+ * any session exists — the CDN in the web build, the staged `ort/` directory
+ * in the desktop build — and the runtime is fetched from there. Cloudflare
+ * Pages refuses files over 25 MiB, so the unreachable copy has to go.
+ */
+function dropUnusedOrtWasm(): Plugin {
+  return {
+    name: 'toolbit:drop-unused-ort-wasm',
+    generateBundle(_options, bundle) {
+      for (const fileName of Object.keys(bundle)) {
+        if (/^assets\/ort-wasm-.*\.wasm$/.test(fileName)) delete bundle[fileName];
+      }
+    },
+  };
+}
 
 /**
  * `mode === 'desktop'` is the installed app's build (`vite build --mode desktop`,
@@ -9,7 +28,7 @@ import { fileURLToPath, URL } from 'node:url';
  * entry point, which the desktop route table does not serve.
  */
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), dropUnusedOrtWasm()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   // Node-isms referenced by bundled CJS helpers (e.g. core-js inside terser's
   // tree) resolve to the browser global instead of throwing at startup.
